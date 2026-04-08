@@ -75,7 +75,8 @@ export const Navbar = () => {
             <button
               onClick={signOut}
               className="p-2 text-white/70 hover:text-white transition-colors"
-              title={t("auth.login")}
+              title={t("auth.signOut", "Izrakstīties")}
+              aria-label={t("auth.signOut", "Izrakstīties")}
             >
               <LogOut className="w-5 h-5" />
             </button>
