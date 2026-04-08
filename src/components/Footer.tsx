@@ -81,10 +81,7 @@ export const Footer = () => {
           <button
             className="text-muted-foreground/30 hover:text-muted-foreground transition-colors p-1"
             title="Admin"
-            onClick={() => {
-              // Will connect to admin auth later
-              console.log("Admin login triggered");
-            }}
+            onClick={() => navigate("/admin")}
           >
             <Lock className="w-3.5 h-3.5" />
           </button>
