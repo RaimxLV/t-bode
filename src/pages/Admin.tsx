@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag, Brush } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag, Brush, HelpCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,6 +37,18 @@ type DBProduct = { id: string; name: string; slug: string; description: string |
 
 const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true };
 
+interface FAQForm {
+  id?: string;
+  question_lv: string;
+  answer_lv: string;
+  question_en: string;
+  answer_en: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+const EMPTY_FAQ: FAQForm = { question_lv: "", answer_lv: "", question_en: "", answer_en: "", sort_order: 0, is_active: true };
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -57,6 +69,11 @@ const Admin = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [loadingFaqs, setLoadingFaqs] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FAQForm | null>(null);
+  const [faqDialogOpen, setFaqDialogOpen] = useState(false);
+  const [savingFaq, setSavingFaq] = useState(false);
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
@@ -72,7 +89,7 @@ const Admin = () => {
     checkRole();
   }, [user, authLoading, navigate, t]);
 
-  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); }, [isAdmin]);
 
   const loadProducts = async () => {
     setLoadingProducts(true);
@@ -97,6 +114,37 @@ const Admin = () => {
       }
     }
     setLoadingOrders(false);
+  };
+
+  const loadFaqs = async () => {
+    setLoadingFaqs(true);
+    const { data, error } = await supabase.from("faqs").select("*").order("sort_order", { ascending: true });
+    if (error) toast.error("Failed to load FAQs");
+    else setFaqs(data || []);
+    setLoadingFaqs(false);
+  };
+
+  const handleSaveFaq = async () => {
+    if (!editingFaq || !editingFaq.question_lv || !editingFaq.answer_lv) { toast.error(t("admin.faqSaveError")); return; }
+    setSavingFaq(true);
+    const payload = { question_lv: editingFaq.question_lv, answer_lv: editingFaq.answer_lv, question_en: editingFaq.question_en, answer_en: editingFaq.answer_en, sort_order: editingFaq.sort_order, is_active: editingFaq.is_active };
+    if (editingFaq.id) {
+      const { error } = await supabase.from("faqs").update(payload).eq("id", editingFaq.id);
+      if (error) toast.error(t("admin.faqSaveError"));
+      else toast.success(t("admin.faqSaved"));
+    } else {
+      const { error } = await supabase.from("faqs").insert(payload);
+      if (error) toast.error(t("admin.faqSaveError"));
+      else toast.success(t("admin.faqCreated"));
+    }
+    setSavingFaq(false); setFaqDialogOpen(false); setEditingFaq(null); loadFaqs();
+  };
+
+  const handleDeleteFaq = async (id: string) => {
+    if (!confirm(t("admin.faqDeleteConfirm"))) return;
+    const { error } = await supabase.from("faqs").delete().eq("id", id);
+    if (error) toast.error(t("admin.faqDeleteError"));
+    else { toast.success(t("admin.faqDeleted")); loadFaqs(); }
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
@@ -225,6 +273,7 @@ const Admin = () => {
             <TabsTrigger value="design" className="gap-2"><Brush className="w-4 h-4" /> {t("admin.designTab")}<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-2"><ShoppingBag className="w-4 h-4" /> {t("admin.collectionTab")}<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-2"><Package className="w-4 h-4" /> {t("admin.ordersTab")}{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="faq" className="gap-2"><HelpCircle className="w-4 h-4" /> {t("admin.faqTab")}<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -345,8 +394,88 @@ const Admin = () => {
               );
             })()}
           </TabsContent>
+
+          <TabsContent value="faq">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => { setEditingFaq({ ...EMPTY_FAQ }); setFaqDialogOpen(true); }} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newFaq")}</Button>
+            </div>
+            {loadingFaqs ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingFaqs")}</p>
+            ) : faqs.length === 0 ? (
+              <div className="text-center py-20"><p className="text-muted-foreground font-body">{t("admin.noFaqs")}</p></div>
+            ) : (
+              <div className="space-y-3">
+                {faqs.map((faq) => (
+                  <Card key={faq.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs text-muted-foreground font-body">#{faq.sort_order}</span>
+                            {!faq.is_active && <Badge variant="secondary" className="text-xs">Neaktīvs</Badge>}
+                          </div>
+                          <h3 className="font-body font-semibold text-sm truncate">{faq.question_lv}</h3>
+                          <p className="text-xs text-muted-foreground font-body mt-1 line-clamp-2">{faq.answer_lv}</p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button size="icon" variant="ghost" onClick={() => { setEditingFaq({ id: faq.id, question_lv: faq.question_lv, answer_lv: faq.answer_lv, question_en: faq.question_en, answer_en: faq.answer_en, sort_order: faq.sort_order, is_active: faq.is_active }); setFaqDialogOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDeleteFaq(faq.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </main>
+
+      {/* FAQ Dialog */}
+      <Dialog open={faqDialogOpen} onOpenChange={setFaqDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">{editingFaq?.id ? t("admin.editFaq") : t("admin.newFaq")}</DialogTitle>
+          </DialogHeader>
+          {editingFaq && (
+            <div className="space-y-4">
+              <div>
+                <Label className="font-body text-sm">{t("admin.questionLv")}</Label>
+                <Input value={editingFaq.question_lv} onChange={(e) => setEditingFaq({ ...editingFaq, question_lv: e.target.value })} className="mt-1" />
+              </div>
+              <div>
+                <Label className="font-body text-sm">{t("admin.answerLv")}</Label>
+                <Textarea value={editingFaq.answer_lv} onChange={(e) => setEditingFaq({ ...editingFaq, answer_lv: e.target.value })} className="mt-1" rows={3} />
+              </div>
+              <div>
+                <Label className="font-body text-sm">{t("admin.questionEn")}</Label>
+                <Input value={editingFaq.question_en} onChange={(e) => setEditingFaq({ ...editingFaq, question_en: e.target.value })} className="mt-1" />
+              </div>
+              <div>
+                <Label className="font-body text-sm">{t("admin.answerEn")}</Label>
+                <Textarea value={editingFaq.answer_en} onChange={(e) => setEditingFaq({ ...editingFaq, answer_en: e.target.value })} className="mt-1" rows={3} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-body text-sm">{t("admin.sortOrder")}</Label>
+                  <Input type="number" value={editingFaq.sort_order} onChange={(e) => setEditingFaq({ ...editingFaq, sort_order: parseInt(e.target.value) || 0 })} className="mt-1" />
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <Switch checked={editingFaq.is_active} onCheckedChange={(v) => setEditingFaq({ ...editingFaq, is_active: v })} />
+                  <Label className="font-body text-sm">{t("admin.faqActive")}</Label>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <Button variant="outline" onClick={() => setFaqDialogOpen(false)}>{t("admin.cancel")}</Button>
+                <Button onClick={handleSaveFaq} disabled={savingFaq} className="bg-primary text-primary-foreground">
+                  <Save className="w-4 h-4 mr-2" />
+                  {savingFaq ? t("admin.saving") : t("admin.save")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">

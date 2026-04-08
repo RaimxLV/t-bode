@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      faqs: {
+        Row: {
+          answer_en: string
+          answer_lv: string
+          created_at: string
+          id: string
+          is_active: boolean
+          question_en: string
+          question_lv: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          answer_en?: string
+          answer_lv: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_en?: string
+          question_lv: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          answer_en?: string
+          answer_lv?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_en?: string
+          question_lv?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           color: string | null
