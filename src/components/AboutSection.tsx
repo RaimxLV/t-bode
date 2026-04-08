@@ -1,37 +1,24 @@
 import { motion } from "framer-motion";
 import { Palette, Zap, Package, Truck } from "lucide-react";
-
-const features = [
-  {
-    icon: Palette,
-    title: "Premium DTF Print Quality",
-    desc: "Vibrant, durable, and high-quality prints using Direct-to-Film (DTF) technology.",
-  },
-  {
-    icon: Zap,
-    title: "Easy-to-Use Design Tool",
-    desc: "Effortlessly create your own custom designs with our intuitive built-in builder.",
-  },
-  {
-    icon: Package,
-    title: "Fast Production",
-    desc: "With a large on-site warehouse, we guarantee quick manufacturing and order processing.",
-  },
-  {
-    icon: Truck,
-    title: "Convenient Delivery",
-    desc: "Get your order delivered smoothly to any Omniva parcel machine.",
-  },
-];
-
-const steps = [
-  { num: "1", title: "Choose a Product", desc: "Select from our catalog of t-shirts, hoodies, and mugs." },
-  { num: "2", title: "Personalize It", desc: "Customize your item using our built-in design tool." },
-  { num: "3", title: "Place Your Order", desc: "Complete your checkout and pay securely online." },
-  { num: "4", title: "Receive Your Order", desc: "Collect your item from any Omniva parcel machine within 1-2 business days." },
-];
+import { useTranslation } from "react-i18next";
 
 export const AboutSection = () => {
+  const { t } = useTranslation();
+
+  const features = [
+    { icon: Palette, titleKey: "about.features.quality.title", descKey: "about.features.quality.desc" },
+    { icon: Zap, titleKey: "about.features.tool.title", descKey: "about.features.tool.desc" },
+    { icon: Package, titleKey: "about.features.production.title", descKey: "about.features.production.desc" },
+    { icon: Truck, titleKey: "about.features.delivery.title", descKey: "about.features.delivery.desc" },
+  ];
+
+  const steps = [
+    { num: "1", titleKey: "about.steps.s1.title", descKey: "about.steps.s1.desc" },
+    { num: "2", titleKey: "about.steps.s2.title", descKey: "about.steps.s2.desc" },
+    { num: "3", titleKey: "about.steps.s3.title", descKey: "about.steps.s3.desc" },
+    { num: "4", titleKey: "about.steps.s4.title", descKey: "about.steps.s4.desc" },
+  ];
+
   return (
     <section id="about" className="py-24">
       <div className="container mx-auto px-4">
@@ -41,22 +28,17 @@ export const AboutSection = () => {
           viewport={{ once: true }}
           className="max-w-3xl mx-auto text-center mb-16"
         >
-          <h2 className="text-4xl md:text-5xl mb-6">
-            T-Bode is a place where a T-shirt becomes a story.
-          </h2>
-          <p className="text-muted-foreground leading-relaxed font-body">
-            In our stores in <strong className="text-foreground">Riga, Latvia</strong>, you can visit us in person,
-            try on a T-shirt, choose the color and size, and submit your design or idea – we'll take care of the rest.
-            We use modern <strong className="text-foreground">DTF (Direct to Film) technology</strong> for vibrant
-            colors on both light and dark fabrics.
-          </p>
+          <h2 className="text-4xl md:text-5xl mb-6">{t("about.title")}</h2>
+          <p
+            className="text-muted-foreground leading-relaxed font-body"
+            dangerouslySetInnerHTML={{ __html: t("about.description") }}
+          />
         </motion.div>
 
-        {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {features.map((f, i) => (
             <motion.div
-              key={f.title}
+              key={f.titleKey}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -65,13 +47,12 @@ export const AboutSection = () => {
               style={{ boxShadow: "var(--shadow-card)" }}
             >
               <f.icon className="w-8 h-8 text-primary mb-4" />
-              <h3 className="font-body font-semibold mb-2">{f.title}</h3>
-              <p className="text-sm text-muted-foreground font-body">{f.desc}</p>
+              <h3 className="font-body font-semibold mb-2">{t(f.titleKey)}</h3>
+              <p className="text-sm text-muted-foreground font-body">{t(f.descKey)}</p>
             </motion.div>
           ))}
         </div>
 
-        {/* Steps */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {steps.map((step, i) => (
             <motion.div
@@ -85,8 +66,8 @@ export const AboutSection = () => {
               <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary-foreground" style={{ background: "var(--gradient-brand)" }}>
                 {step.num}
               </div>
-              <h4 className="font-body font-semibold mb-2">{step.title}</h4>
-              <p className="text-sm text-muted-foreground font-body">{step.desc}</p>
+              <h4 className="font-body font-semibold mb-2">{t(step.titleKey)}</h4>
+              <p className="text-sm text-muted-foreground font-body">{t(step.descKey)}</p>
             </motion.div>
           ))}
         </div>

@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero.jpg";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <section className="relative h-screen overflow-hidden">
@@ -25,9 +27,9 @@ export const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-6xl md:text-8xl lg:text-9xl leading-none tracking-tight text-white"
           >
-            Design.
+            {t("hero.line1")}
             <br />
-            Print.
+            {t("hero.line2")}
           </motion.h1>
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
@@ -35,7 +37,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-5xl md:text-7xl lg:text-8xl leading-none mt-2 text-gradient-brand"
           >
-            Tell Your Story.
+            {t("hero.line3")}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -43,7 +45,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.7 }}
             className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body"
           >
-            Izveido savu unikālo apģērbu ar mūsu personalizācijas rīku. Tavi dizaini — tavas krekliņi.
+            {t("hero.description")}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -56,14 +58,14 @@ export const HeroSection = () => {
               className="group inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-bold text-lg transition-all hover:scale-105 hover:shadow-lg"
               style={{ background: "var(--gradient-brand)", color: "white" }}
             >
-              Sākt personalizēt
+              {t("hero.ctaDesign")}
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
             </button>
             <button
               onClick={() => navigate("/collection")}
               className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-semibold text-lg border-2 border-white/40 text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/60"
             >
-              Mūsu kolekcija
+              {t("hero.ctaCollection")}
             </button>
           </motion.div>
         </div>

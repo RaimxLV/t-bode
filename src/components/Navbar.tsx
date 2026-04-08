@@ -3,14 +3,8 @@ import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
-
-const navLinks = [
-  { label: "Design Your Own", href: "/design" },
-  { label: "Our Collection", href: "/collection" },
-  { label: "Our Story", href: "/#about" },
-  { label: "Find a Store", href: "/#stores" },
-];
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,6 +12,14 @@ export const Navbar = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
+
+  const navLinks = [
+    { label: t("nav.designYourOwn"), href: "/design" },
+    { label: t("nav.ourCollection"), href: "/collection" },
+    { label: t("nav.ourStory"), href: "/#about" },
+    { label: t("nav.findStore"), href: "/#stores" },
+  ];
 
   const handleNavClick = (href: string) => {
     setIsOpen(false);
@@ -31,6 +33,10 @@ export const Navbar = () => {
     } else {
       navigate(href);
     }
+  };
+
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === "lv" ? "en" : "lv");
   };
 
   return (
@@ -57,11 +63,19 @@ export const Navbar = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Language switcher */}
+          <button
+            onClick={toggleLanguage}
+            className="px-2 py-1 text-xs font-body font-bold text-white/70 hover:text-white transition-colors border border-white/20 rounded"
+          >
+            {i18n.language === "lv" ? "EN" : "LV"}
+          </button>
+
           {user ? (
             <button
               onClick={signOut}
               className="p-2 text-white/70 hover:text-white transition-colors"
-              title="Iziet"
+              title={t("auth.login")}
             >
               <LogOut className="w-5 h-5" />
             </button>
@@ -69,7 +83,7 @@ export const Navbar = () => {
             <button
               onClick={() => navigate("/auth")}
               className="p-2 text-white/70 hover:text-white transition-colors"
-              title="Pieslēgties"
+              title={t("auth.login")}
             >
               <User className="w-5 h-5" />
             </button>

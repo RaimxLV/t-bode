@@ -1,13 +1,20 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { collectionCategories } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
 import { useCollectionProducts } from "@/hooks/useProducts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
+
+const COLLECTION_CATEGORY_KEYS = [
+  { id: "all", key: "categories.allCollection" },
+  { id: "latvia", key: "categories.latvia" },
+  { id: "accessories", key: "categories.accessories" },
+];
 
 export const OurCollectionSection = () => {
   const [active, setActive] = useState("all");
   const { data: products = [], isLoading } = useCollectionProducts();
+  const { t } = useTranslation();
 
   const filtered = active === "all" ? products : products.filter((p) => p.category === active);
 
@@ -22,7 +29,7 @@ export const OurCollectionSection = () => {
           viewport={{ once: true }}
           className="text-4xl md:text-5xl text-center mb-4"
         >
-          Our Collection
+          {t("products.collectionTitle")}
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
@@ -31,11 +38,11 @@ export const OurCollectionSection = () => {
           transition={{ delay: 0.1 }}
           className="text-muted-foreground text-center mb-12 max-w-xl mx-auto font-body"
         >
-          Ready-made designs inspired by Latvia — grab your favourite and go.
+          {t("products.collectionDesc")}
         </motion.p>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {collectionCategories.map((cat) => (
+          {COLLECTION_CATEGORY_KEYS.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActive(cat.id)}
@@ -45,7 +52,7 @@ export const OurCollectionSection = () => {
                   : "bg-card text-muted-foreground border border-border hover:text-foreground"
               }`}
             >
-              {cat.label}
+              {t(cat.key)}
             </button>
           ))}
         </div>

@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Send } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const ContactSection = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const { t } = useTranslation();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Will connect to Brevo later
     console.log("Contact form:", form);
   };
 
@@ -21,12 +22,8 @@ export const ContactSection = () => {
             viewport={{ once: true }}
             className="text-center mb-10"
           >
-            <h2 className="text-4xl md:text-5xl mb-4">
-              Looking to outfit your team or planning an event?
-            </h2>
-            <p className="text-muted-foreground font-body">
-              <strong className="text-foreground">Contact us directly</strong> for competitive pricing on large-scale orders.
-            </p>
+            <h2 className="text-4xl md:text-5xl mb-4">{t("contact.title")}</h2>
+            <p className="text-muted-foreground font-body" dangerouslySetInnerHTML={{ __html: t("contact.subtitle") }} />
           </motion.div>
 
           <motion.form
@@ -38,53 +35,26 @@ export const ContactSection = () => {
             style={{ boxShadow: "var(--shadow-card)" }}
           >
             <div>
-              <label className="block text-sm font-medium font-body mb-1.5">First Name *</label>
-              <input
-                required
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <label className="block text-sm font-medium font-body mb-1.5">{t("contact.firstName")}</label>
+              <input required type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium font-body mb-1.5">Email Address *</label>
-              <input
-                required
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <label className="block text-sm font-medium font-body mb-1.5">{t("contact.email")}</label>
+              <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
-              <label className="block text-sm font-medium font-body mb-1.5">Phone Number</label>
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring"
-              />
+              <label className="block text-sm font-medium font-body mb-1.5">{t("contact.phone")}</label>
+              <input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <div>
               <label className="block text-sm font-medium font-body mb-1.5">
-                Message <span className="text-muted-foreground">({form.message.length}/300)</span>
+                {t("contact.message")} <span className="text-muted-foreground">({form.message.length}/300)</span>
               </label>
-              <textarea
-                maxLength={300}
-                rows={4}
-                value={form.message}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
-                className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-              />
+              <textarea maxLength={300} rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring resize-none" />
             </div>
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-md font-body font-semibold text-sm text-primary-foreground transition-all hover:scale-[1.02]"
-              style={{ background: "var(--gradient-brand)" }}
-            >
+            <button type="submit" className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-md font-body font-semibold text-sm text-primary-foreground transition-all hover:scale-[1.02]" style={{ background: "var(--gradient-brand)" }}>
               <Send className="w-4 h-4" />
-              Submit
+              {t("contact.submit")}
             </button>
           </motion.form>
         </div>
