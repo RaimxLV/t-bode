@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,17 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
 
+const loginSchema = z.object({
+  email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
+  password: z.string().min(6, "Parolei jābūt vismaz 6 simbolus garai"),
+});
+
+const registerSchema = loginSchema.extend({
+  fullName: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100, "Vārds pārāk garš"),
+});
+
+type FieldErrors = Record<string, string>;
+
 const Auth = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -19,20 +31,38 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
+  const [errors, setErrors] = useState<FieldErrors>({});
+
+  const validate = (): boolean => {
+    const schema = isLogin ? loginSchema : registerSchema;
+    const result = schema.safeParse(form);
+    if (!result.success) {
+      const fieldErrors: FieldErrors = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (!fieldErrors[field]) fieldErrors[field] = err.message;
+      });
+      setErrors(fieldErrors);
+      return false;
+    }
+    setErrors({});
+    return true;
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+        const { error } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password });
         if (error) throw error;
         toast.success(t("auth.loginSuccess"));
         navigate("/");
       } else {
         const { error } = await supabase.auth.signUp({
-          email: form.email, password: form.password,
-          options: { data: { full_name: form.fullName }, emailRedirectTo: window.location.origin },
+          email: form.email.trim(), password: form.password,
+          options: { data: { full_name: form.fullName.trim() }, emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
         toast.success(t("auth.registerSuccess"));
@@ -56,6 +86,11 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateField = (field: string, value: string) => {
+    setForm({ ...form, [field]: value });
+    if (errors[field]) setErrors({ ...errors, [field]: "" });
   };
 
   return (
@@ -85,32 +120,35 @@ const Auth = () => {
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground font-body">{t("auth.or")}</span>
           </div>
 
-          <form onSubmit={handleEmailAuth} className="flex flex-col gap-4">
+          <form onSubmit={handleEmailAuth} className="flex flex-col gap-4" noValidate>
             {!isLogin && (
               <div>
                 <Label htmlFor="fullName" className="font-body text-sm">{t("auth.fullName")}</Label>
                 <div className="relative mt-1">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input id="fullName" placeholder="Jānis Bērziņš" value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="pl-10" />
+                  <Input id="fullName" placeholder="Jānis Bērziņš" value={form.fullName} onChange={(e) => updateField("fullName", e.target.value)} className={`pl-10 ${errors.fullName ? "border-destructive" : ""}`} />
                 </div>
+                {errors.fullName && <p className="text-xs text-destructive mt-1 font-body">{errors.fullName}</p>}
               </div>
             )}
             <div>
               <Label htmlFor="email" className="font-body text-sm">{t("auth.emailLabel")}</Label>
               <div className="relative mt-1">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="tavs@epasts.lv" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="pl-10" required />
+                <Input id="email" type="email" placeholder="tavs@epasts.lv" value={form.email} onChange={(e) => updateField("email", e.target.value)} className={`pl-10 ${errors.email ? "border-destructive" : ""}`} />
               </div>
+              {errors.email && <p className="text-xs text-destructive mt-1 font-body">{errors.email}</p>}
             </div>
             <div>
               <Label htmlFor="password" className="font-body text-sm">{t("auth.password")}</Label>
               <div className="relative mt-1">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="pl-10 pr-10" required minLength={6} />
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={form.password} onChange={(e) => updateField("password", e.target.value)} className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {errors.password && <p className="text-xs text-destructive mt-1 font-body">{errors.password}</p>}
             </div>
             <Button type="submit" className="w-full font-body font-semibold" style={{ background: "var(--gradient-brand)" }} disabled={loading}>
               {loading ? t("auth.loading") : isLogin ? t("auth.login") : t("auth.register")}
@@ -119,7 +157,7 @@ const Auth = () => {
 
           <p className="text-center text-sm text-muted-foreground font-body mt-4">
             {isLogin ? t("auth.noAccount") : t("auth.hasAccount")}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary hover:underline font-semibold">
+            <button onClick={() => { setIsLogin(!isLogin); setErrors({}); }} className="text-primary hover:underline font-semibold">
               {isLogin ? t("auth.register") : t("auth.login")}
             </button>
           </p>

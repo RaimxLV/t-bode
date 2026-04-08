@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search } from "lucide-react";
+import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,24 @@ import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
 
+const baseSchema = z.object({
+  name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
+  phone: z.string().trim().min(8, "Ievadiet derīgu telefona numuru").max(20),
+  notes: z.string().max(500).optional(),
+});
+
+const omnivaSchema = baseSchema.extend({
+  selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu"),
+});
+
+const courierSchema = baseSchema.extend({
+  address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
+  city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
+  zip: z.string().trim().min(4, "Ievadiet pasta indeksu").max(10),
+});
+
+type FieldErrors = Record<string, string>;
+
 const Checkout = () => {
   const navigate = useNavigate();
   const { items, totalPrice, clearCart } = useCart();
@@ -30,6 +49,7 @@ const Checkout = () => {
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", address: "", city: "", zip: "", phone: "", notes: "" });
+  const [errors, setErrors] = useState<FieldErrors>({});
 
   const filteredLocations = useMemo(() => {
     if (!omnivaSearch.trim()) return locations.slice(0, 20);
@@ -39,49 +59,58 @@ const Checkout = () => {
 
   const shippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
   const orderTotal = totalPrice + shippingCost;
-  const isValid = form.name.trim() && form.phone.trim() && (shippingMethod === "omniva" ? selectedOmniva : form.address.trim() && form.city.trim() && form.zip.trim());
+
+  const updateField = (field: string, value: string) => {
+    setForm({ ...form, [field]: value });
+    if (errors[field]) setErrors({ ...errors, [field]: "" });
+  };
+
+  const validate = (): boolean => {
+    const data = shippingMethod === "omniva"
+      ? { name: form.name, phone: form.phone, notes: form.notes, selectedOmniva }
+      : { name: form.name, phone: form.phone, notes: form.notes, address: form.address, city: form.city, zip: form.zip };
+    const schema = shippingMethod === "omniva" ? omnivaSchema : courierSchema;
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      const fieldErrors: FieldErrors = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as string;
+        if (!fieldErrors[field]) fieldErrors[field] = err.message;
+      });
+      setErrors(fieldErrors);
+      return false;
+    }
+    setErrors({});
+    return true;
+  };
 
   const handleSubmit = async () => {
     if (!user) { toast.error(t("checkout.loginError")); navigate("/auth"); return; }
-    if (!isValid || items.length === 0) return;
+    if (!validate() || items.length === 0) return;
     setSubmitting(true);
     try {
-      // 1. Create order in DB with status 'pending'
       const { data: order, error: orderError } = await supabase.from("orders").insert({
-        user_id: user.id, total: orderTotal, shipping_name: form.name,
-        shipping_address: shippingMethod === "courier" ? form.address : null,
-        shipping_city: shippingMethod === "courier" ? form.city : null,
-        shipping_zip: shippingMethod === "courier" ? form.zip : null,
-        shipping_phone: form.phone,
+        user_id: user.id, total: orderTotal, shipping_name: form.name.trim(),
+        shipping_address: shippingMethod === "courier" ? form.address.trim() : null,
+        shipping_city: shippingMethod === "courier" ? form.city.trim() : null,
+        shipping_zip: shippingMethod === "courier" ? form.zip.trim() : null,
+        shipping_phone: form.phone.trim(),
         omniva_pickup_point: shippingMethod === "omniva" ? selectedOmniva : null,
-        notes: form.notes || null,
+        notes: form.notes?.trim() || null,
       }).select("id").single();
       if (orderError) throw orderError;
 
-      // 2. Save order items
       const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.productId, product_name: item.name, size: item.size, color: item.color, quantity: item.quantity, unit_price: item.price }));
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      // 3. Create Stripe Checkout session
       const stripeItems = items.map((item) => ({
-        productId: item.productId,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        size: item.size,
-        color: item.color,
-        image: item.image,
-        shippingMethod,
-        shippingCost,
+        productId: item.productId, name: item.name, price: item.price, quantity: item.quantity,
+        size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
       }));
 
       const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
-        body: {
-          order_id: order.id,
-          items: stripeItems,
-          origin_url: window.location.origin,
-        },
+        body: { order_id: order.id, items: stripeItems, origin_url: window.location.origin },
       });
 
       if (sessionError) throw sessionError;
@@ -114,6 +143,9 @@ const Checkout = () => {
     );
   }
 
+  const FieldError = ({ field }: { field: string }) =>
+    errors[field] ? <p className="text-xs text-destructive mt-1 font-body">{errors[field]}</p> : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -131,11 +163,13 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="font-body text-sm">{t("checkout.name")}</Label>
-                    <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Jānis Bērziņš" className="mt-1" maxLength={100} />
+                    <Input id="name" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="Jānis Bērziņš" className={`mt-1 ${errors.name ? "border-destructive" : ""}`} maxLength={100} />
+                    <FieldError field="name" />
                   </div>
                   <div>
                     <Label htmlFor="phone" className="font-body text-sm">{t("checkout.phone")}</Label>
-                    <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+371 20000000" className="mt-1" maxLength={20} />
+                    <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+371 20000000" className={`mt-1 ${errors.phone ? "border-destructive" : ""}`} maxLength={20} />
+                    <FieldError field="phone" />
                   </div>
                 </div>
               </section>
@@ -143,11 +177,11 @@ const Checkout = () => {
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.shippingMethod")}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button onClick={() => setShippingMethod("omniva")} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "omniva" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
+                  <button onClick={() => { setShippingMethod("omniva"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "omniva" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <MapPin className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "omniva" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.omniva")}</p><p className="text-xs text-muted-foreground font-body">2,99 €</p></div>
                   </button>
-                  <button onClick={() => setShippingMethod("courier")} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
+                  <button onClick={() => { setShippingMethod("courier"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <Truck className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "courier" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.courier")}</p><p className="text-xs text-muted-foreground font-body">4,99 €</p></div>
                   </button>
@@ -168,7 +202,7 @@ const Checkout = () => {
                           <p className="text-sm text-muted-foreground p-2 font-body">{t("checkout.notFound")}</p>
                         ) : (
                           filteredLocations.map((loc) => (
-                            <button key={loc.ZIP} onClick={() => setSelectedOmniva(loc.NAME)} className={`text-left p-2 rounded text-sm font-body transition-colors ${selectedOmniva === loc.NAME ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}>
+                            <button key={loc.ZIP} onClick={() => { setSelectedOmniva(loc.NAME); if (errors.selectedOmniva) setErrors({ ...errors, selectedOmniva: "" }); }} className={`text-left p-2 rounded text-sm font-body transition-colors ${selectedOmniva === loc.NAME ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}>
                               <span className="font-semibold">{loc.NAME}</span>
                               <span className="text-xs text-muted-foreground block">{loc.A5_NAME}, {loc.A1_NAME}</span>
                             </button>
@@ -179,6 +213,7 @@ const Checkout = () => {
                     {selectedOmniva && (
                       <p className="text-xs text-muted-foreground mt-2 font-body">{t("checkout.selected")}: <span className="font-semibold text-foreground">{selectedOmniva}</span></p>
                     )}
+                    <FieldError field="selectedOmniva" />
                   </div>
                 )}
 
@@ -186,15 +221,18 @@ const Checkout = () => {
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <Label htmlFor="address" className="font-body text-sm">{t("checkout.address")}</Label>
-                      <Input id="address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Brīvības iela 100-10" className="mt-1" maxLength={200} />
+                      <Input id="address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Brīvības iela 100-10" className={`mt-1 ${errors.address ? "border-destructive" : ""}`} maxLength={200} />
+                      <FieldError field="address" />
                     </div>
                     <div>
                       <Label htmlFor="city" className="font-body text-sm">{t("checkout.city")}</Label>
-                      <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Rīga" className="mt-1" maxLength={100} />
+                      <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder="Rīga" className={`mt-1 ${errors.city ? "border-destructive" : ""}`} maxLength={100} />
+                      <FieldError field="city" />
                     </div>
                     <div>
                       <Label htmlFor="zip" className="font-body text-sm">{t("checkout.zip")}</Label>
-                      <Input id="zip" value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} placeholder="LV-1001" className="mt-1" maxLength={10} />
+                      <Input id="zip" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
+                      <FieldError field="zip" />
                     </div>
                   </div>
                 )}
@@ -202,7 +240,7 @@ const Checkout = () => {
 
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.notes")}</h2>
-                <textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={t("checkout.notesPlaceholder")} className="w-full bg-background border border-border rounded-md p-3 text-sm font-body min-h-[80px] resize-y focus:outline-none focus:ring-2 focus:ring-ring" maxLength={500} />
+                <textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} placeholder={t("checkout.notesPlaceholder")} className="w-full bg-background border border-border rounded-md p-3 text-sm font-body min-h-[80px] resize-y focus:outline-none focus:ring-2 focus:ring-ring" maxLength={500} />
               </section>
             </motion.div>
 
@@ -231,7 +269,7 @@ const Checkout = () => {
                   <span>{t("checkout.total")}</span>
                   <span style={{ color: "hsl(var(--primary))" }}>{orderTotal.toFixed(2).replace(".", ",")} €</span>
                 </div>
-                <Button className="w-full mt-6 py-6 text-base font-body font-semibold" style={{ background: "var(--gradient-brand)" }} disabled={!isValid || submitting} onClick={handleSubmit}>
+                <Button className="w-full mt-6 py-6 text-base font-body font-semibold" style={{ background: "var(--gradient-brand)" }} disabled={submitting} onClick={handleSubmit}>
                   {submitting ? t("checkout.processing") : t("checkout.submit")}
                 </Button>
                 {!user && <p className="text-xs text-muted-foreground text-center mt-2 font-body">{t("checkout.loginRequired")}</p>}
