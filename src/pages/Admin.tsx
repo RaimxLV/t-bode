@@ -147,7 +147,7 @@ const Admin = () => {
     else { toast.success(t("admin.faqDeleted")); loadFaqs(); }
   };
 
-
+  const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
     else { toast.success(t("admin.statusUpdated")); loadOrders(); }
