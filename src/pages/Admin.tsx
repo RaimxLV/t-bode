@@ -15,73 +15,32 @@ import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, P
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
 
-interface ColorVariant {
-  name: string;
-  hex: string;
-  images: string[];
-}
-
-interface ProductForm {
-  id?: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  category: string;
-  sizes: string[];
-  customizable: boolean;
-  color_variants: ColorVariant[];
-  image_url: string;
-  in_stock: boolean;
-}
+interface ColorVariant { name: string; hex: string; images: string[]; }
+interface ProductForm { id?: string; name: string; slug: string; description: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; }
 
 const CATEGORIES = [
-  { value: "t-shirts", label: "T-krekli" },
-  { value: "hoodies", label: "Hūdiji" },
-  { value: "mugs", label: "Krūzes" },
-  { value: "bags", label: "Somas" },
-  { value: "kids", label: "Bērniem" },
-  { value: "latvia", label: "Latvija kolekcija" },
-  { value: "accessories", label: "Aksesuāri" },
+  { value: "t-shirts", labelKey: "categories.t-shirts" },
+  { value: "hoodies", labelKey: "categories.hoodies" },
+  { value: "mugs", labelKey: "categories.mugs" },
+  { value: "bags", labelKey: "categories.bags" },
+  { value: "kids", labelKey: "categories.kids" },
+  { value: "latvia", labelKey: "categories.latvia" },
+  { value: "accessories", labelKey: "categories.accessories" },
 ];
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
-type DBProduct = {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  price: number;
-  category: string;
-  sizes: string[] | null;
-  colors: string[] | null;
-  customizable: boolean;
-  color_variants: ColorVariant[];
-  image_url: string | null;
-  in_stock: boolean;
-  created_at: string;
-  updated_at: string;
-};
+type DBProduct = { id: string; name: string; slug: string; description: string | null; price: number; category: string; sizes: string[] | null; colors: string[] | null; customizable: boolean; color_variants: ColorVariant[]; image_url: string | null; in_stock: boolean; created_at: string; updated_at: string; };
 
-const EMPTY_PRODUCT: ProductForm = {
-  name: "",
-  slug: "",
-  description: "",
-  price: 0,
-  category: "t-shirts",
-  sizes: [],
-  customizable: false,
-  color_variants: [],
-  image_url: "",
-  in_stock: true,
-};
+const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true };
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
   const [checking, setChecking] = useState(true);
   const [products, setProducts] = useState<DBProduct[]>([]);
@@ -107,23 +66,18 @@ const Admin = () => {
     if (!user) { navigate("/auth"); return; }
     const checkRole = async () => {
       const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-      if (!data) { toast.error("Nav piekļuves tiesību"); navigate("/"); return; }
-      setIsAdmin(true);
-      setChecking(false);
+      if (!data) { toast.error(t("admin.noAccess")); navigate("/"); return; }
+      setIsAdmin(true); setChecking(false);
     };
     checkRole();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, t]);
 
-  useEffect(() => {
-    if (!isAdmin) return;
-    loadProducts();
-    loadOrders();
-  }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); }, [isAdmin]);
 
   const loadProducts = async () => {
     setLoadingProducts(true);
     const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
-    if (error) toast.error("Neizdevās ielādēt produktus");
+    if (error) toast.error(t("admin.loadError"));
     else setProducts((data as unknown as DBProduct[]) || []);
     setLoadingProducts(false);
   };
@@ -131,17 +85,14 @@ const Admin = () => {
   const loadOrders = async () => {
     setLoadingOrders(true);
     const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-    if (error) { toast.error("Neizdevās ielādēt pasūtījumus"); }
+    if (error) { toast.error(t("admin.orderLoadError")); }
     else {
       setOrders(data || []);
       const ids = (data || []).map((o: any) => o.id);
       if (ids.length > 0) {
         const { data: items } = await supabase.from("order_items").select("*").in("order_id", ids);
         const grouped: Record<string, any[]> = {};
-        (items || []).forEach((item: any) => {
-          if (!grouped[item.order_id]) grouped[item.order_id] = [];
-          grouped[item.order_id].push(item);
-        });
+        (items || []).forEach((item: any) => { if (!grouped[item.order_id]) grouped[item.order_id] = []; grouped[item.order_id].push(item); });
         setOrderItems(grouped);
       }
     }
@@ -150,82 +101,50 @@ const Admin = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
-    if (error) toast.error("Neizdevās atjaunināt statusu");
-    else { toast.success("Statuss atjaunināts"); loadOrders(); }
+    if (error) toast.error(t("admin.statusError"));
+    else { toast.success(t("admin.statusUpdated")); loadOrders(); }
   };
 
   const ORDER_STATUSES = [
-    { value: "pending", label: "Gaida", color: "bg-yellow-100 text-yellow-800" },
-    { value: "confirmed", label: "Apstiprināts", color: "bg-blue-100 text-blue-800" },
-    { value: "processing", label: "Apstrādē", color: "bg-purple-100 text-purple-800" },
-    { value: "shipped", label: "Nosūtīts", color: "bg-cyan-100 text-cyan-800" },
-    { value: "delivered", label: "Piegādāts", color: "bg-green-100 text-green-800" },
-    { value: "cancelled", label: "Atcelts", color: "bg-red-100 text-red-800" },
+    { value: "pending", key: "admin.orderStatuses.pending", color: "bg-yellow-100 text-yellow-800" },
+    { value: "confirmed", key: "admin.orderStatuses.confirmed", color: "bg-blue-100 text-blue-800" },
+    { value: "processing", key: "admin.orderStatuses.processing", color: "bg-purple-100 text-purple-800" },
+    { value: "shipped", key: "admin.orderStatuses.shipped", color: "bg-cyan-100 text-cyan-800" },
+    { value: "delivered", key: "admin.orderStatuses.delivered", color: "bg-green-100 text-green-800" },
+    { value: "cancelled", key: "admin.orderStatuses.cancelled", color: "bg-red-100 text-red-800" },
   ];
 
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
-
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const openCreateDialog = (forDesign: boolean) => {
-    setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign });
-    setDialogOpen(true);
-  };
-
+  const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
-    setEditingProduct({
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      description: product.description || "",
-      price: product.price,
-      category: product.category,
-      sizes: product.sizes || [],
-      customizable: product.customizable,
-      color_variants: (product.color_variants as ColorVariant[]) || [],
-      image_url: product.image_url || "",
-      in_stock: product.in_stock,
-    });
+    setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!editingProduct) return;
-    if (!editingProduct.name || !editingProduct.slug) { toast.error("Nosaukums un slug ir obligāti"); return; }
+    if (!editingProduct.name || !editingProduct.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = {
-      name: editingProduct.name,
-      slug: editingProduct.slug,
-      description: editingProduct.description || null,
-      price: editingProduct.price,
-      category: editingProduct.category,
-      sizes: editingProduct.sizes,
-      colors: editingProduct.color_variants.map((c) => c.name),
-      customizable: editingProduct.customizable,
-      color_variants: JSON.parse(JSON.stringify(editingProduct.color_variants)),
-      image_url: editingProduct.image_url || null,
-      in_stock: editingProduct.in_stock,
-    };
+    const payload = { name: editingProduct.name, slug: editingProduct.slug, description: editingProduct.description || null, price: editingProduct.price, category: editingProduct.category, sizes: editingProduct.sizes, colors: editingProduct.color_variants.map((c) => c.name), customizable: editingProduct.customizable, color_variants: JSON.parse(JSON.stringify(editingProduct.color_variants)), image_url: editingProduct.image_url || null, in_stock: editingProduct.in_stock };
     if (editingProduct.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id);
-      if (error) toast.error("Neizdevās saglabāt: " + error.message);
-      else toast.success("Produkts saglabāts!");
+      if (error) toast.error(t("admin.saveError") + ": " + error.message);
+      else toast.success(t("admin.productSaved"));
     } else {
       const { error } = await supabase.from("products").insert(payload);
-      if (error) toast.error("Neizdevās izveidot: " + error.message);
-      else toast.success("Produkts izveidots!");
+      if (error) toast.error(t("admin.createError") + ": " + error.message);
+      else toast.success(t("admin.productCreated"));
     }
-    setSaving(false);
-    setDialogOpen(false);
-    setEditingProduct(null);
-    loadProducts();
+    setSaving(false); setDialogOpen(false); setEditingProduct(null); loadProducts();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Vai tiešām dzēst šo produktu?")) return;
+    if (!confirm(t("admin.deleteConfirm"))) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) toast.error("Neizdevās dzēst: " + error.message);
-    else { toast.success("Produkts dzēsts"); loadProducts(); }
+    if (error) toast.error(t("admin.deleteError") + ": " + error.message);
+    else { toast.success(t("admin.productDeleted")); loadProducts(); }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | { colorIndex: number }) => {
@@ -236,91 +155,44 @@ const Admin = () => {
     const ext = file.name.split(".").pop();
     const path = `${editingProduct.slug || "temp"}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-    if (error) { toast.error("Neizdevās augšupielādēt bildi"); setUploadingImage(null); return; }
+    if (error) { toast.error(t("admin.uploadError")); setUploadingImage(null); return; }
     const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
     const url = urlData.publicUrl;
-    if (target === "main") {
-      setEditingProduct({ ...editingProduct, image_url: url });
-    } else {
-      const variants = [...editingProduct.color_variants];
-      variants[target.colorIndex].images.push(url);
-      setEditingProduct({ ...editingProduct, color_variants: variants });
-    }
+    if (target === "main") { setEditingProduct({ ...editingProduct, image_url: url }); }
+    else { const variants = [...editingProduct.color_variants]; variants[target.colorIndex].images.push(url); setEditingProduct({ ...editingProduct, color_variants: variants }); }
     setUploadingImage(null);
   };
 
-  const addColorVariant = () => {
-    if (!editingProduct) return;
-    setEditingProduct({ ...editingProduct, color_variants: [...editingProduct.color_variants, { name: "", hex: "#000000", images: [] }] });
-  };
-  const removeColorVariant = (index: number) => {
-    if (!editingProduct) return;
-    setEditingProduct({ ...editingProduct, color_variants: editingProduct.color_variants.filter((_, i) => i !== index) });
-  };
-  const updateColorVariant = (index: number, field: keyof ColorVariant, value: string | string[]) => {
-    if (!editingProduct) return;
-    const variants = [...editingProduct.color_variants];
-    (variants[index] as any)[field] = value;
-    setEditingProduct({ ...editingProduct, color_variants: variants });
-  };
-  const removeColorImage = (colorIndex: number, imageIndex: number) => {
-    if (!editingProduct) return;
-    const variants = [...editingProduct.color_variants];
-    variants[colorIndex].images = variants[colorIndex].images.filter((_, i) => i !== imageIndex);
-    setEditingProduct({ ...editingProduct, color_variants: variants });
-  };
-  const toggleSize = (size: string) => {
-    if (!editingProduct) return;
-    const sizes = editingProduct.sizes.includes(size) ? editingProduct.sizes.filter((s) => s !== size) : [...editingProduct.sizes, size];
-    setEditingProduct({ ...editingProduct, sizes });
-  };
-  const addCustomSize = () => {
-    if (!editingProduct || !newSize.trim()) return;
-    if (!editingProduct.sizes.includes(newSize.trim())) {
-      setEditingProduct({ ...editingProduct, sizes: [...editingProduct.sizes, newSize.trim()] });
-    }
-    setNewSize("");
-  };
+  const addColorVariant = () => { if (!editingProduct) return; setEditingProduct({ ...editingProduct, color_variants: [...editingProduct.color_variants, { name: "", hex: "#000000", images: [] }] }); };
+  const removeColorVariant = (index: number) => { if (!editingProduct) return; setEditingProduct({ ...editingProduct, color_variants: editingProduct.color_variants.filter((_, i) => i !== index) }); };
+  const updateColorVariant = (index: number, field: keyof ColorVariant, value: string | string[]) => { if (!editingProduct) return; const variants = [...editingProduct.color_variants]; (variants[index] as any)[field] = value; setEditingProduct({ ...editingProduct, color_variants: variants }); };
+  const removeColorImage = (colorIndex: number, imageIndex: number) => { if (!editingProduct) return; const variants = [...editingProduct.color_variants]; variants[colorIndex].images = variants[colorIndex].images.filter((_, i) => i !== imageIndex); setEditingProduct({ ...editingProduct, color_variants: variants }); };
+  const toggleSize = (size: string) => { if (!editingProduct) return; const sizes = editingProduct.sizes.includes(size) ? editingProduct.sizes.filter((s) => s !== size) : [...editingProduct.sizes, size]; setEditingProduct({ ...editingProduct, sizes }); };
+  const addCustomSize = () => { if (!editingProduct || !newSize.trim()) return; if (!editingProduct.sizes.includes(newSize.trim())) { setEditingProduct({ ...editingProduct, sizes: [...editingProduct.sizes, newSize.trim()] }); } setNewSize(""); };
 
   if (authLoading || checking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <p className="text-muted-foreground font-body">Ielādē...</p>
-      </div>
-    );
+    return (<div className="min-h-screen flex items-center justify-center bg-background"><p className="text-muted-foreground font-body">{t("admin.loading")}</p></div>);
   }
   if (!isAdmin) return null;
 
   const renderProductGrid = (items: DBProduct[]) => (
     items.length === 0 ? (
-      <div className="text-center py-20">
-        <p className="text-muted-foreground font-body mb-4">Nav neviena produkta</p>
-      </div>
+      <div className="text-center py-20"><p className="text-muted-foreground font-body mb-4">{t("admin.noProducts")}</p></div>
     ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.map((p) => (
           <Card key={p.id} className="overflow-hidden">
             <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-              {p.image_url ? (
-                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-              ) : (
-                <ImagePlus className="w-10 h-10 text-muted-foreground" />
-              )}
+              {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : <ImagePlus className="w-10 h-10 text-muted-foreground" />}
             </div>
             <CardContent className="p-4">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-body font-semibold text-sm">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground font-body">
-                    {p.price.toFixed(2)} € · {p.category}
-                  </p>
+                  <p className="text-xs text-muted-foreground font-body">{p.price.toFixed(2)} € · {p.category}</p>
                   <div className="flex gap-1 mt-2">
-                    {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (
-                      <div key={i} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />
-                    ))}
-                    {((p.color_variants as ColorVariant[]) || []).length > 8 && (
-                      <span className="text-xs text-muted-foreground">+{(p.color_variants as ColorVariant[]).length - 8}</span>
-                    )}
+                    {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (<div key={i} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />))}
+                    {((p.color_variants as ColorVariant[]) || []).length > 8 && <span className="text-xs text-muted-foreground">+{(p.color_variants as ColorVariant[]).length - 8}</span>}
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -340,11 +212,9 @@ const Admin = () => {
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}><ArrowLeft className="w-5 h-5" /></Button>
             <img src={logo} alt="T-Bode" className="h-8" />
-            <span className="font-display text-lg tracking-wide">DARBINIEKA PANELIS</span>
+            <span className="font-display text-lg tracking-wide">{t("admin.panel")}</span>
           </div>
         </div>
       </header>
@@ -352,76 +222,54 @@ const Admin = () => {
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="design" className="gap-2">
-              <Brush className="w-4 h-4" /> Design Your Own
-              <Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="collection" className="gap-2">
-              <ShoppingBag className="w-4 h-4" /> Our Collection
-              <Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2">
-              <Package className="w-4 h-4" /> Pasūtījumi
-              {orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}
-            </TabsTrigger>
+            <TabsTrigger value="design" className="gap-2"><Brush className="w-4 h-4" /> {t("admin.designTab")}<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="collection" className="gap-2"><ShoppingBag className="w-4 h-4" /> {t("admin.collectionTab")}<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2"><Package className="w-4 h-4" /> {t("admin.ordersTab")}{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
           </TabsList>
 
-          {/* Design Your Own Tab */}
           <TabsContent value="design">
             <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" /> Jauns personalizējams produkts
-              </Button>
+              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newDesignProduct")}</Button>
             </div>
-            {loadingProducts ? (
-              <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
-            ) : renderProductGrid(designProducts)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(designProducts)}
           </TabsContent>
 
-          {/* Our Collection Tab */}
           <TabsContent value="collection">
             <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts
-              </Button>
+              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newCollectionProduct")}</Button>
             </div>
-            {loadingProducts ? (
-              <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
-            ) : renderProductGrid(collectionProducts)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts)}
           </TabsContent>
 
-          {/* Orders Tab */}
           <TabsContent value="orders">
             <div className="flex flex-wrap items-end gap-3 mb-4">
               <div>
-                <Label className="font-body text-xs text-muted-foreground">Statuss</Label>
+                <Label className="font-body text-xs text-muted-foreground">{t("admin.filterStatus")}</Label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-[140px] text-xs mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all" className="text-xs">Visi</SelectItem>
-                    {ORDER_STATUSES.map((s) => (
-                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
-                    ))}
+                    <SelectItem value="all" className="text-xs">{t("admin.filterAll")}</SelectItem>
+                    {ORDER_STATUSES.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="font-body text-xs text-muted-foreground">No datuma</Label>
+                <Label className="font-body text-xs text-muted-foreground">{t("admin.filterDateFrom")}</Label>
                 <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-[150px] text-xs mt-1" />
               </div>
               <div>
-                <Label className="font-body text-xs text-muted-foreground">Līdz datumam</Label>
+                <Label className="font-body text-xs text-muted-foreground">{t("admin.filterDateTo")}</Label>
                 <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-[150px] text-xs mt-1" />
               </div>
               {(filterStatus !== "all" || filterDateFrom || filterDateTo) && (
                 <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setFilterStatus("all"); setFilterDateFrom(""); setFilterDateTo(""); }}>
-                  <X className="w-3 h-3 mr-1" /> Notīrīt
+                  <X className="w-3 h-3 mr-1" /> {t("admin.clearFilters")}
                 </Button>
               )}
             </div>
 
             {loadingOrders ? (
-              <p className="text-muted-foreground text-center py-12 font-body">Ielādē pasūtījumus...</p>
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingOrders")}</p>
             ) : (() => {
               const filteredOrders = orders.filter((order) => {
                 if (filterStatus !== "all" && order.status !== filterStatus) return false;
@@ -430,7 +278,7 @@ const Admin = () => {
                 return true;
               });
               return filteredOrders.length === 0 ? (
-                <div className="text-center py-20"><p className="text-muted-foreground font-body">Nav pasūtījumu ar šādiem filtriem</p></div>
+                <div className="text-center py-20"><p className="text-muted-foreground font-body">{t("admin.noOrders")}</p></div>
               ) : (
                 <div className="space-y-4">
                   {filteredOrders.map((order) => {
@@ -443,10 +291,8 @@ const Admin = () => {
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <span className="font-body font-semibold text-sm">#{order.id.slice(0, 8)}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
-                                <span className="text-xs text-muted-foreground font-body">
-                                  {new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                                </span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>{t(statusInfo.key)}</span>
+                                <span className="text-xs text-muted-foreground font-body">{new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                               </div>
                               <div className="text-xs text-muted-foreground font-body space-y-1">
                                 {order.shipping_name && <p>👤 {order.shipping_name} · {order.shipping_phone}</p>}
@@ -459,11 +305,11 @@ const Admin = () => {
                                   <Table>
                                     <TableHeader>
                                       <TableRow>
-                                        <TableHead className="text-xs">Produkts</TableHead>
-                                        <TableHead className="text-xs">Izmērs</TableHead>
-                                        <TableHead className="text-xs">Krāsa</TableHead>
-                                        <TableHead className="text-xs text-right">Skaits</TableHead>
-                                        <TableHead className="text-xs text-right">Cena</TableHead>
+                                        <TableHead className="text-xs">{t("admin.orderProduct")}</TableHead>
+                                        <TableHead className="text-xs">{t("admin.orderSize")}</TableHead>
+                                        <TableHead className="text-xs">{t("admin.orderColor")}</TableHead>
+                                        <TableHead className="text-xs text-right">{t("admin.orderQty")}</TableHead>
+                                        <TableHead className="text-xs text-right">{t("admin.orderPrice")}</TableHead>
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -486,9 +332,7 @@ const Admin = () => {
                               <Select value={order.status} onValueChange={(v) => updateOrderStatus(order.id, v)}>
                                 <SelectTrigger className="w-[140px] text-xs"><SelectValue /></SelectTrigger>
                                 <SelectContent>
-                                  {ORDER_STATUSES.map((s) => (
-                                    <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
-                                  ))}
+                                  {ORDER_STATUSES.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
                                 </SelectContent>
                               </Select>
                             </div>
@@ -504,100 +348,91 @@ const Admin = () => {
         </Tabs>
       </main>
 
-      {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">
-              {editingProduct?.id ? "Rediģēt produktu" : "Jauns produkts"}
-            </DialogTitle>
+            <DialogTitle className="font-display text-xl">{editingProduct?.id ? t("admin.editProduct") : t("admin.newProduct")}</DialogTitle>
           </DialogHeader>
 
           {editingProduct && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-body text-sm">Nosaukums</Label>
-                  <Input value={editingProduct.name} onChange={(e) => { const name = e.target.value; setEditingProduct({ ...editingProduct, name, slug: editingProduct.id ? editingProduct.slug : generateSlug(name) }); }} placeholder="Produkta nosaukums" className="mt-1" />
+                  <Label className="font-body text-sm">{t("admin.productName")}</Label>
+                  <Input value={editingProduct.name} onChange={(e) => { const name = e.target.value; setEditingProduct({ ...editingProduct, name, slug: editingProduct.id ? editingProduct.slug : generateSlug(name) }); }} placeholder={t("admin.productName")} className="mt-1" />
                 </div>
                 <div>
-                  <Label className="font-body text-sm">Slug (URL)</Label>
+                  <Label className="font-body text-sm">{t("admin.slug")}</Label>
                   <Input value={editingProduct.slug} onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })} placeholder="produkta-slug" className="mt-1" />
                 </div>
                 <div>
-                  <Label className="font-body text-sm">Cena (€)</Label>
+                  <Label className="font-body text-sm">{t("admin.price")}</Label>
                   <Input type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })} className="mt-1" />
                 </div>
                 <div>
-                  <Label className="font-body text-sm">Kategorija</Label>
+                  <Label className="font-body text-sm">{t("admin.category")}</Label>
                   <Select value={editingProduct.category} onValueChange={(v) => setEditingProduct({ ...editingProduct, category: v })}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => (<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
-                    </SelectContent>
+                    <SelectContent>{CATEGORIES.map((c) => (<SelectItem key={c.value} value={c.value}>{t(c.labelKey)}</SelectItem>))}</SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div>
-                <Label className="font-body text-sm">Apraksts</Label>
-                <Textarea value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder="Produkta apraksts..." className="mt-1" rows={3} />
+                <Label className="font-body text-sm">{t("admin.description")}</Label>
+                <Textarea value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder={t("admin.description")} className="mt-1" rows={3} />
               </div>
 
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Switch checked={editingProduct.customizable} onCheckedChange={(v) => setEditingProduct({ ...editingProduct, customizable: v })} />
-                  <Label className="font-body text-sm">Personalizējams (Zakeke)</Label>
+                  <Label className="font-body text-sm">{t("admin.customizable")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch checked={editingProduct.in_stock} onCheckedChange={(v) => setEditingProduct({ ...editingProduct, in_stock: v })} />
-                  <Label className="font-body text-sm">Noliktavā</Label>
+                  <Label className="font-body text-sm">{t("admin.inStock")}</Label>
                 </div>
               </div>
 
               <div>
-                <Label className="font-body text-sm">Galvenā bilde</Label>
+                <Label className="font-body text-sm">{t("admin.mainImage")}</Label>
                 <div className="mt-1 flex items-center gap-3">
                   {editingProduct.image_url && <img src={editingProduct.image_url} alt="Main" className="w-20 h-20 object-cover rounded border border-border" />}
                   <label className="cursor-pointer">
                     <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted text-sm font-body">
                       <Upload className="w-4 h-4" />
-                      {uploadingImage === "main" ? "Augšupielādē..." : "Augšupielādēt"}
+                      {uploadingImage === "main" ? t("admin.uploading") : t("admin.upload")}
                     </div>
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "main")} disabled={uploadingImage === "main"} />
                   </label>
-                  {editingProduct.image_url && (
-                    <Input value={editingProduct.image_url} onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })} placeholder="Vai ievadi URL" className="flex-1" />
-                  )}
+                  {editingProduct.image_url && <Input value={editingProduct.image_url} onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })} placeholder={t("admin.orEnterUrl")} className="flex-1" />}
                 </div>
               </div>
 
               <div>
-                <Label className="font-body text-sm">Izmēri</Label>
+                <Label className="font-body text-sm">{t("admin.sizes")}</Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {COMMON_SIZES.map((size) => (
-                    <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1 text-xs font-body rounded-md border transition-colors ${editingProduct.sizes.includes(size) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/40"}`}>
-                      {size}
-                    </button>
+                    <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1 text-xs font-body rounded-md border transition-colors ${editingProduct.sizes.includes(size) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/40"}`}>{size}</button>
                   ))}
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Input value={newSize} onChange={(e) => setNewSize(e.target.value)} placeholder="Cits izmērs..." className="w-32" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomSize())} />
-                  <Button variant="outline" size="sm" onClick={addCustomSize}>Pievienot</Button>
+                  <Input value={newSize} onChange={(e) => setNewSize(e.target.value)} placeholder={t("admin.otherSize")} className="w-32" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomSize())} />
+                  <Button variant="outline" size="sm" onClick={addCustomSize}>{t("admin.add")}</Button>
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="font-body text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> Krāsu variācijas</Label>
-                  <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> Pievienot krāsu</Button>
+                  <Label className="font-body text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> {t("admin.colorVariants")}</Label>
+                  <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> {t("admin.addColor")}</Button>
                 </div>
                 <div className="space-y-4">
                   {editingProduct.color_variants.map((variant, ci) => (
                     <Card key={ci} className="p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
-                        <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder="Krāsas nosaukums" className="flex-1" />
+                        <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1" />
                         <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-28" />
                         <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                       </div>
@@ -605,9 +440,7 @@ const Admin = () => {
                         {variant.images.map((img, ii) => (
                           <div key={ii} className="relative group">
                             <img src={img} alt="" className="w-16 h-16 object-cover rounded border border-border" />
-                            <button onClick={() => removeColorImage(ci, ii)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                              <X className="w-3 h-3" />
-                            </button>
+                            <button onClick={() => removeColorImage(ci, ii)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
                           </div>
                         ))}
                         <label className="cursor-pointer w-16 h-16 border border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 transition-colors">
@@ -621,10 +454,10 @@ const Admin = () => {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>Atcelt</Button>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>{t("admin.cancel")}</Button>
                 <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground">
                   <Save className="w-4 h-4 mr-2" />
-                  {saving ? "Saglabā..." : "Saglabāt"}
+                  {saving ? t("admin.saving") : t("admin.save")}
                 </Button>
               </div>
             </div>

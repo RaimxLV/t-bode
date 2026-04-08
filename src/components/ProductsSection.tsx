@@ -1,13 +1,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { designCategories } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
 import { useDesignProducts } from "@/hooks/useProducts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
+
+const DESIGN_CATEGORY_KEYS = [
+  { id: "all", key: "categories.all" },
+  { id: "t-shirts", key: "categories.t-shirts" },
+  { id: "hoodies", key: "categories.hoodies" },
+  { id: "mugs", key: "categories.mugs" },
+  { id: "bags", key: "categories.bags" },
+  { id: "kids", key: "categories.kids" },
+];
 
 export const ProductsSection = () => {
   const [active, setActive] = useState("all");
   const { data: products = [], isLoading } = useDesignProducts();
+  const { t } = useTranslation();
 
   const filtered = active === "all" ? products : products.filter((p) => p.category === active);
 
@@ -20,7 +30,7 @@ export const ProductsSection = () => {
           viewport={{ once: true }}
           className="text-4xl md:text-5xl text-center mb-4"
         >
-          Design Your Own
+          {t("products.designTitle")}
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
@@ -29,11 +39,11 @@ export const ProductsSection = () => {
           transition={{ delay: 0.1 }}
           className="text-muted-foreground text-center mb-12 max-w-xl mx-auto font-body"
         >
-          Choose a blank product, then personalise it with your own design using our editor.
+          {t("products.designDesc")}
         </motion.p>
 
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {designCategories.map((cat) => (
+          {DESIGN_CATEGORY_KEYS.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActive(cat.id)}
@@ -43,7 +53,7 @@ export const ProductsSection = () => {
                   : "bg-card text-muted-foreground border border-border hover:text-foreground"
               }`}
             >
-              {cat.label}
+              {t(cat.key)}
             </button>
           ))}
         </div>
