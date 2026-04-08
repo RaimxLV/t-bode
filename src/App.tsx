@@ -21,8 +21,8 @@ const App = () => (
         <CartProvider>
           <Toaster />
           <Sonner />
-          <CartSidebar />
           <BrowserRouter>
+            <CartSidebar />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
