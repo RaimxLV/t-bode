@@ -11,7 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import logo from "@/assets/logo.svg";
 
 interface ColorVariant {
