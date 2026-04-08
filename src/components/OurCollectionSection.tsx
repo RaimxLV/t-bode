@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductFilters } from "@/components/ProductFilters";
 import { useCollectionProducts } from "@/hooks/useProducts";
+import { useProductFilters } from "@/hooks/useProductFilters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 
@@ -12,11 +14,26 @@ const COLLECTION_CATEGORY_KEYS = [
 ];
 
 export const OurCollectionSection = () => {
-  const [active, setActive] = useState("all");
   const { data: products = [], isLoading } = useCollectionProducts();
+  const { filters, setFilter, clearFilters, hasActiveFilters } = useProductFilters();
   const { t } = useTranslation();
 
-  const filtered = active === "all" ? products : products.filter((p) => p.category === active);
+  const filtered = useMemo(() => {
+    return products.filter((p) => {
+      if (filters.category !== "all" && p.category !== filters.category) return false;
+      if (filters.colors.length > 0) {
+        const productColors = (p.color_variants || []).map((c) => c.hex.toLowerCase());
+        if (!filters.colors.some((c) => productColors.includes(c))) return false;
+      }
+      if (filters.sizes.length > 0) {
+        const productSizes = p.sizes || [];
+        if (!filters.sizes.some((s) => productSizes.includes(s))) return false;
+      }
+      if (filters.priceMin !== null && p.price < filters.priceMin) return false;
+      if (filters.priceMax !== null && p.price > filters.priceMax) return false;
+      return true;
+    });
+  }, [products, filters]);
 
   if (!isLoading && products.length === 0) return null;
 
@@ -41,41 +58,40 @@ export const OurCollectionSection = () => {
           {t("products.collectionDesc")}
         </motion.p>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {COLLECTION_CATEGORY_KEYS.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActive(cat.id)}
-              className={`px-5 py-2 rounded-full text-sm font-body font-medium transition-all ${
-                active === cat.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-card text-muted-foreground border border-border hover:text-foreground"
-              }`}
-            >
-              {t(cat.key)}
-            </button>
-          ))}
-        </div>
+        <ProductFilters
+          categories={COLLECTION_CATEGORY_KEYS}
+          products={products}
+          filters={filters}
+          setFilter={setFilter}
+          clearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
 
-        {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
-                <Skeleton className="aspect-square w-full" />
-                <div className="p-3 sm:p-4 space-y-2">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-6 w-1/2" />
+        <div className="mt-8">
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
+                  <Skeleton className="aspect-square w-full" />
+                  <div className="p-3 sm:p-4 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-6 w-1/2" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-            {filtered.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground font-body">{t("products.noProducts")}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              {filtered.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
