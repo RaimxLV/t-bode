@@ -59,6 +59,7 @@ const Admin = () => {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [adminCategoryFilter, setAdminCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
