@@ -6,6 +6,8 @@ import { products } from "@/data/products";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 const sizeOptions: Record<string, string[]> = {
   "t-shirts": ["XS", "S", "M", "L", "XL", "XXL"],
