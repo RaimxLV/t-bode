@@ -209,12 +209,12 @@ const Admin = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}><ArrowLeft className="w-5 h-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-white/70 hover:text-white hover:bg-white/10"><ArrowLeft className="w-5 h-5" /></Button>
             <img src={logo} alt="T-Bode" className="h-8" />
-            <span className="font-display text-lg tracking-wide">{t("admin.panel")}</span>
+            <span className="font-display text-lg tracking-wide text-white">{t("admin.panel")}</span>
           </div>
         </div>
       </header>
