@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 
 export const Footer = () => {
+  const navigate = useNavigate();
   return (
     <footer className="bg-card border-t border-border py-12">
       <div className="container mx-auto px-4">
