@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag, Brush } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -36,19 +36,6 @@ interface ProductForm {
   image_url: string;
   in_stock: boolean;
 }
-
-const EMPTY_PRODUCT: ProductForm = {
-  name: "",
-  slug: "",
-  description: "",
-  price: 0,
-  category: "t-shirts",
-  sizes: [],
-  customizable: false,
-  color_variants: [],
-  image_url: "",
-  in_stock: true,
-};
 
 const CATEGORIES = [
   { value: "t-shirts", label: "T-krekli" },
@@ -79,6 +66,19 @@ type DBProduct = {
   updated_at: string;
 };
 
+const EMPTY_PRODUCT: ProductForm = {
+  name: "",
+  slug: "",
+  description: "",
+  price: 0,
+  category: "t-shirts",
+  sizes: [],
+  customizable: false,
+  color_variants: [],
+  image_url: "",
+  in_stock: true,
+};
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("products");
+  const [activeTab, setActiveTab] = useState("design");
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
@@ -99,30 +99,21 @@ const Admin = () => {
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
 
-  // Check admin role
+  const designProducts = products.filter((p) => p.customizable);
+  const collectionProducts = products.filter((p) => !p.customizable);
+
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
+    if (!user) { navigate("/auth"); return; }
     const checkRole = async () => {
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      if (!data) {
-        toast.error("Nav piekļuves tiesību");
-        navigate("/");
-        return;
-      }
+      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!data) { toast.error("Nav piekļuves tiesību"); navigate("/"); return; }
       setIsAdmin(true);
       setChecking(false);
     };
     checkRole();
   }, [user, authLoading, navigate]);
 
-  // Load products
   useEffect(() => {
     if (!isAdmin) return;
     loadProducts();
@@ -131,35 +122,21 @@ const Admin = () => {
 
   const loadProducts = async () => {
     setLoadingProducts(true);
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Neizdevās ielādēt produktus");
-    } else {
-      setProducts((data as unknown as DBProduct[]) || []);
-    }
+    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    if (error) toast.error("Neizdevās ielādēt produktus");
+    else setProducts((data as unknown as DBProduct[]) || []);
     setLoadingProducts(false);
   };
 
   const loadOrders = async () => {
     setLoadingOrders(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) {
-      toast.error("Neizdevās ielādēt pasūtījumus");
-    } else {
+    const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+    if (error) { toast.error("Neizdevās ielādēt pasūtījumus"); }
+    else {
       setOrders(data || []);
-      // Load order items for each order
       const ids = (data || []).map((o: any) => o.id);
       if (ids.length > 0) {
-        const { data: items } = await supabase
-          .from("order_items")
-          .select("*")
-          .in("order_id", ids);
+        const { data: items } = await supabase.from("order_items").select("*").in("order_id", ids);
         const grouped: Record<string, any[]> = {};
         (items || []).forEach((item: any) => {
           if (!grouped[item.order_id]) grouped[item.order_id] = [];
@@ -172,35 +149,26 @@ const Admin = () => {
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: status as "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" })
-      .eq("id", orderId);
-    if (error) {
-      toast.error("Neizdevās atjaunināt statusu");
-    } else {
-      toast.success("Statuss atjaunināts");
-      loadOrders();
-    }
+    const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
+    if (error) toast.error("Neizdevās atjaunināt statusu");
+    else { toast.success("Statuss atjaunināts"); loadOrders(); }
   };
 
   const ORDER_STATUSES = [
-    { value: "pending", label: "Gaida", color: "bg-yellow-500/20 text-yellow-400" },
-    { value: "confirmed", label: "Apstiprināts", color: "bg-blue-500/20 text-blue-400" },
-    { value: "processing", label: "Apstrādē", color: "bg-purple-500/20 text-purple-400" },
-    { value: "shipped", label: "Nosūtīts", color: "bg-cyan-500/20 text-cyan-400" },
-    { value: "delivered", label: "Piegādāts", color: "bg-green-500/20 text-green-400" },
-    { value: "cancelled", label: "Atcelts", color: "bg-red-500/20 text-red-400" },
+    { value: "pending", label: "Gaida", color: "bg-yellow-100 text-yellow-800" },
+    { value: "confirmed", label: "Apstiprināts", color: "bg-blue-100 text-blue-800" },
+    { value: "processing", label: "Apstrādē", color: "bg-purple-100 text-purple-800" },
+    { value: "shipped", label: "Nosūtīts", color: "bg-cyan-100 text-cyan-800" },
+    { value: "delivered", label: "Piegādāts", color: "bg-green-100 text-green-800" },
+    { value: "cancelled", label: "Atcelts", color: "bg-red-100 text-red-800" },
   ];
 
-  const getStatusInfo = (status: string) =>
-    ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
+  const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
 
-  const generateSlug = (name: string) =>
-    name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const openCreateDialog = () => {
-    setEditingProduct({ ...EMPTY_PRODUCT });
+  const openCreateDialog = (forDesign: boolean) => {
+    setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign });
     setDialogOpen(true);
   };
 
@@ -223,10 +191,7 @@ const Admin = () => {
 
   const handleSave = async () => {
     if (!editingProduct) return;
-    if (!editingProduct.name || !editingProduct.slug) {
-      toast.error("Nosaukums un slug ir obligāti");
-      return;
-    }
+    if (!editingProduct.name || !editingProduct.slug) { toast.error("Nosaukums un slug ir obligāti"); return; }
     setSaving(true);
     const payload = {
       name: editingProduct.name,
@@ -241,12 +206,8 @@ const Admin = () => {
       image_url: editingProduct.image_url || null,
       in_stock: editingProduct.in_stock,
     };
-
     if (editingProduct.id) {
-      const { error } = await supabase
-        .from("products")
-        .update(payload)
-        .eq("id", editingProduct.id);
+      const { error } = await supabase.from("products").update(payload).eq("id", editingProduct.id);
       if (error) toast.error("Neizdevās saglabāt: " + error.message);
       else toast.success("Produkts saglabāts!");
     } else {
@@ -264,40 +225,20 @@ const Admin = () => {
     if (!confirm("Vai tiešām dzēst šo produktu?")) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) toast.error("Neizdevās dzēst: " + error.message);
-    else {
-      toast.success("Produkts dzēsts");
-      loadProducts();
-    }
+    else { toast.success("Produkts dzēsts"); loadProducts(); }
   };
 
-  const handleImageUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    target: "main" | { colorIndex: number }
-  ) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | { colorIndex: number }) => {
     const file = e.target.files?.[0];
     if (!file || !editingProduct) return;
     const key = typeof target === "string" ? "main" : `color-${target.colorIndex}`;
     setUploadingImage(key);
-
     const ext = file.name.split(".").pop();
     const path = `${editingProduct.slug || "temp"}/${Date.now()}.${ext}`;
-
-    const { error } = await supabase.storage
-      .from("product-images")
-      .upload(path, file, { upsert: true });
-
-    if (error) {
-      toast.error("Neizdevās augšupielādēt bildi");
-      setUploadingImage(null);
-      return;
-    }
-
-    const { data: urlData } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(path);
-
+    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+    if (error) { toast.error("Neizdevās augšupielādēt bildi"); setUploadingImage(null); return; }
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
     const url = urlData.publicUrl;
-
     if (target === "main") {
       setEditingProduct({ ...editingProduct, image_url: url });
     } else {
@@ -310,50 +251,33 @@ const Admin = () => {
 
   const addColorVariant = () => {
     if (!editingProduct) return;
-    setEditingProduct({
-      ...editingProduct,
-      color_variants: [
-        ...editingProduct.color_variants,
-        { name: "", hex: "#000000", images: [] },
-      ],
-    });
+    setEditingProduct({ ...editingProduct, color_variants: [...editingProduct.color_variants, { name: "", hex: "#000000", images: [] }] });
   };
-
   const removeColorVariant = (index: number) => {
     if (!editingProduct) return;
-    const variants = editingProduct.color_variants.filter((_, i) => i !== index);
-    setEditingProduct({ ...editingProduct, color_variants: variants });
+    setEditingProduct({ ...editingProduct, color_variants: editingProduct.color_variants.filter((_, i) => i !== index) });
   };
-
   const updateColorVariant = (index: number, field: keyof ColorVariant, value: string | string[]) => {
     if (!editingProduct) return;
     const variants = [...editingProduct.color_variants];
     (variants[index] as any)[field] = value;
     setEditingProduct({ ...editingProduct, color_variants: variants });
   };
-
   const removeColorImage = (colorIndex: number, imageIndex: number) => {
     if (!editingProduct) return;
     const variants = [...editingProduct.color_variants];
     variants[colorIndex].images = variants[colorIndex].images.filter((_, i) => i !== imageIndex);
     setEditingProduct({ ...editingProduct, color_variants: variants });
   };
-
   const toggleSize = (size: string) => {
     if (!editingProduct) return;
-    const sizes = editingProduct.sizes.includes(size)
-      ? editingProduct.sizes.filter((s) => s !== size)
-      : [...editingProduct.sizes, size];
+    const sizes = editingProduct.sizes.includes(size) ? editingProduct.sizes.filter((s) => s !== size) : [...editingProduct.sizes, size];
     setEditingProduct({ ...editingProduct, sizes });
   };
-
   const addCustomSize = () => {
     if (!editingProduct || !newSize.trim()) return;
     if (!editingProduct.sizes.includes(newSize.trim())) {
-      setEditingProduct({
-        ...editingProduct,
-        sizes: [...editingProduct.sizes, newSize.trim()],
-      });
+      setEditingProduct({ ...editingProduct, sizes: [...editingProduct.sizes, newSize.trim()] });
     }
     setNewSize("");
   };
@@ -365,12 +289,54 @@ const Admin = () => {
       </div>
     );
   }
-
   if (!isAdmin) return null;
+
+  const renderProductGrid = (items: DBProduct[]) => (
+    items.length === 0 ? (
+      <div className="text-center py-20">
+        <p className="text-muted-foreground font-body mb-4">Nav neviena produkta</p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map((p) => (
+          <Card key={p.id} className="overflow-hidden">
+            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+              {p.image_url ? (
+                <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+              ) : (
+                <ImagePlus className="w-10 h-10 text-muted-foreground" />
+              )}
+            </div>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h3 className="font-body font-semibold text-sm">{p.name}</h3>
+                  <p className="text-xs text-muted-foreground font-body">
+                    {p.price.toFixed(2)} € · {p.category}
+                  </p>
+                  <div className="flex gap-1 mt-2">
+                    {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (
+                      <div key={i} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />
+                    ))}
+                    {((p.color_variants as ColorVariant[]) || []).length > 8 && (
+                      <span className="text-xs text-muted-foreground">+{(p.color_variants as ColorVariant[]).length - 8}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}><Pencil className="w-4 h-4" /></Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  );
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -380,140 +346,75 @@ const Admin = () => {
             <img src={logo} alt="T-Bode" className="h-8" />
             <span className="font-display text-lg tracking-wide">DARBINIEKA PANELIS</span>
           </div>
-          {activeTab === "products" && (
-            <Button onClick={openCreateDialog} style={{ background: "var(--gradient-brand)" }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Jauns produkts
-            </Button>
-          )}
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="products" className="gap-2">
-              <ShoppingBag className="w-4 h-4" /> Produkti
+            <TabsTrigger value="design" className="gap-2">
+              <Brush className="w-4 h-4" /> Design Your Own
+              <Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="collection" className="gap-2">
+              <ShoppingBag className="w-4 h-4" /> Our Collection
+              <Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="orders" className="gap-2">
               <Package className="w-4 h-4" /> Pasūtījumi
-              {orders.length > 0 && (
-                <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>
-              )}
+              {orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}
             </TabsTrigger>
           </TabsList>
 
-          {/* Products Tab */}
-          <TabsContent value="products">
+          {/* Design Your Own Tab */}
+          <TabsContent value="design">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground">
+                <Plus className="w-4 h-4 mr-2" /> Jauns personalizējams produkts
+              </Button>
+            </div>
             {loadingProducts ? (
               <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
-            ) : products.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground font-body mb-4">Nav neviena produkta</p>
-                <Button onClick={openCreateDialog} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" /> Izveidot pirmo produktu
-                </Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products.map((p) => (
-                  <Card key={p.id} className="overflow-hidden">
-                    <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImagePlus className="w-10 h-10 text-muted-foreground" />
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-body font-semibold text-sm">{p.name}</h3>
-                          <p className="text-xs text-muted-foreground font-body">
-                            {p.price.toFixed(2)} € · {p.category}
-                            {p.customizable && " · 🎨 Personalizējams"}
-                          </p>
-                          <div className="flex gap-1 mt-2">
-                            {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (
-                              <div
-                                key={i}
-                                className="w-4 h-4 rounded-full border border-border"
-                                style={{ backgroundColor: c.hex }}
-                                title={c.name}
-                              />
-                            ))}
-                            {((p.color_variants as ColorVariant[]) || []).length > 8 && (
-                              <span className="text-xs text-muted-foreground">
-                                +{(p.color_variants as ColorVariant[]).length - 8}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}>
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+            ) : renderProductGrid(designProducts)}
+          </TabsContent>
+
+          {/* Our Collection Tab */}
+          <TabsContent value="collection">
+            <div className="flex justify-end mb-4">
+              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground">
+                <Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts
+              </Button>
+            </div>
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
+            ) : renderProductGrid(collectionProducts)}
           </TabsContent>
 
           {/* Orders Tab */}
           <TabsContent value="orders">
-            {/* Filters */}
             <div className="flex flex-wrap items-end gap-3 mb-4">
               <div>
                 <Label className="font-body text-xs text-muted-foreground">Statuss</Label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-[140px] text-xs mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="w-[140px] text-xs mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" className="text-xs">Visi</SelectItem>
                     {ORDER_STATUSES.map((s) => (
-                      <SelectItem key={s.value} value={s.value} className="text-xs">
-                        {s.label}
-                      </SelectItem>
+                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label className="font-body text-xs text-muted-foreground">No datuma</Label>
-                <Input
-                  type="date"
-                  value={filterDateFrom}
-                  onChange={(e) => setFilterDateFrom(e.target.value)}
-                  className="w-[150px] text-xs mt-1"
-                />
+                <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-[150px] text-xs mt-1" />
               </div>
               <div>
                 <Label className="font-body text-xs text-muted-foreground">Līdz datumam</Label>
-                <Input
-                  type="date"
-                  value={filterDateTo}
-                  onChange={(e) => setFilterDateTo(e.target.value)}
-                  className="w-[150px] text-xs mt-1"
-                />
+                <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-[150px] text-xs mt-1" />
               </div>
               {(filterStatus !== "all" || filterDateFrom || filterDateTo) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => {
-                    setFilterStatus("all");
-                    setFilterDateFrom("");
-                    setFilterDateTo("");
-                  }}
-                >
+                <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setFilterStatus("all"); setFilterDateFrom(""); setFilterDateTo(""); }}>
                   <X className="w-3 h-3 mr-1" /> Notīrīt
                 </Button>
               )}
@@ -525,104 +426,78 @@ const Admin = () => {
               const filteredOrders = orders.filter((order) => {
                 if (filterStatus !== "all" && order.status !== filterStatus) return false;
                 if (filterDateFrom && new Date(order.created_at) < new Date(filterDateFrom)) return false;
-                if (filterDateTo) {
-                  const to = new Date(filterDateTo);
-                  to.setHours(23, 59, 59, 999);
-                  if (new Date(order.created_at) > to) return false;
-                }
+                if (filterDateTo) { const to = new Date(filterDateTo); to.setHours(23, 59, 59, 999); if (new Date(order.created_at) > to) return false; }
                 return true;
               });
               return filteredOrders.length === 0 ? (
-                <div className="text-center py-20">
-                  <p className="text-muted-foreground font-body">Nav pasūtījumu ar šādiem filtriem</p>
-                </div>
+                <div className="text-center py-20"><p className="text-muted-foreground font-body">Nav pasūtījumu ar šādiem filtriem</p></div>
               ) : (
-              <div className="space-y-4">
-                {filteredOrders.map((order) => {
-                  const statusInfo = getStatusInfo(order.status);
-                  const items = orderItems[order.id] || [];
-                  return (
-                    <Card key={order.id}>
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="font-body font-semibold text-sm">
-                                #{order.id.slice(0, 8)}
-                              </span>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>
-                                {statusInfo.label}
-                              </span>
-                              <span className="text-xs text-muted-foreground font-body">
-                                {new Date(order.created_at).toLocaleDateString("lv-LV", {
-                                  day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
-                                })}
-                              </span>
-                            </div>
-                            <div className="text-xs text-muted-foreground font-body space-y-1">
-                              {order.shipping_name && <p>👤 {order.shipping_name} · {order.shipping_phone}</p>}
-                              {order.shipping_address && (
-                                <p>📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>
-                              )}
-                              {order.omniva_pickup_point && <p>📦 Omniva: {order.omniva_pickup_point}</p>}
-                              {order.notes && <p>📝 {order.notes}</p>}
-                            </div>
-
-                            {/* Order items */}
-                            {items.length > 0 && (
-                              <div className="mt-3 border-t border-border pt-2">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead className="text-xs">Produkts</TableHead>
-                                      <TableHead className="text-xs">Izmērs</TableHead>
-                                      <TableHead className="text-xs">Krāsa</TableHead>
-                                      <TableHead className="text-xs text-right">Skaits</TableHead>
-                                      <TableHead className="text-xs text-right">Cena</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {items.map((item: any) => (
-                                      <TableRow key={item.id}>
-                                        <TableCell className="text-xs font-body">{item.product_name}</TableCell>
-                                        <TableCell className="text-xs">{item.size || "—"}</TableCell>
-                                        <TableCell className="text-xs">{item.color || "—"}</TableCell>
-                                        <TableCell className="text-xs text-right">{item.quantity}</TableCell>
-                                        <TableCell className="text-xs text-right">{item.unit_price.toFixed(2)} €</TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
+                <div className="space-y-4">
+                  {filteredOrders.map((order) => {
+                    const statusInfo = getStatusInfo(order.status);
+                    const items = orderItems[order.id] || [];
+                    return (
+                      <Card key={order.id}>
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <span className="font-body font-semibold text-sm">#{order.id.slice(0, 8)}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>{statusInfo.label}</span>
+                                <span className="text-xs text-muted-foreground font-body">
+                                  {new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </span>
                               </div>
-                            )}
+                              <div className="text-xs text-muted-foreground font-body space-y-1">
+                                {order.shipping_name && <p>👤 {order.shipping_name} · {order.shipping_phone}</p>}
+                                {order.shipping_address && <p>📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>}
+                                {order.omniva_pickup_point && <p>📦 Omniva: {order.omniva_pickup_point}</p>}
+                                {order.notes && <p>📝 {order.notes}</p>}
+                              </div>
+                              {items.length > 0 && (
+                                <div className="mt-3 border-t border-border pt-2">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead className="text-xs">Produkts</TableHead>
+                                        <TableHead className="text-xs">Izmērs</TableHead>
+                                        <TableHead className="text-xs">Krāsa</TableHead>
+                                        <TableHead className="text-xs text-right">Skaits</TableHead>
+                                        <TableHead className="text-xs text-right">Cena</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {items.map((item: any) => (
+                                        <TableRow key={item.id}>
+                                          <TableCell className="text-xs font-body">{item.product_name}</TableCell>
+                                          <TableCell className="text-xs">{item.size || "—"}</TableCell>
+                                          <TableCell className="text-xs">{item.color || "—"}</TableCell>
+                                          <TableCell className="text-xs text-right">{item.quantity}</TableCell>
+                                          <TableCell className="text-xs text-right">{item.unit_price.toFixed(2)} €</TableCell>
+                                        </TableRow>
+                                      ))}
+                                    </TableBody>
+                                  </Table>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                              <span className="font-body font-bold text-lg">{Number(order.total).toFixed(2)} €</span>
+                              <Select value={order.status} onValueChange={(v) => updateOrderStatus(order.id, v)}>
+                                <SelectTrigger className="w-[140px] text-xs"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {ORDER_STATUSES.map((s) => (
+                                    <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
-
-                          <div className="flex flex-col items-end gap-2 min-w-[140px]">
-                            <span className="font-body font-bold text-lg">
-                              {Number(order.total).toFixed(2)} €
-                            </span>
-                            <Select
-                              value={order.status}
-                              onValueChange={(v) => updateOrderStatus(order.id, v)}
-                            >
-                              <SelectTrigger className="w-[140px] text-xs">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {ORDER_STATUSES.map((s) => (
-                                  <SelectItem key={s.value} value={s.value} className="text-xs">
-                                    {s.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
               );
             })()}
           </TabsContent>
@@ -640,245 +515,104 @@ const Admin = () => {
 
           {editingProduct && (
             <div className="space-y-6">
-              {/* Basic info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="font-body text-sm">Nosaukums</Label>
-                  <Input
-                    value={editingProduct.name}
-                    onChange={(e) => {
-                      const name = e.target.value;
-                      setEditingProduct({
-                        ...editingProduct,
-                        name,
-                        slug: editingProduct.id ? editingProduct.slug : generateSlug(name),
-                      });
-                    }}
-                    placeholder="Produkta nosaukums"
-                    className="mt-1"
-                  />
+                  <Input value={editingProduct.name} onChange={(e) => { const name = e.target.value; setEditingProduct({ ...editingProduct, name, slug: editingProduct.id ? editingProduct.slug : generateSlug(name) }); }} placeholder="Produkta nosaukums" className="mt-1" />
                 </div>
                 <div>
                   <Label className="font-body text-sm">Slug (URL)</Label>
-                  <Input
-                    value={editingProduct.slug}
-                    onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, slug: e.target.value })
-                    }
-                    placeholder="produkta-slug"
-                    className="mt-1"
-                  />
+                  <Input value={editingProduct.slug} onChange={(e) => setEditingProduct({ ...editingProduct, slug: e.target.value })} placeholder="produkta-slug" className="mt-1" />
                 </div>
                 <div>
                   <Label className="font-body text-sm">Cena (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={editingProduct.price}
-                    onChange={(e) =>
-                      setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })
-                    }
-                    className="mt-1"
-                  />
+                  <Input type="number" step="0.01" value={editingProduct.price} onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })} className="mt-1" />
                 </div>
                 <div>
                   <Label className="font-body text-sm">Kategorija</Label>
-                  <Select
-                    value={editingProduct.category}
-                    onValueChange={(v) => setEditingProduct({ ...editingProduct, category: v })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={editingProduct.category} onValueChange={(v) => setEditingProduct({ ...editingProduct, category: v })}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {CATEGORIES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
+                      {CATEGORIES.map((c) => (<SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>))}
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              {/* Description */}
               <div>
                 <Label className="font-body text-sm">Apraksts</Label>
-                <Textarea
-                  value={editingProduct.description}
-                  onChange={(e) =>
-                    setEditingProduct({ ...editingProduct, description: e.target.value })
-                  }
-                  placeholder="Produkta apraksts..."
-                  className="mt-1"
-                  rows={3}
-                />
+                <Textarea value={editingProduct.description} onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })} placeholder="Produkta apraksts..." className="mt-1" rows={3} />
               </div>
 
-              {/* Toggles */}
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
-                  <Switch
-                    checked={editingProduct.customizable}
-                    onCheckedChange={(v) =>
-                      setEditingProduct({ ...editingProduct, customizable: v })
-                    }
-                  />
+                  <Switch checked={editingProduct.customizable} onCheckedChange={(v) => setEditingProduct({ ...editingProduct, customizable: v })} />
                   <Label className="font-body text-sm">Personalizējams (Zakeke)</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Switch
-                    checked={editingProduct.in_stock}
-                    onCheckedChange={(v) =>
-                      setEditingProduct({ ...editingProduct, in_stock: v })
-                    }
-                  />
+                  <Switch checked={editingProduct.in_stock} onCheckedChange={(v) => setEditingProduct({ ...editingProduct, in_stock: v })} />
                   <Label className="font-body text-sm">Noliktavā</Label>
                 </div>
               </div>
 
-              {/* Main image */}
               <div>
                 <Label className="font-body text-sm">Galvenā bilde</Label>
                 <div className="mt-1 flex items-center gap-3">
-                  {editingProduct.image_url && (
-                    <img
-                      src={editingProduct.image_url}
-                      alt="Main"
-                      className="w-20 h-20 object-cover rounded border border-border"
-                    />
-                  )}
+                  {editingProduct.image_url && <img src={editingProduct.image_url} alt="Main" className="w-20 h-20 object-cover rounded border border-border" />}
                   <label className="cursor-pointer">
                     <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted text-sm font-body">
                       <Upload className="w-4 h-4" />
                       {uploadingImage === "main" ? "Augšupielādē..." : "Augšupielādēt"}
                     </div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => handleImageUpload(e, "main")}
-                      disabled={uploadingImage === "main"}
-                    />
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "main")} disabled={uploadingImage === "main"} />
                   </label>
                   {editingProduct.image_url && (
-                    <Input
-                      value={editingProduct.image_url}
-                      onChange={(e) =>
-                        setEditingProduct({ ...editingProduct, image_url: e.target.value })
-                      }
-                      placeholder="Vai ievadi URL"
-                      className="flex-1"
-                    />
+                    <Input value={editingProduct.image_url} onChange={(e) => setEditingProduct({ ...editingProduct, image_url: e.target.value })} placeholder="Vai ievadi URL" className="flex-1" />
                   )}
                 </div>
               </div>
 
-              {/* Sizes */}
               <div>
                 <Label className="font-body text-sm">Izmēri</Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {COMMON_SIZES.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => toggleSize(size)}
-                      className={`px-3 py-1 text-xs font-body rounded-md border transition-colors ${
-                        editingProduct.sizes.includes(size)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "border-border hover:border-primary/40"
-                      }`}
-                    >
+                    <button key={size} onClick={() => toggleSize(size)} className={`px-3 py-1 text-xs font-body rounded-md border transition-colors ${editingProduct.sizes.includes(size) ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/40"}`}>
                       {size}
                     </button>
                   ))}
                 </div>
                 <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newSize}
-                    onChange={(e) => setNewSize(e.target.value)}
-                    placeholder="Cits izmērs..."
-                    className="w-32"
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomSize())}
-                  />
-                  <Button variant="outline" size="sm" onClick={addCustomSize}>
-                    Pievienot
-                  </Button>
+                  <Input value={newSize} onChange={(e) => setNewSize(e.target.value)} placeholder="Cits izmērs..." className="w-32" onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCustomSize())} />
+                  <Button variant="outline" size="sm" onClick={addCustomSize}>Pievienot</Button>
                 </div>
               </div>
 
-              {/* Color variants */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="font-body text-sm flex items-center gap-2">
-                    <Palette className="w-4 h-4" /> Krāsu variācijas
-                  </Label>
-                  <Button variant="outline" size="sm" onClick={addColorVariant}>
-                    <Plus className="w-3 h-3 mr-1" /> Pievienot krāsu
-                  </Button>
+                  <Label className="font-body text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> Krāsu variācijas</Label>
+                  <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> Pievienot krāsu</Button>
                 </div>
-
                 <div className="space-y-4">
                   {editingProduct.color_variants.map((variant, ci) => (
                     <Card key={ci} className="p-4">
                       <div className="flex items-center gap-3 mb-3">
-                        <input
-                          type="color"
-                          value={variant.hex}
-                          onChange={(e) => updateColorVariant(ci, "hex", e.target.value)}
-                          className="w-8 h-8 rounded cursor-pointer border-0 p-0"
-                        />
-                        <Input
-                          value={variant.name}
-                          onChange={(e) => updateColorVariant(ci, "name", e.target.value)}
-                          placeholder="Krāsas nosaukums"
-                          className="flex-1"
-                        />
-                        <Input
-                          value={variant.hex}
-                          onChange={(e) => updateColorVariant(ci, "hex", e.target.value)}
-                          placeholder="#000000"
-                          className="w-28"
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeColorVariant(ci)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
+                        <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder="Krāsas nosaukums" className="flex-1" />
+                        <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-28" />
+                        <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                       </div>
-
-                      {/* Color images */}
                       <div className="flex flex-wrap gap-2">
                         {variant.images.map((img, ii) => (
                           <div key={ii} className="relative group">
-                            <img
-                              src={img}
-                              alt=""
-                              className="w-16 h-16 object-cover rounded border border-border"
-                            />
-                            <button
-                              onClick={() => removeColorImage(ci, ii)}
-                              className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
+                            <img src={img} alt="" className="w-16 h-16 object-cover rounded border border-border" />
+                            <button onClick={() => removeColorImage(ci, ii)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                               <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
                         <label className="cursor-pointer w-16 h-16 border border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 transition-colors">
-                          {uploadingImage === `color-${ci}` ? (
-                            <span className="text-xs text-muted-foreground">...</span>
-                          ) : (
-                            <ImagePlus className="w-5 h-5 text-muted-foreground" />
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => handleImageUpload(e, { colorIndex: ci })}
-                            disabled={uploadingImage === `color-${ci}`}
-                          />
+                          {uploadingImage === `color-${ci}` ? <span className="text-xs text-muted-foreground">...</span> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, { colorIndex: ci })} disabled={uploadingImage === `color-${ci}`} />
                         </label>
                       </div>
                     </Card>
@@ -886,16 +620,9 @@ const Admin = () => {
                 </div>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                <Button variant="outline" onClick={() => setDialogOpen(false)}>
-                  Atcelt
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  style={{ background: "var(--gradient-brand)" }}
-                >
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>Atcelt</Button>
+                <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground">
                   <Save className="w-4 h-4 mr-2" />
                   {saving ? "Saglabā..." : "Saglabāt"}
                 </Button>
