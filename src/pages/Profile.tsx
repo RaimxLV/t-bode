@@ -207,7 +207,7 @@ const Profile = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge className={`text-xs font-body ${ORDER_STATUS_COLORS[order.status] || "bg-muted text-muted-foreground"}`}>
-                              {t(`admin.status_${order.status}`, order.status)}
+                              {String(t(`admin.status_${order.status}`, order.status))}
                             </Badge>
                             <span className="font-body font-bold text-sm">
                               {Number(order.total).toFixed(2).replace(".", ",")} €
