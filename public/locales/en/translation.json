@@ -27,7 +27,9 @@
       "s2": { "title": "Personalize It", "desc": "Customize your item using our built-in design tool." },
       "s3": { "title": "Place Your Order", "desc": "Complete your checkout and pay securely online." },
       "s4": { "title": "Receive Your Order", "desc": "Collect your item from any Omniva parcel machine within 1-2 business days." }
-    }
+    },
+    "howItWorks": "HOW IT WORKS",
+    "howItWorksDesc": "Four simple steps to your unique custom product"
   },
   "stores": {
     "title": "Visit T-BODE",
