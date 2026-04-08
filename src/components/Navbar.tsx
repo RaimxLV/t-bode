@@ -60,7 +60,7 @@ export const Navbar = () => {
           {user ? (
             <button
               onClick={signOut}
-              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="p-2 text-white/70 hover:text-white transition-colors"
               title="Iziet"
             >
               <LogOut className="w-5 h-5" />
