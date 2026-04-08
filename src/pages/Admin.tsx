@@ -273,6 +273,7 @@ const Admin = () => {
             <TabsTrigger value="design" className="gap-2"><Brush className="w-4 h-4" /> {t("admin.designTab")}<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-2"><ShoppingBag className="w-4 h-4" /> {t("admin.collectionTab")}<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-2"><Package className="w-4 h-4" /> {t("admin.ordersTab")}{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="faq" className="gap-2"><HelpCircle className="w-4 h-4" /> {t("admin.faqTab")}<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
