@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { Product } from "@/data/products";
 
 export const ProductCard = ({ product }: { product: Product }) => {
