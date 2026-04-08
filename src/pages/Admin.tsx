@@ -37,6 +37,18 @@ type DBProduct = { id: string; name: string; slug: string; description: string |
 
 const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true };
 
+interface FAQForm {
+  id?: string;
+  question_lv: string;
+  answer_lv: string;
+  question_en: string;
+  answer_en: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+const EMPTY_FAQ: FAQForm = { question_lv: "", answer_lv: "", question_en: "", answer_en: "", sort_order: 0, is_active: true };
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
