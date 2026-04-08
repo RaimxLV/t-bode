@@ -101,10 +101,20 @@ const ProductDetail = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-              <div className="aspect-square rounded-lg overflow-hidden bg-card border border-border mb-3">
+              <div
+                className="aspect-square rounded-lg overflow-hidden bg-card border border-border mb-3 relative group cursor-zoom-in"
+                onClick={() => setLightboxOpen(true)}
+                role="button"
+                aria-label={t("productDetail.zoomImage", "Palielināt attēlu")}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxOpen(true); } }}
+              >
                 <AnimatePresence mode="wait">
                   <motion.img key={displayImage} src={displayImage} alt={product.name} className="w-full h-full object-cover" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                 </AnimatePresence>
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                  <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
+                </div>
               </div>
               {galleryImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
