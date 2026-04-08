@@ -71,20 +71,31 @@ export const Navbar = () => {
             {i18n.language === "lv" ? "EN" : "LV"}
           </button>
 
-          {user ? (
-            <button
-              onClick={signOut}
-              className="p-2 text-white/70 hover:text-white transition-colors"
-              title={t("auth.signOut", "Izrakstīties")}
-              aria-label={t("auth.signOut", "Izrakstīties")}
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+{user ? (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => navigate("/profile")}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+                title={t("profile.title", "Mans profils")}
+                aria-label={t("profile.title", "Mans profils")}
+              >
+                <User className="w-5 h-5" />
+              </button>
+              <button
+                onClick={signOut}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+                title={t("auth.signOut", "Izrakstīties")}
+                aria-label={t("auth.signOut", "Izrakstīties")}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => navigate("/auth")}
               className="p-2 text-white/70 hover:text-white transition-colors"
               title={t("auth.login")}
+              aria-label={t("auth.login")}
             >
               <User className="w-5 h-5" />
             </button>
