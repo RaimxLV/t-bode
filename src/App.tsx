@@ -13,6 +13,7 @@ import ProductDetail from "./pages/ProductDetail.tsx";
 import Auth from "./pages/Auth.tsx";
 import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
+import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
