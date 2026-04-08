@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { Product } from "@/data/products";
+import type { DBProduct } from "@/hooks/useProducts";
 
-export const ProductCard = ({ product }: { product: Product }) => {
+export const ProductCard = ({ product }: { product: DBProduct }) => {
   return (
     <Link to={`/product/${product.slug}`}>
       <motion.div
@@ -15,7 +15,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
       >
         <div className="aspect-square overflow-hidden">
           <img
-            src={product.image}
+            src={product.image_url || "/placeholder.svg"}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
