@@ -41,7 +41,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10" role="navigation" aria-label={t("nav.main", "Galvenā navigācija")}>
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <a
           href="/"
@@ -71,19 +71,31 @@ export const Navbar = () => {
             {i18n.language === "lv" ? "EN" : "LV"}
           </button>
 
-          {user ? (
-            <button
-              onClick={signOut}
-              className="p-2 text-white/70 hover:text-white transition-colors"
-              title={t("auth.login")}
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+{user ? (
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => navigate("/profile")}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+                title={t("profile.title", "Mans profils")}
+                aria-label={t("profile.title", "Mans profils")}
+              >
+                <User className="w-5 h-5" />
+              </button>
+              <button
+                onClick={signOut}
+                className="p-2 text-white/70 hover:text-white transition-colors"
+                title={t("auth.signOut", "Izrakstīties")}
+                aria-label={t("auth.signOut", "Izrakstīties")}
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           ) : (
             <button
               onClick={() => navigate("/auth")}
               className="p-2 text-white/70 hover:text-white transition-colors"
               title={t("auth.login")}
+              aria-label={t("auth.login")}
             >
               <User className="w-5 h-5" />
             </button>
@@ -91,6 +103,7 @@ export const Navbar = () => {
           <button
             className="relative p-2 text-white/70 hover:text-white transition-colors"
             onClick={() => setCartOpen(true)}
+            aria-label={t("cart.openCart", "Atvērt grozu") + (totalItems > 0 ? ` (${totalItems})` : "")}
           >
             <ShoppingCart className="w-5 h-5" />
             {totalItems > 0 && (
@@ -102,6 +115,8 @@ export const Navbar = () => {
           <button
             className="lg:hidden p-2 text-white/70"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? t("nav.closeMenu", "Aizvērt izvēlni") : t("nav.openMenu", "Atvērt izvēlni")}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>

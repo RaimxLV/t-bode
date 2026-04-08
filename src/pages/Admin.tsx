@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
@@ -59,6 +59,7 @@ const Admin = () => {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [adminCategoryFilter, setAdminCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
@@ -122,6 +123,12 @@ const Admin = () => {
     else { toast.success(t("admin.productDeleted")); loadProducts(); }
   };
 
+  const handleToggleStock = async (id: string, currentStock: boolean) => {
+    const { error } = await supabase.from("products").update({ in_stock: !currentStock }).eq("id", id);
+    if (error) toast.error(t("admin.updateError", "Neizdevās atjaunināt"));
+    else { toast.success(!currentStock ? t("admin.markedInStock", "Atzīmēts kā pieejams") : t("admin.markedOutOfStock", "Atzīmēts kā nav noliktavā")); loadProducts(); }
+  };
+
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
     setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock });
@@ -134,8 +141,13 @@ const Admin = () => {
   if (!isAdmin) return null;
 
   const filterProductsForTab = (items: DBProduct[]) => {
-    if (adminCategoryFilter === "all") return items;
-    return items.filter((p) => p.category === adminCategoryFilter);
+    let result = items;
+    if (adminCategoryFilter !== "all") result = result.filter((p) => p.category === adminCategoryFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+    }
+    return result;
   };
 
   const renderProductGrid = (items: DBProduct[], forDesign: boolean) => {
@@ -146,6 +158,16 @@ const Admin = () => {
 
     return (
       <>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("admin.searchProducts", "Meklēt produktus...")}
+            className="w-full sm:w-64 pl-9 pr-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
         <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => setAdminCategoryFilter("all")}

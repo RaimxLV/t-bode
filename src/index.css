@@ -86,4 +86,17 @@
   .bg-cta-red {
     background-color: hsl(var(--cta-red));
   }
+
+  /* Skip to content link */
+  .skip-to-content {
+    @apply absolute -top-12 left-4 z-[200] px-4 py-2 bg-primary text-primary-foreground font-body text-sm rounded-md transition-all;
+  }
+  .skip-to-content:focus {
+    @apply top-4;
+  }
+
+  /* Focus visible ring for keyboard navigation */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
 }
