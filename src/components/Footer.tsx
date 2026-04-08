@@ -1,7 +1,9 @@
 import { Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.svg";
 
 export const Footer = () => {
+  const navigate = useNavigate();
   return (
     <footer className="bg-card border-t border-border py-12">
       <div className="container mx-auto px-4">
@@ -79,10 +81,7 @@ export const Footer = () => {
           <button
             className="text-muted-foreground/30 hover:text-muted-foreground transition-colors p-1"
             title="Admin"
-            onClick={() => {
-              // Will connect to admin auth later
-              console.log("Admin login triggered");
-            }}
+            onClick={() => navigate("/admin")}
           >
             <Lock className="w-3.5 h-3.5" />
           </button>
