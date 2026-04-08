@@ -34,7 +34,6 @@ export const ProductCard = ({ product }: { product: Product }) => {
               <ShoppingCart className="w-3.5 h-3.5" />
               {product.customizable ? "Customize" : "Select options"}
             </span>
-            </span>
           </div>
         </div>
       </motion.div>
