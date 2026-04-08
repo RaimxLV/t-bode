@@ -95,13 +95,13 @@ export const Navbar = () => {
       </div>
 
       {isOpen && (
-        <div className="lg:hidden bg-background border-t border-border">
+        <div className="lg:hidden bg-black border-t border-white/10">
           <div className="container mx-auto py-4 px-4 flex flex-col gap-4">
             {navLinks.map((link) => (
               <button
                 key={link.label}
                 onClick={() => handleNavClick(link.href)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+                className="text-sm font-medium text-white/70 hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
               >
                 {link.label}
               </button>
