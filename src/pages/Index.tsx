@@ -7,18 +7,25 @@ import { StoresSection } from "@/components/StoresSection";
 import { ContactSection } from "@/components/ContactSection";
 import { Footer } from "@/components/Footer";
 import { FAQSection } from "@/components/FAQSection";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen">
+      <a href="#main-content" className="skip-to-content">
+        {t("nav.skipToContent", "Pāriet uz saturu")}
+      </a>
       <Navbar />
-      <HeroSection />
-      <AboutSection />
-      <HowItWorksSection />
-      <GallerySection />
-      <StoresSection />
-      <ContactSection />
-      <FAQSection />
+      <main id="main-content">
+        <HeroSection />
+        <AboutSection />
+        <HowItWorksSection />
+        <GallerySection />
+        <StoresSection />
+        <ContactSection />
+        <FAQSection />
+      </main>
       <Footer />
     </div>
   );
