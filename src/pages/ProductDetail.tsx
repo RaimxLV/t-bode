@@ -32,6 +32,22 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+
+  const handleAddToCart = () => {
+    if (!product || !selectedSize || !selectedColor) return;
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      size: selectedSize,
+      color: selectedColor,
+      quantity,
+      slug: product.slug,
+    });
+    toast.success(`${product.name} pievienots grozam!`);
+  };
 
   if (!product) {
     return (
