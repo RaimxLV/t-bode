@@ -67,6 +67,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/rock.jpg`,
     ],
     category: "t-shirts",
+    customizable: true,
     slug: "unisex-dry-handfeel-heavyweight",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Wide twin-needle topstitching at sleeve cuffs and hem. Slightly textured fabric.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Open End Carded. Fabric washed.",
