@@ -6,6 +6,8 @@ import { products } from "@/data/products";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
+import { toast } from "sonner";
 
 const sizeOptions: Record<string, string[]> = {
   "t-shirts": ["XS", "S", "M", "L", "XL", "XXL"],
@@ -30,6 +32,22 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
+
+  const handleAddToCart = () => {
+    if (!product || !selectedSize || !selectedColor) return;
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      size: selectedSize,
+      color: selectedColor,
+      quantity,
+      slug: product.slug,
+    });
+    toast.success(`${product.name} pievienots grozam!`);
+  };
 
   if (!product) {
     return (
@@ -195,9 +213,10 @@ const ProductDetail = () => {
                 className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-lg text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--gradient-brand)" }}
                 disabled={!selectedSize || !selectedColor}
+                onClick={handleAddToCart}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Add to Cart — {(product.price * quantity).toFixed(2).replace(".", ",")} €
+                Pievienot grozam — {(product.price * quantity).toFixed(2).replace(".", ",")} €
               </button>
               {(!selectedSize || !selectedColor) && (
                 <p className="text-xs text-muted-foreground text-center mt-2 font-body">

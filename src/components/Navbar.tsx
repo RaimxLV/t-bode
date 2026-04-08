@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShoppingCart, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
 import logo from "@/assets/logo.svg";
 
 const navLinks = [
@@ -13,6 +14,7 @@ const navLinks = [
 
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { totalItems, setIsOpen: setCartOpen } = useCart();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -37,11 +39,16 @@ export const Navbar = () => {
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Search className="w-5 h-5" />
           </button>
-          <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
+          <button
+            className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setCartOpen(true)}
+          >
             <ShoppingCart className="w-5 h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
-              0
-            </span>
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                {totalItems}
+              </span>
+            )}
           </button>
           <button
             className="lg:hidden p-2 text-muted-foreground"
