@@ -467,15 +467,78 @@ const Admin = () => {
 
           {/* Orders Tab */}
           <TabsContent value="orders">
+            {/* Filters */}
+            <div className="flex flex-wrap items-end gap-3 mb-4">
+              <div>
+                <Label className="font-body text-xs text-muted-foreground">Statuss</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[140px] text-xs mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs">Visi</SelectItem>
+                    {ORDER_STATUSES.map((s) => (
+                      <SelectItem key={s.value} value={s.value} className="text-xs">
+                        {s.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="font-body text-xs text-muted-foreground">No datuma</Label>
+                <Input
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  className="w-[150px] text-xs mt-1"
+                />
+              </div>
+              <div>
+                <Label className="font-body text-xs text-muted-foreground">Līdz datumam</Label>
+                <Input
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  className="w-[150px] text-xs mt-1"
+                />
+              </div>
+              {(filterStatus !== "all" || filterDateFrom || filterDateTo) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    setFilterStatus("all");
+                    setFilterDateFrom("");
+                    setFilterDateTo("");
+                  }}
+                >
+                  <X className="w-3 h-3 mr-1" /> Notīrīt
+                </Button>
+              )}
+            </div>
+
             {loadingOrders ? (
               <p className="text-muted-foreground text-center py-12 font-body">Ielādē pasūtījumus...</p>
-            ) : orders.length === 0 ? (
-              <div className="text-center py-20">
-                <p className="text-muted-foreground font-body">Nav neviena pasūtījuma</p>
-              </div>
-            ) : (
+            ) : (() => {
+              const filteredOrders = orders.filter((order) => {
+                if (filterStatus !== "all" && order.status !== filterStatus) return false;
+                if (filterDateFrom && new Date(order.created_at) < new Date(filterDateFrom)) return false;
+                if (filterDateTo) {
+                  const to = new Date(filterDateTo);
+                  to.setHours(23, 59, 59, 999);
+                  if (new Date(order.created_at) > to) return false;
+                }
+                return true;
+              });
+              return filteredOrders.length === 0 ? (
+                <div className="text-center py-20">
+                  <p className="text-muted-foreground font-body">Nav pasūtījumu ar šādiem filtriem</p>
+                </div>
+              ) : (
               <div className="space-y-4">
-                {orders.map((order) => {
+                {filteredOrders.map((order) => {
                   const statusInfo = getStatusInfo(order.status);
                   const items = orderItems[order.id] || [];
                   return (
