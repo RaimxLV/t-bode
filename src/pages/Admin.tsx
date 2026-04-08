@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -11,11 +11,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag, Brush, HelpCircle } from "lucide-react";
+import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, Package, ShoppingBag, Brush, HelpCircle, BarChart3, AlertTriangle, Layers } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useTranslation } from "react-i18next";
+import { CATEGORY_ICONS } from "@/components/CategoryIcons";
 import logo from "@/assets/logo.svg";
 
 interface ColorVariant { name: string; hex: string; images: string[]; }
@@ -49,6 +50,30 @@ interface FAQForm {
 
 const EMPTY_FAQ: FAQForm = { question_lv: "", answer_lv: "", question_en: "", answer_en: "", sort_order: 0, is_active: true };
 
+const ORDER_STATUSES = [
+  { value: "pending", key: "admin.orderStatuses.pending", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  { value: "confirmed", key: "admin.orderStatuses.confirmed", color: "bg-blue-100 text-blue-800 border-blue-200" },
+  { value: "processing", key: "admin.orderStatuses.processing", color: "bg-purple-100 text-purple-800 border-purple-200" },
+  { value: "shipped", key: "admin.orderStatuses.shipped", color: "bg-cyan-100 text-cyan-800 border-cyan-200" },
+  { value: "delivered", key: "admin.orderStatuses.delivered", color: "bg-green-100 text-green-800 border-green-200" },
+  { value: "cancelled", key: "admin.orderStatuses.cancelled", color: "bg-red-100 text-red-800 border-red-200" },
+];
+
+// ---------- Stats Card ----------
+const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent?: string }) => (
+  <Card className="border border-border">
+    <CardContent className="p-4 flex items-center gap-4">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent || "bg-primary/10 text-primary"}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <p className="text-2xl font-display">{value}</p>
+        <p className="text-xs text-muted-foreground font-body">{label}</p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -74,9 +99,17 @@ const Admin = () => {
   const [editingFaq, setEditingFaq] = useState<FAQForm | null>(null);
   const [faqDialogOpen, setFaqDialogOpen] = useState(false);
   const [savingFaq, setSavingFaq] = useState(false);
+  const [adminCategoryFilter, setAdminCategoryFilter] = useState("all");
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
+
+  // Stats
+  const stats = useMemo(() => {
+    const outOfStock = products.filter((p) => !p.in_stock).length;
+    const activeDesigns = designProducts.length;
+    return { total: products.length, outOfStock, activeDesigns };
+  }, [products, designProducts]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -153,15 +186,6 @@ const Admin = () => {
     else { toast.success(t("admin.statusUpdated")); loadOrders(); }
   };
 
-  const ORDER_STATUSES = [
-    { value: "pending", key: "admin.orderStatuses.pending", color: "bg-yellow-100 text-yellow-800" },
-    { value: "confirmed", key: "admin.orderStatuses.confirmed", color: "bg-blue-100 text-blue-800" },
-    { value: "processing", key: "admin.orderStatuses.processing", color: "bg-purple-100 text-purple-800" },
-    { value: "shipped", key: "admin.orderStatuses.shipped", color: "bg-cyan-100 text-cyan-800" },
-    { value: "delivered", key: "admin.orderStatuses.delivered", color: "bg-green-100 text-green-800" },
-    { value: "cancelled", key: "admin.orderStatuses.cancelled", color: "bg-red-100 text-red-800" },
-  ];
-
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -211,6 +235,28 @@ const Admin = () => {
     setUploadingImage(null);
   };
 
+  // Inline toggle in-stock
+  const toggleInStock = async (product: DBProduct) => {
+    const newVal = !product.in_stock;
+    const { error } = await supabase.from("products").update({ in_stock: newVal }).eq("id", product.id);
+    if (error) toast.error(t("admin.saveError"));
+    else {
+      setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, in_stock: newVal } : p));
+      toast.success(t("admin.productSaved"));
+    }
+  };
+
+  // Inline price update
+  const updatePrice = async (product: DBProduct, newPrice: number) => {
+    if (newPrice === product.price) return;
+    const { error } = await supabase.from("products").update({ price: newPrice }).eq("id", product.id);
+    if (error) toast.error(t("admin.saveError"));
+    else {
+      setProducts((prev) => prev.map((p) => p.id === product.id ? { ...p, price: newPrice } : p));
+      toast.success(t("admin.productSaved"));
+    }
+  };
+
   const addColorVariant = () => { if (!editingProduct) return; setEditingProduct({ ...editingProduct, color_variants: [...editingProduct.color_variants, { name: "", hex: "#000000", images: [] }] }); };
   const removeColorVariant = (index: number) => { if (!editingProduct) return; setEditingProduct({ ...editingProduct, color_variants: editingProduct.color_variants.filter((_, i) => i !== index) }); };
   const updateColorVariant = (index: number, field: keyof ColorVariant, value: string | string[]) => { if (!editingProduct) return; const variants = [...editingProduct.color_variants]; (variants[index] as any)[field] = value; setEditingProduct({ ...editingProduct, color_variants: variants }); };
@@ -223,40 +269,132 @@ const Admin = () => {
   }
   if (!isAdmin) return null;
 
-  const renderProductGrid = (items: DBProduct[]) => (
-    items.length === 0 ? (
-      <div className="text-center py-20"><p className="text-muted-foreground font-body mb-4">{t("admin.noProducts")}</p></div>
-    ) : (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((p) => (
-          <Card key={p.id} className="overflow-hidden">
-            <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-              {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : <ImagePlus className="w-10 h-10 text-muted-foreground" />}
-            </div>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-body font-semibold text-sm">{p.name}</h3>
-                  <p className="text-xs text-muted-foreground font-body">{p.price.toFixed(2)} € · {p.category}</p>
-                  <div className="flex gap-1 mt-2">
-                    {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (<div key={i} className="w-4 h-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />))}
-                    {((p.color_variants as ColorVariant[]) || []).length > 8 && <span className="text-xs text-muted-foreground">+{(p.color_variants as ColorVariant[]).length - 8}</span>}
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}><Pencil className="w-4 h-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  );
+  // Filter products for table by category
+  const filterProductsForTab = (items: DBProduct[]) => {
+    if (adminCategoryFilter === "all") return items;
+    return items.filter((p) => p.category === adminCategoryFilter);
+  };
+
+  const renderProductTable = (items: DBProduct[], forDesign: boolean) => {
+    const filtered = filterProductsForTab(items);
+    const relevantCategories = forDesign
+      ? CATEGORIES.filter((c) => !["latvia", "accessories"].includes(c.value))
+      : CATEGORIES.filter((c) => ["latvia", "accessories"].includes(c.value));
+
+    return (
+      <>
+        {/* Category filter with icons */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            onClick={() => setAdminCategoryFilter("all")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
+              adminCategoryFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
+            }`}
+          >
+            {t("admin.filterAll")}
+          </button>
+          {relevantCategories.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat.value];
+            return (
+              <button
+                key={cat.value}
+                onClick={() => setAdminCategoryFilter(cat.value)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
+                  adminCategoryFilter === cat.value ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                }`}
+              >
+                {Icon && <Icon size={14} />}
+                {t(cat.labelKey)}
+              </button>
+            );
+          })}
+        </div>
+
+        {filtered.length === 0 ? (
+          <div className="text-center py-20"><p className="text-muted-foreground font-body">{t("admin.noProducts")}</p></div>
+        ) : (
+          <div className="border border-border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="w-[50px]"></TableHead>
+                  <TableHead className="text-xs font-body">{t("admin.productName")}</TableHead>
+                  <TableHead className="text-xs font-body">{t("admin.category")}</TableHead>
+                  <TableHead className="text-xs font-body">{t("admin.colorVariants")}</TableHead>
+                  <TableHead className="text-xs font-body w-[100px]">{t("admin.price")}</TableHead>
+                  <TableHead className="text-xs font-body w-[80px]">{t("admin.inStock")}</TableHead>
+                  <TableHead className="text-xs font-body w-[80px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((p) => (
+                  <TableRow key={p.id} className="group">
+                    <TableCell className="p-2">
+                      <div className="w-10 h-10 rounded bg-muted overflow-hidden flex items-center justify-center">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImagePlus className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-body font-semibold text-sm">{p.name}</p>
+                        <p className="text-xs text-muted-foreground font-body">/{p.slug}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs font-body">{t(`categories.${p.category}`)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5">
+                        {((p.color_variants as ColorVariant[]) || []).slice(0, 6).map((c, i) => (
+                          <div key={i} className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />
+                        ))}
+                        {((p.color_variants as ColorVariant[]) || []).length > 6 && (
+                          <span className="text-xs text-muted-foreground ml-1">+{(p.color_variants as ColorVariant[]).length - 6}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        defaultValue={p.price}
+                        onBlur={(e) => updatePrice(p, parseFloat(e.target.value) || 0)}
+                        className="w-20 h-8 text-xs font-body"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={p.in_stock}
+                        onCheckedChange={() => toggleInStock(p)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)} className="h-8 w-8">
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -267,8 +405,15 @@ const Admin = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <StatCard icon={Layers} label="Kopā produkti" value={stats.total} />
+          <StatCard icon={AlertTriangle} label="Nav noliktavā" value={stats.outOfStock} accent="bg-destructive/10 text-destructive" />
+          <StatCard icon={Brush} label="Aktīvie dizaini" value={stats.activeDesigns} accent="bg-blue-50 text-blue-600" />
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
           <TabsList className="mb-6">
             <TabsTrigger value="design" className="gap-2"><Brush className="w-4 h-4" /> {t("admin.designTab")}<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-2"><ShoppingBag className="w-4 h-4" /> {t("admin.collectionTab")}<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
@@ -280,14 +425,14 @@ const Admin = () => {
             <div className="flex justify-end mb-4">
               <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newDesignProduct")}</Button>
             </div>
-            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(designProducts)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductTable(designProducts, true)}
           </TabsContent>
 
           <TabsContent value="collection">
             <div className="flex justify-end mb-4">
               <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newCollectionProduct")}</Button>
             </div>
-            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductTable(collectionProducts, false)}
           </TabsContent>
 
           <TabsContent value="orders">
@@ -334,13 +479,13 @@ const Admin = () => {
                     const statusInfo = getStatusInfo(order.status);
                     const items = orderItems[order.id] || [];
                     return (
-                      <Card key={order.id}>
+                      <Card key={order.id} className="border border-border">
                         <CardContent className="p-4">
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-2">
                                 <span className="font-body font-semibold text-sm">#{order.id.slice(0, 8)}</span>
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>{t(statusInfo.key)}</span>
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold border ${statusInfo.color}`}>{t(statusInfo.key)}</span>
                                 <span className="text-xs text-muted-foreground font-body">{new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
                               </div>
                               <div className="text-xs text-muted-foreground font-body space-y-1">
@@ -406,7 +551,7 @@ const Admin = () => {
             ) : (
               <div className="space-y-3">
                 {faqs.map((faq) => (
-                  <Card key={faq.id}>
+                  <Card key={faq.id} className="border border-border">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
@@ -477,6 +622,7 @@ const Admin = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Product Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -558,7 +704,7 @@ const Admin = () => {
                 </div>
                 <div className="space-y-4">
                   {editingProduct.color_variants.map((variant, ci) => (
-                    <Card key={ci} className="p-4">
+                    <Card key={ci} className="p-4 border border-border">
                       <div className="flex items-center gap-3 mb-3">
                         <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
                         <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1" />
