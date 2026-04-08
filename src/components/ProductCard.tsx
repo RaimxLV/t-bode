@@ -32,7 +32,8 @@ export const ProductCard = ({ product }: { product: Product }) => {
               style={{ background: "var(--gradient-brand)" }}
             >
               <ShoppingCart className="w-3.5 h-3.5" />
-              Select options
+              {product.customizable ? "Customize" : "Select options"}
+            </span>
             </span>
           </div>
         </div>
