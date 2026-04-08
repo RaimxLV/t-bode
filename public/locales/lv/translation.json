@@ -250,6 +250,13 @@
     "message": "Ups! Lapa nav atrasta",
     "backHome": "Atgriezties uz sākumu"
   },
+  "payment": {
+    "successTitle": "Maksājums veiksmīgs!",
+    "successDesc": "Paldies par jūsu pasūtījumu. Mēs sāksim tā apstrādi nekavējoties.",
+    "orderId": "Pasūtījuma ID",
+    "backToHome": "Uz sākumu",
+    "continueShopping": "Turpināt iepirkties"
+  },
   "language": {
     "lv": "LV",
     "en": "EN"
