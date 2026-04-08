@@ -442,13 +442,17 @@ export const products: Product[] = [
   },
 ];
 
-export const categories = [
+export const designCategories = [
   { id: "all", label: "All Products" },
   { id: "t-shirts", label: "T-Shirts" },
   { id: "hoodies", label: "Hoodies & Sweatshirts" },
   { id: "mugs", label: "Mugs" },
   { id: "bags", label: "Bags" },
   { id: "kids", label: "Kids" },
+] as const;
+
+export const categories = [
+  ...designCategories,
   { id: "latvia", label: "The Latvia Edit" },
 ] as const;
 
