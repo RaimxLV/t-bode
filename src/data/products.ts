@@ -17,6 +17,7 @@ export type Product = {
   careInstructions?: string;
   colors: ColorVariant[];
   sizes: string[];
+  customizable: boolean;
 };
 
 const BASE = "https://www.mml.s-host.net/t-bode/wp-content/uploads";
@@ -33,6 +34,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/mid-heather-gray-front.png`,
     ],
     category: "t-shirts",
+    customizable: true,
     slug: "unisex-iconic",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
     composition: "Shell – Single Jersey, 100% Cotton – Organic Combed Ring Spun / Heather Haze: 70% Organic Cotton – 30% Recycled Cotton, Combed Ring Spun – 180.0 GSM. Fabric washed.",
@@ -65,6 +67,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/rock.jpg`,
     ],
     category: "t-shirts",
+    customizable: true,
     slug: "unisex-dry-handfeel-heavyweight",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Wide twin-needle topstitching at sleeve cuffs and hem. Slightly textured fabric.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Open End Carded. Fabric washed.",
@@ -84,6 +87,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/skatebord.jpg`,
     ],
     category: "t-shirts",
+    customizable: true,
     slug: "organic-cotton-t-shirt",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Combed Ring Spun / Heather Haze: 70% Organic Cotton – 30% Recycled Cotton, Combed Ring Spun. Fabric washed.",
@@ -126,6 +130,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/burgundy-1.jpg`,
     ],
     category: "hoodies",
+    customizable: true,
     slug: "unisex-hoodie",
     description: "Modern, sporty style sweatshirt with hood and front pocket. Double-thick and adjustable hood with thick, reinforced cords. Extended cut. MP3 output in the pocket. Made of soft, three-layer polycotton material.",
     composition: "Material: 80% cotton, 20% polyester. Density: 280g.",
@@ -154,6 +159,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/light-oxford-1-2.jpg`,
     ],
     category: "hoodies",
+    customizable: true,
     slug: "sweatshirt-without-hood",
     description: "A classic style sweater made of soft three-layer polycotton material. Inside 50% polyester, 50% cotton – for warmth and comfort.",
     composition: "Material: 80% cotton, 20% polyester. Density: 280g.",
@@ -176,6 +182,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/white-1-3.jpg`,
     ],
     category: "mugs",
+    customizable: true,
     slug: "white-mug-300ml",
     description: "Ceramic cylinder mug. Volume 300ml. Unlimited number of colors for printing. Printing area 210×85mm.",
     colors: [
@@ -193,6 +200,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/gold-1-1.jpg`,
     ],
     category: "mugs",
+    customizable: true,
     slug: "mug-gold-silver-rim",
     description: "Ceramic cylinder mug. Volume 300ml. Unlimited number of colors for printing. Printing area 210×85mm.",
     colors: [
@@ -211,6 +219,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/450ml-1-1.jpg`,
     ],
     category: "mugs",
+    customizable: true,
     slug: "large-mug-450ml",
     description: "Ceramic cylinder mug. Volume 450ml. Unlimited number of colors for printing. Printing area 210×85mm.",
     colors: [
@@ -227,6 +236,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/Gemini_Generated_Image_4u1spb4u1spb4u1s-500x500.png`,
     ],
     category: "mugs",
+    customizable: true,
     slug: "duo-two-tone-mug",
     description: "Ceramic cylinder mug with two-tone design. Volume 300ml. Unlimited number of colors for printing.",
     colors: [
@@ -244,6 +254,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/magic-1-1.jpg`,
     ],
     category: "mugs",
+    customizable: true,
     slug: "color-changing-mug-magic",
     description: "Ceramic cylinder-shaped mug that changes color when heated – the mug remains white, so the print becomes visible. Volume 300ml. Printing area 210×85mm.",
     colors: [
@@ -263,6 +274,7 @@ export const products: Product[] = [
       `${BASE}/2026/01/Gemini_Generated_Image_mge42xmge42xmge4.png`,
     ],
     category: "bags",
+    customizable: true,
     slug: "cotton-bag",
     colors: [
       { name: "White", hex: "#FFFFFF" },
@@ -304,6 +316,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/white-1.jpg`,
     ],
     category: "kids",
+    customizable: true,
     slug: "t-shirt-kids",
     description: "Single Jersey, 100% cotton. Cut with side seams, narrow 1:1 rib knit neckline hem, inner back neckline with shell fabric tape, fixing shoulder seams.",
     colors: [
@@ -329,6 +342,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/baby.jpg`,
     ],
     category: "kids",
+    customizable: true,
     slug: "baby-bodysuits",
     description: "Children's bodysuit with short sleeves. Side seams, U-shaped neckline with lapels and one button. Three press studs at the bottom. Certified by OEKO-TEX® and GOTS.",
     composition: "100% organic cotton. Weight: 210g.",
@@ -354,6 +368,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/Ozollapu-krekls-Vintage-white-_prieksa_-1890-eur-2.png`,
     ],
     category: "latvia",
+    customizable: false,
     slug: "oak-leaf-shirt",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Combed Ring Spun. Fabric washed.",
@@ -374,6 +389,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/FANU-bernu-krekls-_bordo_-1490-eur-2.png`,
     ],
     category: "latvia",
+    customizable: false,
     slug: "kids-fan-shirt",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Narrow twin-needle topstitching at sleeve hems.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Ring Spun Combed. Fabric washed.",
@@ -395,6 +411,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/LV-krekls-ar-izsuvi-_khaki_-1990-eur-1.png`,
     ],
     category: "latvia",
+    customizable: false,
     slug: "latvia-shirt-with-embroidery",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
     composition: "Shell: Single Jersey, 100% Cotton – Organic Combed Ring Spun. Fabric washed.",
@@ -416,6 +433,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/LV-dzemperis-_Tris-Zvaignes_-3990-eur.png`,
     ],
     category: "latvia",
+    customizable: false,
     slug: "latvia-hoodie-three-stars",
     description: "Double-layered hood in self-fabric. Single-jersey back neck tape. Set-in sleeves. 1×1 rib at sleeve cuffs and hem. Kangaroo pocket with 3mm single-needle topstitching.",
     composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
@@ -427,13 +445,17 @@ export const products: Product[] = [
   },
 ];
 
-export const categories = [
+export const designCategories = [
   { id: "all", label: "All Products" },
   { id: "t-shirts", label: "T-Shirts" },
   { id: "hoodies", label: "Hoodies & Sweatshirts" },
   { id: "mugs", label: "Mugs" },
   { id: "bags", label: "Bags" },
   { id: "kids", label: "Kids" },
+] as const;
+
+export const categories = [
+  ...designCategories,
   { id: "latvia", label: "The Latvia Edit" },
 ] as const;
 

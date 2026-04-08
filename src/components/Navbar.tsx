@@ -8,7 +8,7 @@ import logo from "@/assets/logo.svg";
 const navLinks = [
   { label: "Our Story", href: "#about" },
   { label: "Design Your Own", href: "#products" },
-  { label: "Our Collection", href: "#products" },
+  { label: "Our Collection", href: "#collection" },
   { label: "Find a Store", href: "#stores" },
   { label: "FAQs", href: "#faq" },
 ];

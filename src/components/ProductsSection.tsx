@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { products, categories } from "@/data/products";
+import { products, designCategories } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
 
 export const ProductsSection = () => {
   const [active, setActive] = useState("all");
 
-  const filtered = active === "all" ? products : products.filter((p) => p.category === active);
+  const customizable = products.filter((p) => p.customizable);
+  const filtered = active === "all" ? customizable : customizable.filter((p) => p.category === active);
 
   return (
     <section id="products" className="py-24 bg-secondary/30">
@@ -15,14 +16,23 @@ export const ProductsSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-4xl md:text-5xl text-center mb-10"
+          className="text-4xl md:text-5xl text-center mb-4"
         >
           Design Your Own
         </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.1 }}
+          className="text-muted-foreground text-center mb-12 max-w-xl mx-auto font-body"
+        >
+          Choose a blank product, then personalise it with your own design using our editor.
+        </motion.p>
 
         {/* Category filter */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {categories.map((cat) => (
+          {designCategories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActive(cat.id)}
