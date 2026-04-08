@@ -69,6 +69,11 @@ const Admin = () => {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDateFrom, setFilterDateFrom] = useState<string>("");
   const [filterDateTo, setFilterDateTo] = useState<string>("");
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [loadingFaqs, setLoadingFaqs] = useState(false);
+  const [editingFaq, setEditingFaq] = useState<FAQForm | null>(null);
+  const [faqDialogOpen, setFaqDialogOpen] = useState(false);
+  const [savingFaq, setSavingFaq] = useState(false);
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
