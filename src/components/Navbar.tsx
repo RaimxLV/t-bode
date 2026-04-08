@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShoppingCart, Menu, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/context/CartContext";
 import logo from "@/assets/logo.svg";
 
 const navLinks = [
