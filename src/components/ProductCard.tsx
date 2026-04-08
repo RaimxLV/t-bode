@@ -1,14 +1,22 @@
 import { useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
 
-export const ProductCard = ({ product }: { product: DBProduct }) => {
+interface ProductCardProps {
+  product: DBProduct;
+  /** Admin mode: show edit/delete actions */
+  onEdit?: (product: DBProduct) => void;
+  onDelete?: (productId: string) => void;
+}
+
+export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
   const { t } = useTranslation();
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
+  const isAdmin = !!(onEdit || onDelete);
 
   const allImages = useMemo(() => {
     const imgs: string[] = [];
@@ -36,7 +44,6 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
     setCurrentSlide(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
-  // Re-attach listener when emblaApi changes
   useMemo(() => {
     if (!emblaApi) return;
     emblaApi.on("select", onSelect);
@@ -54,10 +61,10 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="group bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
+      className="group flex flex-col h-full bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
     >
       {/* Image carousel */}
-      <div className="relative aspect-square overflow-hidden">
+      <div className="relative aspect-square overflow-hidden flex-shrink-0">
         <div ref={emblaRef} className="overflow-hidden h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
@@ -77,7 +84,6 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
           </div>
         </div>
 
-        {/* Nav arrows – visible on hover (desktop) or always (mobile with multiple) */}
         {hasMultipleImages && (
           <>
             <button
@@ -97,7 +103,6 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
           </>
         )}
 
-        {/* Dot indicators */}
         {hasMultipleImages && (
           <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1">
             {displayImages.map((_, i) => (
@@ -110,49 +115,96 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
             ))}
           </div>
         )}
-      </div>
 
-      {/* Info */}
-      <div className="p-2.5 sm:p-4">
-        <Link to={`/product/${product.slug}`}>
-          <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
-            {product.name}
-          </h3>
-        </Link>
-
-        {/* Color swatches */}
-        {hasColors && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {product.color_variants.map((cv, i) => (
-              <button
-                key={i}
-                onClick={() => setSelectedColorIdx(selectedColorIdx === i ? null : i)}
-                className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 transition-all ${
-                  selectedColorIdx === i
-                    ? "border-foreground scale-110"
-                    : "border-border hover:border-foreground/50"
-                }`}
-                style={{ backgroundColor: cv.hex }}
-                title={cv.name}
-                aria-label={cv.name}
-              />
-            ))}
+        {/* Out of stock badge */}
+        {!product.in_stock && (
+          <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-bold font-body px-2 py-0.5 rounded">
+            {t("products.outOfStock", "Nav noliktavā")}
           </div>
         )}
+      </div>
 
-        <div className="flex items-center justify-between gap-1">
-          <span className="text-sm sm:text-lg font-bold font-body">
-            {product.price.toFixed(2).replace(".", ",")} €
-          </span>
-          <Link
-            to={`/product/${product.slug}`}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body text-white transition-all hover:scale-105 bg-cta-red"
-          >
-            <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden xs:inline">
-              {product.customizable ? t("products.customize") : t("products.selectOptions")}
-            </span>
+      {/* Info — grows to fill, pushes bottom block down */}
+      <div className="flex flex-col flex-1 p-2.5 sm:p-4">
+        {/* Top content: name + colors */}
+        <div className="flex-1 min-h-0">
+          <Link to={`/product/${product.slug}`}>
+            <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
+              {product.name}
+            </h3>
           </Link>
+
+          {hasColors && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {product.color_variants.map((cv, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedColorIdx(selectedColorIdx === i ? null : i)}
+                  className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 transition-all ${
+                    selectedColorIdx === i
+                      ? "border-foreground scale-110"
+                      : "border-border hover:border-foreground/50"
+                  }`}
+                  style={{ backgroundColor: cv.hex }}
+                  title={cv.name}
+                  aria-label={cv.name}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom block — always pushed to bottom via mt-auto */}
+        <div className="mt-auto space-y-2">
+          {/* Price + cart row */}
+          <div className="flex items-center justify-between gap-1">
+            <span className="text-sm sm:text-lg font-bold font-body">
+              {product.price.toFixed(2).replace(".", ",")} €
+            </span>
+            <Link
+              to={`/product/${product.slug}`}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body text-white transition-all hover:scale-105 bg-cta-red"
+            >
+              <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">
+                {t("products.selectOptions")}
+              </span>
+            </Link>
+          </div>
+
+          {/* Customize button for customizable products */}
+          {product.customizable && (
+            <Link
+              to={`/product/${product.slug}`}
+              className="flex items-center justify-center gap-1.5 w-full py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body border-2 border-cta-red text-cta-red hover:bg-cta-red hover:text-white transition-all"
+            >
+              {t("products.customize")}
+            </Link>
+          )}
+
+          {/* Admin actions */}
+          {isAdmin && (
+            <div className="flex gap-1 pt-1 border-t border-border">
+              {onEdit && (
+                <button
+                  onClick={(e) => { e.preventDefault(); onEdit(product); }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded text-xs font-body text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                  <span className="hidden sm:inline">{t("admin.edit", "Rediģēt")}</span>
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={(e) => { e.preventDefault(); onDelete(product.id); }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded text-xs font-body text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span className="hidden sm:inline">{t("admin.delete", "Dzēst")}</span>
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
