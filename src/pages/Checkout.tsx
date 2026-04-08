@@ -46,6 +46,7 @@ const Checkout = () => {
     if (!isValid || items.length === 0) return;
     setSubmitting(true);
     try {
+      // 1. Create order in DB with status 'pending'
       const { data: order, error: orderError } = await supabase.from("orders").insert({
         user_id: user.id, total: orderTotal, shipping_name: form.name,
         shipping_address: shippingMethod === "courier" ? form.address : null,
@@ -56,12 +57,39 @@ const Checkout = () => {
         notes: form.notes || null,
       }).select("id").single();
       if (orderError) throw orderError;
+
+      // 2. Save order items
       const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.productId, product_name: item.name, size: item.size, color: item.color, quantity: item.quantity, unit_price: item.price }));
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
-      clearCart();
-      toast.success(t("checkout.success"));
-      navigate("/");
+
+      // 3. Create Stripe Checkout session
+      const stripeItems = items.map((item) => ({
+        productId: item.productId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.size,
+        color: item.color,
+        image: item.image,
+        shippingMethod,
+        shippingCost,
+      }));
+
+      const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          order_id: order.id,
+          items: stripeItems,
+          origin_url: window.location.origin,
+        },
+      });
+
+      if (sessionError) throw sessionError;
+      if (sessionData?.url) {
+        window.location.href = sessionData.url;
+      } else {
+        throw new Error("No checkout URL received");
+      }
     } catch (error: any) {
       toast.error(error.message || t("checkout.error"));
     } finally {
