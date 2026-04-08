@@ -213,9 +213,10 @@ const ProductDetail = () => {
                 className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-lg text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: "var(--gradient-brand)" }}
                 disabled={!selectedSize || !selectedColor}
+                onClick={handleAddToCart}
               >
                 <ShoppingCart className="w-5 h-5" />
-                Add to Cart — {(product.price * quantity).toFixed(2).replace(".", ",")} €
+                Pievienot grozam — {(product.price * quantity).toFixed(2).replace(".", ",")} €
               </button>
               {(!selectedSize || !selectedColor) && (
                 <p className="text-xs text-muted-foreground text-center mt-2 font-body">
