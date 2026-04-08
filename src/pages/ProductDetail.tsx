@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Ruler, Palette, ExternalLink } from "lucide-react";
 import { products } from "@/data/products";
 import { Navbar } from "@/components/Navbar";
@@ -9,30 +9,25 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 
-const sizeOptions: Record<string, string[]> = {
-  "t-shirts": ["XS", "S", "M", "L", "XL", "XXL"],
-  hoodies: ["XS", "S", "M", "L", "XL", "XXL"],
-  kids: ["92", "98", "104", "110", "116", "122", "128"],
-  mugs: ["300ml", "450ml"],
-  bags: ["One Size"],
-};
-
-const colorOptions = [
-  { name: "White", value: "#FFFFFF" },
-  { name: "Black", value: "#1a1a1a" },
-  { name: "Red", value: "#DC2626" },
-  { name: "Navy", value: "#1e3a5f" },
-  { name: "Grey", value: "#6b7280" },
-];
-
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const product = products.find((p) => p.slug === slug);
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+
+  // When a color is selected and it has its own image, show that image
+  const displayImage = useMemo(() => {
+    if (!product) return "";
+    if (selectedColor) {
+      const colorVariant = product.colors.find((c) => c.name === selectedColor);
+      if (colorVariant?.image) return colorVariant.image;
+    }
+    return product.images[selectedImageIdx] || product.image;
+  }, [product, selectedColor, selectedImageIdx]);
 
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) return;
@@ -66,8 +61,6 @@ const ProductDetail = () => {
     );
   }
 
-  const sizes = sizeOptions[product.category] || ["One Size"];
-
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -84,19 +77,48 @@ const ProductDetail = () => {
           </Link>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-            {/* Product Image */}
+            {/* Product Image + Gallery */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="aspect-square rounded-lg overflow-hidden bg-card border border-border">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-square rounded-lg overflow-hidden bg-card border border-border mb-3">
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={displayImage}
+                    src={displayImage}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </AnimatePresence>
               </div>
+
+              {/* Thumbnail gallery */}
+              {product.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {product.images.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedImageIdx(idx);
+                        setSelectedColor("");
+                      }}
+                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${
+                        selectedImageIdx === idx && !selectedColor
+                          ? "border-primary"
+                          : "border-border hover:border-foreground/50"
+                      }`}
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
 
             {/* Product Info */}
@@ -110,9 +132,58 @@ const ProductDetail = () => {
                 {product.category}
               </span>
               <h1 className="text-3xl md:text-4xl mb-4">{product.name}</h1>
-              <p className="text-3xl font-bold font-body mb-8" style={{ color: "hsl(var(--primary))" }}>
+              <p className="text-3xl font-bold font-body mb-6" style={{ color: "hsl(var(--primary))" }}>
                 {product.price.toFixed(2).replace(".", ",")} €
               </p>
+
+              {/* Description */}
+              {product.description && (
+                <p className="text-sm text-muted-foreground font-body mb-6 leading-relaxed">
+                  {product.description}
+                </p>
+              )}
+
+              {/* Composition */}
+              {product.composition && (
+                <div className="mb-4 text-xs text-muted-foreground font-body">
+                  <span className="font-semibold text-foreground">Composition:</span> {product.composition}
+                </div>
+              )}
+
+              {/* Care */}
+              {product.careInstructions && (
+                <div className="mb-6 text-xs text-muted-foreground font-body">
+                  <span className="font-semibold text-foreground">Care:</span> {product.careInstructions}
+                </div>
+              )}
+
+              {/* Color Selection */}
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Palette className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-body font-semibold text-sm">
+                    Color {selectedColor && `— ${selectedColor}`}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => {
+                        setSelectedColor(color.name);
+                        setSelectedImageIdx(0);
+                      }}
+                      title={color.name}
+                      className={`w-9 h-9 rounded-full border-2 transition-all ${
+                        selectedColor === color.name
+                          ? "border-primary scale-110 ring-2 ring-primary/30"
+                          : "border-border hover:border-foreground"
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                    />
+                  ))}
+                </div>
+              </div>
 
               {/* Size Selection */}
               <div className="mb-6">
@@ -121,11 +192,11 @@ const ProductDetail = () => {
                   <span className="font-body font-semibold text-sm">Size</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {sizes.map((size) => (
+                  {product.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-md text-sm font-body font-medium border transition-all ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${
                         selectedSize === size
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
@@ -135,34 +206,6 @@ const ProductDetail = () => {
                     </button>
                   ))}
                 </div>
-              </div>
-
-              {/* Color Selection */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Palette className="w-4 h-4 text-muted-foreground" />
-                  <span className="font-body font-semibold text-sm">Color</span>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {colorOptions.map((color) => (
-                    <button
-                      key={color.name}
-                      onClick={() => setSelectedColor(color.name)}
-                      title={color.name}
-                      className={`w-10 h-10 rounded-full border-2 transition-all ${
-                        selectedColor === color.name
-                          ? "border-primary scale-110 ring-2 ring-primary/30"
-                          : "border-border hover:border-foreground"
-                      }`}
-                      style={{ backgroundColor: color.value }}
-                    />
-                  ))}
-                </div>
-                {selectedColor && (
-                  <p className="text-xs text-muted-foreground mt-2 font-body">
-                    Selected: {selectedColor}
-                  </p>
-                )}
               </div>
 
               {/* Quantity */}
