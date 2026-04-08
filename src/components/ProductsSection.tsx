@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { products, designCategories } from "@/data/products";
+import { designCategories } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { useDesignProducts } from "@/hooks/useProducts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const ProductsSection = () => {
   const [active, setActive] = useState("all");
+  const { data: products = [], isLoading } = useDesignProducts();
 
-  const customizable = products.filter((p) => p.customizable);
-  const filtered = active === "all" ? customizable : customizable.filter((p) => p.category === active);
+  const filtered = active === "all" ? products : products.filter((p) => p.category === active);
 
   return (
     <section id="products" className="py-24 bg-secondary/30">
@@ -30,7 +32,6 @@ export const ProductsSection = () => {
           Choose a blank product, then personalise it with your own design using our editor.
         </motion.p>
 
-        {/* Category filter */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">
           {designCategories.map((cat) => (
             <button
@@ -47,11 +48,25 @@ export const ProductsSection = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

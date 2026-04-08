@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { products, collectionCategories } from "@/data/products";
+import { collectionCategories } from "@/data/products";
 import { ProductCard } from "@/components/ProductCard";
+import { useCollectionProducts } from "@/hooks/useProducts";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const OurCollectionSection = () => {
   const [active, setActive] = useState("all");
+  const { data: products = [], isLoading } = useCollectionProducts();
 
-  const collectionProducts = products.filter((p) => !p.customizable);
-  const filtered =
-    active === "all"
-      ? collectionProducts
-      : collectionProducts.filter((p) => p.category === active);
+  const filtered = active === "all" ? products : products.filter((p) => p.category === active);
 
-  if (collectionProducts.length === 0) return null;
+  if (!isLoading && products.length === 0) return null;
 
   return (
     <section id="collection" className="py-24 bg-background">
@@ -51,11 +50,25 @@ export const OurCollectionSection = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
+                <Skeleton className="aspect-square w-full" />
+                <div className="p-4 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
