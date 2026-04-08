@@ -28,6 +28,8 @@ const App = () => (
             <CartSidebar />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/design" element={<DesignYourOwn />} />
+              <Route path="/collection" element={<OurCollection />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/checkout" element={<Checkout />} />
