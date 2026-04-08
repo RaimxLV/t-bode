@@ -92,6 +92,7 @@ export const Navbar = () => {
           <button
             className="relative p-2 text-white/70 hover:text-white transition-colors"
             onClick={() => setCartOpen(true)}
+            aria-label={t("cart.openCart", "Atvērt grozu") + (totalItems > 0 ? ` (${totalItems})` : "")}
           >
             <ShoppingCart className="w-5 h-5" />
             {totalItems > 0 && (
