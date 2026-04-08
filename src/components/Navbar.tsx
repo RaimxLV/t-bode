@@ -49,7 +49,7 @@ export const Navbar = () => {
             <button
               key={link.label}
               onClick={() => handleNavClick(link.href)}
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer"
+              className="text-sm font-medium text-white/70 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
             >
               {link.label}
             </button>
