@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ShoppingCart, Menu, X, Search } from "lucide-react";
+import { ShoppingCart, Menu, X, Search, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import logo from "@/assets/logo.svg";
 
 const navLinks = [
@@ -15,6 +16,7 @@ const navLinks = [
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalItems, setIsOpen: setCartOpen } = useCart();
+  const { user, signOut } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -39,6 +41,23 @@ export const Navbar = () => {
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Search className="w-5 h-5" />
           </button>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Iziet"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          ) : (
+            <a
+              href="/auth"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Pieslēgties"
+            >
+              <User className="w-5 h-5" />
+            </a>
+          )}
           <button
             className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setCartOpen(true)}
