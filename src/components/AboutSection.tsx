@@ -12,12 +12,6 @@ export const AboutSection = () => {
     { icon: Truck, titleKey: "about.features.delivery.title", descKey: "about.features.delivery.desc" },
   ];
 
-  const steps = [
-    { num: "1", titleKey: "about.steps.s1.title", descKey: "about.steps.s1.desc" },
-    { num: "2", titleKey: "about.steps.s2.title", descKey: "about.steps.s2.desc" },
-    { num: "3", titleKey: "about.steps.s3.title", descKey: "about.steps.s3.desc" },
-    { num: "4", titleKey: "about.steps.s4.title", descKey: "about.steps.s4.desc" },
-  ];
 
   return (
     <section id="about" className="py-24">
