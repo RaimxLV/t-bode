@@ -116,7 +116,38 @@ const Admin = () => {
     setLoadingOrders(false);
   };
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  const loadFaqs = async () => {
+    setLoadingFaqs(true);
+    const { data, error } = await supabase.from("faqs").select("*").order("sort_order", { ascending: true });
+    if (error) toast.error("Failed to load FAQs");
+    else setFaqs(data || []);
+    setLoadingFaqs(false);
+  };
+
+  const handleSaveFaq = async () => {
+    if (!editingFaq || !editingFaq.question_lv || !editingFaq.answer_lv) { toast.error(t("admin.faqSaveError")); return; }
+    setSavingFaq(true);
+    const payload = { question_lv: editingFaq.question_lv, answer_lv: editingFaq.answer_lv, question_en: editingFaq.question_en, answer_en: editingFaq.answer_en, sort_order: editingFaq.sort_order, is_active: editingFaq.is_active };
+    if (editingFaq.id) {
+      const { error } = await supabase.from("faqs").update(payload).eq("id", editingFaq.id);
+      if (error) toast.error(t("admin.faqSaveError"));
+      else toast.success(t("admin.faqSaved"));
+    } else {
+      const { error } = await supabase.from("faqs").insert(payload);
+      if (error) toast.error(t("admin.faqSaveError"));
+      else toast.success(t("admin.faqCreated"));
+    }
+    setSavingFaq(false); setFaqDialogOpen(false); setEditingFaq(null); loadFaqs();
+  };
+
+  const handleDeleteFaq = async (id: string) => {
+    if (!confirm(t("admin.faqDeleteConfirm"))) return;
+    const { error } = await supabase.from("faqs").delete().eq("id", id);
+    if (error) toast.error(t("admin.faqDeleteError"));
+    else { toast.success(t("admin.faqDeleted")); loadFaqs(); }
+  };
+
+
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
     else { toast.success(t("admin.statusUpdated")); loadOrders(); }
