@@ -7,6 +7,8 @@ import { CartProvider } from "@/context/CartContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartSidebar } from "@/components/CartSidebar";
 import Index from "./pages/Index.tsx";
+import DesignYourOwn from "./pages/DesignYourOwn.tsx";
+import OurCollection from "./pages/OurCollection.tsx";
 import ProductDetail from "./pages/ProductDetail.tsx";
 import Auth from "./pages/Auth.tsx";
 import Checkout from "./pages/Checkout.tsx";
@@ -26,6 +28,8 @@ const App = () => (
             <CartSidebar />
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/design" element={<DesignYourOwn />} />
+              <Route path="/collection" element={<OurCollection />} />
               <Route path="/product/:slug" element={<ProductDetail />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/checkout" element={<Checkout />} />

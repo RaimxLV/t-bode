@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import heroImage from "@/assets/hero.jpg";
 
 export const HeroSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative h-screen overflow-hidden">
-      {/* Parallax Background */}
       <div
         className="absolute inset-0 parallax-bg"
         style={{ backgroundImage: `url(${heroImage})` }}
@@ -14,14 +17,13 @@ export const HeroSection = () => {
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      {/* Content */}
       <div className="relative z-10 flex items-center h-full container mx-auto px-4">
         <div className="max-w-3xl">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl lg:text-9xl leading-none tracking-tight"
+            className="text-6xl md:text-8xl lg:text-9xl leading-none tracking-tight text-white"
           >
             Design.
             <br />
@@ -35,25 +37,34 @@ export const HeroSection = () => {
           >
             Tell Your Story.
           </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.7 }}
+            className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body"
+          >
+            Izveido savu unikālo apģērbu ar mūsu personalizācijas rīku. Tavi dizaini — tavas krekliņi.
+          </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-8 bg-background/30 backdrop-blur-sm rounded-lg p-6 max-w-md"
+            transition={{ duration: 0.8, delay: 0.9 }}
+            className="mt-10 flex flex-col sm:flex-row gap-4"
           >
-            <h3 className="text-xl font-semibold mb-2 font-body">
-              Your Idea. Your Shirt.
-            </h3>
-            <p className="text-muted-foreground text-sm mb-4 font-body">
-              Custom Apparel for Every Adventure.
-            </p>
-            <a
-              href="#products"
-              className="inline-block px-8 py-3 rounded-md font-body font-semibold text-sm transition-all hover:scale-105"
+            <button
+              onClick={() => navigate("/design")}
+              className="group inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-bold text-lg transition-all hover:scale-105 hover:shadow-lg"
               style={{ background: "var(--gradient-brand)", color: "white" }}
             >
-              Make it Personal
-            </a>
+              Sākt personalizēt
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+            </button>
+            <button
+              onClick={() => navigate("/collection")}
+              className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-semibold text-lg border-2 border-white/40 text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/60"
+            >
+              Mūsu kolekcija
+            </button>
           </motion.div>
         </div>
       </div>
