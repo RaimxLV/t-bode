@@ -49,7 +49,14 @@
     "fileUpload": "Pievienot failu",
     "attachFile": "Nospied, lai pievienotu failu (PDF, PNG, JPG, AI, EPS, SVG)",
     "fileHint": "Maks. faila izmērs: 15 MB",
-    "fileTooLarge": "Fails ir pārāk liels. Maksimālais izmērs ir 15 MB."
+    "fileTooLarge": "Fails ir pārāk liels. Maksimālais izmērs ir 15 MB.",
+    "email": "E-pasts *",
+    "sending": "Nosūta...",
+    "successMessage": "Jūsu pieteikums ir veiksmīgi nosūtīts!",
+    "errorMessage": "Kļūda nosūtot pieteikumu. Lūdzu mēģiniet vēlreiz.",
+    "thankYouTitle": "Paldies par jūsu pieteikumu!",
+    "thankYouDesc": "Mēs sazināsimies ar jums tuvākajā laikā.",
+    "sendAnother": "Nosūtīt vēl vienu pieteikumu"
   },
   "products": {
     "designTitle": "Dizaini pats",
