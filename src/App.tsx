@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,16 +10,18 @@ import { CartSidebar } from "@/components/CartSidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import Index from "./pages/Index.tsx";
-import DesignYourOwn from "./pages/DesignYourOwn.tsx";
-import OurCollection from "./pages/OurCollection.tsx";
-import ProductDetail from "./pages/ProductDetail.tsx";
-import Auth from "./pages/Auth.tsx";
-import Checkout from "./pages/Checkout.tsx";
-import Admin from "./pages/Admin.tsx";
-import PaymentSuccess from "./pages/PaymentSuccess.tsx";
-import NotFound from "./pages/NotFound.tsx";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import Index from "./pages/Index.tsx";
+
+// Lazy-loaded routes for code splitting
+const DesignYourOwn = lazy(() => import("./pages/DesignYourOwn.tsx"));
+const OurCollection = lazy(() => import("./pages/OurCollection.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
+const Auth = lazy(() => import("./pages/Auth.tsx"));
+const Checkout = lazy(() => import("./pages/Checkout.tsx"));
+const Admin = lazy(() => import("./pages/Admin.tsx"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
+const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -29,6 +32,12 @@ const DynamicLang = () => {
   }, [i18n.language]);
   return null;
 };
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <ErrorBoundary>
@@ -42,18 +51,20 @@ const App = () => (
               <DynamicLang />
               <ScrollToTop />
               <CartSidebar />
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/design" element={<DesignYourOwn />} />
-                <Route path="/collection" element={<OurCollection />} />
-                <Route path="/product/:slug" element={<ProductDetail />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/payment-success" element={<PaymentSuccess />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/design" element={<DesignYourOwn />} />
+                  <Route path="/collection" element={<OurCollection />} />
+                  <Route path="/product/:slug" element={<ProductDetail />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/admin" element={<Admin />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
             </BrowserRouter>
           </CartProvider>
         </AuthProvider>

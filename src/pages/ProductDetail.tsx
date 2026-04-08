@@ -206,6 +206,13 @@ const ProductDetail = () => {
           </div>
         </div>
       </main>
+      <ImageLightbox
+        images={galleryImages}
+        initialIndex={selectedImageIdx}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        alt={product.name}
+      />
       <Footer />
     </div>
   );
