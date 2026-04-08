@@ -91,6 +91,10 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("products");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
 
   // Check admin role
   useEffect(() => {
