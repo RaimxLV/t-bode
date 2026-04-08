@@ -10,7 +10,7 @@ export type Product = {
   price: number;
   image: string;
   images: string[];
-  category: "t-shirts" | "hoodies" | "mugs" | "bags" | "kids" | "latvia";
+  category: "t-shirts" | "hoodies" | "mugs" | "bags" | "kids" | "latvia" | "accessories";
   slug: string;
   description?: string;
   composition?: string;
@@ -231,16 +231,30 @@ export const products: Product[] = [
     id: "10",
     name: "DUO Two-Tone Mug 300ml",
     price: 10.9,
-    image: `${BASE}/2026/02/Gemini_Generated_Image_4u1spb4u1spb4u1s-500x500.png`,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_4u1spb4u1spb4u1s.png`,
     images: [
-      `${BASE}/2026/02/Gemini_Generated_Image_4u1spb4u1spb4u1s-500x500.png`,
+      `${BASE}/2026/02/Gemini_Generated_Image_4u1spb4u1spb4u1s.png`,
+      `${BASE}/2026/02/navy-duo.jpg`,
+      `${BASE}/2026/02/lime-duo.jpg`,
+      `${BASE}/2026/02/mugs.jpg`,
+      `${BASE}/2026/02/pink-duo.jpg`,
+      `${BASE}/2026/02/black-duo.jpg`,
     ],
     category: "mugs",
     customizable: true,
     slug: "duo-two-tone-mug",
     description: "Ceramic cylinder mug with two-tone design. Volume 300ml. Unlimited number of colors for printing.",
     colors: [
-      { name: "Two-tone", hex: "#E0E0E0" },
+      { name: "Black", hex: "#1a1a1a", image: `${BASE}/2026/02/black-duo.jpg` },
+      { name: "Burgundy", hex: "#800020" },
+      { name: "Dark green", hex: "#006400" },
+      { name: "Light blue", hex: "#93C5FD" },
+      { name: "Lime", hex: "#84CC16", image: `${BASE}/2026/02/lime-duo.jpg` },
+      { name: "Navy", hex: "#002147", image: `${BASE}/2026/02/navy-duo.jpg` },
+      { name: "Orange", hex: "#F97316" },
+      { name: "Pink", hex: "#FFB7C5", image: `${BASE}/2026/02/pink-duo.jpg` },
+      { name: "Red", hex: "#DC2626" },
+      { name: "Yellow", hex: "#EAB308" },
     ],
     sizes: ["300ml"],
   },
@@ -443,6 +457,215 @@ export const products: Product[] = [
     ],
     sizes: ["S", "M", "L", "XL", "XXL"],
   },
+
+  // ── LATVIA COLLECTION (ADDITIONAL) ────────────────────
+  {
+    id: "18",
+    name: "LATVIA Shirt Three Stars",
+    price: 18.9,
+    image: `${BASE}/2026/02/unnamed-1.jpg`,
+    images: [
+      `${BASE}/2026/02/unnamed-1.jpg`,
+      `${BASE}/2026/02/LV-krekls-_Tris-Zvaigznes_-1890-eur-1.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "latvia-shirt-three-stars",
+    description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
+    composition: "Shell: Single Jersey, 100% Cotton – Organic Combed Ring Spun. Fabric washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Heather Grey", hex: "#B0B0B0" },
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: "19",
+    name: "Fan Shirts",
+    price: 18.9,
+    image: `${BASE}/2026/01/FANU-krekls-Bordo-1890-eur-1.png`,
+    images: [
+      `${BASE}/2026/01/FANU-krekls-Bordo-1890-eur-1.png`,
+      `${BASE}/2026/01/Gemini_Generated_Image_k9t8z5k9t8z5k9t8-1.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "fan-shirts",
+    description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
+    composition: "Shell: Single Jersey, 100% Cotton – Organic Combed Ring Spun. Fabric washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Burgundy", hex: "#800020", image: `${BASE}/2026/01/FANU-krekls-Bordo-1890-eur-1.png` },
+      { name: "White", hex: "#FFFFFF", image: `${BASE}/2026/01/Gemini_Generated_Image_k9t8z5k9t8z5k9t8-1.png` },
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: "20",
+    name: "LATVIA Hoodie with Embroidery",
+    price: 49.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_aw0zbpaw0zbpaw0z.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_aw0zbpaw0zbpaw0z.png`,
+      `${BASE}/2026/02/hoodijss.jpg`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "latvia-hoodie-with-embroidery",
+    description: "Double-layered hood in self-fabric. Single-jersey back neck tape. Set-in sleeves. 1×1 rib at sleeve cuffs and hem. Kangaroo pocket.",
+    composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Black", hex: "#1a1a1a" },
+      { name: "Burgundy", hex: "#800020" },
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: "21",
+    name: "Hoodie with Embroidery LATVIA",
+    price: 35.9,
+    image: `${BASE}/2026/02/LV-hudijs-ar-uzsuvi-_khaki_-4990-eur.png`,
+    images: [
+      `${BASE}/2026/02/LV-hudijs-ar-uzsuvi-_khaki_-4990-eur.png`,
+      `${BASE}/2026/02/Gemini_Generated_Image_79wwbo79wwbo79ww-1.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "hoodie-with-embroidery-latvia",
+    description: "Double-layered hood in self-fabric. Single-jersey back neck tape. Set-in sleeves. 1×1 rib at sleeve cuffs and hem. Kangaroo pocket.",
+    composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Khaki", hex: "#806B2A" },
+    ],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+  },
+  {
+    id: "22",
+    name: "KIDS Sweater with Oak Leaf Design",
+    price: 19.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_x66h8tx66h8tx66h.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_x66h8tx66h8tx66h.png`,
+      `${BASE}/2026/02/Ozollapu-bernu-dzemperis_natural-raw_19.90EUR.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "kids-sweater-oak-leaf",
+    description: "Kids sweater with oak leaf design. Soft brushed fabric for comfort.",
+    composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Natural Raw", hex: "#F5F0E8" },
+    ],
+    sizes: ["3-4/98-104cm", "5-6/110-116cm", "7-8/122-128cm", "9-11/134-146cm", "12-13/152-158cm"],
+  },
+  {
+    id: "23",
+    name: "KIDS Hoodie LATVIJA",
+    price: 27.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_bivtyubivtyubivt.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_bivtyubivtyubivt.png`,
+      `${BASE}/2026/02/LV-bernu-hudijs-_bordo_-2790-eur.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "kids-hoodie-latvija",
+    description: "Kids hoodie with LATVIJA design. Double-layered hood, kangaroo pocket.",
+    composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Burgundy", hex: "#800020" },
+    ],
+    sizes: ["3-4/98-104cm", "5-6/110-116cm", "7-8/122-128cm", "9-11/134-146cm", "12-13/152-158cm"],
+  },
+  {
+    id: "24",
+    name: "KIDS Hoodie with Embroidery LATVIA",
+    price: 35.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_ijnpshijnpshijnp.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_ijnpshijnpshijnp.png`,
+      `${BASE}/2026/02/LV-Bernu-hudijs-_khaki_3590-eur-1.png`,
+    ],
+    category: "latvia",
+    customizable: false,
+    slug: "kids-hoodie-embroidery-latvia",
+    description: "Kids hoodie with embroidered LATVIA text. Double-layered hood, kangaroo pocket.",
+    composition: "Shell: Brushed, 100% Cotton – Organic Ring Spun Combed. Panel washed.",
+    careInstructions: "Wash similar colours together, no ironing on print, wash and iron inside out.",
+    colors: [
+      { name: "Khaki", hex: "#806B2A" },
+    ],
+    sizes: ["3-4/98-104cm", "5-6/110-116cm", "7-8/122-128cm", "9-11/134-146cm", "12-13/152-158cm"],
+  },
+
+  // ── ACCESSORIES ───────────────────────────────────────
+  {
+    id: "25",
+    name: "Oak Leaf Bag",
+    price: 6.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_mge42xmge42xmge4-1.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_mge42xmge42xmge4-1.png`,
+      `${BASE}/2026/02/maiss.jpg`,
+    ],
+    category: "accessories",
+    customizable: false,
+    slug: "oak-leaf-bag",
+    description: "Cotton bag with oak leaf design from The Latvia Edit collection.",
+    colors: [
+      { name: "Black", hex: "#1a1a1a" },
+      { name: "Neutral", hex: "#F5F0E8" },
+    ],
+    sizes: ["One Size"],
+  },
+  {
+    id: "26",
+    name: "Latvian Design Hats with Embroidery \"LATVIA\"",
+    price: 16.9,
+    image: `${BASE}/2026/02/cover.jpg`,
+    images: [
+      `${BASE}/2026/02/cover.jpg`,
+      `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Sinepju-krasas-1690-eur-2.png`,
+      `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Antracits-1690-eur-2.png`,
+      `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Bordo-1690-eur-2.png`,
+      `${BASE}/2026/02/LV-ziemas-cepure-ar-uzsuvi-Khaki-1690-eur-2.png`,
+      `${BASE}/2026/02/LV-ziemas-cepure-ar-uzsuvi-Smilsu-krasas-1690-eur-2.png`,
+    ],
+    category: "accessories",
+    customizable: false,
+    slug: "latvian-hat-embroidery-latvia",
+    description: "Winter hat with embroidered LATVIA text. Double-layered knit for warmth.",
+    colors: [
+      { name: "Anthracite", hex: "#383838", image: `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Antracits-1690-eur-2.png` },
+      { name: "Burgundy", hex: "#800020", image: `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Bordo-1690-eur-2.png` },
+      { name: "Caramel", hex: "#C4A882", image: `${BASE}/2026/02/LV-ziemas-cepure-ar-uzsuvi-Smilsu-krasas-1690-eur-2.png` },
+      { name: "Khaki", hex: "#806B2A", image: `${BASE}/2026/02/LV-ziemas-cepure-ar-uzsuvi-Khaki-1690-eur-2.png` },
+      { name: "Mustard", hex: "#E5A100", image: `${BASE}/2026/02/LV-ziemas-cepure-ar-izsuvi-Sinepju-krasas-1690-eur-2.png` },
+    ],
+    sizes: ["One Size"],
+  },
+  {
+    id: "27",
+    name: "Latvian Socks",
+    price: 3.9,
+    image: `${BASE}/2026/02/Gemini_Generated_Image_w86jdzw86jdzw86j.png`,
+    images: [
+      `${BASE}/2026/02/Gemini_Generated_Image_w86jdzw86jdzw86j.png`,
+      `${BASE}/2026/02/Latvijas-zekites-399-eur.png`,
+    ],
+    category: "accessories",
+    customizable: false,
+    slug: "latvian-socks",
+    description: "Latvian design socks with national pattern.",
+    colors: [
+      { name: "White", hex: "#FFFFFF" },
+    ],
+    sizes: ["35-38", "38-42", "43-46"],
+  },
 ];
 
 export const designCategories = [
@@ -454,9 +677,16 @@ export const designCategories = [
   { id: "kids", label: "Kids" },
 ] as const;
 
+export const collectionCategories = [
+  { id: "all", label: "All" },
+  { id: "latvia", label: "The Latvia Edit" },
+  { id: "accessories", label: "Accessories" },
+] as const;
+
 export const categories = [
   ...designCategories,
   { id: "latvia", label: "The Latvia Edit" },
+  { id: "accessories", label: "Accessories" },
 ] as const;
 
 export const stores = [
