@@ -15,6 +15,7 @@ import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, P
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ProductCard } from "@/components/ProductCard";
 import { useTranslation } from "react-i18next";
 import { CATEGORY_ICONS } from "@/components/CategoryIcons";
 import logo from "@/assets/logo.svg";
@@ -275,7 +276,7 @@ const Admin = () => {
     return items.filter((p) => p.category === adminCategoryFilter);
   };
 
-  const renderProductTable = (items: DBProduct[], forDesign: boolean) => {
+  const renderProductGrid = (items: DBProduct[], forDesign: boolean) => {
     const filtered = filterProductsForTab(items);
     const relevantCategories = forDesign
       ? CATEGORIES.filter((c) => !["latvia", "accessories"].includes(c.value))
@@ -313,79 +314,15 @@ const Admin = () => {
         {filtered.length === 0 ? (
           <div className="text-center py-20"><p className="text-muted-foreground font-body">{t("admin.noProducts")}</p></div>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[50px]"></TableHead>
-                  <TableHead className="text-xs font-body">{t("admin.productName")}</TableHead>
-                  <TableHead className="text-xs font-body">{t("admin.category")}</TableHead>
-                  <TableHead className="text-xs font-body">{t("admin.colorVariants")}</TableHead>
-                  <TableHead className="text-xs font-body w-[100px]">{t("admin.price")}</TableHead>
-                  <TableHead className="text-xs font-body w-[80px]">{t("admin.inStock")}</TableHead>
-                  <TableHead className="text-xs font-body w-[80px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id} className="group">
-                    <TableCell className="p-2">
-                      <div className="w-10 h-10 rounded bg-muted overflow-hidden flex items-center justify-center">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <ImagePlus className="w-4 h-4 text-muted-foreground" />
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-body font-semibold text-sm">{p.name}</p>
-                        <p className="text-xs text-muted-foreground font-body">/{p.slug}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs font-body">{t(`categories.${p.category}`)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-0.5">
-                        {((p.color_variants as ColorVariant[]) || []).slice(0, 6).map((c, i) => (
-                          <div key={i} className="w-5 h-5 rounded-full border border-border" style={{ backgroundColor: c.hex }} title={c.name} />
-                        ))}
-                        {((p.color_variants as ColorVariant[]) || []).length > 6 && (
-                          <span className="text-xs text-muted-foreground ml-1">+{(p.color_variants as ColorVariant[]).length - 6}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        defaultValue={p.price}
-                        onBlur={(e) => updatePrice(p, parseFloat(e.target.value) || 0)}
-                        className="w-20 h-8 text-xs font-body"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Switch
-                        checked={p.in_stock}
-                        onCheckedChange={() => toggleInStock(p)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)} className="h-8 w-8">
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="h-8 w-8 text-destructive">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+            {filtered.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onEdit={openEditDialog}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
         )}
       </>
@@ -425,14 +362,14 @@ const Admin = () => {
             <div className="flex justify-end mb-4">
               <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newDesignProduct")}</Button>
             </div>
-            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductTable(designProducts, true)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(designProducts, true)}
           </TabsContent>
 
           <TabsContent value="collection">
             <div className="flex justify-end mb-4">
               <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newCollectionProduct")}</Button>
             </div>
-            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductTable(collectionProducts, false)}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
           </TabsContent>
 
           <TabsContent value="orders">
