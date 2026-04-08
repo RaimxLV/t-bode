@@ -18,6 +18,7 @@ export default {
         body: ["Inter", "sans-serif"],
       },
       colors: {
+        "cta-red": "hsl(var(--cta-red))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

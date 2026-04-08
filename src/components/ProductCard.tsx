@@ -10,7 +10,7 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="group bg-card rounded-lg overflow-hidden border border-border hover:border-primary/40 transition-all cursor-pointer"
+        className="group bg-card rounded-lg overflow-hidden border border-border hover:border-foreground/20 transition-all cursor-pointer"
         style={{ boxShadow: "var(--shadow-card)" }}
       >
         <div className="aspect-square overflow-hidden">
@@ -28,8 +28,7 @@ export const ProductCard = ({ product }: { product: DBProduct }) => {
               {product.price.toFixed(2).replace(".", ",")} €
             </span>
             <span
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-body text-primary-foreground transition-all hover:scale-105"
-              style={{ background: "var(--gradient-brand)" }}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold font-body text-white transition-all hover:scale-105 bg-cta-red"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               {product.customizable ? "Customize" : "Select options"}
