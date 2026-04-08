@@ -123,6 +123,12 @@ const Admin = () => {
     else { toast.success(t("admin.productDeleted")); loadProducts(); }
   };
 
+  const handleToggleStock = async (id: string, currentStock: boolean) => {
+    const { error } = await supabase.from("products").update({ in_stock: !currentStock }).eq("id", id);
+    if (error) toast.error(t("admin.updateError", "Neizdevās atjaunināt"));
+    else { toast.success(!currentStock ? t("admin.markedInStock", "Atzīmēts kā pieejams") : t("admin.markedOutOfStock", "Atzīmēts kā nav noliktavā")); loadProducts(); }
+  };
+
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
     setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock });
