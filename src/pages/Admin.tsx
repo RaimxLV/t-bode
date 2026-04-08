@@ -623,7 +623,8 @@ const Admin = () => {
                   );
                 })}
               </div>
-            )}
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </main>
