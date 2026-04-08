@@ -71,6 +71,15 @@
     "accessories": "Aksesuāri",
     "allCollection": "Visi"
   },
+  "filters": {
+    "filter": "Filtrēt",
+    "clearAll": "Notīrīt visu",
+    "showResults": "Rādīt {{count}} produktus",
+    "showAllColors": "Skatīt visas krāsas (+{{count}})",
+    "sizeAdults": "Pieaugušajiem",
+    "sizeKids": "Bērniem",
+    "sizeBaby": "Zīdaiņiem"
+  },
   "productDetail": {
     "backToProducts": "Atpakaļ uz produktiem",
     "color": "Krāsa",

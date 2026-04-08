@@ -1,4 +1,7 @@
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileFilterDrawer } from "./MobileFilterDrawer";
+import { FilterAccordionContent } from "./FilterAccordionContent";
 import { CATEGORY_ICONS } from "./CategoryIcons";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
@@ -19,6 +22,7 @@ interface ProductFiltersProps {
   setFilter: (key: string, value: string | string[] | number | null) => void;
   clearFilters: () => void;
   hasActiveFilters: boolean;
+  filteredCount?: number;
 }
 
 export const ProductFilters = ({
@@ -28,10 +32,26 @@ export const ProductFilters = ({
   setFilter,
   clearFilters,
   hasActiveFilters,
+  filteredCount = 0,
 }: ProductFiltersProps) => {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
-  // Derive available colors from products
+  if (isMobile) {
+    return (
+      <MobileFilterDrawer
+        categories={categories}
+        products={products}
+        filters={filters}
+        setFilter={setFilter}
+        clearFilters={clearFilters}
+        hasActiveFilters={hasActiveFilters}
+        filteredCount={filteredCount}
+      />
+    );
+  }
+
+  // Desktop: keep the existing inline layout
   const availableColors = Array.from(
     new Map(
       products
@@ -41,7 +61,6 @@ export const ProductFilters = ({
     ).values()
   );
 
-  // Derive available sizes from products
   const availableSizes = Array.from(
     new Set(products.flatMap((p) => p.sizes || []))
   );
@@ -56,7 +75,6 @@ export const ProductFilters = ({
     return a.localeCompare(b);
   });
 
-  // Price range
   const prices = products.map((p) => p.price);
   const minPrice = prices.length ? Math.floor(Math.min(...prices)) : 0;
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 100;
@@ -104,7 +122,6 @@ export const ProductFilters = ({
 
       {/* Attribute filters row */}
       <div className="flex flex-wrap items-start gap-6 p-4 bg-card rounded-lg border border-border">
-        {/* Color swatches */}
         {availableColors.length > 0 && (
           <div className="space-y-2">
             <span className="text-xs font-body font-medium text-muted-foreground uppercase tracking-wider">
@@ -131,7 +148,6 @@ export const ProductFilters = ({
           </div>
         )}
 
-        {/* Size grid */}
         {availableSizes.length > 0 && (
           <div className="space-y-2">
             <span className="text-xs font-body font-medium text-muted-foreground uppercase tracking-wider">
@@ -158,7 +174,6 @@ export const ProductFilters = ({
           </div>
         )}
 
-        {/* Price range */}
         {maxPrice > minPrice && (
           <div className="space-y-2 min-w-[200px]">
             <span className="text-xs font-body font-medium text-muted-foreground uppercase tracking-wider">
@@ -182,7 +197,6 @@ export const ProductFilters = ({
                   value={filters.priceMin ?? minPrice}
                   onChange={(e) => setFilter("priceMin", e.target.value ? Number(e.target.value) : null)}
                   className="w-20 h-8 text-xs"
-                  placeholder="No"
                 />
                 <span className="text-xs text-muted-foreground">–</span>
                 <Input
@@ -190,7 +204,6 @@ export const ProductFilters = ({
                   value={filters.priceMax ?? maxPrice}
                   onChange={(e) => setFilter("priceMax", e.target.value ? Number(e.target.value) : null)}
                   className="w-20 h-8 text-xs"
-                  placeholder="Līdz"
                 />
                 <span className="text-xs text-muted-foreground">€</span>
               </div>
@@ -198,7 +211,6 @@ export const ProductFilters = ({
           </div>
         )}
 
-        {/* Clear filters */}
         {hasActiveFilters && (
           <div className="flex items-end pb-1">
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-muted-foreground">

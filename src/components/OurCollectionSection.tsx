@@ -65,6 +65,7 @@ export const OurCollectionSection = () => {
           setFilter={setFilter}
           clearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
+          filteredCount={filtered.length}
         />
 
         <div className="mt-8">

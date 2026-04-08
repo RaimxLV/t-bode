@@ -71,6 +71,15 @@
     "accessories": "Accessories",
     "allCollection": "All"
   },
+  "filters": {
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "showResults": "Show {{count}} products",
+    "showAllColors": "Show all colors (+{{count}})",
+    "sizeAdults": "Adults",
+    "sizeKids": "Kids",
+    "sizeBaby": "Baby"
+  },
   "productDetail": {
     "backToProducts": "Back to Products",
     "color": "Color",
