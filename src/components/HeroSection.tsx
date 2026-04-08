@@ -12,59 +12,38 @@ export const HeroSection = () => {
     <section className="relative h-screen overflow-hidden">
       <div
         className="absolute inset-0 parallax-bg"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundPosition: "top center",
-        }}
+        style={{ backgroundImage: `url(${heroImage})` }}
       />
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      <div className="relative z-10 flex items-center justify-center h-full container mx-auto px-4">
-        <div className="max-w-4xl text-center">
+      <div className="relative z-10 flex items-center h-full container mx-auto px-4">
+        <div className="max-w-3xl">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-tight tracking-tight text-white uppercase"
-            style={{ fontFamily: "'Inter', sans-serif", fontWeight: 900 }}
+            className="text-6xl md:text-8xl lg:text-9xl leading-none tracking-tight text-white"
           >
             {t("hero.line1")}
+            <br />
+            {t("hero.line2")}
           </motion.h1>
-          <motion.div
+          <motion.h2
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="mt-2"
+            className="text-5xl md:text-7xl lg:text-8xl leading-none mt-2 text-gradient-brand"
           >
-            <span
-              className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-none tracking-tight uppercase"
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 900,
-                color: "#DC2626",
-              }}
-            >
-              {t("hero.line3a")}
-            </span>
-            <span
-              className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-black leading-none tracking-tight uppercase"
-              style={{
-                fontFamily: "'Inter', sans-serif",
-                fontWeight: 900,
-                color: "#DC2626",
-              }}
-            >
-              {t("hero.line3b")}
-            </span>
-          </motion.div>
+            {t("hero.line3")}
+          </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="mt-6 text-base sm:text-lg md:text-xl text-white/80 max-w-lg mx-auto font-body"
+            className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body"
           >
             {t("hero.description")}
           </motion.p>
@@ -72,7 +51,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            className="mt-10 flex flex-col sm:flex-row gap-4"
           >
             <button
               onClick={() => navigate("/design")}
