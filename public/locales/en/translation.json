@@ -317,6 +317,13 @@
       "cancelled": "Cancelled"
     }
   },
+  "payment": {
+    "successTitle": "Payment Successful!",
+    "successDesc": "Thank you for your order. We'll start processing it right away.",
+    "orderId": "Order ID",
+    "backToHome": "Back to Home",
+    "continueShopping": "Continue Shopping"
+  },
   "language": {
     "lv": "LV",
     "en": "EN"
