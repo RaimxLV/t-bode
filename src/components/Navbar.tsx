@@ -41,6 +41,23 @@ export const Navbar = () => {
           <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
             <Search className="w-5 h-5" />
           </button>
+          {user ? (
+            <button
+              onClick={signOut}
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Iziet"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          ) : (
+            <a
+              href="/auth"
+              className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+              title="Pieslēgties"
+            >
+              <User className="w-5 h-5" />
+            </a>
+          )}
           <button
             className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
             onClick={() => setCartOpen(true)}
