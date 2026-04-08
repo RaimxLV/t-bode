@@ -173,7 +173,7 @@ const Admin = () => {
       sizes: editingProduct.sizes,
       colors: editingProduct.color_variants.map((c) => c.name),
       customizable: editingProduct.customizable,
-      color_variants: editingProduct.color_variants as unknown as Record<string, unknown>[],
+      color_variants: JSON.parse(JSON.stringify(editingProduct.color_variants)),
       image_url: editingProduct.image_url || null,
       in_stock: editingProduct.in_stock,
     };
