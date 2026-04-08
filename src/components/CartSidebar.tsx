@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 
 export const CartSidebar = () => {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalItems, totalPrice } = useCart();
+  const navigate = useNavigate();
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
