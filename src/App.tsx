@@ -15,6 +15,7 @@ import Checkout from "./pages/Checkout.tsx";
 import Admin from "./pages/Admin.tsx";
 import PaymentSuccess from "./pages/PaymentSuccess.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 const queryClient = new QueryClient();
 
