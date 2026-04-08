@@ -104,6 +104,8 @@ export const Navbar = () => {
           <button
             className="lg:hidden p-2 text-white/70"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label={isOpen ? t("nav.closeMenu", "Aizvērt izvēlni") : t("nav.openMenu", "Atvērt izvēlni")}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
