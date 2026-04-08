@@ -86,7 +86,7 @@ export const Navbar = () => {
             )}
           </button>
           <button
-            className="lg:hidden p-2 text-muted-foreground"
+            className="lg:hidden p-2 text-white/70"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
