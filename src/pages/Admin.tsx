@@ -95,6 +95,9 @@ const Admin = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
 
   // Check admin role
   useEffect(() => {
