@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Ruler, Palette, ExternalLink } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Ruler, Palette, ExternalLink, ZoomIn } from "lucide-react";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
