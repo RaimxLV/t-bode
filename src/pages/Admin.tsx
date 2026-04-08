@@ -158,6 +158,16 @@ const Admin = () => {
 
     return (
       <>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={t("admin.searchProducts", "Meklēt produktus...")}
+            className="w-full sm:w-64 pl-9 pr-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+        </div>
         <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => setAdminCategoryFilter("all")}
