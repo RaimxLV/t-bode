@@ -377,73 +377,189 @@ const Admin = () => {
             <img src={logo} alt="T-Bode" className="h-8" />
             <span className="font-display text-lg tracking-wide">DARBINIEKA PANELIS</span>
           </div>
-          <Button onClick={openCreateDialog} style={{ background: "var(--gradient-brand)" }}>
-            <Plus className="w-4 h-4 mr-2" />
-            Jauns produkts
-          </Button>
+          {activeTab === "products" && (
+            <Button onClick={openCreateDialog} style={{ background: "var(--gradient-brand)" }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Jauns produkts
+            </Button>
+          )}
         </div>
       </header>
 
-      {/* Product list */}
       <main className="max-w-7xl mx-auto px-4 py-6">
-        {loadingProducts ? (
-          <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
-        ) : products.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-muted-foreground font-body mb-4">Nav neviena produkta</p>
-            <Button onClick={openCreateDialog} variant="outline">
-              <Plus className="w-4 h-4 mr-2" /> Izveidot pirmo produktu
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((p) => (
-              <Card key={p.id} className="overflow-hidden">
-                <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
-                  {p.image_url ? (
-                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <ImagePlus className="w-10 h-10 text-muted-foreground" />
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="font-body font-semibold text-sm">{p.name}</h3>
-                      <p className="text-xs text-muted-foreground font-body">
-                        {p.price.toFixed(2)} € · {p.category}
-                        {p.customizable && " · 🎨 Personalizējams"}
-                      </p>
-                      <div className="flex gap-1 mt-2">
-                        {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (
-                          <div
-                            key={i}
-                            className="w-4 h-4 rounded-full border border-border"
-                            style={{ backgroundColor: c.hex }}
-                            title={c.name}
-                          />
-                        ))}
-                        {((p.color_variants as ColorVariant[]) || []).length > 8 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{(p.color_variants as ColorVariant[]).length - 8}
-                          </span>
-                        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="products" className="gap-2">
+              <ShoppingBag className="w-4 h-4" /> Produkti
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="gap-2">
+              <Package className="w-4 h-4" /> Pasūtījumi
+              {orders.length > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Products Tab */}
+          <TabsContent value="products">
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">Ielādē produktus...</p>
+            ) : products.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground font-body mb-4">Nav neviena produkta</p>
+                <Button onClick={openCreateDialog} variant="outline">
+                  <Plus className="w-4 h-4 mr-2" /> Izveidot pirmo produktu
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.map((p) => (
+                  <Card key={p.id} className="overflow-hidden">
+                    <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImagePlus className="w-10 h-10 text-muted-foreground" />
+                      )}
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-body font-semibold text-sm">{p.name}</h3>
+                          <p className="text-xs text-muted-foreground font-body">
+                            {p.price.toFixed(2)} € · {p.category}
+                            {p.customizable && " · 🎨 Personalizējams"}
+                          </p>
+                          <div className="flex gap-1 mt-2">
+                            {((p.color_variants as ColorVariant[]) || []).slice(0, 8).map((c, i) => (
+                              <div
+                                key={i}
+                                className="w-4 h-4 rounded-full border border-border"
+                                style={{ backgroundColor: c.hex }}
+                                title={c.name}
+                              />
+                            ))}
+                            {((p.color_variants as ColorVariant[]) || []).length > 8 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{(p.color_variants as ColorVariant[]).length - 8}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(p.id)} className="text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders">
+            {loadingOrders ? (
+              <p className="text-muted-foreground text-center py-12 font-body">Ielādē pasūtījumus...</p>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-muted-foreground font-body">Nav neviena pasūtījuma</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((order) => {
+                  const statusInfo = getStatusInfo(order.status);
+                  const items = orderItems[order.id] || [];
+                  return (
+                    <Card key={order.id}>
+                      <CardContent className="p-4">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="font-body font-semibold text-sm">
+                                #{order.id.slice(0, 8)}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-body font-semibold ${statusInfo.color}`}>
+                                {statusInfo.label}
+                              </span>
+                              <span className="text-xs text-muted-foreground font-body">
+                                {new Date(order.created_at).toLocaleDateString("lv-LV", {
+                                  day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
+                                })}
+                              </span>
+                            </div>
+                            <div className="text-xs text-muted-foreground font-body space-y-1">
+                              {order.shipping_name && <p>👤 {order.shipping_name} · {order.shipping_phone}</p>}
+                              {order.shipping_address && (
+                                <p>📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>
+                              )}
+                              {order.omniva_pickup_point && <p>📦 Omniva: {order.omniva_pickup_point}</p>}
+                              {order.notes && <p>📝 {order.notes}</p>}
+                            </div>
+
+                            {/* Order items */}
+                            {items.length > 0 && (
+                              <div className="mt-3 border-t border-border pt-2">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead className="text-xs">Produkts</TableHead>
+                                      <TableHead className="text-xs">Izmērs</TableHead>
+                                      <TableHead className="text-xs">Krāsa</TableHead>
+                                      <TableHead className="text-xs text-right">Skaits</TableHead>
+                                      <TableHead className="text-xs text-right">Cena</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {items.map((item: any) => (
+                                      <TableRow key={item.id}>
+                                        <TableCell className="text-xs font-body">{item.product_name}</TableCell>
+                                        <TableCell className="text-xs">{item.size || "—"}</TableCell>
+                                        <TableCell className="text-xs">{item.color || "—"}</TableCell>
+                                        <TableCell className="text-xs text-right">{item.quantity}</TableCell>
+                                        <TableCell className="text-xs text-right">{item.unit_price.toFixed(2)} €</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-col items-end gap-2 min-w-[140px]">
+                            <span className="font-body font-bold text-lg">
+                              {Number(order.total).toFixed(2)} €
+                            </span>
+                            <Select
+                              value={order.status}
+                              onValueChange={(v) => updateOrderStatus(order.id, v)}
+                            >
+                              <SelectTrigger className="w-[140px] text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ORDER_STATUSES.map((s) => (
+                                  <SelectItem key={s.value} value={s.value} className="text-xs">
+                                    {s.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* Edit/Create Dialog */}
