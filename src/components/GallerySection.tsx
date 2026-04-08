@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 
 const galleryImages = [
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0025-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0017-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0019-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0013-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0021-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0009-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0003-scaled-500x500.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0011-scaled-500x500.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0025-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0017-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0019-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0013-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0021-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0009-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0003-scaled.jpg",
+  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0011-scaled.jpg",
 ];
 
 export const GallerySection = () => {
