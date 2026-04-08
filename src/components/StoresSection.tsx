@@ -86,7 +86,7 @@ export const StoresSection = () => {
             >
               <iframe
                 title="T-Bode Office"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1088.2!2d24.18375!3d56.94960!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46eecfb0e5b3c7e1%3A0x4c7b91f2a3d8e5f0!2sBraslas%20iela%2029%2C%20Ie%C4%93ja%20D%2C%20R%C4%ABga%2C%20LV-1084!5e0!3m2!1slv!2slv!4v1700000000000"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2175.5!2d24.1830!3d56.9496!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46eecfb7e3a0b0c1%3A0x8f0e4d3c2b1a0987!2sBraslas+iela+29%2C+Latgales+priek%C5%A1pils%C4%93ta%2C+R%C4%ABga%2C+LV-1084!5e0!3m2!1slv!2slv!4v1700000000000"
                 width="100%"
                 height="100%"
                 style={{ border: 0, pointerEvents: 'none' }}
