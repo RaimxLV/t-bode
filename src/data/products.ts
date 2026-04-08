@@ -34,6 +34,7 @@ export const products: Product[] = [
       `${BASE}/2026/02/mid-heather-gray-front.png`,
     ],
     category: "t-shirts",
+    customizable: true,
     slug: "unisex-iconic",
     description: "1×1 rib at neckline. Self-fabric back neck tape. Set-in sleeves. Twin-needle topstitching at sleeve cuffs and hem.",
     composition: "Shell – Single Jersey, 100% Cotton – Organic Combed Ring Spun / Heather Haze: 70% Organic Cotton – 30% Recycled Cotton, Combed Ring Spun – 180.0 GSM. Fabric washed.",
