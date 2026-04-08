@@ -89,7 +89,7 @@ const Admin = () => {
     checkRole();
   }, [user, authLoading, navigate, t]);
 
-  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); }, [isAdmin]);
 
   const loadProducts = async () => {
     setLoadingProducts(true);
