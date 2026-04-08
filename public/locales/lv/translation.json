@@ -6,9 +6,9 @@
     "findStore": "Atrast veikalu"
   },
   "hero": {
-    "line1": "Dizains.",
-    "line2": "Druka.",
-    "line3": "Stāsti savu stāstu.",
+    "line1": "DIZAINS. DRUKA.",
+    "line3a": "IZSTĀSTI",
+    "line3b": "SAVU STĀSTU.",
     "description": "Izveido savu unikālo apģērbu ar mūsu personalizācijas rīku. Tavi dizaini — tavas krekliņi.",
     "ctaDesign": "Sākt personalizēt",
     "ctaCollection": "Mūsu kolekcija"

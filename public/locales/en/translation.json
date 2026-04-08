@@ -6,9 +6,9 @@
     "findStore": "Find a Store"
   },
   "hero": {
-    "line1": "Design.",
-    "line2": "Print.",
-    "line3": "Tell Your Story.",
+    "line1": "DESIGN. PRINT.",
+    "line3a": "TELL YOUR",
+    "line3b": "STORY.",
     "description": "Create your unique clothing with our customization tool. Your designs — your shirts.",
     "ctaDesign": "Start Customizing",
     "ctaCollection": "Our Collection"
