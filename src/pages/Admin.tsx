@@ -135,8 +135,13 @@ const Admin = () => {
   if (!isAdmin) return null;
 
   const filterProductsForTab = (items: DBProduct[]) => {
-    if (adminCategoryFilter === "all") return items;
-    return items.filter((p) => p.category === adminCategoryFilter);
+    let result = items;
+    if (adminCategoryFilter !== "all") result = result.filter((p) => p.category === adminCategoryFilter);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
+    }
+    return result;
   };
 
   const renderProductGrid = (items: DBProduct[], forDesign: boolean) => {
