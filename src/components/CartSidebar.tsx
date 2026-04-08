@@ -1,5 +1,5 @@
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "@/context/CartContext";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 
 export const CartSidebar = () => {
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalItems, totalPrice } = useCart();
+  const navigate = useNavigate();
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -93,6 +94,7 @@ export const CartSidebar = () => {
               <Button
                 className="w-full text-base py-6 font-body font-semibold"
                 style={{ background: "var(--gradient-brand)" }}
+                onClick={() => { setIsOpen(false); navigate("/checkout"); }}
               >
                 Noformēt pasūtījumu
               </Button>
