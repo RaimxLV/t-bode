@@ -94,6 +94,7 @@ export const CartSidebar = () => {
               <Button
                 className="w-full text-base py-6 font-body font-semibold"
                 style={{ background: "var(--gradient-brand)" }}
+                onClick={() => { setIsOpen(false); navigate("/checkout"); }}
               >
                 Noformēt pasūtījumu
               </Button>
