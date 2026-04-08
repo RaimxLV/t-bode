@@ -10,7 +10,7 @@ export type Product = {
   price: number;
   image: string;
   images: string[];
-  category: "t-shirts" | "hoodies" | "mugs" | "bags" | "kids" | "latvia";
+  category: "t-shirts" | "hoodies" | "mugs" | "bags" | "kids" | "latvia" | "accessories";
   slug: string;
   description?: string;
   composition?: string;
