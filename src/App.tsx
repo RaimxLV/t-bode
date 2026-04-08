@@ -21,6 +21,7 @@ const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
+const Profile = lazy(() => import("./pages/Profile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient();
