@@ -123,6 +123,7 @@ const Admin = () => {
   useEffect(() => {
     if (!isAdmin) return;
     loadProducts();
+    loadOrders();
   }, [isAdmin]);
 
   const loadProducts = async () => {
@@ -138,6 +139,59 @@ const Admin = () => {
     }
     setLoadingProducts(false);
   };
+
+  const loadOrders = async () => {
+    setLoadingOrders(true);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Neizdevās ielādēt pasūtījumus");
+    } else {
+      setOrders(data || []);
+      // Load order items for each order
+      const ids = (data || []).map((o: any) => o.id);
+      if (ids.length > 0) {
+        const { data: items } = await supabase
+          .from("order_items")
+          .select("*")
+          .in("order_id", ids);
+        const grouped: Record<string, any[]> = {};
+        (items || []).forEach((item: any) => {
+          if (!grouped[item.order_id]) grouped[item.order_id] = [];
+          grouped[item.order_id].push(item);
+        });
+        setOrderItems(grouped);
+      }
+    }
+    setLoadingOrders(false);
+  };
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId);
+    if (error) {
+      toast.error("Neizdevās atjaunināt statusu");
+    } else {
+      toast.success("Statuss atjaunināts");
+      loadOrders();
+    }
+  };
+
+  const ORDER_STATUSES = [
+    { value: "pending", label: "Gaida", color: "bg-yellow-500/20 text-yellow-400" },
+    { value: "confirmed", label: "Apstiprināts", color: "bg-blue-500/20 text-blue-400" },
+    { value: "processing", label: "Apstrādē", color: "bg-purple-500/20 text-purple-400" },
+    { value: "shipped", label: "Nosūtīts", color: "bg-cyan-500/20 text-cyan-400" },
+    { value: "delivered", label: "Piegādāts", color: "bg-green-500/20 text-green-400" },
+    { value: "cancelled", label: "Atcelts", color: "bg-red-500/20 text-red-400" },
+  ];
+
+  const getStatusInfo = (status: string) =>
+    ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
 
   const generateSlug = (name: string) =>
     name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
