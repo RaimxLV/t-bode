@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -8,7 +8,6 @@ import type { DBProduct } from "@/hooks/useProducts";
 
 interface ProductCardProps {
   product: DBProduct;
-  /** Admin mode: show edit/delete actions */
   onEdit?: (product: DBProduct) => void;
   onDelete?: (productId: string) => void;
 }
@@ -44,7 +43,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
     setCurrentSlide(emblaApi.selectedScrollSnap());
   }, [emblaApi]);
 
-  useMemo(() => {
+  useEffect(() => {
     if (!emblaApi) return;
     emblaApi.on("select", onSelect);
     onSelect();
@@ -63,9 +62,9 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       viewport={{ once: true }}
       className="group flex flex-col h-full bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
     >
-      {/* Image carousel */}
-      <div className="relative aspect-square overflow-hidden flex-shrink-0">
-        <div ref={emblaRef} className="overflow-hidden h-full">
+      {/* Image — aspect-square, overflow-hidden, rounded top */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-muted">
+        <div ref={emblaRef} className="overflow-hidden w-full h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
               <Link
@@ -76,7 +75,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 <img
                   src={img}
                   alt={`${product.name} ${i + 1}`}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain bg-muted"
                   loading="lazy"
                 />
               </Link>
@@ -116,7 +115,6 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           </div>
         )}
 
-        {/* Out of stock badge */}
         {!product.in_stock && (
           <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-bold font-body px-2 py-0.5 rounded">
             {t("products.outOfStock", "Nav noliktavā")}
@@ -124,9 +122,9 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         )}
       </div>
 
-      {/* Info — grows to fill, pushes bottom block down */}
+      {/* Content — flex-1 pushes bottom block down */}
       <div className="flex flex-col flex-1 p-2.5 sm:p-4">
-        {/* Top content: name + colors */}
+        {/* Name + colors — grows to fill */}
         <div className="flex-1 min-h-0">
           <Link to={`/product/${product.slug}`}>
             <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
@@ -154,9 +152,9 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           )}
         </div>
 
-        {/* Bottom block — always pushed to bottom via mt-auto */}
-        <div className="mt-auto space-y-2">
-          {/* Price + cart row */}
+        {/* Bottom — always at bottom via mt-auto */}
+        <div className="mt-auto space-y-1.5">
+          {/* Price + cart */}
           <div className="flex items-center justify-between gap-1">
             <span className="text-sm sm:text-lg font-bold font-body">
               {product.price.toFixed(2).replace(".", ",")} €
@@ -172,7 +170,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
             </Link>
           </div>
 
-          {/* Customize button for customizable products */}
+          {/* Customize button */}
           {product.customizable && (
             <Link
               to={`/product/${product.slug}`}
