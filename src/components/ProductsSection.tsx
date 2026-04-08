@@ -66,6 +66,7 @@ export const ProductsSection = () => {
           setFilter={setFilter}
           clearFilters={clearFilters}
           hasActiveFilters={hasActiveFilters}
+          filteredCount={filtered.length}
         />
 
         <div className="mt-8">
