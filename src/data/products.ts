@@ -17,6 +17,7 @@ export type Product = {
   careInstructions?: string;
   colors: ColorVariant[];
   sizes: string[];
+  customizable: boolean;
 };
 
 const BASE = "https://www.mml.s-host.net/t-bode/wp-content/uploads";
