@@ -677,9 +677,16 @@ export const designCategories = [
   { id: "kids", label: "Kids" },
 ] as const;
 
+export const collectionCategories = [
+  { id: "all", label: "All" },
+  { id: "latvia", label: "The Latvia Edit" },
+  { id: "accessories", label: "Accessories" },
+] as const;
+
 export const categories = [
   ...designCategories,
   { id: "latvia", label: "The Latvia Edit" },
+  { id: "accessories", label: "Accessories" },
 ] as const;
 
 export const stores = [
