@@ -75,7 +75,7 @@ export const Navbar = () => {
             </button>
           )}
           <button
-            className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="relative p-2 text-white/70 hover:text-white transition-colors"
             onClick={() => setCartOpen(true)}
           >
             <ShoppingCart className="w-5 h-5" />
