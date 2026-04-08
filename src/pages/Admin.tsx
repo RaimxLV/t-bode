@@ -15,6 +15,7 @@ import { Plus, Trash2, Save, ArrowLeft, Upload, X, Pencil, ImagePlus, Palette, P
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ProductCard } from "@/components/ProductCard";
 import { useTranslation } from "react-i18next";
 import { CATEGORY_ICONS } from "@/components/CategoryIcons";
 import logo from "@/assets/logo.svg";
