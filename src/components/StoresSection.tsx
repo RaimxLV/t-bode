@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { Phone, Mail, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { stores } from "@/data/products";
 
@@ -34,13 +34,59 @@ export const StoresSection = () => {
               <div className="p-5">
                 <h3 className="font-body font-bold text-lg mb-3">{store.name}</h3>
                 <div className="space-y-2 text-sm text-muted-foreground font-body">
-                  <div className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" />{store.phone}</div>
-                  <div className="flex items-center gap-2"><Mail className="w-4 h-4 text-primary" />{store.email}</div>
+                  <a href={`tel:${store.phone.replace(/\s/g, "")}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
+                    <Phone className="w-4 h-4 text-primary" />{store.phone}
+                  </a>
+                  <a href={`mailto:${store.email}`} className="flex items-center gap-2 hover:text-foreground transition-colors">
+                    <Mail className="w-4 h-4 text-primary" />{store.email}
+                  </a>
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
+
+        {/* Office location with Google Map */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mt-12 bg-card rounded-lg overflow-hidden border border-border"
+          style={{ boxShadow: "var(--shadow-card)" }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            <div className="p-6 md:p-8 flex flex-col justify-center">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-5 h-5 text-primary" />
+                <h3 className="font-body font-bold text-lg">{t("stores.officeTitle")}</h3>
+              </div>
+              <p className="text-muted-foreground font-body text-sm leading-relaxed mb-4">
+                {t("stores.officeDesc")}
+              </p>
+              <div className="space-y-2 text-sm text-muted-foreground font-body">
+                <p className="font-medium text-foreground">Braslas iela 29, Ieeja D, Rīga, LV-1084</p>
+                <a href="tel:+37125486124" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                  <Phone className="w-4 h-4 text-primary" />+371 25 486 124
+                </a>
+                <a href="mailto:info@t-bode.lv" className="flex items-center gap-2 hover:text-foreground transition-colors">
+                  <Mail className="w-4 h-4 text-primary" />info@t-bode.lv
+                </a>
+              </div>
+            </div>
+            <div className="h-64 md:h-auto min-h-[280px]">
+              <iframe
+                title="T-Bode Office"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2175.5!2d24.1614!3d56.9677!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46eecfb0e5b3c7e1%3A0x0!2sBraslas%20iela%2029%2C%20R%C4%ABga!5e0!3m2!1slv!2slv!4v1700000000000"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+          </div>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}
