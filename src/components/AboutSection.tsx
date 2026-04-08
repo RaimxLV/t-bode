@@ -12,12 +12,6 @@ export const AboutSection = () => {
     { icon: Truck, titleKey: "about.features.delivery.title", descKey: "about.features.delivery.desc" },
   ];
 
-  const steps = [
-    { num: "1", titleKey: "about.steps.s1.title", descKey: "about.steps.s1.desc" },
-    { num: "2", titleKey: "about.steps.s2.title", descKey: "about.steps.s2.desc" },
-    { num: "3", titleKey: "about.steps.s3.title", descKey: "about.steps.s3.desc" },
-    { num: "4", titleKey: "about.steps.s4.title", descKey: "about.steps.s4.desc" },
-  ];
 
   return (
     <section id="about" className="py-24">
@@ -53,24 +47,6 @@ export const AboutSection = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.num}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15 }}
-              className="text-center"
-            >
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold text-primary-foreground" style={{ background: "var(--gradient-brand)" }}>
-                {step.num}
-              </div>
-              <h4 className="font-body font-semibold mb-2">{t(step.titleKey)}</h4>
-              <p className="text-sm text-muted-foreground font-body">{t(step.descKey)}</p>
-            </motion.div>
-          ))}
-        </div>
       </div>
     </section>
   );

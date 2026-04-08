@@ -27,7 +27,9 @@
       "s2": { "title": "Personalizē", "desc": "Pielāgo savu priekšmetu ar mūsu iebūvēto dizaina rīku." },
       "s3": { "title": "Noformē pasūtījumu", "desc": "Aizpildi pasūtījumu un samaksā droši tiešsaistē." },
       "s4": { "title": "Saņem pasūtījumu", "desc": "Izņem preci jebkurā Omniva pakomātā 1-2 darba dienu laikā." }
-    }
+    },
+    "howItWorks": "KĀ TAS STRĀDĀ",
+    "howItWorksDesc": "Četri vienkārši soļi līdz tavam unikālajam produktam"
   },
   "stores": {
     "title": "Apmeklē T-BODE",
