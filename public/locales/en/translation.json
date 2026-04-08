@@ -35,16 +35,21 @@
   "stores": {
     "title": "Visit T-BODE",
     "subtitle": "Our Stores in Riga Shopping Centers",
-    "pickup": "Orders can be picked up at the T-Bode office: Braslas iela 29, Entrance D, Riga"
+    "pickup": "Orders can be picked up at the T-Bode office: Braslas iela 29, Entrance D, Riga",
+    "officeTitle": "T-Bode Office / Pickup Point",
+    "officeDesc": "Pick up your orders in person at our office in Riga, Braslas iela 29, Entrance D."
   },
   "contact": {
     "title": "Looking to outfit your team or planning an event?",
     "subtitle": "<strong>Contact us directly</strong> for competitive pricing on large-scale orders.",
-    "firstName": "First Name *",
-    "email": "Email Address *",
-    "phone": "Phone Number",
+    "firstName": "Name *",
+    "phone": "Phone Number *",
     "message": "Message",
-    "submit": "Submit"
+    "submit": "Submit Request",
+    "fileUpload": "Attach a file",
+    "attachFile": "Click to attach a file (PDF, PNG, JPG, AI, EPS, SVG)",
+    "fileHint": "Max file size: 15 MB",
+    "fileTooLarge": "File is too large. Maximum size is 15 MB."
   },
   "products": {
     "designTitle": "Design Your Own",

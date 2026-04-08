@@ -35,16 +35,21 @@
   "stores": {
     "title": "Apmeklē T-BODE",
     "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
-    "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga"
+    "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
+    "officeTitle": "T-Bode birojs / Saņemšanas punkts",
+    "officeDesc": "Saņemiet pasūtījumus personīgi mūsu birojā Rīgā, Braslas ielā 29, D ieeja."
   },
   "contact": {
     "title": "Vēlies apģērbt savu komandu vai plāno pasākumu?",
     "subtitle": "<strong>Sazinies ar mums</strong> par konkurētspējīgām cenām lieliem pasūtījumiem.",
     "firstName": "Vārds *",
-    "email": "E-pasta adrese *",
-    "phone": "Telefona numurs",
+    "phone": "Telefona numurs *",
     "message": "Ziņojums",
-    "submit": "Nosūtīt"
+    "submit": "Nosūtīt pieteikumu",
+    "fileUpload": "Pievienot failu",
+    "attachFile": "Nospied, lai pievienotu failu (PDF, PNG, JPG, AI, EPS, SVG)",
+    "fileHint": "Maks. faila izmērs: 15 MB",
+    "fileTooLarge": "Fails ir pārāk liels. Maksimālais izmērs ir 15 MB."
   },
   "products": {
     "designTitle": "Dizaini pats",
