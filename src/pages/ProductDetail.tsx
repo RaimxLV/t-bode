@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Ruler, Palette, ExternalLink, ZoomIn } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import { useProductBySlug } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,6 +23,7 @@ const ProductDetail = () => {
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [designerOpen, setDesignerOpen] = useState(false);
   const { addItem } = useCart();
 
   const colors = product?.color_variants ?? [];
@@ -181,12 +183,21 @@ const ProductDetail = () => {
               {product.customizable && (
                 <div className="mb-8 p-6 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
                   <div className="flex items-center gap-3 mb-3">
-                    <ExternalLink className="w-5 h-5 text-primary" />
+                    <Paintbrush className="w-5 h-5 text-primary" />
                     <h3 className="text-lg font-display">{t("productDetail.customizeDesign")}</h3>
                   </div>
                   <p className="text-sm text-muted-foreground font-body mb-4">{t("productDetail.customizeDesc")}</p>
-                  <Button variant="outline" className="border-primary/40 text-primary hover:bg-primary/10" disabled>{t("productDetail.openDesigner")}</Button>
-                  <p className="text-xs text-muted-foreground mt-2 font-body italic">{t("productDetail.zakekeNote")}</p>
+                  <Button
+                    variant="outline"
+                    className="border-primary/40 text-primary hover:bg-primary/10"
+                    disabled={!selectedSize || !selectedColor}
+                    onClick={() => setDesignerOpen(true)}
+                  >
+                    {t("productDetail.openDesigner")}
+                  </Button>
+                  {(!selectedSize || !selectedColor) && (
+                    <p className="text-xs text-muted-foreground mt-2 font-body italic">{t("productDetail.selectSizeColor")}</p>
+                  )}
                 </div>
               )}
 
@@ -214,6 +225,19 @@ const ProductDetail = () => {
         alt={product.name}
       />
       <Footer />
+      {designerOpen && product.customizable && (
+        <ZakekeDesigner
+          productId={product.id}
+          productName={product.name}
+          productPrice={product.price}
+          productSlug={product.slug}
+          productImage={product.image_url || ""}
+          selectedColor={selectedColor}
+          selectedSize={selectedSize}
+          quantity={quantity}
+          onClose={() => setDesignerOpen(false)}
+        />
+      )}
     </div>
   );
 };
