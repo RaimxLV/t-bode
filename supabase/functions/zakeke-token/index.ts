@@ -39,6 +39,8 @@ Deno.serve(async (req) => {
     if (visitorCode) params.set("visitorcode", visitorCode);
     if (customerCode) params.set("customercode", customerCode);
 
+    console.log("Requesting Zakeke token with clientId:", clientId?.substring(0, 3) + "...", "secret length:", clientSecret?.length);
+
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
@@ -48,9 +50,11 @@ Deno.serve(async (req) => {
       body: params.toString(),
     });
 
+    const resText = await tokenRes.text();
+    console.log("Zakeke response status:", tokenRes.status, "body:", resText);
+
     if (!tokenRes.ok) {
-      const errText = await tokenRes.text();
-      console.error("Zakeke token error:", tokenRes.status, errText, "clientId length:", clientId?.length, "secretLength:", clientSecret?.length);
+      console.error("Zakeke token error:", tokenRes.status, resText, "clientId length:", clientId?.length, "secretLength:", clientSecret?.length);
       return new Response(
         JSON.stringify({ error: "Failed to get Zakeke token", status: tokenRes.status, detail: errText }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
