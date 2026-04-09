@@ -226,7 +226,7 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
-          <TabsList className="mb-6 w-full overflow-x-auto flex-nowrap">
+          <TabsList className="mb-6 w-full max-w-full overflow-x-auto justify-start">
             <TabsTrigger value="design" className="gap-1.5 text-xs sm:text-sm"><Brush className="w-4 h-4 hidden sm:block" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-1.5 text-xs sm:text-sm"><ShoppingBag className="w-4 h-4 hidden sm:block" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm"><Package className="w-4 h-4 hidden sm:block" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
