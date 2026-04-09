@@ -43,7 +43,10 @@ export const CartSidebar = () => {
                       <Link to={`/product/${item.slug}`} onClick={() => setIsOpen(false)} className="font-body font-semibold text-sm truncate block hover:text-primary transition-colors">
                         {item.name}
                       </Link>
-                      <p className="text-xs text-muted-foreground font-body">{item.size} · {item.color}</p>
+                      <p className="text-xs text-muted-foreground font-body">
+                        {item.size} · {item.color}
+                        {item.designId && <span className="ml-1 text-primary">✦ {t("cart.customized", "Personalizēts")}</span>}
+                      </p>
                       <p className="text-sm font-bold font-body mt-1" style={{ color: "hsl(var(--primary))" }}>
                         {(item.price * item.quantity).toFixed(2).replace(".", ",")} €
                       </p>

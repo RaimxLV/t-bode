@@ -30,22 +30,20 @@ Deno.serve(async (req) => {
       // No body is fine
     }
 
-    // Build form body
+    // Build form body per Zakeke docs
     const params = new URLSearchParams({
       grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
     });
     if (visitorCode) params.set("visitorcode", visitorCode);
     if (customerCode) params.set("customercode", customerCode);
 
-    // Use Basic Auth as recommended by Zakeke docs
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
-
-    console.log("Requesting Zakeke token with Basic Auth, clientId length:", clientId.length);
+    console.log("Requesting Zakeke token, clientId:", clientId);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${basicAuth}`,
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
       },

@@ -100,7 +100,7 @@ const Checkout = () => {
       }).select("id").single();
       if (orderError) throw orderError;
 
-      const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.productId, product_name: item.name, size: item.size, color: item.color, quantity: item.quantity, unit_price: item.price }));
+      const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.productId, product_name: item.name, size: item.size, color: item.color, quantity: item.quantity, unit_price: item.price, zakeke_design_id: item.designId || null, zakeke_thumbnail_url: item.designThumbnail || null }));
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
@@ -253,7 +253,10 @@ const Checkout = () => {
                       <img src={item.image} alt={item.name} className="w-14 h-14 rounded border border-border object-cover" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-body font-semibold truncate">{item.name}</p>
-                        <p className="text-xs text-muted-foreground font-body">{item.size} · {item.color} · x{item.quantity}</p>
+                        <p className="text-xs text-muted-foreground font-body">
+                          {item.size} · {item.color} · x{item.quantity}
+                          {item.designId && <span className="ml-1 text-primary">✦ {t("cart.customized", "Personalizēts")}</span>}
+                        </p>
                         <p className="text-sm font-body font-bold" style={{ color: "hsl(var(--primary))" }}>{(item.price * item.quantity).toFixed(2).replace(".", ",")} €</p>
                       </div>
                     </div>
