@@ -242,7 +242,7 @@ const Admin = () => {
 
           <TabsContent value="collection">
             <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newCollectionProduct")}</Button>
+              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
           </TabsContent>
