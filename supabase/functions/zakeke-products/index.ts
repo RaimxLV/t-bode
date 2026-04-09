@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
 Deno.serve(async (req) => {
@@ -15,38 +16,32 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Support pagination as required by Zakeke
+    const url = new URL(req.url);
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const pageSize = 50;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
     const { data: products, error } = await supabase
       .from("products")
       .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock")
       .eq("customizable", true)
       .eq("in_stock", true)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .range(from, to);
 
     if (error) throw error;
 
-    // Format for Zakeke catalog import
+    // Format per Zakeke Product Catalog API spec:
+    // Required fields: code, name, thumbnail
     const zakekeProducts = (products ?? []).map((p: any) => ({
-      productID: p.id,
+      code: p.id,
       name: p.name,
-      description: p.description || "",
-      price: p.price,
-      currency: "EUR",
-      imageUrl: p.image_url || "",
-      variants: (p.color_variants || []).flatMap((cv: any) =>
-        (p.sizes || []).map((size: string) => ({
-          variantID: `${p.id}-${cv.name}-${size}`,
-          attributes: {
-            Color: cv.name,
-            Size: size,
-          },
-          imageUrl: cv.images?.[0] || p.image_url || "",
-          price: p.price,
-          inStock: true,
-        }))
-      ),
+      thumbnail: p.image_url || "",
     }));
 
-    return new Response(JSON.stringify({ products: zakekeProducts }), {
+    return new Response(JSON.stringify(zakekeProducts), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
