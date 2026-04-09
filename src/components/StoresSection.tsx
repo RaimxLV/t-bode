@@ -51,8 +51,8 @@ export const StoresSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mt-12 bg-card rounded-lg overflow-hidden border border-border relative z-0"
-          style={{ boxShadow: "var(--shadow-card)" }}
+          className="mt-12 bg-card rounded-lg overflow-hidden border border-border relative"
+          style={{ boxShadow: "var(--shadow-card)", isolation: "isolate", zIndex: 0 }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="p-6 md:p-8 flex flex-col justify-center">
