@@ -122,32 +122,38 @@ export const ZakekeDesigner = ({
 
           getProductAttribute: () => ({}),
 
-          addToCart: (zakekeData: { designId: string; quantity: number }) => {
+          addToCart: (zakekeData: { designId: string; quantity: number; previews?: { url: string }[] }) => {
+            const thumbnail = zakekeData.previews?.[0]?.url || productImage;
             addItem({
               productId,
               name: productName,
               price: productPrice,
-              image: productImage,
+              image: thumbnail,
               size: selectedSize,
               color: selectedColor,
               quantity: zakekeData.quantity || quantity,
               slug: productSlug,
+              designId: zakekeData.designId,
+              designThumbnail: thumbnail,
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
             onClose();
             setIsOpen(true);
           },
 
-          editAddToCart: (zakekeData: { designId: string; quantity: number }) => {
+          editAddToCart: (zakekeData: { designId: string; quantity: number; previews?: { url: string }[] }) => {
+            const thumbnail = zakekeData.previews?.[0]?.url || productImage;
             addItem({
               productId,
               name: productName,
               price: productPrice,
-              image: productImage,
+              image: thumbnail,
               size: selectedSize,
               color: selectedColor,
               quantity: zakekeData.quantity || quantity,
               slug: productSlug,
+              designId: zakekeData.designId,
+              designThumbnail: thumbnail,
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
             onClose();
