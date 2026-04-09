@@ -56,12 +56,17 @@ Deno.serve(async (req) => {
     if (!tokenRes.ok) {
       console.error("Zakeke token error:", tokenRes.status, resText, "clientId length:", clientId?.length, "secretLength:", clientSecret?.length);
       return new Response(
-        JSON.stringify({ error: "Failed to get Zakeke token", status: tokenRes.status, detail: errText }),
+        JSON.stringify({ error: "Failed to get Zakeke token", status: tokenRes.status, detail: resText }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const tokenData = await tokenRes.json();
+    let tokenData;
+    try {
+      tokenData = JSON.parse(resText);
+    } catch {
+      tokenData = { raw: resText };
+    }
 
     return new Response(JSON.stringify(tokenData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
