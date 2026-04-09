@@ -226,23 +226,23 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="design" className="gap-2"><Brush className="w-4 h-4" /> {t("admin.designTab")}<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="collection" className="gap-2"><ShoppingBag className="w-4 h-4" /> {t("admin.collectionTab")}<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="orders" className="gap-2"><Package className="w-4 h-4" /> {t("admin.ordersTab")}{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
-            <TabsTrigger value="faq" className="gap-2"><HelpCircle className="w-4 h-4" /> {t("admin.faqTab")}<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
+          <TabsList className="mb-6 w-full max-w-full overflow-x-auto justify-start">
+            <TabsTrigger value="design" className="gap-1.5 text-xs sm:text-sm"><Brush className="w-4 h-4 hidden sm:block" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="collection" className="gap-1.5 text-xs sm:text-sm"><ShoppingBag className="w-4 h-4 hidden sm:block" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm"><Package className="w-4 h-4 hidden sm:block" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="faq" className="gap-1.5 text-xs sm:text-sm"><HelpCircle className="w-4 h-4 hidden sm:block" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
             <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newDesignProduct")}</Button>
+              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns dizains</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(designProducts, true)}
           </TabsContent>
 
           <TabsContent value="collection">
             <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> {t("admin.newCollectionProduct")}</Button>
+              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
           </TabsContent>
