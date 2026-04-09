@@ -73,6 +73,13 @@ const Admin = () => {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { navigate("/auth"); return; }
+    // Admin panel only allows email/password login — block OAuth users
+    const provider = user.app_metadata?.provider;
+    if (provider && provider !== "email") {
+      toast.error("Administrācijas panelis pieejams tikai ar e-pasta autentifikāciju");
+      navigate("/");
+      return;
+    }
     const checkRole = async () => {
       const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
       if (!data) { toast.error(t("admin.noAccess")); navigate("/"); return; }
