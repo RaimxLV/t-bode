@@ -53,7 +53,6 @@ export const StoresSection = () => {
           viewport={{ once: true }}
           className="mt-12 bg-card rounded-lg overflow-hidden border border-border relative"
           style={{ boxShadow: "var(--shadow-card)", isolation: "isolate", zIndex: 0 }}
-          style={{ boxShadow: "var(--shadow-card)" }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2">
             <div className="p-6 md:p-8 flex flex-col justify-center">
