@@ -30,31 +30,32 @@ Deno.serve(async (req) => {
       // No body is fine
     }
 
-    // Get C2S token from Zakeke OAuth
+    // Build form body
     const params = new URLSearchParams({
       grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
     });
     if (visitorCode) params.set("visitorcode", visitorCode);
     if (customerCode) params.set("customercode", customerCode);
 
-    console.log("Requesting Zakeke token with clientId:", clientId?.substring(0, 3) + "...", "secret length:", clientSecret?.length);
+    // Use Basic auth header as recommended by Zakeke docs
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+
+    console.log("Requesting Zakeke token, clientId length:", clientId.length, "secret length:", clientSecret.length);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${basicAuth}`,
       },
       body: params.toString(),
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke response status:", tokenRes.status, "body:", resText);
+    console.log("Zakeke response status:", tokenRes.status, "body:", resText.substring(0, 500));
 
     if (!tokenRes.ok) {
-      console.error("Zakeke token error:", tokenRes.status, resText, "clientId length:", clientId?.length, "secretLength:", clientSecret?.length);
       return new Response(
         JSON.stringify({ error: "Failed to get Zakeke token", status: tokenRes.status, detail: resText }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
