@@ -1,7 +1,30 @@
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Navigation } from "lucide-react";
+import { Phone, Mail, Navigation } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { stores } from "@/data/products";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+const OFFICE_LAT = 56.9534;
+const OFFICE_LNG = 24.1625;
+
+// Custom red marker icon
+const officeIcon = new L.DivIcon({
+  className: "",
+  html: `<div style="
+    width:36px;height:36px;border-radius:50%;
+    background:hsl(var(--primary));
+    border:3px solid white;
+    box-shadow:0 2px 8px rgba(0,0,0,0.4);
+    display:flex;align-items:center;justify-content:center;
+  ">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
+  </div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -36],
+});
 
 export const StoresSection = () => {
   const { t } = useTranslation();
@@ -19,7 +42,7 @@ export const StoresSection = () => {
           <p className="text-muted-foreground font-body text-sm md:text-base">{t("stores.subtitle")}</p>
         </motion.div>
 
-        {/* Store cards - 2 columns on mobile, 4 on desktop */}
+        {/* Store cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {stores.map((store, i) => (
             <motion.div
@@ -49,7 +72,7 @@ export const StoresSection = () => {
           ))}
         </div>
 
-        {/* Office location - map on top, info + buttons below (like Ervitex) */}
+        {/* Office location with Leaflet map */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -60,45 +83,42 @@ export const StoresSection = () => {
             {t("stores.officeTitle", "Atrašanās vieta kartē")}
           </h3>
 
-          {/* Map - full width */}
-          <div
-            className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border relative group cursor-pointer"
-            style={{ isolation: "isolate", zIndex: 0 }}
-            onClick={(e) => {
-              const iframe = e.currentTarget.querySelector('iframe');
-              if (iframe) iframe.style.pointerEvents = 'auto';
-            }}
-            onMouseLeave={(e) => {
-              const iframe = e.currentTarget.querySelector('iframe');
-              if (iframe) iframe.style.pointerEvents = 'none';
-            }}
-          >
-            <iframe
-              title="T-Bode Office"
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2175.5!2d24.1830!3d56.9496!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46eecfb7e3a0b0c1%3A0x8f0e4d3c2b1a0987!2sBraslas+iela+29%2C+Latgales+priek%C5%A1pils%C4%93ta%2C+R%C4%ABga%2C+LV-1084!5e0!3m2!1slv!2slv!4v1700000000000"
-              width="100%"
-              height="100%"
-              style={{ border: 0, pointerEvents: 'none' }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <span className="text-white text-xs md:text-sm font-body bg-black/60 px-3 py-1.5 rounded-full">
-                {t("stores.clickToInteract", "Klikšķini, lai pārvietotos kartē")}
-              </span>
-            </div>
+          {/* Leaflet dark map */}
+          <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border">
+            <MapContainer
+              center={[OFFICE_LAT, OFFICE_LNG]}
+              zoom={16}
+              scrollWheelZoom={false}
+              style={{ height: "100%", width: "100%" }}
+              attributionControl={false}
+            >
+              <TileLayer
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+              />
+              <Marker position={[OFFICE_LAT, OFFICE_LNG]} icon={officeIcon}>
+                <Popup>
+                  <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: "13px" }}>
+                    <strong style={{ fontSize: "14px" }}>T-Bode birojs</strong>
+                    <br />
+                    Braslas iela 29, Rīga
+                    <br />
+                    <span style={{ color: "#DC2626" }}>Ieeja D</span>
+                  </div>
+                </Popup>
+              </Marker>
+            </MapContainer>
           </div>
 
-          {/* Pickup info text */}
+          {/* Pickup info */}
           <p className="text-center text-sm md:text-base text-muted-foreground font-body mt-4 md:mt-6 px-4">
             {t("stores.pickup", "Pasūtījumus var saņemt personīgi T-Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
           </p>
 
-          {/* Navigation buttons - full width, stacked */}
+          {/* Navigation buttons */}
           <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto">
             <a
-              href="https://waze.com/ul?ll=56.9496,24.1830&navigate=yes"
+              href="https://waze.com/ul?q=Braslas%20iela%2029%20Riga&ll=56.9534,24.1625&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 md:py-4 px-4 font-body font-bold text-sm md:text-base hover:bg-secondary/50 transition-colors uppercase tracking-wide"
@@ -107,7 +127,7 @@ export const StoresSection = () => {
               {t("stores.openWaze", "Atvērt Waze")}
             </a>
             <a
-              href="https://www.google.com/maps/dir/?api=1&destination=56.9496,24.1830"
+              href="https://www.google.com/maps/dir/?api=1&destination=Braslas+iela+29+Rīga+D+ieeja"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 md:py-4 px-4 font-body font-bold text-sm md:text-base hover:bg-secondary/50 transition-colors uppercase tracking-wide"
