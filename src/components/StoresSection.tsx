@@ -2,29 +2,60 @@ import { motion } from "framer-motion";
 import { Phone, Mail, Navigation } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { stores } from "@/data/products";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 const OFFICE_LAT = 56.9534;
 const OFFICE_LNG = 24.1625;
 
-// Custom red marker icon
-const officeIcon = new L.DivIcon({
-  className: "",
-  html: `<div style="
-    width:36px;height:36px;border-radius:50%;
-    background:hsl(var(--primary));
-    border:3px solid white;
-    box-shadow:0 2px 8px rgba(0,0,0,0.4);
-    display:flex;align-items:center;justify-content:center;
-  ">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-  </div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-  popupAnchor: [0, -36],
-});
+const LeafletMap = () => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [OFFICE_LAT, OFFICE_LNG],
+      zoom: 16,
+      scrollWheelZoom: false,
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    }).addTo(map);
+
+    const icon = L.divIcon({
+      className: "",
+      html: `<div style="width:36px;height:36px;border-radius:50%;background:#DC2626;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
+      </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 36],
+      popupAnchor: [0, -36],
+    });
+
+    L.marker([OFFICE_LAT, OFFICE_LNG], { icon })
+      .addTo(map)
+      .bindPopup(
+        `<div style="text-align:center;font-family:Inter,sans-serif;font-size:13px">
+          <strong style="font-size:14px">T-Bode birojs</strong><br/>
+          Braslas iela 29, Rīga<br/>
+          <span style="color:#DC2626">Ieeja D</span>
+        </div>`
+      );
+
+    mapInstanceRef.current = map;
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, []);
+
+  return <div ref={mapRef} className="w-full h-full" />;
+};
 
 export const StoresSection = () => {
   const { t } = useTranslation();
@@ -85,29 +116,7 @@ export const StoresSection = () => {
 
           {/* Leaflet dark map */}
           <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border">
-            <MapContainer
-              center={[OFFICE_LAT, OFFICE_LNG]}
-              zoom={16}
-              scrollWheelZoom={false}
-              style={{ height: "100%", width: "100%" }}
-              attributionControl={false}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-              />
-              <Marker position={[OFFICE_LAT, OFFICE_LNG]} icon={officeIcon}>
-                <Popup>
-                  <div style={{ textAlign: "center", fontFamily: "Inter, sans-serif", fontSize: "13px" }}>
-                    <strong style={{ fontSize: "14px" }}>T-Bode birojs</strong>
-                    <br />
-                    Braslas iela 29, Rīga
-                    <br />
-                    <span style={{ color: "#DC2626" }}>Ieeja D</span>
-                  </div>
-                </Popup>
-              </Marker>
-            </MapContainer>
+            <LeafletMap />
           </div>
 
           {/* Pickup info */}
