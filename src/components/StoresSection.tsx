@@ -22,29 +22,42 @@ const LeafletMap = () => {
       scrollWheelZoom: false,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    // Light/standard map style like Ervitex reference
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
     const icon = L.divIcon({
       className: "",
-      html: `<div style="width:36px;height:36px;border-radius:50%;background:#DC2626;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
-      </div>`,
-      iconSize: [36, 36],
-      iconAnchor: [18, 36],
-      popupAnchor: [0, -36],
+      html: `<div style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
     });
 
-    L.marker([OFFICE_LAT, OFFICE_LNG], { icon })
-      .addTo(map)
-      .bindPopup(
-        `<div style="text-align:center;font-family:Inter,sans-serif;font-size:13px">
-          <strong style="font-size:14px">T-Bode birojs</strong><br/>
-          Braslas iela 29, Rīga<br/>
-          <span style="color:#DC2626">Ieeja D</span>
-        </div>`
-      );
+    // Dark overlay label like Ervitex
+    const labelIcon = L.divIcon({
+      className: "",
+      html: `<div style="
+        background:rgba(0,0,0,0.85);
+        color:white;
+        padding:10px 16px;
+        border-radius:4px;
+        font-family:Inter,sans-serif;
+        min-width:220px;
+        pointer-events:none;
+      ">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
+          <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
+        </div>
+        <div style="font-size:12px;color:#ccc;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+      </div>`,
+      iconSize: [260, 60],
+      iconAnchor: [130, 70],
+    });
+
+    L.marker([OFFICE_LAT, OFFICE_LNG], { icon }).addTo(map);
+    L.marker([OFFICE_LAT, OFFICE_LNG], { icon: labelIcon, interactive: false }).addTo(map);
 
     mapInstanceRef.current = map;
 
@@ -103,7 +116,7 @@ export const StoresSection = () => {
           ))}
         </div>
 
-        {/* Office location with Leaflet map */}
+        {/* Office location */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -114,7 +127,7 @@ export const StoresSection = () => {
             {t("stores.officeTitle", "Atrašanās vieta kartē")}
           </h3>
 
-          {/* Leaflet dark map */}
+          {/* Light Leaflet map */}
           <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border">
             <LeafletMap />
           </div>
@@ -124,25 +137,28 @@ export const StoresSection = () => {
             {t("stores.pickup", "Pasūtījumus var saņemt personīgi T-Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
           </p>
 
-          {/* Navigation buttons */}
-          <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto">
+          {/* Navigation buttons – Ervitex style: full-width, light bg, border, centered icon+text */}
+          <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto px-2">
             <a
               href="https://waze.com/ul?q=Braslas%20iela%2029%20Riga&ll=56.9534,24.1625&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 md:py-4 px-4 font-body font-bold text-sm md:text-base hover:bg-secondary/50 transition-colors uppercase tracking-wide"
+              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
             >
-              <svg className="w-5 h-5 md:w-6 md:h-6 flex-shrink-0 text-primary" viewBox="0 0 24 24" fill="currentColor"><path d="M20.54 6.63c.69 1.34 1.07 2.87 1.07 4.49 0 4.41-2.79 8.12-6.67 9.33-.25.08-.51-.12-.51-.38v-.71c0-.26.18-.49.43-.56 3.19-1.05 5.5-4.13 5.5-7.68 0-1.35-.32-2.62-.88-3.74a.544.544 0 0 1 .09-.6l.47-.47c.17-.17.45-.14.5.12zm-3.06-3.16c.17-.17.14-.45-.12-.5C16.02 2.28 14.55 1.9 12.93 1.9c-5.14 0-9.31 4.17-9.31 9.31 0 2.24.79 4.29 2.1 5.9.16.2.14.49-.05.65l-.47.47c-.17.17-.45.14-.6-.06A9.26 9.26 0 0 1 2.37 11.2C2.37 5.34 7.07.64 12.93.64c1.89 0 3.66.5 5.19 1.36.2.11.23.38.09.56l-.47.47c-.11.11-.28.15-.43.09-.01 0-.02-.01-.03-.01zM12 6a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 8.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
-              {t("stores.openWaze", "Atvērt Waze")}
+              <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 1.74.5 3.37 1.41 4.84.95 1.54 2.2 2.86 3.16 4.4.47.75.81 1.45 1.17 2.26.17.39.27.74.26.5 0-.24.09-.59.26-.98.36-.81.7-1.51 1.17-2.26.96-1.54 2.21-2.86 3.16-4.4A6.95 6.95 0 0019 9c0-3.87-3.13-7-7-7z" fill="#33CCFF"/>
+                <circle cx="12" cy="9" r="2.5" fill="white"/>
+              </svg>
+              {t("stores.openWaze", "ATVĒRT WAZE")}
             </a>
             <a
               href="https://www.google.com/maps/dir/?api=1&destination=Braslas+iela+29+Rīga+D+ieeja"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 border border-border rounded-lg py-3.5 md:py-4 px-4 font-body font-bold text-sm md:text-base hover:bg-secondary/50 transition-colors uppercase tracking-wide"
+              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
             >
-              <Navigation className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0" />
-              {t("stores.openGoogleMaps", "Atvērt Google Maps")}
+              <Navigation className="w-5 h-5 text-primary flex-shrink-0" />
+              {t("stores.openGoogleMaps", "ATVĒRT GOOGLE MAPS")}
             </a>
           </div>
         </motion.div>
