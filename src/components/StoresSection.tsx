@@ -58,7 +58,7 @@ const LeafletMap = () => {
             <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
             <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
           </div>
-          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29</div>
         </div>`;
         return div;
       },
@@ -73,7 +73,7 @@ const LeafletMap = () => {
     };
   }, []);
 
-  return <div ref={mapRef} className="w-full h-full" />;
+  return <div ref={mapRef} className="w-full h-full" style={{ zIndex: 0 }} />;
 };
 
 export const StoresSection = () => {
@@ -134,7 +134,7 @@ export const StoresSection = () => {
           </h3>
 
           {/* Light Leaflet map */}
-          <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border">
+          <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border relative" style={{ zIndex: 0 }}>
             <LeafletMap />
           </div>
 
