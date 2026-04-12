@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const OFFICE_LAT = 56.9534;
+const OFFICE_LAT = 56.9587;
 const OFFICE_LNG = 24.1625;
 
 const LeafletMap = () => {
@@ -146,7 +146,7 @@ export const StoresSection = () => {
           {/* Navigation buttons – white bg, grey border, colored icons */}
           <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto px-2">
             <a
-              href="https://waze.com/ul?q=Braslas%20iela%2029%20Riga&ll=56.9534,24.1625&navigate=yes"
+              href="https://waze.com/ul?ll=56.9587,24.1625&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
@@ -159,7 +159,7 @@ export const StoresSection = () => {
               {t("stores.openWaze", "ATVĒRT WAZE")}
             </a>
             <a
-              href="https://www.google.com/maps/dir/?api=1&destination=Braslas+iela+29+Rīga+D+ieeja"
+              href="https://www.google.com/maps/dir/?api=1&destination=56.9587,24.1625"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
