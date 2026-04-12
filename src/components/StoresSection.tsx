@@ -27,33 +27,37 @@ const LeafletMap = () => {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
+    // Orange circle marker (like Ervitex pin)
     const icon = L.divIcon({
       className: "",
-      html: `<div style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
+      html: `<div style="width:36px;height:36px;border-radius:50%;background:#F97316;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="2.5" fill="#F97316"/></svg>
+      </div>`,
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
     });
 
-    // Dark overlay label like Ervitex
+    // Compact dark label in bottom-left (Ervitex style)
     const labelIcon = L.divIcon({
       className: "",
       html: `<div style="
-        background:rgba(0,0,0,0.85);
+        background:rgba(0,0,0,0.88);
         color:white;
-        padding:10px 16px;
+        padding:12px 16px;
         border-radius:4px;
         font-family:Inter,sans-serif;
-        min-width:220px;
+        min-width:200px;
+        max-width:260px;
         pointer-events:none;
       ">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
           <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
           <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
         </div>
-        <div style="font-size:12px;color:#ccc;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+        <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
       </div>`,
       iconSize: [260, 60],
-      iconAnchor: [130, 70],
+      iconAnchor: [-8, 70],
     });
 
     L.marker([OFFICE_LAT, OFFICE_LNG], { icon }).addTo(map);
