@@ -58,7 +58,7 @@ const LeafletMap = () => {
             <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
             <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
           </div>
-          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29</div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas Biznesa Centrs, Braslas iela 29</div>
         </div>`;
         return div;
       },
