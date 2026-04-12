@@ -165,7 +165,7 @@ export const StoresSection = () => {
               className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
             >
               <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12l1.41-1.41L11 16.17V4h2v12.17l5.59-5.58L20 12l-8 8-8-8z" fill="#EA4335" transform="rotate(90 12 12)"/>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="#EA4335"/>
               </svg>
               {t("stores.openGoogleMaps", "ATVĒRT GOOGLE MAPS")}
             </a>
