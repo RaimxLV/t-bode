@@ -37,31 +37,33 @@ const LeafletMap = () => {
       iconAnchor: [18, 18],
     });
 
-    // Compact dark label in bottom-left (Ervitex style)
-    const labelIcon = L.divIcon({
-      className: "",
-      html: `<div style="
-        background:rgba(0,0,0,0.88);
-        color:white;
-        padding:12px 16px;
-        border-radius:4px;
-        font-family:Inter,sans-serif;
-        min-width:200px;
-        max-width:260px;
-        pointer-events:none;
-      ">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
-          <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
-        </div>
-        <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
-      </div>`,
-      iconSize: [260, 60],
-      iconAnchor: [-8, 70],
-    });
-
     L.marker([OFFICE_LAT, OFFICE_LNG], { icon }).addTo(map);
-    L.marker([OFFICE_LAT, OFFICE_LNG], { icon: labelIcon, interactive: false }).addTo(map);
+
+    // Custom control: dark info box in bottom-left (Ervitex style)
+    const InfoControl = L.Control.extend({
+      options: { position: "bottomleft" as L.ControlPosition },
+      onAdd: function () {
+        const div = L.DomUtil.create("div");
+        div.innerHTML = `<div style="
+          background:rgba(0,0,0,0.88);
+          color:white;
+          padding:12px 16px;
+          border-radius:4px;
+          font-family:Inter,sans-serif;
+          min-width:200px;
+          max-width:260px;
+          pointer-events:none;
+        ">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
+            <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
+          </div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+        </div>`;
+        return div;
+      },
+    });
+    new InfoControl().addTo(map);
 
     mapInstanceRef.current = map;
 
