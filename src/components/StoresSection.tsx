@@ -27,37 +27,43 @@ const LeafletMap = () => {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
+    // Orange circle marker (like Ervitex pin)
     const icon = L.divIcon({
       className: "",
-      html: `<div style="width:14px;height:14px;border-radius:50%;background:#DC2626;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
-
-    // Dark overlay label like Ervitex
-    const labelIcon = L.divIcon({
-      className: "",
-      html: `<div style="
-        background:rgba(0,0,0,0.85);
-        color:white;
-        padding:10px 16px;
-        border-radius:4px;
-        font-family:Inter,sans-serif;
-        min-width:220px;
-        pointer-events:none;
-      ">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
-          <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
-          <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
-        </div>
-        <div style="font-size:12px;color:#ccc;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+      html: `<div style="width:36px;height:36px;border-radius:50%;background:#F97316;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white"/><circle cx="12" cy="9" r="2.5" fill="#F97316"/></svg>
       </div>`,
-      iconSize: [260, 60],
-      iconAnchor: [130, 70],
+      iconSize: [36, 36],
+      iconAnchor: [18, 18],
     });
 
     L.marker([OFFICE_LAT, OFFICE_LNG], { icon }).addTo(map);
-    L.marker([OFFICE_LAT, OFFICE_LNG], { icon: labelIcon, interactive: false }).addTo(map);
+
+    // Custom control: dark info box in bottom-left (Ervitex style)
+    const InfoControl = L.Control.extend({
+      options: { position: "bottomleft" as L.ControlPosition },
+      onAdd: function () {
+        const div = L.DomUtil.create("div");
+        div.innerHTML = `<div style="
+          background:rgba(0,0,0,0.88);
+          color:white;
+          padding:12px 16px;
+          border-radius:4px;
+          font-family:Inter,sans-serif;
+          min-width:200px;
+          max-width:260px;
+          pointer-events:none;
+        ">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
+            <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
+          </div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas iela 29, ieeja D, 2. stāvs</div>
+        </div>`;
+        return div;
+      },
+    });
+    new InfoControl().addTo(map);
 
     mapInstanceRef.current = map;
 
@@ -137,17 +143,18 @@ export const StoresSection = () => {
             {t("stores.pickup", "Pasūtījumus var saņemt personīgi T-Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
           </p>
 
-          {/* Navigation buttons – Ervitex style: full-width, light bg, border, centered icon+text */}
+          {/* Navigation buttons – white bg, grey border, colored icons */}
           <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto px-2">
             <a
               href="https://waze.com/ul?q=Braslas%20iela%2029%20Riga&ll=56.9534,24.1625&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
+              className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
             >
               <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 1.74.5 3.37 1.41 4.84.95 1.54 2.2 2.86 3.16 4.4.47.75.81 1.45 1.17 2.26.17.39.27.74.26.5 0-.24.09-.59.26-.98.36-.81.7-1.51 1.17-2.26.96-1.54 2.21-2.86 3.16-4.4A6.95 6.95 0 0019 9c0-3.87-3.13-7-7-7z" fill="#33CCFF"/>
-                <circle cx="12" cy="9" r="2.5" fill="white"/>
+                <rect width="24" height="24" rx="6" fill="#33CCFF"/>
+                <path d="M12 4C9.24 4 7 6.24 7 9c0 1.2.34 2.3.95 3.3l3.4 5.4c.34.54 1.16.54 1.5 0l3.4-5.4c.6-1 .95-2.1.95-3.3 0-2.76-2.24-5-5-5z" fill="white"/>
+                <circle cx="12" cy="9" r="2" fill="#33CCFF"/>
               </svg>
               {t("stores.openWaze", "ATVĒRT WAZE")}
             </a>
@@ -155,9 +162,11 @@ export const StoresSection = () => {
               href="https://www.google.com/maps/dir/?api=1&destination=Braslas+iela+29+Rīga+D+ieeja"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
+              className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
             >
-              <Navigation className="w-5 h-5 text-primary flex-shrink-0" />
+              <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="#EA4335"/>
+              </svg>
               {t("stores.openGoogleMaps", "ATVĒRT GOOGLE MAPS")}
             </a>
           </div>
