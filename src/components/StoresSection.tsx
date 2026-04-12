@@ -141,17 +141,18 @@ export const StoresSection = () => {
             {t("stores.pickup", "Pasūtījumus var saņemt personīgi T-Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
           </p>
 
-          {/* Navigation buttons – Ervitex style: full-width, light bg, border, centered icon+text */}
+          {/* Navigation buttons – white bg, grey border, colored icons */}
           <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto px-2">
             <a
               href="https://waze.com/ul?q=Braslas%20iela%2029%20Riga&ll=56.9534,24.1625&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
+              className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
             >
               <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 1.74.5 3.37 1.41 4.84.95 1.54 2.2 2.86 3.16 4.4.47.75.81 1.45 1.17 2.26.17.39.27.74.26.5 0-.24.09-.59.26-.98.36-.81.7-1.51 1.17-2.26.96-1.54 2.21-2.86 3.16-4.4A6.95 6.95 0 0019 9c0-3.87-3.13-7-7-7z" fill="#33CCFF"/>
-                <circle cx="12" cy="9" r="2.5" fill="white"/>
+                <rect width="24" height="24" rx="6" fill="#33CCFF"/>
+                <path d="M12 4C9.24 4 7 6.24 7 9c0 1.2.34 2.3.95 3.3l3.4 5.4c.34.54 1.16.54 1.5 0l3.4-5.4c.6-1 .95-2.1.95-3.3 0-2.76-2.24-5-5-5z" fill="white"/>
+                <circle cx="12" cy="9" r="2" fill="#33CCFF"/>
               </svg>
               {t("stores.openWaze", "ATVĒRT WAZE")}
             </a>
@@ -159,9 +160,11 @@ export const StoresSection = () => {
               href="https://www.google.com/maps/dir/?api=1&destination=Braslas+iela+29+Rīga+D+ieeja"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 bg-card border border-border rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base hover:bg-secondary/60 transition-colors uppercase tracking-wider"
+              className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
             >
-              <Navigation className="w-5 h-5 text-primary flex-shrink-0" />
+              <svg className="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12l1.41-1.41L11 16.17V4h2v12.17l5.59-5.58L20 12l-8 8-8-8z" fill="#EA4335" transform="rotate(90 12 12)"/>
+              </svg>
               {t("stores.openGoogleMaps", "ATVĒRT GOOGLE MAPS")}
             </a>
           </div>
