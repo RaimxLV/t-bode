@@ -85,7 +85,8 @@
     "showAllColors": "Skatīt visas krāsas (+{{count}})",
     "sizeAdults": "Pieaugušajiem",
     "sizeKids": "Bērniem",
-    "sizeBaby": "Zīdaiņiem"
+    "sizeBaby": "Zīdaiņiem",
+    "sizeOther": "Krūzes / Citi"
   },
   "productDetail": {
     "backToProducts": "Atpakaļ uz produktiem",
