@@ -27,22 +27,21 @@ Deno.serve(async (req) => {
       // no body
     }
 
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const bodyParams = new URLSearchParams({
-      grant_type: "client_credentials",
-      access_type: "S2S",
-      ...(visitorCode ? { visitorcode: visitorCode } : {}),
-    });
+    // Exact format as curl -u "clientId:secret" -d "param=value" -d "param=value"
+    const credentials = `${clientId}:${clientSecret}`;
+    const basicAuth = btoa(credentials);
 
-    // Debug: hash the secret to compare with sandbox
-    const encoder = new TextEncoder();
-    const secretData = encoder.encode(clientSecret);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", secretData);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-    console.log("Secret hash (first 16):", hashHex.substring(0, 16));
+    // Build body exactly like curl does with separate -d flags
+    const parts = [
+      "grant_type=client_credentials",
+      "access_type=S2S",
+    ];
+    if (visitorCode) {
+      parts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
+    }
+    const rawBody = parts.join("&");
 
-    console.log("Zakeke request:", clientId, "body:", bodyParams.toString());
+    console.log("Request body:", rawBody, "auth length:", basicAuth.length);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
@@ -50,16 +49,12 @@ Deno.serve(async (req) => {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": `Basic ${basicAuth}`,
-        "User-Agent": "Mozilla/5.0",
       },
-      body: bodyParams.toString(),
+      body: rawBody,
     });
 
     const resText = await tokenRes.text();
-    const respHeaders: Record<string, string> = {};
-    tokenRes.headers.forEach((v, k) => { respHeaders[k] = v; });
-    console.log("Zakeke response:", tokenRes.status, "headers:", JSON.stringify(respHeaders));
-    console.log("Zakeke body:", resText.substring(0, 500));
+    console.log("Response:", tokenRes.status, resText.substring(0, 300));
 
     if (!tokenRes.ok) {
       return new Response(
