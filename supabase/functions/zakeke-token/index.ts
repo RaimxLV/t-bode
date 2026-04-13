@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const bodyStr = "grant_type=client_credentials&access_type=S2S";
+    const bodyStr = `grant_type=client_credentials&access_type=S2S&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`;
 
     // Basic Authentication: base64(ClientID:SecretKey)
     const credentials = `${clientId}:${clientSecret}`;
