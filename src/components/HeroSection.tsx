@@ -20,7 +20,7 @@ export const HeroSection = () => {
       />
 
       <div className="relative z-10 flex items-center h-full container mx-auto px-4">
-        <div className="max-w-3xl">
+        <div className="max-w-3xl text-center mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
@@ -35,7 +35,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-5xl lg:text-8xl leading-none mt-2 text-gradient-brand font-extrabold md:text-8xl text-left border-none text-destructive bg-transparent whitespace-pre-line"
+            className="text-5xl lg:text-8xl leading-none mt-2 text-gradient-brand font-extrabold md:text-8xl border-none text-destructive bg-transparent whitespace-pre-line text-center"
           >
             {t("hero.line3")}
           </motion.h2>
@@ -43,7 +43,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
-            className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body whitespace-pre-line"
+            className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body whitespace-pre-line text-center mx-auto"
           >
             {t("hero.description")}
           </motion.p>
@@ -51,7 +51,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="mt-10 flex flex-col sm:flex-row gap-4"
+            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
               onClick={() => navigate("/design")}
