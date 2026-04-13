@@ -207,6 +207,7 @@ export type Database = {
           sizes: string[] | null
           slug: string
           updated_at: string
+          zakeke_model_code: string | null
         }
         Insert: {
           category: string
@@ -223,6 +224,7 @@ export type Database = {
           sizes?: string[] | null
           slug: string
           updated_at?: string
+          zakeke_model_code?: string | null
         }
         Update: {
           category?: string
@@ -239,6 +241,7 @@ export type Database = {
           sizes?: string[] | null
           slug?: string
           updated_at?: string
+          zakeke_model_code?: string | null
         }
         Relationships: []
       }

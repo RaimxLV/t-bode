@@ -13,7 +13,7 @@ import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette } from "lucide-react"
 import { useTranslation } from "react-i18next";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; slug: string; description: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; }
+export interface ProductForm { id?: string; name: string; slug: string; description: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
 
 const CATEGORIES = [
   { value: "t-shirts", labelKey: "categories.t-shirts" },
@@ -27,7 +27,7 @@ const CATEGORIES = [
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true };
+export const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
@@ -50,7 +50,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = { name: product.name, slug: product.slug, description: product.description || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock };
+    const payload = { name: product.name, slug: product.slug, description: product.description || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, zakeke_model_code: product.zakeke_model_code || null };
     if (product.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) toast.error(t("admin.saveError") + ": " + error.message);
@@ -135,6 +135,17 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <Switch checked={product.customizable} onCheckedChange={(v) => onProductChange({ ...product, customizable: v })} />
               <Label className="font-body text-sm">{t("admin.customizable")}</Label>
             </div>
+            {product.customizable && (
+              <div className="flex items-center gap-2">
+                <Label className="font-body text-sm whitespace-nowrap">Zakeke ID:</Label>
+                <Input
+                  className="h-8 w-48 text-sm"
+                  placeholder="e.g. model-code-123"
+                  value={product.zakeke_model_code}
+                  onChange={(e) => onProductChange({ ...product, zakeke_model_code: e.target.value })}
+                />
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Switch checked={product.in_stock} onCheckedChange={(v) => onProductChange({ ...product, in_stock: v })} />
               <Label className="font-body text-sm">{t("admin.inStock")}</Label>

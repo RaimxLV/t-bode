@@ -1,0 +1,1 @@
+ALTER TABLE public.products ADD COLUMN zakeke_model_code text DEFAULT NULL;
