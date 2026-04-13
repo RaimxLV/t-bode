@@ -40,14 +40,7 @@ export const HeroSection = () => {
           >
             {t("hero.line3")}
           </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.7 }}
-            className="mt-6 text-lg md:text-xl text-white/80 max-w-lg font-body whitespace-pre-line text-center mx-auto"
-          >
-            {t("hero.description")}
-          </motion.p>
+          <HeroAnimatedText />
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
