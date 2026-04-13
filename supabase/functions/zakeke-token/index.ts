@@ -39,7 +39,8 @@ Deno.serve(async (req) => {
     }
     const body = new URLSearchParams(params);
 
-    console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "visitor:", visitorCode);
+    const trimmedSecret = clientSecret.trim();
+    console.log("ClientID:", clientId.trim(), "Secret length:", trimmedSecret.length, "first3:", trimmedSecret.substring(0,3), "last3:", trimmedSecret.substring(trimmedSecret.length-3), "visitor:", visitorCode);
     console.log("Body:", body.toString());
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
