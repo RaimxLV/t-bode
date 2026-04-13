@@ -3,14 +3,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function toBase64(str: string): string {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  let binary = "";
+  for (const byte of data) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const clientId = Deno.env.get("ZAKEKE_API_KEY");
-    const clientSecret = Deno.env.get("ZAKEKE_CLIENT_SECRET");
+    const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
+    const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
 
     if (!clientId || !clientSecret) {
       return new Response(
@@ -19,7 +29,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body for optional visitorcode
     let visitorCode = "";
     try {
       const reqBody = await req.json();
@@ -28,10 +37,7 @@ Deno.serve(async (req) => {
       // no body
     }
 
-    // Use Basic Auth (recommended by Zakeke docs)
-    // Try without trailing period if present
-    const secret = clientSecret.trim().replace(/\.$/, "");
-    const basicAuth = btoa(`${clientId.trim()}:${secret}`);
+    const basicAuth = toBase64(`${clientId}:${clientSecret}`);
     const params: Record<string, string> = {
       grant_type: "client_credentials",
       access_type: "S2S",
@@ -41,9 +47,7 @@ Deno.serve(async (req) => {
     }
     const body = new URLSearchParams(params);
 
-    const trimmedSecret = clientSecret.trim();
-    console.log("ClientID:", clientId.trim(), "Secret length:", trimmedSecret.length, "first3:", trimmedSecret.substring(0,3), "last3:", trimmedSecret.substring(trimmedSecret.length-3), "visitor:", visitorCode);
-    console.log("Body:", body.toString());
+    console.log("Requesting Zakeke token, clientId:", clientId, "secretLen:", clientSecret.length);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
@@ -56,7 +60,7 @@ Deno.serve(async (req) => {
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 500));
+    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 200));
 
     if (!tokenRes.ok) {
       return new Response(
