@@ -56,7 +56,10 @@ Deno.serve(async (req) => {
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 300));
+    const respHeaders: Record<string, string> = {};
+    tokenRes.headers.forEach((v, k) => { respHeaders[k] = v; });
+    console.log("Zakeke response:", tokenRes.status, "headers:", JSON.stringify(respHeaders));
+    console.log("Zakeke body:", resText.substring(0, 500));
 
     if (!tokenRes.ok) {
       return new Response(
