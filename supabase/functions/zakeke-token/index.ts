@@ -19,24 +19,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Basic Authentication: base64(ClientID:SecretKey) - exactly as Postman
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    // Use body-based credentials as shown in Zakeke docs (alternative to Basic Auth)
+    const body = new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+    });
 
-    console.log("Sending request to Zakeke. ClientID:", clientId);
-    console.log("Secret length:", clientSecret.length, "ends with:", clientSecret.slice(-5));
-    console.log("Full base64:", basicAuth);
+    console.log("Requesting token with body credentials. ClientID:", clientId);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${basicAuth}`,
+        "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "grant_type=client_credentials",
+      body: body.toString(),
     });
 
     const resText = await tokenRes.text();
-    console.log("Response:", tokenRes.status, resText.substring(0, 500));
+    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 500));
 
     if (!tokenRes.ok) {
       return new Response(
