@@ -6,8 +6,8 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const OFFICE_LAT = 56.95878;
-const OFFICE_LNG = 24.16255;
+const OFFICE_LAT = 56.961710;
+const OFFICE_LNG = 24.166054;
 
 const LeafletMap = () => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -58,7 +58,7 @@ const LeafletMap = () => {
             <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
             <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
           </div>
-          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas Biznesa Centrs, Braslas iela 29</div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas Biznesa Centrs, ieeja D, 2. stāvs</div>
         </div>`;
         return div;
       },
@@ -146,7 +146,7 @@ export const StoresSection = () => {
           {/* Navigation buttons – white bg, grey border, colored icons */}
           <div className="flex flex-col gap-3 mt-4 md:mt-6 max-w-lg mx-auto px-2">
             <a
-              href="https://waze.com/ul?ll=56.95878,24.16255&navigate=yes"
+              href="https://waze.com/ul?ll=56.961710,24.166054&navigate=yes"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
@@ -159,7 +159,7 @@ export const StoresSection = () => {
               {t("stores.openWaze", "ATVĒRT WAZE")}
             </a>
             <a
-              href="https://www.google.com/maps/search/?api=1&query=56.95878,24.16255"
+              href="https://www.google.com/maps/search/?api=1&query=56.961710,24.166054"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg py-4 px-6 font-body font-bold text-sm md:text-base text-black hover:bg-gray-50 transition-colors uppercase tracking-wider"
