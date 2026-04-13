@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
     const params: Record<string, string> = {
       grant_type: "client_credentials",
-      access_type: "C2S",
+      access_type: "S2S",
     };
     if (visitorCode) {
       params.visitorcode = visitorCode;
