@@ -52,6 +52,8 @@ Deno.serve(async (req) => {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": `Basic ${basicAuth}`,
+        "Accept-Language": "en",
+        "Accept-Encoding": "identity",
       },
       body: rawBody,
       // deno-lint-ignore no-explicit-any
