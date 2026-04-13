@@ -19,13 +19,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate a unique visitor code per session
-    const visitorCode = crypto.randomUUID();
-
     const params = new URLSearchParams({
       grant_type: "client_credentials",
       access_type: "S2S",
-      visitorcode: visitorCode,
     });
 
     // Basic Authentication: base64(ClientID:SecretKey)
