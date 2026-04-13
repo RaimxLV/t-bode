@@ -6,6 +6,7 @@ import { useDesignProducts } from "@/hooks/useProducts";
 import { useProductFilters } from "@/hooks/useProductFilters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DESIGN_CATEGORY_KEYS = [
   { id: "all", key: "categories.all" },
@@ -20,6 +21,7 @@ export const ProductsSection = () => {
   const { data: products = [], isLoading } = useDesignProducts();
   const { filters, setFilter, clearFilters, hasActiveFilters } = useProductFilters();
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -37,6 +39,30 @@ export const ProductsSection = () => {
       return true;
     });
   }, [products, filters]);
+
+  const gridContent = isLoading ? (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
+          <Skeleton className="aspect-square w-full" />
+          <div className="p-3 sm:p-4 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : filtered.length === 0 ? (
+    <div className="text-center py-20">
+      <p className="text-muted-foreground font-body">{t("products.noProducts")}</p>
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+      {filtered.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
 
   return (
     <section id="products" className="py-24 bg-secondary/30">
@@ -59,41 +85,35 @@ export const ProductsSection = () => {
           {t("products.designDesc")}
         </motion.p>
 
-        <ProductFilters
-          categories={DESIGN_CATEGORY_KEYS}
-          products={products}
-          filters={filters}
-          setFilter={setFilter}
-          clearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-          filteredCount={filtered.length}
-        />
-
-        <div className="mt-8">
-          {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="bg-card rounded-lg overflow-hidden border border-border">
-                  <Skeleton className="aspect-square w-full" />
-                  <div className="p-3 sm:p-4 space-y-2">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-6 w-1/2" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-muted-foreground font-body">{t("products.noProducts")}</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-              {filtered.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          )}
-        </div>
+        {isMobile ? (
+          <>
+            <ProductFilters
+              categories={DESIGN_CATEGORY_KEYS}
+              products={products}
+              filters={filters}
+              setFilter={setFilter}
+              clearFilters={clearFilters}
+              hasActiveFilters={hasActiveFilters}
+              filteredCount={filtered.length}
+            />
+            <div className="mt-8">{gridContent}</div>
+          </>
+        ) : (
+          <div className="flex gap-8">
+            <aside className="w-56 shrink-0">
+              <ProductFilters
+                categories={DESIGN_CATEGORY_KEYS}
+                products={products}
+                filters={filters}
+                setFilter={setFilter}
+                clearFilters={clearFilters}
+                hasActiveFilters={hasActiveFilters}
+                filteredCount={filtered.length}
+              />
+            </aside>
+            <div className="flex-1 min-w-0">{gridContent}</div>
+          </div>
+        )}
       </div>
     </section>
   );
