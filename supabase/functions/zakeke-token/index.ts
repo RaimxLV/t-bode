@@ -19,28 +19,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    const bodyStr = `grant_type=client_credentials&access_type=S2S&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`;
+    // Basic Authentication: base64(ClientID:SecretKey) - exactly as Postman
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
 
-    // Basic Authentication: base64(ClientID:SecretKey)
-    const credentials = `${clientId}:${clientSecret}`;
-    const basicAuth = btoa(credentials);
-
-    console.log("ClientID:", clientId, "Secret first 5:", clientSecret.substring(0, 5), "Secret last 5:", clientSecret.substring(clientSecret.length - 5));
-    console.log("Base64 first 20:", basicAuth.substring(0, 20));
-    console.log("Body:", bodyStr);
+    console.log("Sending request to Zakeke. ClientID:", clientId);
+    console.log("Secret length:", clientSecret.length, "ends with:", clientSecret.slice(-5));
+    console.log("Full base64:", basicAuth);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
+        "Authorization": `Basic ${basicAuth}`,
         "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/json",
       },
-      body: bodyStr,
+      body: "grant_type=client_credentials&access_type=S2S",
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke status:", tokenRes.status, "headers:", JSON.stringify(Object.fromEntries(tokenRes.headers.entries())));
-    console.log("Zakeke body:", resText.substring(0, 1000));
+    console.log("Response:", tokenRes.status, resText.substring(0, 500));
 
     if (!tokenRes.ok) {
       return new Response(
