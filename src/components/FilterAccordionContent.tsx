@@ -4,8 +4,12 @@ import { CATEGORY_ICONS } from "./CategoryIcons";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import type { ProductFiltersState } from "@/hooks/useProductFilters";
 import type { DBProduct } from "@/hooks/useProducts";
 
@@ -21,25 +25,73 @@ interface FilterAccordionContentProps {
   setFilter: (key: string, value: string | string[] | number | null) => void;
 }
 
-const MAX_VISIBLE_COLORS = 12;
+/* ───────────── colour helpers ───────────── */
 
-// Size group classification
-function classifySizes(sizes: string[]) {
-  const adultSizes = ["XXS", "XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
+interface ColorGroup {
+  name: string;
+  /** representative hex (first encountered) */
+  displayHex: string;
+  /** every hex value across all products for this colour name */
+  allHexes: string[];
+}
+
+function buildColorGroups(products: DBProduct[]): ColorGroup[] {
+  const map = new Map<string, { displayHex: string; hexes: Set<string> }>();
+
+  for (const p of products) {
+    for (const c of p.color_variants || []) {
+      if (!c.hex || !c.name) continue;
+      const key = c.name.trim().toLowerCase();
+      const entry = map.get(key);
+      if (entry) {
+        entry.hexes.add(c.hex.toLowerCase());
+      } else {
+        map.set(key, {
+          displayHex: c.hex,
+          hexes: new Set([c.hex.toLowerCase()]),
+        });
+      }
+    }
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, v]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      displayHex: v.displayHex,
+      allHexes: Array.from(v.hexes),
+    }));
+}
+
+/* ───────────── size helpers ───────────── */
+
+interface SizeGroups {
+  adults: string[];
+  kids: string[];
+  baby: string[];
+  other: string[];
+}
+
+function classifySizes(sizes: string[]): SizeGroups {
+  const adultOrder = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL", "4XL", "5XL"];
   const adults: string[] = [];
   const kids: string[] = [];
   const baby: string[] = [];
-
-  const adultOrder = adultSizes;
+  const other: string[] = [];
 
   for (const size of sizes) {
     const upper = size.toUpperCase();
-    if (adultSizes.includes(upper)) {
+    if (adultOrder.includes(upper)) {
       adults.push(size);
     } else if (/month/i.test(size) || /^0-/i.test(size)) {
+      // Baby: anything with "months" or starts with "0-"
       baby.push(size);
-    } else {
+    } else if (/gadi/i.test(size) || /^\d+-\d+\/\d+/i.test(size)) {
+      // Kids: contains "gadi" or pattern like "3-4/98-104cm", "5-6/110-116cm"
       kids.push(size);
+    } else {
+      // Other: 300ml, 450ml, One Size, shoe sizes (35-38, etc.)
+      other.push(size);
     }
   }
 
@@ -49,8 +101,24 @@ function classifySizes(sizes: string[]) {
     return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
   });
 
-  return { adults, kids, baby };
+  // Sort baby by extracting first number
+  baby.sort((a, b) => {
+    const na = parseInt(a) || 0;
+    const nb = parseInt(b) || 0;
+    return na - nb;
+  });
+
+  // Sort kids by extracting age/cm number
+  kids.sort((a, b) => {
+    const na = parseInt(a) || 0;
+    const nb = parseInt(b) || 0;
+    return na - nb;
+  });
+
+  return { adults, kids, baby, other };
 }
+
+/* ───────────── component ───────────── */
 
 export const FilterAccordionContent = ({
   categories,
@@ -61,37 +129,30 @@ export const FilterAccordionContent = ({
   const { t } = useTranslation();
   const [showAllColors, setShowAllColors] = useState(false);
 
-  // Derive available colors
-  const availableColors = Array.from(
-    new Map(
-      products
-        .flatMap((p) => p.color_variants || [])
-        .filter((c) => c.hex && c.name)
-        .map((c) => [c.hex.toLowerCase(), c] as const)
-    ).values()
-  );
+  const colorGroups = buildColorGroups(products);
+  const MAX_VISIBLE = 14;
+  const visibleColors = showAllColors ? colorGroups : colorGroups.slice(0, MAX_VISIBLE);
+  const hiddenCount = colorGroups.length - MAX_VISIBLE;
 
-  // Derive available sizes
-  const availableSizes = Array.from(
-    new Set(products.flatMap((p) => p.sizes || []))
-  );
+  const allSizes = Array.from(new Set(products.flatMap((p) => p.sizes || [])));
+  const { adults, kids, baby, other } = classifySizes(allSizes);
 
-  const { adults, kids, baby } = classifySizes(availableSizes);
-  const hasMultipleGroups = [adults.length > 0, kids.length > 0, baby.length > 0].filter(Boolean).length > 1;
-
-  // Price range
   const prices = products.map((p) => p.price);
   const minPrice = prices.length ? Math.floor(Math.min(...prices)) : 0;
   const maxPrice = prices.length ? Math.ceil(Math.max(...prices)) : 100;
 
-  const toggleColor = (hex: string) => {
-    const lower = hex.toLowerCase();
+  /* colour toggle – adds/removes ALL hexes belonging to a colour name */
+  const toggleColorGroup = (group: ColorGroup) => {
     const current = filters.colors;
-    const next = current.includes(lower)
-      ? current.filter((c) => c !== lower)
-      : [...current, lower];
+    const isSelected = group.allHexes.some((h) => current.includes(h));
+    const next = isSelected
+      ? current.filter((c) => !group.allHexes.includes(c))
+      : [...current, ...group.allHexes.filter((h) => !current.includes(h))];
     setFilter("colors", next);
   };
+
+  const isColorGroupSelected = (group: ColorGroup) =>
+    group.allHexes.some((h) => filters.colors.includes(h));
 
   const toggleSize = (size: string) => {
     const current = filters.sizes;
@@ -101,9 +162,6 @@ export const FilterAccordionContent = ({
     setFilter("sizes", next);
   };
 
-  const visibleColors = showAllColors ? availableColors : availableColors.slice(0, MAX_VISIBLE_COLORS);
-  const hiddenColorCount = availableColors.length - MAX_VISIBLE_COLORS;
-
   const renderSizeButtons = (sizes: string[]) => (
     <div className="flex flex-wrap gap-1.5">
       {sizes.map((size) => {
@@ -112,7 +170,7 @@ export const FilterAccordionContent = ({
           <button
             key={size}
             onClick={() => toggleSize(size)}
-            className={`min-w-[40px] h-10 px-3 text-sm font-body font-medium rounded-lg border transition-all ${
+            className={`min-w-[40px] h-9 px-2.5 text-xs font-body font-medium rounded-lg border transition-all ${
               isSelected
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background text-foreground border-border hover:border-foreground/30"
@@ -124,6 +182,13 @@ export const FilterAccordionContent = ({
       })}
     </div>
   );
+
+  const sizeGroups: { key: string; label: string; sizes: string[] }[] = [
+    { key: "adults", label: t("filters.sizeAdults"), sizes: adults },
+    { key: "kids", label: t("filters.sizeKids"), sizes: kids },
+    { key: "baby", label: t("filters.sizeBaby"), sizes: baby },
+    { key: "other", label: t("filters.sizeOther"), sizes: other },
+  ].filter((g) => g.sizes.length > 0);
 
   return (
     <Accordion type="multiple" defaultValue={["category"]} className="w-full">
@@ -156,57 +221,59 @@ export const FilterAccordionContent = ({
         </AccordionContent>
       </AccordionItem>
 
-      {/* Colors */}
-      {availableColors.length > 0 && (
+      {/* Colors – grouped by name */}
+      {colorGroups.length > 0 && (
         <AccordionItem value="colors">
           <AccordionTrigger className="text-sm font-body font-semibold uppercase tracking-wider">
             {t("productDetail.color")}
             {filters.colors.length > 0 && (
-              <span className="ml-2 text-xs text-primary font-normal">({filters.colors.length})</span>
+              <span className="ml-2 text-xs text-primary font-normal">
+                ({colorGroups.filter(isColorGroupSelected).length})
+              </span>
             )}
           </AccordionTrigger>
           <AccordionContent>
-            <div className="grid grid-cols-6 gap-2">
-              {visibleColors.map((c) => {
-                const isSelected = filters.colors.includes(c.hex.toLowerCase());
+            <div className="grid grid-cols-7 gap-1.5">
+              {visibleColors.map((group) => {
+                const selected = isColorGroupSelected(group);
                 return (
                   <button
-                    key={c.hex}
-                    onClick={() => toggleColor(c.hex)}
-                    title={c.name}
-                    className="flex flex-col items-center gap-1"
+                    key={group.name}
+                    onClick={() => toggleColorGroup(group)}
+                    title={group.name}
+                    className="flex flex-col items-center gap-0.5"
                   >
                     <span
-                      className={`w-9 h-9 rounded-full border-2 transition-all ${
-                        isSelected
+                      className={`w-7 h-7 rounded-full border-2 transition-all ${
+                        selected
                           ? "border-primary ring-2 ring-primary/30 scale-110"
                           : "border-border hover:scale-105"
                       }`}
-                      style={{ backgroundColor: c.hex }}
+                      style={{ backgroundColor: group.displayHex }}
                     />
-                    <span className="text-[10px] text-muted-foreground truncate max-w-[48px]">
-                      {c.name}
+                    <span className="text-[9px] text-muted-foreground truncate max-w-[44px] leading-tight">
+                      {group.name}
                     </span>
                   </button>
                 );
               })}
             </div>
-            {hiddenColorCount > 0 && !showAllColors && (
+            {hiddenCount > 0 && !showAllColors && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowAllColors(true)}
-                className="mt-3 text-xs text-primary w-full"
+                className="mt-2 text-xs text-primary w-full"
               >
-                {t("filters.showAllColors", { count: hiddenColorCount })}
+                +{hiddenCount} {t("productDetail.color").toLowerCase()}
               </Button>
             )}
           </AccordionContent>
         </AccordionItem>
       )}
 
-      {/* Sizes */}
-      {availableSizes.length > 0 && (
+      {/* Sizes – 4 sub-groups inside nested accordion */}
+      {allSizes.length > 0 && (
         <AccordionItem value="sizes">
           <AccordionTrigger className="text-sm font-body font-semibold uppercase tracking-wider">
             {t("productDetail.size")}
@@ -215,19 +282,22 @@ export const FilterAccordionContent = ({
             )}
           </AccordionTrigger>
           <AccordionContent>
-            {hasMultipleGroups ? (
-              <Tabs defaultValue="adults" className="w-full">
-                <TabsList className="w-full mb-3">
-                  {adults.length > 0 && <TabsTrigger value="adults" className="flex-1 text-xs">{t("filters.sizeAdults")}</TabsTrigger>}
-                  {kids.length > 0 && <TabsTrigger value="kids" className="flex-1 text-xs">{t("filters.sizeKids")}</TabsTrigger>}
-                  {baby.length > 0 && <TabsTrigger value="baby" className="flex-1 text-xs">{t("filters.sizeBaby")}</TabsTrigger>}
-                </TabsList>
-                {adults.length > 0 && <TabsContent value="adults">{renderSizeButtons(adults)}</TabsContent>}
-                {kids.length > 0 && <TabsContent value="kids">{renderSizeButtons(kids)}</TabsContent>}
-                {baby.length > 0 && <TabsContent value="baby">{renderSizeButtons(baby)}</TabsContent>}
-              </Tabs>
+            {sizeGroups.length === 1 ? (
+              renderSizeButtons(sizeGroups[0].sizes)
             ) : (
-              renderSizeButtons(availableSizes)
+              <Accordion type="multiple" defaultValue={[sizeGroups[0]?.key]} className="w-full">
+                {sizeGroups.map((group) => (
+                  <AccordionItem key={group.key} value={group.key} className="border-b-0">
+                    <AccordionTrigger className="text-xs font-body font-medium py-2 text-muted-foreground hover:text-foreground">
+                      {group.label}
+                      <span className="ml-1 text-[10px] opacity-60">({group.sizes.length})</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-3">
+                      {renderSizeButtons(group.sizes)}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             )}
           </AccordionContent>
         </AccordionItem>
@@ -240,7 +310,7 @@ export const FilterAccordionContent = ({
             {t("admin.price")}
           </AccordionTrigger>
           <AccordionContent>
-            <div className="pt-2">
+            <div className="pt-2 space-y-3">
               <Slider
                 min={minPrice}
                 max={maxPrice}
@@ -252,21 +322,25 @@ export const FilterAccordionContent = ({
                 }}
                 className="w-full"
               />
-              <div className="flex items-center gap-2 mt-3">
+              <div className="flex items-center gap-2">
                 <Input
                   type="number"
                   value={filters.priceMin ?? minPrice}
-                  onChange={(e) => setFilter("priceMin", e.target.value ? Number(e.target.value) : null)}
-                  className="w-20 h-9 text-sm"
+                  onChange={(e) =>
+                    setFilter("priceMin", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className="w-20 h-8 text-xs"
                 />
-                <span className="text-sm text-muted-foreground">–</span>
+                <span className="text-xs text-muted-foreground">–</span>
                 <Input
                   type="number"
                   value={filters.priceMax ?? maxPrice}
-                  onChange={(e) => setFilter("priceMax", e.target.value ? Number(e.target.value) : null)}
-                  className="w-20 h-9 text-sm"
+                  onChange={(e) =>
+                    setFilter("priceMax", e.target.value ? Number(e.target.value) : null)
+                  }
+                  className="w-20 h-8 text-xs"
                 />
-                <span className="text-sm text-muted-foreground">€</span>
+                <span className="text-xs font-medium text-muted-foreground">€</span>
               </div>
             </div>
           </AccordionContent>

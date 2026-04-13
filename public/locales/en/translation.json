@@ -85,7 +85,8 @@
     "showAllColors": "Show all colors (+{{count}})",
     "sizeAdults": "Adults",
     "sizeKids": "Kids",
-    "sizeBaby": "Baby"
+    "sizeBaby": "Baby",
+    "sizeOther": "Mugs / Other"
   },
   "productDetail": {
     "backToProducts": "Back to Products",
