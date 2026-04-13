@@ -9,22 +9,17 @@ export const HeroSection = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background">
-      {/* Full illustration as an img so it's never cropped */}
-      <img
-        src={heroImage}
-        alt="T-Bode hero illustration"
-        className="absolute inset-0 w-full h-full object-contain object-center"
+    <section className="relative h-screen overflow-hidden">
+      <div
+        className="absolute inset-0 parallax-bg"
+        style={{ backgroundImage: `url(${heroImage})` }}
       />
-
-      {/* Dark overlay */}
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      {/* Content */}
-      <div className="relative z-10 flex items-center min-h-screen container mx-auto px-4">
+      <div className="relative z-10 flex items-center h-full container mx-auto px-4">
         <div className="max-w-3xl text-center mx-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
