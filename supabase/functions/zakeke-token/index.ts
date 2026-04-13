@@ -19,14 +19,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Parse request body for optional visitorcode
+    let visitorCode = "";
+    try {
+      const reqBody = await req.json();
+      visitorCode = reqBody?.visitorCode || "";
+    } catch {
+      // no body
+    }
+
     // Use Basic Auth (recommended by Zakeke docs)
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const body = new URLSearchParams({
+    const params: Record<string, string> = {
       grant_type: "client_credentials",
-    });
+      access_type: "C2S",
+    };
+    if (visitorCode) {
+      params.visitorcode = visitorCode;
+    }
+    const body = new URLSearchParams(params);
 
-    console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "Secret ends with:", clientSecret.slice(-5));
-    console.log("Basic auth header:", `Basic ${basicAuth}`);
+    console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "visitor:", visitorCode);
+    console.log("Body:", body.toString());
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
