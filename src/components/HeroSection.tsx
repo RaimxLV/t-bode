@@ -35,7 +35,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-5xl md:text-7xl lg:text-8xl leading-none mt-2 text-gradient-brand"
+            className="text-5xl lg:text-8xl leading-none mt-2 text-gradient-brand font-extrabold md:text-8xl text-left border-none text-destructive bg-transparent whitespace-pre-line"
           >
             {t("hero.line3")}
           </motion.h2>

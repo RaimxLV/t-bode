@@ -9,7 +9,7 @@
   "hero": {
     "line1": "Dizains.",
     "line2": "Druka.",
-    "line3": "Stāsti savu stāstu.",
+    "line3": "Izstāsti\u00a0\nsavu stāstu.",
     "description": "Izveido savu unikālo apģērbu ar mūsu personalizācijas rīku. Tavi dizaini — tavas krekliņi.",
     "ctaDesign": "Sākt personalizēt",
     "ctaCollection": "Mūsu kolekcija"
@@ -37,7 +37,7 @@
     "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
     "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
     "officeTitle": "T-Bode birojs / Saņemšanas punkts",
-    "officeDesc": "Saņemiet pasūtījumus personīgi mūsu birojā Rīgā, Braslas ielā 29, D ieeja."
+    "officeDesc": "Saņemiet pasūtījumus personīgi mūsu birojā Rīgā, Braslas iela 29, D ieeja."
   },
   "contact": {
     "title": "Vēlies apģērbt savu komandu vai plāno pasākumu?",
