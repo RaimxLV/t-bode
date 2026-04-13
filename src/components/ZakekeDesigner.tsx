@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 
 interface ZakekeDesignerProps {
   productId: string;
+  zakekeModelCode: string;
   productName: string;
   productPrice: number;
   productSlug: string;
@@ -29,6 +30,7 @@ declare global {
 
 export const ZakekeDesigner = ({
   productId,
+  zakekeModelCode,
   productName,
   productPrice,
   productSlug,
@@ -94,7 +96,7 @@ export const ZakekeDesigner = ({
 
         const config: Record<string, unknown> = {
           tokenOauth: token,
-          productId,
+          productId: zakekeModelCode,
           productName,
           quantity,
           currency: "EUR",

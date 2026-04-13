@@ -20,6 +20,7 @@ export interface DBProduct {
   color_variants: ColorVariant[];
   customizable: boolean;
   in_stock: boolean;
+  zakeke_model_code: string | null;
   created_at: string;
   updated_at: string;
 }
