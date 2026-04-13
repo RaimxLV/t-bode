@@ -34,6 +34,14 @@ Deno.serve(async (req) => {
       ...(visitorCode ? { visitorcode: visitorCode } : {}),
     });
 
+    // Debug: hash the secret to compare with sandbox
+    const encoder = new TextEncoder();
+    const secretData = encoder.encode(clientSecret);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", secretData);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    console.log("Secret hash (first 16):", hashHex.substring(0, 16));
+
     console.log("Zakeke request:", clientId, "body:", bodyParams.toString());
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
