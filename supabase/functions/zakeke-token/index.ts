@@ -41,16 +41,18 @@ Deno.serve(async (req) => {
     }
     const rawBody = parts.join("&");
 
-    console.log("Request body:", rawBody, "auth length:", basicAuth.length);
+    const bodyBytes = new TextEncoder().encode(rawBody);
+    console.log("Request body:", rawBody, "bodyLen:", bodyBytes.length, "auth length:", basicAuth.length);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Length": String(bodyBytes.length),
         "Authorization": `Basic ${basicAuth}`,
       },
-      body: rawBody,
+      body: bodyBytes,
     });
 
     const resText = await tokenRes.text();
