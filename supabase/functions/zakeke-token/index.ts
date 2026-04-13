@@ -19,28 +19,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    const bodyStr = "grant_type=client_credentials&access_type=S2S";
+    // Use body-based credentials as shown in Zakeke docs (alternative to Basic Auth)
+    const body = new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+    });
 
-    // Basic Authentication: base64(ClientID:SecretKey)
-    const credentials = `${clientId}:${clientSecret}`;
-    const basicAuth = btoa(credentials);
-
-    console.log("ClientID:", clientId, "Secret first 5:", clientSecret.substring(0, 5), "Secret last 5:", clientSecret.substring(clientSecret.length - 5));
-    console.log("Base64 first 20:", basicAuth.substring(0, 20));
-    console.log("Body:", bodyStr);
+    console.log("Requesting token with body credentials. ClientID:", clientId);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${basicAuth}`,
       },
-      body: bodyStr,
+      body: body.toString(),
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke status:", tokenRes.status, "headers:", JSON.stringify(Object.fromEntries(tokenRes.headers.entries())));
-    console.log("Zakeke body:", resText.substring(0, 1000));
+    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 500));
 
     if (!tokenRes.ok) {
       return new Response(
