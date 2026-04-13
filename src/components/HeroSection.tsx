@@ -20,7 +20,7 @@ export const HeroSection = () => {
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   return (
-    <section ref={sectionRef} className="relative h-screen overflow-hidden">
+    <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden">
       {/* Parallax image via framer-motion transform */}
       <motion.img
         src={heroImage}
