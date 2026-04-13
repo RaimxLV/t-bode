@@ -25,7 +25,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl md:text-8xl lg:text-9xl leading-none tracking-tight text-white"
+            className="text-3xl md:text-4xl lg:text-5xl leading-none tracking-tight text-white"
           >
             {t("hero.line1")}
             <br />
