@@ -19,28 +19,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse optional visitor/customer codes from request body
-    let visitorCode = "";
-    let customerCode = "";
-    try {
-      const body = await req.json();
-      visitorCode = body.visitorCode || "";
-      customerCode = body.customerCode || "";
-    } catch {
-      // No body is fine
-    }
+    // Generate a unique visitor code per session
+    const visitorCode = crypto.randomUUID();
 
-    // Build form body — credentials go in Basic Auth header per Zakeke docs
     const params = new URLSearchParams({
       grant_type: "client_credentials",
+      access_type: "S2S",
+      visitorcode: visitorCode,
     });
-    if (visitorCode) params.set("visitorcode", visitorCode);
-    if (customerCode) params.set("customercode", customerCode);
 
-    // Basic Authentication: base64(client_id:client_secret)
+    // Basic Authentication: base64(ClientID:SecretKey)
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
 
-    console.log("Requesting Zakeke token with Basic Auth, clientId:", clientId);
+    console.log("Requesting Zakeke token with Basic Auth, clientId:", clientId, "visitorCode:", visitorCode);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
