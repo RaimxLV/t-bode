@@ -41,6 +41,8 @@ Deno.serve(async (req) => {
     headers.set("Authorization", `Basic ${basicAuth}`);
     // Fix: Zakeke rejects Accept-Language: * which Deno runtime adds by default
     headers.set("Accept-Language", "en-US,en;q=0.9");
+    headers.set("Origin", "https://t-bode.lovable.app");
+    headers.set("Referer", "https://t-bode.lovable.app/");
     // Fix: Set explicit Accept-Encoding to prevent runtime adding gzip,br
     headers.set("Accept-Encoding", "identity");
     // Override User-Agent to avoid Deno/Supabase identification issues
