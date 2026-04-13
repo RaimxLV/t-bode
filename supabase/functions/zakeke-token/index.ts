@@ -19,28 +19,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    const params = new URLSearchParams({
-      grant_type: "client_credentials",
-      access_type: "S2S",
-    });
+    const bodyStr = "grant_type=client_credentials&access_type=S2S";
 
     // Basic Authentication: base64(ClientID:SecretKey)
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    const credentials = `${clientId}:${clientSecret}`;
+    const basicAuth = btoa(credentials);
 
-    console.log("Requesting Zakeke token with Basic Auth, clientId:", clientId);
+    console.log("Credentials length:", credentials.length, "Base64 length:", basicAuth.length);
+    console.log("Body:", bodyStr);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
-        "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": `Basic ${basicAuth}`,
       },
-      body: params.toString(),
+      body: bodyStr,
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke response status:", tokenRes.status, "body:", resText.substring(0, 500));
+    console.log("Zakeke status:", tokenRes.status, "headers:", JSON.stringify(Object.fromEntries(tokenRes.headers.entries())));
+    console.log("Zakeke body:", resText.substring(0, 1000));
 
     if (!tokenRes.ok) {
       return new Response(
@@ -63,7 +62,7 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error("Zakeke token error:", err);
     return new Response(
-      JSON.stringify({ error: "Internal error" }),
+      JSON.stringify({ error: "Internal error", detail: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
