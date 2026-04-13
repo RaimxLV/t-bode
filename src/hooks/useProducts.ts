@@ -35,6 +35,7 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
   return (data ?? []).map((p) => ({
     ...p,
     color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
+    zakeke_model_code: (p as any).zakeke_model_code ?? null,
   }));
 }
 
@@ -49,6 +50,7 @@ async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
   return {
     ...data,
     color_variants: (data.color_variants as unknown as ColorVariant[]) ?? [],
+    zakeke_model_code: (data as any).zakeke_model_code ?? null,
   };
 }
 
