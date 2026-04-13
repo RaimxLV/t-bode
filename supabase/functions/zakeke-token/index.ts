@@ -37,27 +37,51 @@ Deno.serve(async (req) => {
       // no body
     }
 
-    const basicAuth = toBase64(`${clientId}:${clientSecret}`);
+    // Try body-based credentials as fallback
     const params: Record<string, string> = {
       grant_type: "client_credentials",
       access_type: "S2S",
+      client_id: clientId,
+      client_secret: clientSecret,
     };
     if (visitorCode) {
       params.visitorcode = visitorCode;
     }
     const body = new URLSearchParams(params);
 
-    console.log("Requesting Zakeke token, clientId:", clientId, "secretLen:", clientSecret.length, "authHeader:", `Basic ${basicAuth.substring(0,20)}...`);
+    console.log("Requesting Zakeke token, method: body-based, clientId:", clientId);
 
-    const tokenRes = await fetch("https://api.zakeke.com/token", {
+    // First try with Basic Auth
+    const basicAuth = toBase64(`${clientId}:${clientSecret}`);
+    let tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": `Basic ${basicAuth}`,
       },
-      body: body.toString(),
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        access_type: "S2S",
+        ...(visitorCode ? { visitorcode: visitorCode } : {}),
+      }).toString(),
     });
+
+    console.log("Basic auth attempt:", tokenRes.status);
+
+    // If Basic Auth fails, try body-based
+    if (!tokenRes.ok) {
+      console.log("Falling back to body-based credentials");
+      tokenRes = await fetch("https://api.zakeke.com/token", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: body.toString(),
+      });
+      console.log("Body-based attempt:", tokenRes.status);
+    }
 
     const resText = await tokenRes.text();
     console.log("Zakeke response:", tokenRes.status, resText.substring(0, 200));
