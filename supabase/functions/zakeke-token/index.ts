@@ -34,27 +34,39 @@ Deno.serve(async (req) => {
     }
     const rawBody = bodyParts.join("&");
 
-    // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
-    const httpClient = Deno.createHttpClient({ http1: true, http2: false });
+    // Use explicit Headers object to control what gets sent
+    const headers = new Headers();
+    headers.set("Accept", "application/json");
+    headers.set("Content-Type", "application/x-www-form-urlencoded");
+    headers.set("Authorization", `Basic ${basicAuth}`);
+    // Fix: Zakeke rejects Accept-Language: * which Deno runtime adds by default
+    headers.set("Accept-Language", "en-US,en;q=0.9");
+    // Fix: Set explicit Accept-Encoding to prevent runtime adding gzip,br
+    headers.set("Accept-Encoding", "identity");
+    // Override User-Agent to avoid Deno/Supabase identification issues
+    headers.set("User-Agent", "T-Bode/1.0");
 
     console.log("=== ZAKEKE TOKEN REQUEST ===");
     console.log("URL: https://api.zakeke.com/token");
     console.log("Method: POST");
-    console.log("Content-Type: application/x-www-form-urlencoded");
-    console.log("Authorization: Basic <redacted>");
     console.log("Body:", rawBody);
     console.log("Client ID length:", clientId.length);
     console.log("Client Secret length:", clientSecret.length);
+    console.log("Request Headers:");
+    headers.forEach((value, key) => {
+      if (key === "authorization") {
+        console.log(`  ${key}: Basic <redacted>`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    });
+
+    // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
+    const httpClient = Deno.createHttpClient({ http1: true, http2: false });
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": `Basic ${basicAuth}`,
-        "Accept-Language": "en",
-        "Accept-Encoding": "identity",
-      },
+      headers,
       body: rawBody,
       // deno-lint-ignore no-explicit-any
       client: httpClient as any,
