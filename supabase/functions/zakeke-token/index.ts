@@ -29,7 +29,9 @@ Deno.serve(async (req) => {
     }
 
     // Use Basic Auth (recommended by Zakeke docs)
-    const basicAuth = btoa(`${clientId.trim()}:${clientSecret.trim()}`);
+    // Try without trailing period if present
+    const secret = clientSecret.trim().replace(/\.$/, "");
+    const basicAuth = btoa(`${clientId.trim()}:${secret}`);
     const params: Record<string, string> = {
       grant_type: "client_credentials",
       access_type: "S2S",
