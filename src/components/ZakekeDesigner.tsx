@@ -57,11 +57,11 @@ export const ZakekeDesigner = ({
       body: { visitorCode },
     });
 
-    if (error || !data?.["access-token"]) {
+    if (error || !data?.access_token) {
       throw new Error(error?.message || "Failed to get token");
     }
 
-    return data["access-token"] as string;
+    return data.access_token as string;
   }, []);
 
   useEffect(() => {
