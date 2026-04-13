@@ -27,36 +27,33 @@ Deno.serve(async (req) => {
       // no body
     }
 
-    // Exact format as curl -u "clientId:secret" -d "param=value" -d "param=value"
-    const credentials = `${clientId}:${clientSecret}`;
-    const basicAuth = btoa(credentials);
-
-    // Build body exactly like curl does with separate -d flags
-    const parts = [
-      "grant_type=client_credentials",
-      "access_type=S2S",
-    ];
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    const bodyParts = ["grant_type=client_credentials", "access_type=S2S"];
     if (visitorCode) {
-      parts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
+      bodyParts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
     }
-    const rawBody = parts.join("&");
+    const rawBody = bodyParts.join("&");
 
-    const bodyBytes = new TextEncoder().encode(rawBody);
-    console.log("Request body:", rawBody, "bodyLen:", bodyBytes.length, "auth length:", basicAuth.length);
+    // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
+    const httpClient = Deno.createHttpClient({ http1: true, http2: false });
+
+    console.log("Requesting token with HTTP/1.1, body:", rawBody);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
-        "Content-Length": String(bodyBytes.length),
         "Authorization": `Basic ${basicAuth}`,
       },
-      body: bodyBytes,
+      body: rawBody,
+      // deno-lint-ignore no-explicit-any
+      client: httpClient as any,
     });
 
     const resText = await tokenRes.text();
-    console.log("Response:", tokenRes.status, resText.substring(0, 300));
+    httpClient.close();
+    console.log("Response:", tokenRes.status, resText.substring(0, 200));
 
     if (!tokenRes.ok) {
       return new Response(
