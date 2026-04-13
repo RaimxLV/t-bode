@@ -33,6 +33,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        "Accept": "application/json",
         "Authorization": `Basic ${basicAuth}`,
       },
       body: bodyStr,
