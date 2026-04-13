@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
         "Authorization": `Basic ${basicAuth}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: "grant_type=client_credentials&access_type=S2S",
+      body: "grant_type=client_credentials",
     });
 
     const resText = await tokenRes.text();
