@@ -37,7 +37,14 @@ Deno.serve(async (req) => {
     // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
     const httpClient = Deno.createHttpClient({ http1: true, http2: false });
 
-    console.log("Requesting token with HTTP/1.1, body:", rawBody);
+    console.log("=== ZAKEKE TOKEN REQUEST ===");
+    console.log("URL: https://api.zakeke.com/token");
+    console.log("Method: POST");
+    console.log("Content-Type: application/x-www-form-urlencoded");
+    console.log("Authorization: Basic <redacted>");
+    console.log("Body:", rawBody);
+    console.log("Client ID length:", clientId.length);
+    console.log("Client Secret length:", clientSecret.length);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
@@ -53,11 +60,27 @@ Deno.serve(async (req) => {
 
     const resText = await tokenRes.text();
     httpClient.close();
-    console.log("Response:", tokenRes.status, resText.substring(0, 200));
+
+    console.log("=== ZAKEKE TOKEN RESPONSE ===");
+    console.log("Status:", tokenRes.status);
+    console.log("Status Text:", tokenRes.statusText);
+    console.log("Response Headers:");
+    tokenRes.headers.forEach((value, key) => {
+      console.log(`  ${key}: ${value}`);
+    });
+    console.log("Response Body:", resText || "(empty)");
+    console.log("Response Body Length:", resText.length);
+    console.log("=== END ===");
 
     if (!tokenRes.ok) {
       return new Response(
-        JSON.stringify({ error: "Failed to get Zakeke token", status: tokenRes.status, detail: resText }),
+        JSON.stringify({
+          error: "Failed to get Zakeke token",
+          status: tokenRes.status,
+          statusText: tokenRes.statusText,
+          headers: Object.fromEntries(tokenRes.headers.entries()),
+          detail: resText || "(empty body)",
+        }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
