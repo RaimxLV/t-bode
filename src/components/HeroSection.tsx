@@ -11,16 +11,29 @@ export const HeroSection = () => {
 
   return (
     <section className="relative h-screen overflow-hidden">
+      {/* Desktop: parallax with fixed attachment, position top so jumping guy's head is at navbar */}
       <div
-        className="absolute inset-0 parallax-bg"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        className="absolute inset-0 hidden md:block"
+        style={{
+          backgroundImage: `url(${heroImage})`,
+          backgroundAttachment: "fixed",
+          backgroundPosition: "center top",
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "cover",
+        }}
+      />
+      {/* Mobile: no fixed attachment (iOS doesn't support it), object-position to show all characters */}
+      <img
+        src={heroImage}
+        alt="T-Bode hero"
+        className="absolute inset-0 w-full h-full object-cover object-bottom md:hidden"
       />
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      <div className="relative z-10 flex items-end justify-center h-full container mx-auto px-4 pb-32 md:pb-36">
+      <div className="relative z-10 flex items-end justify-center h-full container mx-auto px-4 pb-20 md:pb-28">
         <div className="max-w-3xl text-center">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
