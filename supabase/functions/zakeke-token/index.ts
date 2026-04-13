@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
       client_secret: clientSecret,
     });
 
-    console.log("Requesting token with body credentials. ClientID:", clientId);
+    console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "Secret ends with:", clientSecret.slice(-5));
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
