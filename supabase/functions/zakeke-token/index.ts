@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
     // Basic Authentication: base64(ClientID:SecretKey)
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
 
-    console.log("Requesting Zakeke token with Basic Auth, clientId:", clientId, "visitorCode:", visitorCode);
+    console.log("Requesting Zakeke token with Basic Auth, clientId:", clientId);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
