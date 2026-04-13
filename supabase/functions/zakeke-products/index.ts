@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     const { data: products, error } = await supabase
       .from("products")
-      .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock")
+      .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code")
       .eq("customizable", true)
       .eq("in_stock", true)
       .order("created_at", { ascending: true })
@@ -33,10 +33,8 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    // Format per Zakeke Product Catalog API spec:
-    // Required fields: code, name, thumbnail
     const zakekeProducts = (products ?? []).map((p: any) => ({
-      code: p.id,
+      code: p.zakeke_model_code || p.slug,
       name: p.name,
       thumbnail: p.image_url || "",
     }));
