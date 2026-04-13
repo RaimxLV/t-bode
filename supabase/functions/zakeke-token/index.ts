@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
     const credentials = `${clientId}:${clientSecret}`;
     const basicAuth = btoa(credentials);
 
-    console.log("Credentials length:", credentials.length, "Base64 length:", basicAuth.length);
+    console.log("ClientID:", clientId, "Secret first 5:", clientSecret.substring(0, 5), "Secret last 5:", clientSecret.substring(clientSecret.length - 5));
+    console.log("Base64 first 20:", basicAuth.substring(0, 20));
     console.log("Body:", bodyStr);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
