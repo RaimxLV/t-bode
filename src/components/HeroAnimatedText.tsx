@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 const WordPow = ({ word, delay }: { word: string; delay: number }) => (
   <motion.span
-    className="inline-block mx-1"
+    className="inline-block mx-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
     initial={{ opacity: 0, scale: 0, rotate: -8 }}
     animate={{ opacity: 1, scale: [0, 1.25, 0.95, 1.05, 1], rotate: [-8, 4, -2, 0] }}
     transition={{ delay, duration: 0.6, ease: "easeOut" }}
@@ -74,9 +74,9 @@ export const HeroAnimatedText = () => {
   }
 
   return (
-    <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4">
+    <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4 pointer-events-none">
       {/* Line 1 — POW wobble per word */}
-      <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-white text-center leading-tight">
+      <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
         {words.map((w, i) => (
           <WordPow key={i} word={w} delay={i * 0.12} />
         ))}
@@ -84,7 +84,7 @@ export const HeroAnimatedText = () => {
 
       {/* Line 2 — Slide down + fade */}
       <motion.p
-        className="text-base sm:text-lg md:text-xl lg:text-2xl font-body text-white/80 max-w-2xl text-center leading-relaxed"
+        className="text-sm sm:text-base md:text-lg lg:text-xl font-body text-white/85 max-w-xl text-center leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: line2Delay, duration: 0.7, ease: "easeOut" }}
@@ -92,9 +92,9 @@ export const HeroAnimatedText = () => {
         {line2}
       </motion.p>
 
-      {/* Line 3 — Typewriter + glow */}
+      {/* Line 3 — Typewriter + glow, UPPERCASE & large */}
       <motion.p
-        className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white text-center tracking-wide"
+        className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white text-center tracking-widest uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: line3Delay, duration: 0.3 }}
