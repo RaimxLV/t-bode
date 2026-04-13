@@ -1,6 +1,5 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useRef, useState, useEffect } from "react";
 
 const WordPow = ({ word, delay }: { word: string; delay: number }) => (
   <motion.span
@@ -13,9 +12,7 @@ const WordPow = ({ word, delay }: { word: string; delay: number }) => (
   </motion.span>
 );
 
-const TypewriterGlow = ({ text, delay }: { text: string; delay: number }) => {
-  const { t } = useTranslation();
-  const glowPhrase = t("heroAnim.glowPhrase");
+const TypewriterGlow = ({ text, delay, glowPhrase }: { text: string; delay: number; glowPhrase: string }) => {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -56,16 +53,16 @@ const TypewriterGlow = ({ text, delay }: { text: string; delay: number }) => {
   );
 };
 
+const LINE1 = "Esi unikāls. Radi pats!";
+const LINE2 = "Krekls, hūdijs vai cepure – uztaisi savu stiliņu tūlīt. Tavs apģērbs ir tavs vēstījums pasaulei.";
+const LINE3 = "T-Bode: Tavs dizains – tavs stāsts.";
+const GLOW_PHRASE = "tavs stāsts.";
+
 export const HeroAnimatedText = () => {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
-  const { t } = useTranslation();
 
-  const line1 = t("heroAnim.line1");
-  const line2 = t("heroAnim.line2");
-  const line3 = t("heroAnim.line3");
-
-  const words = useMemo(() => line1.split(" "), [line1]);
+  const words = LINE1.split(" ");
   const line2Delay = words.length * 0.12 + 0.5;
   const line3Delay = line2Delay + 0.8;
 
@@ -75,31 +72,28 @@ export const HeroAnimatedText = () => {
 
   return (
     <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4 pointer-events-none">
-      {/* Line 1 — POW wobble per word */}
       <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
         {words.map((w, i) => (
           <WordPow key={i} word={w} delay={i * 0.12} />
         ))}
       </p>
 
-      {/* Line 2 — Slide down + fade */}
       <motion.p
         className="text-sm sm:text-base md:text-lg lg:text-xl font-body text-white/85 max-w-xl text-center leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: line2Delay, duration: 0.7, ease: "easeOut" }}
       >
-        {line2}
+        {LINE2}
       </motion.p>
 
-      {/* Line 3 — Typewriter + glow, UPPERCASE & large */}
       <motion.p
         className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white text-center tracking-widest uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: line3Delay, duration: 0.3 }}
       >
-        <TypewriterGlow text={line3} delay={line3Delay} />
+        <TypewriterGlow text={LINE3} delay={line3Delay} glowPhrase={GLOW_PHRASE} />
       </motion.p>
     </div>
   );

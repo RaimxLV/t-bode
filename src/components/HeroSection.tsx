@@ -20,8 +20,8 @@ export const HeroSection = () => {
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      <div className="relative z-10 flex items-center h-full container mx-auto px-4">
-        <div className="max-w-3xl text-center mx-auto">
+      <div className="relative z-10 flex items-end justify-center h-full container mx-auto px-4 pb-32 md:pb-36">
+        <div className="max-w-3xl text-center">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
