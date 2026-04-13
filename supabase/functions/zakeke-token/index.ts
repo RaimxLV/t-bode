@@ -9,8 +9,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const clientId = Deno.env.get("ZAKEKE_API_KEY");
-    const clientSecret = Deno.env.get("ZAKEKE_CLIENT_SECRET");
+    const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
+    const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
 
     if (!clientId || !clientSecret) {
       return new Response(
@@ -19,7 +19,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse request body for optional visitorcode
     let visitorCode = "";
     try {
       const reqBody = await req.json();
@@ -28,19 +27,17 @@ Deno.serve(async (req) => {
       // no body
     }
 
-    // Use Basic Auth (recommended by Zakeke docs)
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const params: Record<string, string> = {
-      grant_type: "client_credentials",
-      access_type: "C2S",
-    };
+    const bodyParts = ["grant_type=client_credentials", "access_type=S2S"];
     if (visitorCode) {
-      params.visitorcode = visitorCode;
+      bodyParts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
     }
-    const body = new URLSearchParams(params);
+    const rawBody = bodyParts.join("&");
 
-    console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "visitor:", visitorCode);
-    console.log("Body:", body.toString());
+    // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
+    const httpClient = Deno.createHttpClient({ http1: true, http2: false });
+
+    console.log("Requesting token with HTTP/1.1, body:", rawBody);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
@@ -49,11 +46,14 @@ Deno.serve(async (req) => {
         "Content-Type": "application/x-www-form-urlencoded",
         "Authorization": `Basic ${basicAuth}`,
       },
-      body: body.toString(),
+      body: rawBody,
+      // deno-lint-ignore no-explicit-any
+      client: httpClient as any,
     });
 
     const resText = await tokenRes.text();
-    console.log("Zakeke response:", tokenRes.status, resText.substring(0, 500));
+    httpClient.close();
+    console.log("Response:", tokenRes.status, resText.substring(0, 200));
 
     if (!tokenRes.ok) {
       return new Response(
