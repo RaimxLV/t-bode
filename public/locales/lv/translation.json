@@ -1,7 +1,53 @@
 {
   "nav": {
     "designYourOwn": "Izveido dizainu pats",
-...
+    "ourCollection": "Mūsu kolekcija",
+    "ourStory": "Mūsu stāsts",
+    "findStore": "Mūsu veikali",
+    "faq": "BUJ"
+  },
+  "hero": {
+    "line1": "Dizains.",
+    "line2": "Druka.",
+    "line3": "Stāsti savu stāstu.",
+    "description": "Esi unikāls. Izveido savu dizainu. >\nTavs apģērbs ir tava ziņa.\nAr mūsu personalizācijas rīku tu vari izveidot ne tikai vienkāršu apģērbu – tu izveido savu stila ikonu.\nT-Bode: Tavi dizaini – tavs stāsts.",
+    "ctaDesign": "Sākt personalizēt",
+    "heroAnim": {
+      "pow": "POW",
+      "slide": "Izveido savu T-kreklu!"
+    },
+    "ctaCollection": "Skatīt kolekciju"
+  },
+  "about": {
+    "title": "Kāpēc T-Bode?",
+    "feature1Title": "Dizains",
+    "feature1Desc": "Izveido unikālu dizainu",
+    "feature2Title": "Kvalitāte",
+    "feature2Desc": "Augstas kvalitātes materiāli",
+    "feature3Title": "Ātrums",
+    "feature3Desc": "Ātra piegāde visā Latvijā",
+    "step1": "Izvēlies produktu",
+    "step2": "Personalizē dizainu",
+    "step3": "Saņem sūtījumu"
+  },
+  "stores": {
+    "title": "Mūsu veikali",
+    "subtitle": "Apmeklē mūs klātienē",
+    "visitUs": "Apmeklē mūs"
+  },
+  "contact": {
+    "title": "Sazinies ar mums",
+    "subtitle": "Mēs labprāt palīdzēsim",
+    "name": "Vārds",
+    "email": "E-pasts",
+    "phone": "Telefons",
+    "message": "Ziņojums",
+    "file": "Pievienot failu",
+    "submit": "Nosūtīt",
+    "success": "Ziņojums nosūtīts!",
+    "error": "Kļūda nosūtot"
+  },
+  "products": {
     "designTitle": "Izveido dizainu pats",
     "designDesc": "Izvēlies tukšu produktu, pēc tam personalizē to ar savu dizainu, izmantojot mūsu redaktoru.",
     "collectionTitle": "Mūsu kolekcija",
