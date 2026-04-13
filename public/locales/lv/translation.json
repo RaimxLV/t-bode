@@ -1,71 +1,8 @@
 {
   "nav": {
-    "designYourOwn": "Dizaini pats",
-    "ourCollection": "Mūsu kolekcija",
-    "ourStory": "Mūsu stāsts",
-    "findStore": "Mūsu veikali",
-    "faq": "FAQ"
-  },
-  "hero": {
-    "line1": "Dizains.",
-    "line2": "Druka.",
-    "line3": "Izstāsti\u00a0\nsavu stāstu.",
-    "description": "Esi unikāls. \nRadi savu dizainu pats. > \nTavs apģērbs ir tavs vēstījums. \nAr mūsu personalizācijas rīku tu vari izveidot ko vairāk par vienkāršu apģērbu – tu radi savu stila ikonu. \nT-Bode: Tavi dizaini – tavs stāsts.",
-    "ctaDesign": "Sākt personalizēt",
-  "heroAnim": {
-    "line1": "Esi unikāls. Radi pats!",
-    "line2": "Krekls, hūdijs vai cepure – uztaisi savu stiliņu tūlīt. Tavs apģērbs ir tavs vēstījums pasaulei.",
-    "line3": "T-Bode: Tavs dizains – tavs stāsts.",
-    "glowPhrase": "tavs stāsts."
-  },
-    "ctaCollection": "Mūsu kolekcija"
-  },
-  "about": {
-    "title": "T-Bode ir vieta, kur T-krekls kļūst par stāstu.",
-    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> vari mūs apmeklēt personīgi, uzprobēt T-kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo parūpēsimies mēs. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong> spilgtām krāsām gan gaišiem, gan tumšiem audumiem.",
-    "features": {
-      "quality": { "title": "Premium DTF drukas kvalitāte", "desc": "Spilgtas, izturīgas un augstas kvalitātes izdrukas, izmantojot DTF tehnoloģiju." },
-      "tool": { "title": "Ērts dizaina rīks", "desc": "Viegli izveido savus unikālos dizainus ar mūsu intuitīvo iebūvēto redaktoru." },
-      "production": { "title": "Ātra ražošana", "desc": "Ar plašu noliktavu uz vietas garantējam ātru ražošanu un pasūtījumu apstrādi." },
-      "delivery": { "title": "Ērta piegāde", "desc": "Saņem pasūtījumu jebkurā Omniva pakomātā." }
-    },
-    "steps": {
-      "s1": { "title": "Izvēlies produktu", "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga." },
-      "s2": { "title": "Personalizē", "desc": "Pielāgo savu priekšmetu ar mūsu iebūvēto dizaina rīku." },
-      "s3": { "title": "Noformē pasūtījumu", "desc": "Aizpildi pasūtījumu un samaksā droši tiešsaistē." },
-      "s4": { "title": "Saņem pasūtījumu", "desc": "Izņem preci jebkurā Omniva pakomātā 1-2 darba dienu laikā." }
-    },
-    "howItWorks": "KĀ TAS STRĀDĀ",
-    "howItWorksDesc": "Četri vienkārši soļi līdz tavam unikālajam produktam"
-  },
-  "stores": {
-    "title": "Apmeklē T-BODE",
-    "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
-    "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
-    "officeTitle": "T-Bode birojs / Saņemšanas punkts",
-    "officeDesc": "Saņemiet pasūtījumus personīgi mūsu birojā Rīgā, Braslas iela 29, D ieeja."
-  },
-  "contact": {
-    "title": "Vēlies apģērbt savu komandu vai plāno pasākumu?",
-    "subtitle": "<strong>Sazinies ar mums</strong> par konkurētspējīgām cenām lieliem pasūtījumiem.",
-    "firstName": "Vārds *",
-    "phone": "Telefona numurs *",
-    "message": "Ziņojums",
-    "submit": "Nosūtīt pieteikumu",
-    "fileUpload": "Pievienot failu",
-    "attachFile": "Nospied, lai pievienotu failu (PDF, PNG, JPG, AI, EPS, SVG)",
-    "fileHint": "Maks. faila izmērs: 15 MB",
-    "fileTooLarge": "Fails ir pārāk liels. Maksimālais izmērs ir 15 MB.",
-    "email": "E-pasts *",
-    "sending": "Nosūta...",
-    "successMessage": "Jūsu pieteikums ir veiksmīgi nosūtīts!",
-    "errorMessage": "Kļūda nosūtot pieteikumu. Lūdzu mēģiniet vēlreiz.",
-    "thankYouTitle": "Paldies par jūsu pieteikumu!",
-    "thankYouDesc": "Mēs sazināsimies ar jums tuvākajā laikā.",
-    "sendAnother": "Nosūtīt vēl vienu pieteikumu"
-  },
-  "products": {
-    "designTitle": "Dizaini pats",
+    "designYourOwn": "Izveido dizainu pats",
+...
+    "designTitle": "Izveido dizainu pats",
     "designDesc": "Izvēlies tukšu produktu, pēc tam personalizē to ar savu dizainu, izmantojot mūsu redaktoru.",
     "collectionTitle": "Mūsu kolekcija",
     "collectionDesc": "Gatavi dizaini, iedvesmoti no Latvijas — izvēlies savu favorītu un ej.",
@@ -258,7 +195,7 @@
   "footer": {
     "brandDesc": "SIA Ervitex — personalizētu apģērbu un aksesuāru ražotājs Latvijā. Izveido savu unikālo dizainu vai izvēlies no mūsu kolekcijas.",
     "shop": "VEIKALS",
-    "designYourOwn": "Dizaini pats",
+    "designYourOwn": "Izveido dizainu pats",
     "ourCollection": "Mūsu kolekcija",
     "news": "Jaunumi",
     "giftCards": "Dāvanu kartes",
