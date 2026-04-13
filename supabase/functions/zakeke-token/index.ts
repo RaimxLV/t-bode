@@ -19,20 +19,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use body-based credentials as shown in Zakeke docs (alternative to Basic Auth)
+    // Use Basic Auth (recommended by Zakeke docs)
+    const basicAuth = btoa(`${clientId}:${clientSecret}`);
     const body = new URLSearchParams({
       grant_type: "client_credentials",
-      client_id: clientId,
-      client_secret: clientSecret,
     });
 
     console.log("ClientID:", clientId, "Secret length:", clientSecret.length, "Secret ends with:", clientSecret.slice(-5));
+    console.log("Basic auth header:", `Basic ${basicAuth}`);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": `Basic ${basicAuth}`,
       },
       body: body.toString(),
     });
