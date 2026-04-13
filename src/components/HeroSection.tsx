@@ -1,39 +1,39 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useRef } from "react";
 import heroImage from "@/assets/hero.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end start"],
+  });
+
+  // Parallax: image moves slower than scroll
+  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   return (
-    <section className="relative h-screen overflow-hidden">
-      {/* Desktop: parallax with fixed attachment, position top so jumping guy's head is at navbar */}
-      <div
-        className="absolute inset-0 hidden md:block"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundAttachment: "fixed",
-          backgroundPosition: "center top",
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-        }}
-      />
-      {/* Mobile: no fixed attachment (iOS doesn't support it), object-position to show all characters */}
-      <img
+    <section ref={sectionRef} className="relative h-screen overflow-hidden">
+      {/* Parallax image via framer-motion transform */}
+      <motion.img
         src={heroImage}
         alt="T-Bode hero"
-        className="absolute inset-0 w-full h-full object-cover object-bottom md:hidden"
+        className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
+        style={{ y: imgY }}
       />
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
       />
 
-      <div className="relative z-10 flex items-end justify-center h-full container mx-auto px-4 pb-20 md:pb-28">
+      <div className="relative z-10 flex items-end justify-center h-full container mx-auto px-4 pb-8 md:pb-16">
         <div className="max-w-3xl text-center">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
@@ -58,7 +58,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.9 }}
-            className="mt-10 flex flex-col sm:flex-row gap-4 justify-center"
+            className="mt-6 flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
               onClick={() => navigate("/design")}
