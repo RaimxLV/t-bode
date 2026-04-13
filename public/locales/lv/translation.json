@@ -12,6 +12,12 @@
     "line3": "Izstāsti\u00a0\nsavu stāstu.",
     "description": "Esi unikāls. \nRadi savu dizainu pats. > \nTavs apģērbs ir tavs vēstījums. \nAr mūsu personalizācijas rīku tu vari izveidot ko vairāk par vienkāršu apģērbu – tu radi savu stila ikonu. \nT-Bode: Tavi dizaini – tavs stāsts.",
     "ctaDesign": "Sākt personalizēt",
+  "heroAnim": {
+    "line1": "Esi unikāls. Radi pats!",
+    "line2": "Krekls, hūdijs vai cepure – uztaisi savu stiliņu tūlīt. Tavs apģērbs ir tavs vēstījums pasaulei.",
+    "line3": "T-Bode: Tavs dizains – tavs stāsts.",
+    "glowPhrase": "tavs stāsts."
+  },
     "ctaCollection": "Mūsu kolekcija"
   },
   "about": {

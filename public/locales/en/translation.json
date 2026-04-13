@@ -12,6 +12,12 @@
     "line3": "Tell Your Story.",
     "description": "Be unique. Create your own design. > \nYour clothing is your message. \nWith our personalization tool, you can create more than just simple clothing – you create your own style icon. \nT-Bode: Your designs – your story.",
     "ctaDesign": "Start Customizing",
+  "heroAnim": {
+    "line1": "Be unique. Create yours!",
+    "line2": "T-shirt, hoodie or cap – make your own style right now. Your clothing is your message to the world.",
+    "line3": "T-Bode: Your design – your story.",
+    "glowPhrase": "your story."
+  },
     "ctaCollection": "Our Collection"
   },
   "about": {

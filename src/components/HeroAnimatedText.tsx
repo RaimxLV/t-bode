@@ -1,104 +1,106 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { motion, useInView } from "framer-motion";
+import { useRef, useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
-const lines = [
-  {
-    text: "Esi unikāls.",
-    className: "text-4xl md:text-6xl lg:text-7xl font-display font-extrabold tracking-tight text-white",
-  },
-  {
-    text: "Radi savu dizainu pats.",
-    className: "text-3xl md:text-5xl lg:text-6xl font-display font-bold italic text-gradient-brand",
-  },
-  {
-    text: "Tavs apģērbs ir tavs vēstījums.",
-    className: "text-2xl md:text-4xl lg:text-5xl font-body font-semibold text-white/90",
-  },
-  {
-    text: "Ar mūsu personalizācijas rīku tu vari izveidot ko vairāk par vienkāršu apģērbu —",
-    className: "text-lg md:text-2xl lg:text-3xl font-body font-light text-white/70 max-w-2xl mx-auto",
-  },
-  {
-    text: "tu radi savu stila ikonu.",
-    className: "text-3xl md:text-5xl lg:text-6xl font-display font-extrabold text-gradient-brand uppercase tracking-widest",
-  },
-  {
-    text: "T-Bode: Tavi dizaini – tavs stāsts.",
-    className: "text-2xl md:text-4xl lg:text-5xl font-display font-bold text-white tracking-wide",
-  },
-];
+const WordPow = ({ word, delay }: { word: string; delay: number }) => (
+  <motion.span
+    className="inline-block mx-1"
+    initial={{ opacity: 0, scale: 0, rotate: -8 }}
+    animate={{ opacity: 1, scale: [0, 1.25, 0.95, 1.05, 1], rotate: [-8, 4, -2, 0] }}
+    transition={{ delay, duration: 0.6, ease: "easeOut" }}
+  >
+    {word}
+  </motion.span>
+);
 
-const variants = {
-  enter: (i: number) => ({
-    opacity: 0,
-    y: i % 2 === 0 ? 60 : -60,
-    scale: 0.8,
-    rotateX: i % 2 === 0 ? 15 : -15,
-    filter: "blur(12px)",
-  }),
-  center: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    rotateX: 0,
-    filter: "blur(0px)",
-  },
-  exit: (i: number) => ({
-    opacity: 0,
-    y: i % 2 === 0 ? -60 : 60,
-    scale: 0.8,
-    rotateX: i % 2 === 0 ? -15 : 15,
-    filter: "blur(12px)",
-  }),
+const TypewriterGlow = ({ text, delay }: { text: string; delay: number }) => {
+  const { t } = useTranslation();
+  const glowPhrase = t("heroAnim.glowPhrase");
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+
+  useEffect(() => {
+    const startTimer = setTimeout(() => setStarted(true), delay * 1000);
+    return () => clearTimeout(startTimer);
+  }, [delay]);
+
+  useEffect(() => {
+    if (!started || count >= text.length) return;
+    const timer = setTimeout(() => setCount((c) => c + 1), 40);
+    return () => clearTimeout(timer);
+  }, [started, count, text.length]);
+
+  const visible = text.slice(0, count);
+  const glowStart = text.indexOf(glowPhrase);
+
+  if (glowStart === -1 || count <= glowStart) {
+    return (
+      <span>
+        {visible}
+        <span className="animate-pulse opacity-80">|</span>
+      </span>
+    );
+  }
+
+  const before = visible.slice(0, glowStart);
+  const glowVisible = visible.slice(glowStart);
+
+  return (
+    <span>
+      {before}
+      <span className="text-gradient-brand animate-[pulse_2s_ease-in-out_infinite] drop-shadow-[0_0_18px_hsl(var(--primary)/0.7)]">
+        {glowVisible}
+      </span>
+      {count < text.length && <span className="animate-pulse opacity-80">|</span>}
+    </span>
+  );
 };
 
 export const HeroAnimatedText = () => {
-  const [current, setCurrent] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.3 });
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % lines.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+  const line1 = t("heroAnim.line1");
+  const line2 = t("heroAnim.line2");
+  const line3 = t("heroAnim.line3");
 
-  const line = lines[current];
+  const words = useMemo(() => line1.split(" "), [line1]);
+  const line2Delay = words.length * 0.12 + 0.5;
+  const line3Delay = line2Delay + 0.8;
+
+  if (!isInView) {
+    return <div ref={ref} className="min-h-[180px] md:min-h-[220px]" />;
+  }
 
   return (
-    <div className="relative h-[120px] md:h-[160px] lg:h-[180px] flex items-center justify-center overflow-hidden" style={{ perspective: "800px" }}>
-      <AnimatePresence mode="wait" custom={current}>
-        <motion.p
-          key={current}
-          custom={current}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{
-            duration: 0.7,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className={`absolute text-center px-4 leading-tight ${line.className}`}
-        >
-          {line.text}
-        </motion.p>
-      </AnimatePresence>
-
-      {/* Progress dots */}
-      <div className="absolute bottom-0 flex gap-2">
-        {lines.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              i === current
-                ? "bg-white w-6"
-                : "bg-white/30 hover:bg-white/50"
-            }`}
-            aria-label={`Line ${i + 1}`}
-          />
+    <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4">
+      {/* Line 1 — POW wobble per word */}
+      <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-extrabold tracking-tight text-white text-center leading-tight">
+        {words.map((w, i) => (
+          <WordPow key={i} word={w} delay={i * 0.12} />
         ))}
-      </div>
+      </p>
+
+      {/* Line 2 — Slide down + fade */}
+      <motion.p
+        className="text-base sm:text-lg md:text-xl lg:text-2xl font-body text-white/80 max-w-2xl text-center leading-relaxed"
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: line2Delay, duration: 0.7, ease: "easeOut" }}
+      >
+        {line2}
+      </motion.p>
+
+      {/* Line 3 — Typewriter + glow */}
+      <motion.p
+        className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white text-center tracking-wide"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: line3Delay, duration: 0.3 }}
+      >
+        <TypewriterGlow text={line3} delay={line3Delay} />
+      </motion.p>
     </div>
   );
 };
