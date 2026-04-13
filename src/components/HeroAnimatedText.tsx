@@ -6,7 +6,7 @@ const WordPow = ({ word, delay }: { word: string; delay: number }) => (
   <motion.span
     className="inline-block mx-1"
     initial={{ opacity: 0, scale: 0, rotate: -8 }}
-    animate={{ opacity: 1, scale: [0, 1.25, 0.95, 1.05, 1], rotate: [−8, 4, -2, 0] }}
+    animate={{ opacity: 1, scale: [0, 1.25, 0.95, 1.05, 1], rotate: [-8, 4, -2, 0] }}
     transition={{ delay, duration: 0.6, ease: "easeOut" }}
   >
     {word}
