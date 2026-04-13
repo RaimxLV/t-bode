@@ -228,7 +228,7 @@ const ProductDetail = () => {
       {designerOpen && product.customizable && (
         <ZakekeDesigner
           productId={product.id}
-          zakekeModelCode={product.zakeke_model_code || product.id}
+          zakekeModelCode={product.zakeke_model_code || product.slug}
           productName={product.name}
           productPrice={product.price}
           productSlug={product.slug}

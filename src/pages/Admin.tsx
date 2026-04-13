@@ -15,8 +15,7 @@ import logo from "@/assets/logo.svg";
 import { ProductDialog, EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
 import { OrdersList } from "@/components/admin/OrdersList";
 import { FAQManager } from "@/components/admin/FAQManager";
-
-type DBProduct = { id: string; name: string; slug: string; description: string | null; price: number; category: string; sizes: string[] | null; colors: string[] | null; customizable: boolean; color_variants: ColorVariant[]; image_url: string | null; in_stock: boolean; created_at: string; updated_at: string; };
+import type { DBProduct } from "@/hooks/useProducts";
 
 const CATEGORIES = [
   { value: "t-shirts", labelKey: "categories.t-shirts" },
@@ -94,7 +93,7 @@ const Admin = () => {
     setLoadingProducts(true);
     const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
     if (error) toast.error(t("admin.loadError"));
-    else setProducts((data as unknown as DBProduct[]) || []);
+    else setProducts(((data ?? []) as any[]).map((product) => ({ ...product, color_variants: (product.color_variants as ColorVariant[]) || [], zakeke_model_code: product.zakeke_model_code ?? null })));
     setLoadingProducts(false);
   };
 
@@ -138,7 +137,7 @@ const Admin = () => {
 
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
-    setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock, zakeke_model_code: (product as any).zakeke_model_code || "" });
+    setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock, zakeke_model_code: product.zakeke_model_code || "" });
     setDialogOpen(true);
   };
 
