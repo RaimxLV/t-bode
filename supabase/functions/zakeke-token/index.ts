@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     }
 
     // Use Basic Auth (recommended by Zakeke docs)
-    const basicAuth = btoa(`${clientId}:${clientSecret}`);
+    const basicAuth = btoa(`${clientId.trim()}:${clientSecret.trim()}`);
     const params: Record<string, string> = {
       grant_type: "client_credentials",
       access_type: "S2S",
