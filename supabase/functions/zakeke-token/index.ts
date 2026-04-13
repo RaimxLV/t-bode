@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     }
     const body = new URLSearchParams(params);
 
-    console.log("Requesting Zakeke token, clientId:", clientId, "secretLen:", clientSecret.length);
+    console.log("Requesting Zakeke token, clientId:", clientId, "secretLen:", clientSecret.length, "authHeader:", `Basic ${basicAuth.substring(0,20)}...`);
 
     const tokenRes = await fetch("https://api.zakeke.com/token", {
       method: "POST",
