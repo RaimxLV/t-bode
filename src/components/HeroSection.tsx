@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero.jpg";
+import { HeroAnimatedText } from "./HeroAnimatedText";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
