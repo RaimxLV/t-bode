@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn } from "lucide-react";
@@ -21,6 +21,7 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+
   const [quantity, setQuantity] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [designerOpen, setDesignerOpen] = useState(false);
@@ -28,6 +29,19 @@ const ProductDetail = () => {
 
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
+
+  // Set defaults when product loads
+  useEffect(() => {
+    if (!product) return;
+    const productSizes = product.sizes ?? [];
+    const productColors = product.color_variants ?? [];
+    if (!selectedSize && productSizes.length > 0) {
+      setSelectedSize(productSizes.includes("M") ? "M" : productSizes[0]);
+    }
+    if (!selectedColor && productColors.length > 0) {
+      setSelectedColor(productColors[0].name);
+    }
+  }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
