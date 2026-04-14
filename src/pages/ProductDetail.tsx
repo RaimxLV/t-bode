@@ -136,6 +136,16 @@ const ProductDetail = () => {
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
                 </div>
+                {product.customizable && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setDesignerOpen(true); }}
+                    disabled={!selectedSize || !selectedColor}
+                    className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary/60 backdrop-blur-sm text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed z-10 shadow-lg"
+                    title={t("productDetail.customizeDesign", "Personalizēt dizainu")}
+                  >
+                    <Paintbrush className="w-5 h-5" />
+                  </button>
+                )}
               </div>
               {galleryImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
@@ -200,24 +210,15 @@ const ProductDetail = () => {
               </div>
 
               {product.customizable && (
-                <div className="mb-8 p-6 rounded-lg border-2 border-dashed border-primary/30 bg-primary/5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Paintbrush className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-display">{t("productDetail.customizeDesign")}</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground font-body mb-4">{t("productDetail.customizeDesc")}</p>
-                  <Button
-                    variant="outline"
-                    className="border-primary/40 text-primary hover:bg-primary/10"
-                    disabled={!selectedSize || !selectedColor}
-                    onClick={() => setDesignerOpen(true)}
-                  >
-                    {t("productDetail.openDesigner")}
-                  </Button>
-                  {(!selectedSize || !selectedColor) && (
-                    <p className="text-xs text-muted-foreground mt-2 font-body italic">{t("productDetail.selectSizeColor")}</p>
-                  )}
-                </div>
+                <Button
+                  variant="secondary"
+                  className="mb-4 w-full gap-2 font-body"
+                  disabled={!selectedSize || !selectedColor}
+                  onClick={() => setDesignerOpen(true)}
+                >
+                  <Paintbrush className="w-4 h-4" />
+                  {t("productDetail.customizeDesign", "Personalizēt dizainu")}
+                </Button>
               )}
 
               <button
