@@ -113,15 +113,30 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {items.map((item: any) => (
-                                <TableRow key={item.id}>
-                                  <TableCell className="text-xs font-body">{item.product_name}</TableCell>
-                                  <TableCell className="text-xs">{item.size || "—"}</TableCell>
-                                  <TableCell className="text-xs">{item.color || "—"}</TableCell>
-                                  <TableCell className="text-xs text-right">{item.quantity}</TableCell>
-                                  <TableCell className="text-xs text-right">{item.unit_price.toFixed(2)} €</TableCell>
-                                </TableRow>
-                              ))}
+                              {items.map((item: any) => {
+                                const product = item.products;
+                                const colorVariants = product?.color_variants as any[] | undefined;
+                                const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
+                                const thumbUrl = matchedVariant?.images?.[0] || product?.image_url || null;
+                                return (
+                                  <TableRow key={item.id}>
+                                    <TableCell className="text-xs font-body">
+                                      <div className="flex items-center gap-2">
+                                        {thumbUrl ? (
+                                          <img src={thumbUrl} alt={item.product_name} className="w-[50px] h-[50px] object-cover rounded border border-border flex-shrink-0" />
+                                        ) : (
+                                          <div className="w-[50px] h-[50px] bg-muted rounded border border-border flex-shrink-0" />
+                                        )}
+                                        <span>{item.product_name}</span>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="text-xs">{item.size || "—"}</TableCell>
+                                    <TableCell className="text-xs">{item.color || "—"}</TableCell>
+                                    <TableCell className="text-xs text-right">{item.quantity}</TableCell>
+                                    <TableCell className="text-xs text-right">{item.unit_price.toFixed(2)} €</TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
                         </div>
