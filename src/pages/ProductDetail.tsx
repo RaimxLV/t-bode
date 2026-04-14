@@ -165,47 +165,92 @@ const ProductDetail = () => {
               <p className="text-3xl font-bold font-body mb-6" style={{ color: "hsl(var(--primary))" }}>
                 {product.price.toFixed(2).replace(".", ",")} €
               </p>
+
+              {/* Mobile: color, size, quantity before description */}
+              <div className="flex flex-col lg:hidden">
+                {colors.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Palette className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-body font-semibold text-sm">{t("productDetail.color")} {selectedColor && `— ${selectedColor}`}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {colors.map((color) => (
+                        <button key={color.name} onClick={() => { setSelectedColor(color.name); setSelectedImageIdx(0); }} title={color.name}
+                          className={`w-9 h-9 rounded-full border-2 transition-all ${selectedColor === color.name ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border hover:border-foreground"}`}
+                          style={{ backgroundColor: color.hex }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {sizes.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Ruler className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-body font-semibold text-sm">{t("productDetail.size")}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {sizes.map((size) => (
+                        <button key={size} onClick={() => setSelectedSize(size)}
+                          className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${selectedSize === size ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="mb-6">
+                  <span className="font-body font-semibold text-sm mb-2 block">{t("productDetail.quantity")}</span>
+                  <div className="inline-flex items-center border border-border rounded-md">
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
+                    <span className="px-6 py-2 font-body font-semibold border-x border-border">{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
+                  </div>
+                </div>
+              </div>
+
               {product.description && <p className="text-sm text-muted-foreground font-body mb-6 leading-relaxed">{product.description}</p>}
 
-              {colors.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Palette className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-body font-semibold text-sm">{t("productDetail.color")} {selectedColor && `— ${selectedColor}`}</span>
+              {/* Desktop: color, size, quantity after description */}
+              <div className="hidden lg:flex lg:flex-col">
+                {colors.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Palette className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-body font-semibold text-sm">{t("productDetail.color")} {selectedColor && `— ${selectedColor}`}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {colors.map((color) => (
+                        <button key={color.name} onClick={() => { setSelectedColor(color.name); setSelectedImageIdx(0); }} title={color.name}
+                          className={`w-9 h-9 rounded-full border-2 transition-all ${selectedColor === color.name ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border hover:border-foreground"}`}
+                          style={{ backgroundColor: color.hex }} />
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {colors.map((color) => (
-                      <button key={color.name} onClick={() => { setSelectedColor(color.name); setSelectedImageIdx(0); }} title={color.name}
-                        className={`w-9 h-9 rounded-full border-2 transition-all ${selectedColor === color.name ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border hover:border-foreground"}`}
-                        style={{ backgroundColor: color.hex }} />
-                    ))}
+                )}
+                {sizes.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Ruler className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-body font-semibold text-sm">{t("productDetail.size")}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {sizes.map((size) => (
+                        <button key={size} onClick={() => setSelectedSize(size)}
+                          className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${selectedSize === size ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {sizes.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Ruler className="w-4 h-4 text-muted-foreground" />
-                    <span className="font-body font-semibold text-sm">{t("productDetail.size")}</span>
+                )}
+                <div className="mb-8">
+                  <span className="font-body font-semibold text-sm mb-3 block">{t("productDetail.quantity")}</span>
+                  <div className="inline-flex items-center border border-border rounded-md">
+                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
+                    <span className="px-6 py-2 font-body font-semibold border-x border-border">{quantity}</span>
+                    <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {sizes.map((size) => (
-                      <button key={size} onClick={() => setSelectedSize(size)}
-                        className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${selectedSize === size ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-8">
-                <span className="font-body font-semibold text-sm mb-3 block">{t("productDetail.quantity")}</span>
-                <div className="inline-flex items-center border border-border rounded-md">
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
-                  <span className="px-6 py-2 font-body font-semibold border-x border-border">{quantity}</span>
-                  <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
                 </div>
               </div>
 
