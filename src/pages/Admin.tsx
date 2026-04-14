@@ -121,7 +121,7 @@ const Admin = () => {
       setOrders(data || []);
       const ids = (data || []).map((o: any) => o.id);
       if (ids.length > 0) {
-        const { data: items } = await supabase.from("order_items").select("*").in("order_id", ids);
+        const { data: items } = await supabase.from("order_items").select("*, products:product_id(image_url, color_variants)").in("order_id", ids);
         const grouped: Record<string, any[]> = {};
         (items || []).forEach((item: any) => { if (!grouped[item.order_id]) grouped[item.order_id] = []; grouped[item.order_id].push(item); });
         setOrderItems(grouped);
