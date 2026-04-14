@@ -42,7 +42,7 @@ const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: stri
 );
 
 const Admin = () => {
-  const { user, loading: authLoading, isAdmin: hasAdminRole, adminLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin: hasAdminRole, adminLoading, isWhitelisted } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -59,6 +59,9 @@ const Admin = () => {
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [adminCategoryFilter, setAdminCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [whitelistEmails, setWhitelistEmails] = useState<{ id: string; email: string }[]>([]);
+  const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
+  const [loadingWhitelist, setLoadingWhitelist] = useState(false);
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
@@ -72,14 +75,14 @@ const Admin = () => {
   useEffect(() => {
     if (authLoading || adminLoading) return;
     if (!user) { navigate("/auth"); return; }
-    if (!hasAdminRole) {
+    if (!hasAdminRole && !isWhitelisted) {
       toast.error(t("admin.noAccess"));
       navigate("/");
       return;
     }
     setIsAdmin(true);
     setChecking(false);
-  }, [user, authLoading, adminLoading, hasAdminRole, navigate, t]);
+  }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, navigate, t]);
 
   useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); }, [isAdmin]);
 
