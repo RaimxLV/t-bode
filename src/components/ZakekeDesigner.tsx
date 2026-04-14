@@ -95,6 +95,7 @@ export const ZakekeDesigner = ({
         customizerInstance = customizer;
 
         const config: Record<string, unknown> = {
+          containerId: "zakeke-container",
           tokenOauth: token,
           productId: zakekeModelCode,
           productName,
@@ -202,14 +203,14 @@ export const ZakekeDesigner = ({
       </div>
 
       {/* Content */}
-      <div ref={containerRef} className="flex-1 relative">
+      <div ref={containerRef} className="flex-1 relative min-h-0">
         {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background">
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         )}
         {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background">
+          <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <div className="text-center p-6">
               <p className="text-destructive mb-4">{error}</p>
               <Button onClick={onClose} variant="outline">
@@ -219,7 +220,7 @@ export const ZakekeDesigner = ({
           </div>
         )}
         {/* Zakeke injects its iframe into #zakeke-container */}
-        <div id="zakeke-container" className="w-full h-full" />
+        <div id="zakeke-container" className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
       </div>
     </div>
   );
