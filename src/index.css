@@ -99,12 +99,11 @@
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-primary;
   }
-  }
+}
 
-  /* Zakeke designer iframe sizing */
-  #zakeke-container iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: none;
-  }
+/* Zakeke designer iframe sizing */
+#zakeke-container iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none;
 }
