@@ -30,6 +30,19 @@ const ProductDetail = () => {
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
 
+  // Set defaults when product loads
+  useEffect(() => {
+    if (!product) return;
+    const productSizes = product.sizes ?? [];
+    const productColors = product.color_variants ?? [];
+    if (!selectedSize && productSizes.length > 0) {
+      setSelectedSize(productSizes.includes("M") ? "M" : productSizes[0]);
+    }
+    if (!selectedColor && productColors.length > 0) {
+      setSelectedColor(productColors[0].name);
+    }
+  }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const galleryImages = useMemo(() => {
     if (!product) return [];
     const imgs: string[] = [];
