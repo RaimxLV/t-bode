@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   adminLoading: boolean;
+  isWhitelisted: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -19,13 +20,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
+  const [isWhitelisted, setIsWhitelisted] = useState(false);
 
-  const checkAdmin = async (userId: string) => {
+  const checkAdmin = async (userId: string, email: string) => {
     try {
-      const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-      setIsAdmin(!!data);
+      const [roleResult, whitelistResult] = await Promise.all([
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        supabase.rpc("is_admin_whitelisted", { _email: email }),
+      ]);
+      setIsAdmin(!!roleResult.data);
+      setIsWhitelisted(!!whitelistResult.data);
     } catch {
       setIsAdmin(false);
+      setIsWhitelisted(false);
     } finally {
       setAdminLoading(false);
     }
@@ -37,9 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        checkAdmin(session.user.id, session.user.email ?? "");
       } else {
         setIsAdmin(false);
+        setIsWhitelisted(false);
         setAdminLoading(false);
       }
     });
@@ -49,7 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       setLoading(false);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        checkAdmin(session.user.id, session.user.email ?? "");
       } else {
         setAdminLoading(false);
       }
@@ -58,12 +66,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Listen for realtime whitelist changes
+  useEffect(() => {
+    const channel = supabase
+      .channel("admin_whitelist_changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_whitelist" }, () => {
+        if (user?.email) {
+          supabase.rpc("is_admin_whitelisted", { _email: user.email }).then(({ data }) => {
+            setIsWhitelisted(!!data);
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.email]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, adminLoading, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, adminLoading, isWhitelisted, signOut }}>
       {children}
     </AuthContext.Provider>
   );

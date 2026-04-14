@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
@@ -42,7 +42,7 @@ const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: stri
 );
 
 const Admin = () => {
-  const { user, loading: authLoading, isAdmin: hasAdminRole, adminLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin: hasAdminRole, adminLoading, isWhitelisted } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
@@ -59,6 +59,9 @@ const Admin = () => {
   const [loadingFaqs, setLoadingFaqs] = useState(false);
   const [adminCategoryFilter, setAdminCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [whitelistEmails, setWhitelistEmails] = useState<{ id: string; email: string }[]>([]);
+  const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
+  const [loadingWhitelist, setLoadingWhitelist] = useState(false);
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
@@ -72,16 +75,42 @@ const Admin = () => {
   useEffect(() => {
     if (authLoading || adminLoading) return;
     if (!user) { navigate("/auth"); return; }
-    if (!hasAdminRole) {
+    if (!hasAdminRole && !isWhitelisted) {
       toast.error(t("admin.noAccess"));
       navigate("/");
       return;
     }
     setIsAdmin(true);
     setChecking(false);
-  }, [user, authLoading, adminLoading, hasAdminRole, navigate, t]);
+  }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, navigate, t]);
 
-  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); loadWhitelist(); }, [isAdmin]);
+
+  const loadWhitelist = async () => {
+    setLoadingWhitelist(true);
+    const { data, error } = await supabase.from("admin_whitelist").select("id, email").order("created_at", { ascending: true });
+    if (!error) setWhitelistEmails((data as { id: string; email: string }[]) || []);
+    setLoadingWhitelist(false);
+  };
+
+  const addWhitelistEmail = async () => {
+    const email = newWhitelistEmail.trim().toLowerCase();
+    if (!email) return;
+    const { error } = await supabase.from("admin_whitelist").insert({ email });
+    if (error) {
+      toast.error(error.message.includes("duplicate") ? "Šis e-pasts jau ir sarakstā" : "Kļūda pievienojot e-pastu");
+    } else {
+      toast.success("E-pasts pievienots baltajam sarakstam");
+      setNewWhitelistEmail("");
+      loadWhitelist();
+    }
+  };
+
+  const removeWhitelistEmail = async (id: string) => {
+    const { error } = await supabase.from("admin_whitelist").delete().eq("id", id);
+    if (error) toast.error("Kļūda dzēšot e-pastu");
+    else { toast.success("E-pasts noņemts"); loadWhitelist(); }
+  };
 
   const loadProducts = async () => {
     setLoadingProducts(true);
@@ -231,6 +260,7 @@ const Admin = () => {
             <TabsTrigger value="collection" className="gap-1.5 text-xs sm:text-sm"><ShoppingBag className="w-4 h-4 hidden sm:block" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm"><Package className="w-4 h-4 hidden sm:block" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
             <TabsTrigger value="faq" className="gap-1.5 text-xs sm:text-sm"><HelpCircle className="w-4 h-4 hidden sm:block" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
+            <TabsTrigger value="access" className="gap-1.5 text-xs sm:text-sm"><UserCheck className="w-4 h-4 hidden sm:block" /> Piekļuve</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -253,6 +283,46 @@ const Admin = () => {
 
           <TabsContent value="faq">
             <FAQManager faqs={faqs} loading={loadingFaqs} onRefresh={loadFaqs} />
+          </TabsContent>
+
+          <TabsContent value="access">
+            <Card className="border border-border">
+              <CardContent className="p-6 space-y-4">
+                <div>
+                  <h3 className="text-lg font-display mb-1">Adminu Baltais Saraksts</h3>
+                  <p className="text-sm text-muted-foreground font-body">Ievadi e-pastu, lai piešķirtu piekļuvi admin panelim.</p>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="email"
+                    value={newWhitelistEmail}
+                    onChange={(e) => setNewWhitelistEmail(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && addWhitelistEmail()}
+                    placeholder="epasts@piemers.lv"
+                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <Button onClick={addWhitelistEmail} className="bg-primary text-primary-foreground">
+                    <Plus className="w-4 h-4 mr-1" /> Pievienot
+                  </Button>
+                </div>
+                {loadingWhitelist ? (
+                  <p className="text-muted-foreground text-sm py-4 text-center">Ielādē...</p>
+                ) : whitelistEmails.length === 0 ? (
+                  <p className="text-muted-foreground text-sm py-4 text-center">Nav neviena e-pasta baltajā sarakstā.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {whitelistEmails.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border">
+                        <span className="text-sm font-body">{item.email}</span>
+                        <button onClick={() => removeWhitelistEmail(item.id)} className="p-1 text-destructive hover:text-destructive/80 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
