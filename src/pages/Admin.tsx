@@ -84,7 +84,33 @@ const Admin = () => {
     setChecking(false);
   }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, navigate, t]);
 
-  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); }, [isAdmin]);
+  useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); loadWhitelist(); }, [isAdmin]);
+
+  const loadWhitelist = async () => {
+    setLoadingWhitelist(true);
+    const { data, error } = await supabase.from("admin_whitelist").select("id, email").order("created_at", { ascending: true });
+    if (!error) setWhitelistEmails((data as { id: string; email: string }[]) || []);
+    setLoadingWhitelist(false);
+  };
+
+  const addWhitelistEmail = async () => {
+    const email = newWhitelistEmail.trim().toLowerCase();
+    if (!email) return;
+    const { error } = await supabase.from("admin_whitelist").insert({ email });
+    if (error) {
+      toast.error(error.message.includes("duplicate") ? "Šis e-pasts jau ir sarakstā" : "Kļūda pievienojot e-pastu");
+    } else {
+      toast.success("E-pasts pievienots baltajam sarakstam");
+      setNewWhitelistEmail("");
+      loadWhitelist();
+    }
+  };
+
+  const removeWhitelistEmail = async (id: string) => {
+    const { error } = await supabase.from("admin_whitelist").delete().eq("id", id);
+    if (error) toast.error("Kļūda dzēšot e-pastu");
+    else { toast.success("E-pasts noņemts"); loadWhitelist(); }
+  };
 
   const loadProducts = async () => {
     setLoadingProducts(true);
