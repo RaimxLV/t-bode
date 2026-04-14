@@ -117,7 +117,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                 const product = item.products;
                                 const colorVariants = product?.color_variants as any[] | undefined;
                                 const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
-                                const thumbUrl = matchedVariant?.images?.[0] || product?.image_url || null;
+                                const thumbUrl = item.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
                                 return (
                                   <TableRow key={item.id}>
                                     <TableCell className="text-xs font-body">
