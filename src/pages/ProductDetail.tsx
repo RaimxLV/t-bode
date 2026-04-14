@@ -50,11 +50,16 @@ const ProductDetail = () => {
     return galleryImages[selectedImageIdx] || product.image_url || "";
   }, [product, selectedColor, selectedImageIdx, galleryImages, colors]);
 
+  const selectedColorHex = useMemo(() => {
+    if (!selectedColor) return "";
+    return colors.find((c) => c.name === selectedColor)?.hex || "";
+  }, [selectedColor, colors]);
+
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) return;
     addItem({
       productId: product.id, name: product.name, price: product.price,
-      image: product.image_url || "", size: selectedSize, color: selectedColor, quantity, slug: product.slug,
+      image: displayImage || product.image_url || "", size: selectedSize, color: selectedColor, quantity, slug: product.slug,
     });
     toast.success(t("productDetail.addedToCart", { name: product.name }));
   };
@@ -232,8 +237,9 @@ const ProductDetail = () => {
           productName={product.name}
           productPrice={product.price}
           productSlug={product.slug}
-          productImage={product.image_url || ""}
+          productImage={displayImage || product.image_url || ""}
           selectedColor={selectedColor}
+          selectedColorHex={selectedColorHex}
           selectedSize={selectedSize}
           quantity={quantity}
           onClose={() => setDesignerOpen(false)}
