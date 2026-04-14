@@ -210,7 +210,7 @@ export const ZakekeDesigner = ({
       </div>
 
       {/* Content */}
-      <div ref={containerRef} className="flex-1 relative min-h-0">
+      <div ref={containerRef} className="flex-1 relative min-h-0" style={{ maxHeight: 'calc(100vh - 56px)', overflow: 'hidden' }}>
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />

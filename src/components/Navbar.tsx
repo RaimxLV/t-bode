@@ -9,7 +9,8 @@ import logo from "@/assets/logo.svg";
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalItems, setIsOpen: setCartOpen } = useCart();
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, isWhitelisted } = useAuth();
+  const showAdmin = isAdmin || isWhitelisted;
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
