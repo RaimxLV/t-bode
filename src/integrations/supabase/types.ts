@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_whitelist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
       contact_submissions: {
         Row: {
           created_at: string
@@ -305,6 +323,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_whitelisted: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
