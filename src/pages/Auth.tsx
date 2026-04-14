@@ -28,12 +28,22 @@ type FieldErrors = Record<string, string>;
 const Auth = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { isAdmin, adminLoading } = useAuth();
+  const { user, isAdmin, adminLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  // Redirect after login: admins → /admin, others → /
+  useEffect(() => {
+    if (!user || adminLoading) return;
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
+  }, [user, isAdmin, adminLoading, navigate]);
 
   const validate = (): boolean => {
     const schema = isLogin ? loginSchema : registerSchema;
