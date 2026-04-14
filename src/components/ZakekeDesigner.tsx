@@ -212,7 +212,7 @@ export const ZakekeDesigner = ({
       <div
         ref={containerRef}
         className="flex-1 relative min-h-0"
-        style={{ maxHeight: '80vh', overflow: 'hidden' }}
+        style={{ maxHeight: '85vh', overflow: 'hidden' }}
       >
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
