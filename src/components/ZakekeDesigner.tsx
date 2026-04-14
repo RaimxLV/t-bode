@@ -50,7 +50,6 @@ export const ZakekeDesigner = ({
   const { t, i18n } = useTranslation();
 
   const getToken = useCallback(async () => {
-    // Generate a visitor code for anonymous tracking
     let visitorCode = localStorage.getItem("zakeke-visitor");
     if (!visitorCode) {
       visitorCode = crypto.randomUUID();
@@ -200,7 +199,7 @@ export const ZakekeDesigner = ({
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0">
         <h2 className="text-lg font-display">
           {t("productDetail.customizeDesign")}
         </h2>
@@ -209,8 +208,12 @@ export const ZakekeDesigner = ({
         </Button>
       </div>
 
-      {/* Content */}
-      <div ref={containerRef} className="flex-1 relative min-h-0" style={{ maxHeight: 'calc(100vh - 56px)', overflow: 'hidden' }}>
+      {/* Content - capped at 80vh so buttons stay visible on large/TV screens */}
+      <div
+        ref={containerRef}
+        className="flex-1 relative min-h-0"
+        style={{ maxHeight: '80vh', overflow: 'hidden' }}
+      >
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -226,7 +229,6 @@ export const ZakekeDesigner = ({
             </div>
           </div>
         )}
-        {/* Zakeke injects its iframe into #zakeke-container */}
         <div id="zakeke-container" className="absolute inset-0" style={{ width: '100%', height: '100%' }} />
       </div>
     </div>

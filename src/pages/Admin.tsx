@@ -16,26 +16,17 @@ import { ProductDialog, EMPTY_PRODUCT, type ProductForm, type ColorVariant } fro
 import { OrdersList } from "@/components/admin/OrdersList";
 import { FAQManager } from "@/components/admin/FAQManager";
 import type { DBProduct } from "@/hooks/useProducts";
-
-const CATEGORIES = [
-  { value: "t-shirts", labelKey: "categories.t-shirts" },
-  { value: "hoodies", labelKey: "categories.hoodies" },
-  { value: "mugs", labelKey: "categories.mugs" },
-  { value: "bags", labelKey: "categories.bags" },
-  { value: "kids", labelKey: "categories.kids" },
-  { value: "latvia", labelKey: "categories.latvia" },
-  { value: "accessories", labelKey: "categories.accessories" },
-];
+import { useCategories, getTopLevel } from "@/hooks/useCategories";
 
 const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent?: string }) => (
   <Card className="border border-border">
-    <CardContent className="p-4 flex items-center gap-4">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent || "bg-primary/10 text-primary"}`}>
-        <Icon className="w-5 h-5" />
+    <CardContent className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+      <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center ${accent || "bg-primary/10 text-primary"}`}>
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
       <div>
-        <p className="text-2xl font-display">{value}</p>
-        <p className="text-xs text-muted-foreground font-body">{label}</p>
+        <p className="text-xl sm:text-2xl font-display">{value}</p>
+        <p className="text-[10px] sm:text-xs text-muted-foreground font-body">{label}</p>
       </div>
     </CardContent>
   </Card>
@@ -62,6 +53,7 @@ const Admin = () => {
   const [whitelistEmails, setWhitelistEmails] = useState<{ id: string; email: string }[]>([]);
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
+  const { data: allCategories = [] } = useCategories();
 
   const designProducts = products.filter((p) => p.customizable);
   const collectionProducts = products.filter((p) => !p.customizable);
@@ -169,6 +161,8 @@ const Admin = () => {
   }
   if (!isAdmin) return null;
 
+  const topCats = getTopLevel(allCategories);
+
   const filterProductsForTab = (items: DBProduct[]) => {
     let result = items;
     if (adminCategoryFilter !== "all") result = result.filter((p) => p.category === adminCategoryFilter);
@@ -182,12 +176,12 @@ const Admin = () => {
   const renderProductGrid = (items: DBProduct[], forDesign: boolean) => {
     const filtered = filterProductsForTab(items);
     const relevantCategories = forDesign
-      ? CATEGORIES.filter((c) => !["latvia", "accessories"].includes(c.value))
-      : CATEGORIES.filter((c) => ["latvia", "accessories"].includes(c.value));
+      ? topCats.filter((c) => !["latvia", "accessories"].includes(c.slug))
+      : topCats.filter((c) => ["latvia", "accessories"].includes(c.slug));
 
     return (
       <>
-        <div className="relative mb-4">
+        <div className="relative mb-3 sm:mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
@@ -197,36 +191,36 @@ const Admin = () => {
             className="w-full sm:w-64 pl-9 pr-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
           <button
             onClick={() => setAdminCategoryFilter("all")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
               adminCategoryFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
             }`}
           >
             {t("admin.filterAll")}
           </button>
           {relevantCategories.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat.value];
+            const Icon = CATEGORY_ICONS[cat.slug];
             return (
               <button
-                key={cat.value}
-                onClick={() => setAdminCategoryFilter(cat.value)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
-                  adminCategoryFilter === cat.value ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
+                key={cat.slug}
+                onClick={() => setAdminCategoryFilter(cat.slug)}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-body font-medium border transition-all ${
+                  adminCategoryFilter === cat.slug ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
                 }`}
               >
                 {Icon && <Icon size={14} />}
-                {t(cat.labelKey)}
+                {cat.name}
               </button>
             );
           })}
         </div>
 
         {filtered.length === 0 ? (
-          <div className="text-center py-20"><p className="text-muted-foreground font-body">{t("admin.noProducts")}</p></div>
+          <div className="text-center py-12 sm:py-20"><p className="text-muted-foreground font-body">{t("admin.noProducts")}</p></div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
             {filtered.map((p) => (
               <ProductCard key={p.id} product={p} onEdit={openEditDialog} onDelete={handleDelete} />
             ))}
@@ -239,40 +233,41 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-white/10 bg-black/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-white/70 hover:text-white hover:bg-white/10"><ArrowLeft className="w-5 h-5" /></Button>
-            <img src={logo} alt="T-Bode" className="h-8" />
+            <img src={logo} alt="T-Bode" className="h-7 sm:h-8" />
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <StatCard icon={Layers} label="Kopā produkti" value={stats.total} />
           <StatCard icon={AlertTriangle} label="Nav noliktavā" value={stats.outOfStock} accent="bg-destructive/10 text-destructive" />
           <StatCard icon={Brush} label="Aktīvie dizaini" value={stats.activeDesigns} accent="bg-blue-50 text-blue-600" />
         </div>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
-          <TabsList className="mb-6 w-full max-w-full overflow-x-auto justify-start">
-            <TabsTrigger value="design" className="gap-1.5 text-xs sm:text-sm"><Brush className="w-4 h-4 hidden sm:block" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="collection" className="gap-1.5 text-xs sm:text-sm"><ShoppingBag className="w-4 h-4 hidden sm:block" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="orders" className="gap-1.5 text-xs sm:text-sm"><Package className="w-4 h-4 hidden sm:block" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
-            <TabsTrigger value="faq" className="gap-1.5 text-xs sm:text-sm"><HelpCircle className="w-4 h-4 hidden sm:block" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
-            <TabsTrigger value="access" className="gap-1.5 text-xs sm:text-sm"><UserCheck className="w-4 h-4 hidden sm:block" /> Piekļuve</TabsTrigger>
+          {/* Fixed bottom nav on mobile, top tabs on desktop */}
+          <TabsList className="hidden sm:flex mb-6 w-full max-w-full overflow-x-auto justify-start">
+            <TabsTrigger value="design" className="gap-1.5 text-sm"><Brush className="w-4 h-4" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
+            <TabsTrigger value="access" className="gap-1.5 text-sm"><UserCheck className="w-4 h-4" /> Piekļuve</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
-            <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(true)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns dizains</Button>
+            <div className="flex justify-end mb-3 sm:mb-4">
+              <Button onClick={() => openCreateDialog(true)} className="w-full sm:w-auto bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns dizains</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(designProducts, true)}
           </TabsContent>
 
           <TabsContent value="collection">
-            <div className="flex justify-end mb-4">
-              <Button onClick={() => openCreateDialog(false)} className="bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
+            <div className="flex justify-end mb-3 sm:mb-4">
+              <Button onClick={() => openCreateDialog(false)} className="w-full sm:w-auto bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
           </TabsContent>
@@ -287,10 +282,10 @@ const Admin = () => {
 
           <TabsContent value="access">
             <Card className="border border-border">
-              <CardContent className="p-6 space-y-4">
+              <CardContent className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 <div>
-                  <h3 className="text-lg font-display mb-1">Adminu Baltais Saraksts</h3>
-                  <p className="text-sm text-muted-foreground font-body">Ievadi e-pastu, lai piešķirtu piekļuvi admin panelim.</p>
+                  <h3 className="text-base sm:text-lg font-display mb-1">Adminu Baltais Saraksts</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground font-body">Ievadi e-pastu, lai piešķirtu piekļuvi admin panelim.</p>
                 </div>
                 <div className="flex gap-2">
                   <input
@@ -299,10 +294,10 @@ const Admin = () => {
                     onChange={(e) => setNewWhitelistEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && addWhitelistEmail()}
                     placeholder="epasts@piemers.lv"
-                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-card text-sm font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
-                  <Button onClick={addWhitelistEmail} className="bg-primary text-primary-foreground">
-                    <Plus className="w-4 h-4 mr-1" /> Pievienot
+                  <Button onClick={addWhitelistEmail} className="bg-primary text-primary-foreground shrink-0">
+                    <Plus className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Pievienot</span>
                   </Button>
                 </div>
                 {loadingWhitelist ? (
@@ -313,8 +308,8 @@ const Admin = () => {
                   <div className="space-y-2">
                     {whitelistEmails.map((item) => (
                       <div key={item.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/50 border border-border">
-                        <span className="text-sm font-body">{item.email}</span>
-                        <button onClick={() => removeWhitelistEmail(item.id)} className="p-1 text-destructive hover:text-destructive/80 transition-colors">
+                        <span className="text-xs sm:text-sm font-body truncate mr-2">{item.email}</span>
+                        <button onClick={() => removeWhitelistEmail(item.id)} className="p-1 text-destructive hover:text-destructive/80 transition-colors shrink-0">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -326,6 +321,31 @@ const Admin = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Mobile bottom navigation */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex justify-around py-1.5 safe-bottom">
+        {[
+          { value: "design", icon: Brush, label: "Dizains" },
+          { value: "collection", icon: ShoppingBag, label: "Kolekcija" },
+          { value: "orders", icon: Package, label: "Pasūtījumi" },
+          { value: "faq", icon: HelpCircle, label: "FAQ" },
+          { value: "access", icon: UserCheck, label: "Piekļuve" },
+        ].map(({ value, icon: Icon, label }) => (
+          <button
+            key={value}
+            onClick={() => { setActiveTab(value); setAdminCategoryFilter("all"); }}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-body transition-colors ${
+              activeTab === value ? "text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <Icon className="w-5 h-5" />
+            {label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Bottom padding for mobile nav */}
+      <div className="sm:hidden h-16" />
 
       <ProductDialog
         open={dialogOpen}

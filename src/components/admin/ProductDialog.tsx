@@ -11,19 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
 export interface ProductForm { id?: string; name: string; slug: string; description: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
-
-const CATEGORIES = [
-  { value: "t-shirts", labelKey: "categories.t-shirts" },
-  { value: "hoodies", labelKey: "categories.hoodies" },
-  { value: "mugs", labelKey: "categories.mugs" },
-  { value: "bags", labelKey: "categories.bags" },
-  { value: "kids", labelKey: "categories.kids" },
-  { value: "latvia", labelKey: "categories.latvia" },
-  { value: "accessories", labelKey: "categories.accessories" },
-];
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
@@ -42,8 +33,36 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const [saving, setSaving] = useState(false);
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
+  const { data: allCategories = [] } = useCategories();
 
   if (!product) return null;
+
+  const topCategories = getTopLevel(allCategories);
+
+  // Determine if selected category is a top-level or subcategory
+  const selectedTopSlug = (() => {
+    // If current category matches a top-level slug, use it
+    const top = topCategories.find((c) => c.slug === product.category);
+    if (top) return top.slug;
+    // If it matches a subcategory, find parent
+    const sub = allCategories.find((c) => c.slug === product.category && c.parent_id);
+    if (sub) {
+      const parent = allCategories.find((c) => c.id === sub.parent_id);
+      return parent?.slug ?? product.category;
+    }
+    return product.category;
+  })();
+
+  const selectedTopCat = topCategories.find((c) => c.slug === selectedTopSlug);
+  const subcategories = selectedTopCat ? getChildren(allCategories, selectedTopCat.id) : [];
+
+  const handleTopCategoryChange = (slug: string) => {
+    onProductChange({ ...product, category: slug });
+  };
+
+  const handleSubCategoryChange = (slug: string) => {
+    onProductChange({ ...product, category: slug });
+  };
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -97,13 +116,13 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">{product.id ? t("admin.editProduct") : t("admin.newProduct")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label className="font-body text-sm">{t("admin.productName")}</Label>
               <Input value={product.name} onChange={(e) => { const name = e.target.value; onProductChange({ ...product, name, slug: product.id ? product.slug : generateSlug(name) }); }} placeholder={t("admin.productName")} className="mt-1" />
@@ -118,19 +137,41 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
             <div>
               <Label className="font-body text-sm">{t("admin.category")}</Label>
-              <Select value={product.category} onValueChange={(v) => onProductChange({ ...product, category: v })}>
+              <Select value={selectedTopSlug} onValueChange={handleTopCategoryChange}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{CATEGORIES.map((c) => (<SelectItem key={c.value} value={c.value}>{t(c.labelKey)}</SelectItem>))}</SelectContent>
+                <SelectContent>
+                  {topCategories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Subcategory selector – shown when parent has children */}
+          {subcategories.length > 0 && (
+            <div>
+              <Label className="font-body text-sm">Apakškategorija</Label>
+              <Select
+                value={subcategories.find((s) => s.slug === product.category)?.slug ?? ""}
+                onValueChange={handleSubCategoryChange}
+              >
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Izvēlies apakškategoriju (neobligāti)" /></SelectTrigger>
+                <SelectContent>
+                  {subcategories.map((c) => (
+                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div>
             <Label className="font-body text-sm">{t("admin.description")}</Label>
             <Textarea value={product.description} onChange={(e) => onProductChange({ ...product, description: e.target.value })} className="mt-1" rows={3} />
           </div>
 
-          <div className="flex items-center gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-2">
               <Switch checked={product.customizable} onCheckedChange={(v) => onProductChange({ ...product, customizable: v })} />
               <Label className="font-body text-sm">{t("admin.customizable")}</Label>
@@ -139,7 +180,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <div className="flex items-center gap-2">
                 <Label className="font-body text-sm whitespace-nowrap">Zakeke ID:</Label>
                 <Input
-                  className="h-8 w-48 text-sm"
+                  className="h-8 w-full sm:w-48 text-sm"
                   placeholder="e.g. model-code-123"
                   value={product.zakeke_model_code}
                   onChange={(e) => onProductChange({ ...product, zakeke_model_code: e.target.value })}
@@ -154,7 +195,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">{t("admin.mainImage")}</Label>
-            <div className="mt-1 flex items-center gap-3">
+            <div className="mt-1 flex flex-wrap items-center gap-3">
               {product.image_url && <img src={product.image_url} alt="Main" className="w-20 h-20 object-cover rounded border border-border" />}
               <label className="cursor-pointer">
                 <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted text-sm font-body">
@@ -163,7 +204,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                 </div>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "main")} disabled={uploadingImage === "main"} />
               </label>
-              {product.image_url && <Input value={product.image_url} onChange={(e) => onProductChange({ ...product, image_url: e.target.value })} placeholder={t("admin.orEnterUrl")} className="flex-1" />}
+              {product.image_url && <Input value={product.image_url} onChange={(e) => onProductChange({ ...product, image_url: e.target.value })} placeholder={t("admin.orEnterUrl")} className="flex-1 min-w-0" />}
             </div>
           </div>
 
@@ -187,11 +228,11 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
             <div className="space-y-4">
               {product.color_variants.map((variant, ci) => (
-                <Card key={ci} className="p-4 border border-border">
-                  <div className="flex items-center gap-3 mb-3">
+                <Card key={ci} className="p-3 sm:p-4 border border-border">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
                     <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
-                    <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1" />
-                    <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-28" />
+                    <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1 min-w-0" />
+                    <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-24 sm:w-28" />
                     <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -211,9 +252,9 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>{t("admin.cancel")}</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground">
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
+            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
               <Save className="w-4 h-4 mr-2" />
               {saving ? t("admin.saving") : t("admin.save")}
             </Button>
