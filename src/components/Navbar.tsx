@@ -74,7 +74,7 @@ export const Navbar = () => {
 
 {user ? (
             <div className="flex items-center gap-0.5">
-              {isAdmin && (
+              {showAdmin && (
                 <button
                   onClick={() => navigate("/admin")}
                   className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-body font-bold text-white bg-cta-red/90 hover:bg-cta-red rounded transition-colors"
@@ -145,7 +145,7 @@ export const Navbar = () => {
                 {link.label}
               </button>
             ))}
-            {isAdmin && (
+            {showAdmin && (
               <button
                 onClick={() => { setIsOpen(false); navigate("/admin"); }}
                 className="flex items-center gap-2 text-sm font-bold text-cta-red hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
