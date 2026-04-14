@@ -144,6 +144,15 @@ export const Navbar = () => {
                 {link.label}
               </button>
             ))}
+            {isAdmin && (
+              <button
+                onClick={() => { setIsOpen(false); navigate("/admin"); }}
+                className="flex items-center gap-2 text-sm font-bold text-cta-red hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Panelis
+              </button>
+            )}
           </div>
         </div>
       )}
