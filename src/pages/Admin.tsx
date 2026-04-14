@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2 } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
@@ -15,6 +15,7 @@ import logo from "@/assets/logo.svg";
 import { ProductDialog, EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
 import { OrdersList } from "@/components/admin/OrdersList";
 import { FAQManager } from "@/components/admin/FAQManager";
+import { CategoryManager } from "@/components/admin/CategoryManager";
 import type { DBProduct } from "@/hooks/useProducts";
 import { useCategories, getTopLevel } from "@/hooks/useCategories";
 
@@ -255,6 +256,7 @@ const Admin = () => {
             <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
             <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
+            <TabsTrigger value="categories" className="gap-1.5 text-sm"><FolderTree className="w-4 h-4" /> Kategorijas</TabsTrigger>
             <TabsTrigger value="access" className="gap-1.5 text-sm"><UserCheck className="w-4 h-4" /> Piekļuve</TabsTrigger>
           </TabsList>
 
@@ -278,6 +280,10 @@ const Admin = () => {
 
           <TabsContent value="faq">
             <FAQManager faqs={faqs} loading={loadingFaqs} onRefresh={loadFaqs} />
+          </TabsContent>
+
+          <TabsContent value="categories">
+            <CategoryManager />
           </TabsContent>
 
           <TabsContent value="access">
@@ -328,6 +334,7 @@ const Admin = () => {
           { value: "design", icon: Brush, label: "Dizains" },
           { value: "collection", icon: ShoppingBag, label: "Kolekcija" },
           { value: "orders", icon: Package, label: "Pasūtījumi" },
+          { value: "categories", icon: FolderTree, label: "Kat." },
           { value: "faq", icon: HelpCircle, label: "FAQ" },
           { value: "access", icon: UserCheck, label: "Piekļuve" },
         ].map(({ value, icon: Icon, label }) => (
