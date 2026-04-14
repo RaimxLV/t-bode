@@ -21,6 +21,12 @@ const ProductDetail = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+
+  // Set default size (prefer 'M') and color (first available) when product loads
+  useState(() => {
+    // This runs once on mount - we use useEffect below instead
+  });
+
   const [quantity, setQuantity] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [designerOpen, setDesignerOpen] = useState(false);
