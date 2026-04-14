@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react";
+import { ShoppingCart, Menu, X, User, LogOut, Shield } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -9,7 +9,7 @@ import logo from "@/assets/logo.svg";
 export const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { totalItems, setIsOpen: setCartOpen } = useCart();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
@@ -73,6 +73,15 @@ export const Navbar = () => {
 
 {user ? (
             <div className="flex items-center gap-0.5">
+              {isAdmin && (
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-body font-bold text-white bg-cta-red/90 hover:bg-cta-red rounded transition-colors"
+                >
+                  <Shield className="w-3.5 h-3.5" />
+                  Admin Panelis
+                </button>
+              )}
               <button
                 onClick={() => navigate("/profile")}
                 className="p-2 text-white/70 hover:text-white transition-colors"
@@ -135,6 +144,15 @@ export const Navbar = () => {
                 {link.label}
               </button>
             ))}
+            {isAdmin && (
+              <button
+                onClick={() => { setIsOpen(false); navigate("/admin"); }}
+                className="flex items-center gap-2 text-sm font-bold text-cta-red hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+              >
+                <Shield className="w-4 h-4" />
+                Admin Panelis
+              </button>
+            )}
           </div>
         </div>
       )}

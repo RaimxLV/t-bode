@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,11 +28,22 @@ type FieldErrors = Record<string, string>;
 const Auth = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user, isAdmin, adminLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  // Redirect after login: admins → /admin, others → /
+  useEffect(() => {
+    if (!user || adminLoading) return;
+    if (isAdmin) {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
+  }, [user, isAdmin, adminLoading, navigate]);
 
   const validate = (): boolean => {
     const schema = isLogin ? loginSchema : registerSchema;
@@ -58,7 +70,7 @@ const Auth = () => {
         const { error } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password });
         if (error) throw error;
         toast.success(t("auth.loginSuccess"));
-        navigate("/");
+        // Redirect happens via useEffect after admin check completes
       } else {
         const { error } = await supabase.auth.signUp({
           email: form.email.trim(), password: form.password,
