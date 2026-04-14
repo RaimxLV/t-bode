@@ -14,6 +14,7 @@ interface ZakekeDesignerProps {
   productSlug: string;
   productImage: string;
   selectedColor: string;
+  selectedColorHex?: string;
   selectedSize: string;
   quantity: number;
   onClose: () => void;
@@ -36,6 +37,7 @@ export const ZakekeDesigner = ({
   productSlug,
   productImage,
   selectedColor,
+  selectedColorHex,
   selectedSize,
   quantity,
   onClose,
@@ -109,9 +111,14 @@ export const ZakekeDesigner = ({
           hideVariants: true,
           cartButtonText: t("productDetail.addToCart"),
           selectedAttributes: {
-            ...(selectedColor ? { Color: selectedColor } : {}),
+            ...(selectedColor ? { Color: selectedColor, Colour: selectedColor } : {}),
+            ...(selectedColorHex ? { ColorHex: selectedColorHex } : {}),
             ...(selectedSize ? { Size: selectedSize } : {}),
           },
+          variant: [
+            ...(selectedColor ? [`Color:${selectedColor}`] : []),
+            ...(selectedSize ? [`Size:${selectedSize}`] : []),
+          ].join(",") || undefined,
 
           getProductInfo: () => ({
             price: productPrice,
