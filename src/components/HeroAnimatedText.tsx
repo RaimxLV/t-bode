@@ -1,8 +1,9 @@
 import { motion, useInView } from "framer-motion";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, forwardRef } from "react";
 
-const WordPow = ({ word, delay }: { word: string; delay: number }) => (
+const WordPow = forwardRef<HTMLSpanElement, { word: string; delay: number }>(({ word, delay }, ref) => (
   <motion.span
+    ref={ref}
     className="inline-block mx-1 drop-shadow-[0_2px_6px_rgba(0,0,0,0.7)]"
     initial={{ opacity: 0, scale: 0, rotate: -8 }}
     animate={{ opacity: 1, scale: [0, 1.25, 0.95, 1.05, 1], rotate: [-8, 4, -2, 0] }}
@@ -10,9 +11,10 @@ const WordPow = ({ word, delay }: { word: string; delay: number }) => (
   >
     {word}
   </motion.span>
-);
+));
+WordPow.displayName = "WordPow";
 
-const TypewriterGlow = ({ text, delay, glowPhrase }: { text: string; delay: number; glowPhrase: string }) => {
+const TypewriterGlow = forwardRef<HTMLSpanElement, { text: string; delay: number; glowPhrase: string }>(({ text, delay, glowPhrase }, ref) => {
   const [count, setCount] = useState(0);
   const [started, setStarted] = useState(false);
 
@@ -51,7 +53,8 @@ const TypewriterGlow = ({ text, delay, glowPhrase }: { text: string; delay: numb
       {count < text.length && <span className="animate-pulse opacity-80">|</span>}
     </span>
   );
-};
+});
+TypewriterGlow.displayName = "TypewriterGlow";
 
 const LINE1 = "Esi unikāls. Radi pats!";
 const LINE2 = "Krekls, hūdijs vai cepure – uztaisi savu stiliņu tūlīt. Tavs apģērbs ir tavs vēstījums pasaulei.";
