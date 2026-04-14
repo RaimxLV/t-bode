@@ -95,6 +95,7 @@ export const ZakekeDesigner = ({
         customizerInstance = customizer;
 
         const config: Record<string, unknown> = {
+          containerId: "zakeke-container",
           tokenOauth: token,
           productId: zakekeModelCode,
           productName,
