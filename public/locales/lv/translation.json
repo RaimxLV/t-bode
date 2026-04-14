@@ -13,39 +13,56 @@
     "description": "Esi unikāls. Izveido savu dizainu. >\nTavs apģērbs ir tava ziņa.\nAr mūsu personalizācijas rīku tu vari izveidot ne tikai vienkāršu apģērbu – tu izveido savu stila ikonu.\nT-Bode: Tavi dizaini – tavs stāsts.",
     "ctaDesign": "Sākt personalizēt",
     "heroAnim": {
-      "pow": "POW",
-      "slide": "Izveido savu T-kreklu!"
+      "line1": "Esi unikāls. Izveido savu!",
+      "line2": "T-krekls, hūdijs vai cepure – izveido savu stilu tieši tagad. Tavs apģērbs ir tava ziņa pasaulei.",
+      "line3": "T-Bode: Tavs dizains – tavs stāsts.",
+      "glowPhrase": "tavs stāsts."
     },
     "ctaCollection": "Skatīt kolekciju"
   },
   "about": {
-    "title": "Kāpēc T-Bode?",
-    "feature1Title": "Dizains",
-    "feature1Desc": "Izveido unikālu dizainu",
-    "feature2Title": "Kvalitāte",
-    "feature2Desc": "Augstas kvalitātes materiāli",
-    "feature3Title": "Ātrums",
-    "feature3Desc": "Ātra piegāde visā Latvijā",
-    "step1": "Izvēlies produktu",
-    "step2": "Personalizē dizainu",
-    "step3": "Saņem sūtījumu"
+    "title": "T-Bode ir vieta, kur T-krekls kļūst par stāstu.",
+    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T-kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
+    "features": {
+      "quality": { "title": "Augstas kvalitātes DTF druka", "desc": "Spilgti, izturīgi un kvalitatīvi apdruki, izmantojot DTF (Direct-to-Film) tehnoloģiju." },
+      "tool": { "title": "Ērts dizaina rīks", "desc": "Viegli izveido savus unikālos dizainus ar mūsu intuitīvo iebūvēto redaktoru." },
+      "production": { "title": "Ātra ražošana", "desc": "Ar lielu noliktavu uz vietas mēs garantējam ātru ražošanu un pasūtījumu apstrādi." },
+      "delivery": { "title": "Ērta piegāde", "desc": "Saņem savu pasūtījumu jebkurā Omniva pakomātā." }
+    },
+    "steps": {
+      "s1": { "title": "Izvēlies produktu", "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga." },
+      "s2": { "title": "Personalizē to", "desc": "Pielāgo savu produktu, izmantojot mūsu iebūvēto dizaina rīku." },
+      "s3": { "title": "Noformē pasūtījumu", "desc": "Pabeidz pasūtījumu un samaksā droši tiešsaistē." },
+      "s4": { "title": "Saņem pasūtījumu", "desc": "Saņem savu preci jebkurā Omniva pakomātā 1-2 darba dienu laikā." }
+    },
+    "howItWorks": "KĀ TAS DARBOJAS",
+    "howItWorksDesc": "Četri vienkārši soļi līdz tavam unikālajam produktam"
   },
   "stores": {
-    "title": "Mūsu veikali",
-    "subtitle": "Apmeklē mūs klātienē",
-    "visitUs": "Apmeklē mūs"
+    "title": "Apmeklē T-BODE",
+    "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
+    "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
+    "officeTitle": "T-Bode Birojs / Saņemšanas punkts",
+    "officeDesc": "Saņem savus pasūtījumus klātienē mūsu birojā Rīgā, Braslas ielā 29, Ieeja D."
   },
   "contact": {
-    "title": "Sazinies ar mums",
-    "subtitle": "Mēs labprāt palīdzēsim",
-    "name": "Vārds",
-    "email": "E-pasts",
-    "phone": "Telefons",
+    "title": "Vēlies apģērbt savu komandu vai plāno pasākumu?",
+    "subtitle": "<strong>Sazinies ar mums tieši</strong>, lai saņemtu konkurētspējīgas cenas lieliem pasūtījumiem.",
+    "firstName": "Vārds *",
+    "phone": "Telefona numurs *",
     "message": "Ziņojums",
-    "file": "Pievienot failu",
-    "submit": "Nosūtīt",
-    "success": "Ziņojums nosūtīts!",
-    "error": "Kļūda nosūtot"
+    "submit": "Nosūtīt pieprasījumu",
+    "fileUpload": "Pievienot failu",
+    "attachFile": "Klikšķini, lai pievienotu failu (PDF, PNG, JPG, AI, EPS, SVG)",
+    "fileHint": "Maks. faila izmērs: 15 MB",
+    "fileTooLarge": "Fails ir pārāk liels. Maksimālais izmērs ir 15 MB.",
+    "email": "E-pasts *",
+    "sending": "Nosūta...",
+    "successMessage": "Jūsu pieprasījums ir veiksmīgi nosūtīts!",
+    "errorMessage": "Kļūda nosūtot pieprasījumu. Lūdzu, mēģiniet vēlreiz.",
+    "thankYouTitle": "Paldies par jūsu pieprasījumu!",
+    "thankYouDesc": "Mēs ar jums sazināsimies drīzumā.",
+    "sendAnother": "Nosūtīt vēl vienu pieprasījumu"
   },
   "products": {
     "designTitle": "Izveido dizainu pats",
@@ -150,32 +167,12 @@
     "authError": "Kļūda autentifikācijā",
     "googleError": "Google pieslēgšanās neizdevās"
   },
-  "faq": {
-    "title": "Biežāk uzdotie jautājumi",
-    "subtitle": "Atbildes uz biežāk uzdotajiem jautājumiem par mūsu produktiem un pakalpojumiem"
-  },
   "admin": {
     "panel": "DARBINIEKA PANELIS",
-    "faqTab": "FAQ",
-    "newFaq": "Jauns FAQ",
-    "editFaq": "Rediģēt FAQ",
-    "questionLv": "Jautājums (LV)",
-    "answerLv": "Atbilde (LV)",
-    "questionEn": "Jautājums (EN)",
-    "answerEn": "Atbilde (EN)",
-    "sortOrder": "Kārtošanas secība",
-    "faqActive": "Aktīvs",
-    "faqSaved": "FAQ saglabāts!",
-    "faqCreated": "FAQ izveidots!",
-    "faqDeleted": "FAQ dzēsts",
-    "faqDeleteConfirm": "Vai tiešām dzēst šo FAQ?",
-    "noFaqs": "Nav pievienotu FAQ",
-    "loadingFaqs": "Ielādē FAQ...",
-    "faqSaveError": "Neizdevās saglabāt FAQ",
-    "faqDeleteError": "Neizdevās dzēst FAQ",
-    "designTab": "Design Your Own",
-    "collectionTab": "Our Collection",
+    "designTab": "Izveido dizainu pats",
+    "collectionTab": "Mūsu kolekcija",
     "ordersTab": "Pasūtījumi",
+    "faqTab": "BUJ",
     "newDesignProduct": "Jauns personalizējams produkts",
     "newCollectionProduct": "Jauns kolekcijas produkts",
     "loadingProducts": "Ielādē produktus...",
@@ -236,7 +233,23 @@
       "shipped": "Nosūtīts",
       "delivered": "Piegādāts",
       "cancelled": "Atcelts"
-    }
+    },
+    "newFaq": "Jauns BUJ",
+    "editFaq": "Rediģēt BUJ",
+    "questionLv": "Jautājums (LV)",
+    "answerLv": "Atbilde (LV)",
+    "questionEn": "Jautājums (EN)",
+    "answerEn": "Atbilde (EN)",
+    "sortOrder": "Kārtošanas secība",
+    "faqActive": "Aktīvs",
+    "faqSaved": "BUJ saglabāts!",
+    "faqCreated": "BUJ izveidots!",
+    "faqDeleted": "BUJ dzēsts",
+    "faqDeleteConfirm": "Vai tiešām dzēst šo BUJ?",
+    "noFaqs": "Nav pievienotu BUJ",
+    "loadingFaqs": "Ielādē BUJ...",
+    "faqSaveError": "Neizdevās saglabāt BUJ",
+    "faqDeleteError": "Neizdevās dzēst BUJ"
   },
   "footer": {
     "brandDesc": "SIA Ervitex — personalizētu apģērbu un aksesuāru ražotājs Latvijā. Izveido savu unikālo dizainu vai izvēlies no mūsu kolekcijas.",
@@ -255,6 +268,10 @@
     "title": "404",
     "message": "Ups! Lapa nav atrasta",
     "backHome": "Atgriezties uz sākumu"
+  },
+  "faq": {
+    "title": "Biežāk uzdotie jautājumi",
+    "subtitle": "Atbildes uz biežāk uzdotajiem jautājumiem par mūsu produktiem un pakalpojumiem"
   },
   "payment": {
     "successTitle": "Maksājums veiksmīgs!",
