@@ -7,22 +7,33 @@ import { useProductFilters } from "@/hooks/useProductFilters";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const COLLECTION_CATEGORY_KEYS = [
-  { id: "all", key: "categories.allCollection" },
-  { id: "latvia", key: "categories.latvia" },
-  { id: "accessories", key: "categories.accessories" },
-];
+import { useCategories, buildCategoryFilterList, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 
 export const OurCollectionSection = () => {
   const { data: products = [], isLoading } = useCollectionProducts();
+  const { data: allCategories = [] } = useCategories();
   const { filters, setFilter, clearFilters, hasActiveFilters } = useProductFilters();
   const { t } = useTranslation();
   const isMobile = useIsMobile();
 
+  // Build dynamic category list from DB (only categories that have collection products)
+  const categoryKeys = useMemo(() => {
+    const allKeys = buildCategoryFilterList(allCategories, "categories.allCollection");
+    const productCats = new Set(products.map((p) => p.category));
+    return allKeys.filter((ck) => {
+      if (ck.id === "all") return true;
+      const matchSlugs = getCategorySlugsIncludingChildren(allCategories, ck.id);
+      return matchSlugs.some((s) => productCats.has(s));
+    });
+  }, [allCategories, products]);
+
   const filtered = useMemo(() => {
+    const matchSlugs = filters.category !== "all"
+      ? getCategorySlugsIncludingChildren(allCategories, filters.category)
+      : null;
+
     return products.filter((p) => {
-      if (filters.category !== "all" && p.category !== filters.category) return false;
+      if (matchSlugs && !matchSlugs.includes(p.category)) return false;
       if (filters.colors.length > 0) {
         const productColors = (p.color_variants || []).map((c) => c.hex.toLowerCase());
         if (!filters.colors.some((c) => productColors.includes(c))) return false;
@@ -35,7 +46,7 @@ export const OurCollectionSection = () => {
       if (filters.priceMax !== null && p.price > filters.priceMax) return false;
       return true;
     });
-  }, [products, filters]);
+  }, [products, filters, allCategories]);
 
   if (!isLoading && products.length === 0) return null;
 
@@ -87,7 +98,7 @@ export const OurCollectionSection = () => {
         {isMobile ? (
           <>
             <ProductFilters
-              categories={COLLECTION_CATEGORY_KEYS}
+              categories={categoryKeys}
               products={products}
               filters={filters}
               setFilter={setFilter}
@@ -101,7 +112,7 @@ export const OurCollectionSection = () => {
           <div className="flex gap-8">
             <aside className="w-56 shrink-0">
               <ProductFilters
-                categories={COLLECTION_CATEGORY_KEYS}
+                categories={categoryKeys}
                 products={products}
                 filters={filters}
                 setFilter={setFilter}

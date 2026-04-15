@@ -39,30 +39,15 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
   const topCategories = getTopLevel(allCategories);
 
-  // Determine if selected category is a top-level or subcategory
-  const selectedTopSlug = (() => {
-    // If current category matches a top-level slug, use it
-    const top = topCategories.find((c) => c.slug === product.category);
-    if (top) return top.slug;
-    // If it matches a subcategory, find parent
-    const sub = allCategories.find((c) => c.slug === product.category && c.parent_id);
-    if (sub) {
-      const parent = allCategories.find((c) => c.id === sub.parent_id);
-      return parent?.slug ?? product.category;
+  // Build flat list with optgroup-style entries for the single Select
+  const categoryOptions: { slug: string; label: string; isChild: boolean }[] = [];
+  for (const top of topCategories) {
+    categoryOptions.push({ slug: top.slug, label: top.name, isChild: false });
+    const children = getChildren(allCategories, top.id);
+    for (const child of children) {
+      categoryOptions.push({ slug: child.slug, label: child.name, isChild: true });
     }
-    return product.category;
-  })();
-
-  const selectedTopCat = topCategories.find((c) => c.slug === selectedTopSlug);
-  const subcategories = selectedTopCat ? getChildren(allCategories, selectedTopCat.id) : [];
-
-  const handleTopCategoryChange = (slug: string) => {
-    onProductChange({ ...product, category: slug });
-  };
-
-  const handleSubCategoryChange = (slug: string) => {
-    onProductChange({ ...product, category: slug });
-  };
+  }
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -137,34 +122,18 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
             <div>
               <Label className="font-body text-sm">{t("admin.category")}</Label>
-              <Select value={selectedTopSlug} onValueChange={handleTopCategoryChange}>
+              <Select value={product.category} onValueChange={(slug) => onProductChange({ ...product, category: slug })}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {topCategories.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  {categoryOptions.map((opt) => (
+                    <SelectItem key={opt.slug} value={opt.slug}>
+                      {opt.isChild ? `  └ ${opt.label}` : opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-
-          {/* Subcategory selector – shown when parent has children */}
-          {subcategories.length > 0 && (
-            <div>
-              <Label className="font-body text-sm">Apakškategorija</Label>
-              <Select
-                value={subcategories.find((s) => s.slug === product.category)?.slug ?? ""}
-                onValueChange={handleSubCategoryChange}
-              >
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Izvēlies apakškategoriju (neobligāti)" /></SelectTrigger>
-                <SelectContent>
-                  {subcategories.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div>
             <Label className="font-body text-sm">{t("admin.description")}</Label>
