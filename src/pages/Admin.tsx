@@ -63,7 +63,9 @@ const Admin = () => {
     total: products.length,
     outOfStock: products.filter((p) => !p.in_stock).length,
     activeDesigns: designProducts.length,
-  }), [products, designProducts]);
+    pendingOrders: orders.filter((o: any) => o.status === "pending").length,
+    totalRevenue: orders.filter((o: any) => o.status !== "cancelled").reduce((sum: number, o: any) => sum + Number(o.total), 0),
+  }), [products, designProducts, orders]);
 
   useEffect(() => {
     if (authLoading || adminLoading) return;
