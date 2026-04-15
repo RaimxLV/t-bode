@@ -202,7 +202,7 @@ const Profile = () => {
                               {new Date(order.created_at).toLocaleDateString("lv-LV", { year: "numeric", month: "long", day: "numeric" })}
                             </p>
                             <p className="font-body font-semibold text-sm mt-0.5">
-                              #{order.id.slice(0, 8).toUpperCase()}
+                              {order.order_number ? `#${String(order.order_number).padStart(4, "0")}` : `#${order.id.slice(0, 8).toUpperCase()}`}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ORDER_STATUSES = [
@@ -43,6 +43,11 @@ const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: stri
   </Card>
 );
 
+const formatOrderNumber = (orderNumber: number | null | undefined, orderId: string) => {
+  if (orderNumber != null) return `#${String(orderNumber).padStart(4, "0")}`;
+  return `#${orderId.slice(0, 8).toUpperCase()}`;
+};
+
 export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersListProps) => {
   const { t } = useTranslation();
   const [filterStatus, setFilterStatus] = useState("all");
@@ -60,29 +65,27 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     else { toast.success(t("admin.statusUpdated")); onRefresh(); }
   };
 
-  // Split orders into active and archived
+  const deleteOrder = async (orderId: string) => {
+    if (!confirm("Vai tiešām vēlaties dzēst šo pasūtījumu? Šī darbība ir neatgriezeniska.")) return;
+    // Delete order items first, then the order
+    await supabase.from("order_items").delete().eq("order_id", orderId);
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    if (error) toast.error("Kļūda dzēšot pasūtījumu: " + error.message);
+    else { toast.success("Pasūtījums dzēsts"); setExpandedOrder(null); onRefresh(); }
+  };
+
   const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
-
   const currentOrders = showArchive ? archivedOrders : activeOrders;
 
-  // Stats
   const stats = useMemo(() => {
-    const totalRevenue = orders
-      .filter(o => o.status !== "cancelled")
-      .reduce((sum, o) => sum + Number(o.total), 0);
+    const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = orders.filter(o => o.status === "pending").length;
     const activeCount = orders.filter(o => ["confirmed", "processing", "shipped"].includes(o.status)).length;
-    const deliveredCount = orders.filter(o => o.status === "delivered").length;
-    
-    // This month revenue
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthRevenue = orders
-      .filter(o => o.status !== "cancelled" && new Date(o.created_at) >= monthStart)
-      .reduce((sum, o) => sum + Number(o.total), 0);
-
-    return { totalRevenue, pendingCount, activeCount, deliveredCount, monthRevenue, total: orders.length };
+    const monthRevenue = orders.filter(o => o.status !== "cancelled" && new Date(o.created_at) >= monthStart).reduce((sum, o) => sum + Number(o.total), 0);
+    return { totalRevenue, pendingCount, activeCount, monthRevenue };
   }, [orders]);
 
   const filteredOrders = currentOrders.filter((order) => {
@@ -91,22 +94,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     if (filterDateTo) { const to = new Date(filterDateTo); to.setHours(23, 59, 59, 999); if (new Date(order.created_at) > to) return false; }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchId = order.id.toLowerCase().includes(q);
+      const orderNum = formatOrderNumber(order.order_number, order.id).toLowerCase();
+      const matchNum = orderNum.includes(q) || String(order.order_number).includes(q);
       const matchName = order.shipping_name?.toLowerCase().includes(q);
       const matchPhone = order.shipping_phone?.toLowerCase().includes(q);
-      if (!matchId && !matchName && !matchPhone) return false;
+      if (!matchNum && !matchName && !matchPhone) return false;
     }
     return true;
   });
 
-  // Available statuses for the current view
   const availableStatuses = showArchive
     ? ORDER_STATUSES.filter(s => ARCHIVED_STATUSES.includes(s.value))
     : ORDER_STATUSES.filter(s => !ARCHIVED_STATUSES.includes(s.value));
 
   return (
     <div className="space-y-4">
-      {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         <StatCard icon={Euro} label="Kopējie ieņēmumi" value={`${stats.totalRevenue.toFixed(2)} €`} accent="bg-green-50 text-green-600" />
         <StatCard icon={TrendingUp} label="Šī mēneša ieņēmumi" value={`${stats.monthRevenue.toFixed(2)} €`} accent="bg-blue-50 text-blue-600" />
@@ -114,36 +116,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <StatCard icon={ShoppingCart} label="Aktīvie pasūtījumi" value={stats.activeCount} accent="bg-purple-50 text-purple-600" />
       </div>
 
-      {/* Archive toggle */}
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <Button
-            variant={!showArchive ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setShowArchive(false); setFilterStatus("all"); }}
-            className="gap-1.5 text-xs"
-          >
-            <Inbox className="w-3.5 h-3.5" />
-            Aktīvie
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
+          <Button variant={!showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1.5 text-xs">
+            <Inbox className="w-3.5 h-3.5" /> Aktīvie <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
           </Button>
-          <Button
-            variant={showArchive ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setShowArchive(true); setFilterStatus("all"); }}
-            className="gap-1.5 text-xs"
-          >
-            <Archive className="w-3.5 h-3.5" />
-            Arhīvs
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs">
+            <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
           </Button>
         </div>
-        <span className="text-xs text-muted-foreground font-body">
-          Kopā: {orders.length} pasūtījumi
-        </span>
+        <span className="text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -151,7 +135,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Meklēt pēc ID, vārda, telefona..."
+            placeholder="Meklēt pēc Nr., vārda, telefona..."
             className="w-48 sm:w-56 pl-8 pr-3 py-2 rounded-lg border border-border bg-card text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
@@ -180,7 +164,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         )}
       </div>
 
-      {/* Orders list */}
       {loading ? (
         <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingOrders")}</p>
       ) : filteredOrders.length === 0 ? (
@@ -188,9 +171,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
             {showArchive ? <Archive className="w-5 h-5 text-muted-foreground" /> : <Inbox className="w-5 h-5 text-muted-foreground" />}
           </div>
-          <p className="text-muted-foreground font-body text-sm">
-            {showArchive ? "Arhīvā nav pasūtījumu" : t("admin.noOrders")}
-          </p>
+          <p className="text-muted-foreground font-body text-sm">{showArchive ? "Arhīvā nav pasūtījumu" : t("admin.noOrders")}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -203,7 +184,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"}`}>
                 <CardContent className="p-0">
-                  {/* Order header - always visible, clickable */}
                   <button
                     onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
                     className="w-full p-3 sm:p-4 flex items-center gap-3 text-left"
@@ -213,7 +193,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-body font-semibold text-sm">#{order.id.slice(0, 8)}</span>
+                        <span className="font-body font-semibold text-sm">{formatOrderNumber(order.order_number, order.id)}</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border ${statusInfo.color}`}>
                           {t(statusInfo.key)}
                         </span>
@@ -232,10 +212,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                     </div>
                   </button>
 
-                  {/* Expandable details */}
                   {isExpanded && (
                     <div className="border-t border-border px-3 sm:px-4 pb-4 pt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
-                      {/* Shipping info */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <p className="text-xs font-semibold font-body text-foreground">Piegādes informācija</p>
@@ -252,10 +230,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               {ORDER_STATUSES.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
                             </SelectContent>
                           </Select>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs gap-1.5 mt-1"
+                            onClick={() => deleteOrder(order.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Dzēst pasūtījumu
+                          </Button>
                         </div>
                       </div>
 
-                      {/* Items table */}
                       {items.length > 0 && (
                         <div className="border border-border rounded-lg overflow-hidden">
                           <Table>

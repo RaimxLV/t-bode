@@ -202,6 +202,7 @@ export type Database = {
           id: string
           notes: string | null
           omniva_pickup_point: string | null
+          order_number: number
           shipping_address: string | null
           shipping_city: string | null
           shipping_name: string | null
@@ -218,6 +219,7 @@ export type Database = {
           id?: string
           notes?: string | null
           omniva_pickup_point?: string | null
+          order_number?: number
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
@@ -234,6 +236,7 @@ export type Database = {
           id?: string
           notes?: string | null
           omniva_pickup_point?: string | null
+          order_number?: number
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
