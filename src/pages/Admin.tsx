@@ -17,7 +17,7 @@ import { OrdersList } from "@/components/admin/OrdersList";
 import { FAQManager } from "@/components/admin/FAQManager";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import type { DBProduct } from "@/hooks/useProducts";
-import { useCategories, getTopLevel } from "@/hooks/useCategories";
+import { useCategories, getTopLevel, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 
 const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent?: string }) => (
   <Card className="border border-border">
@@ -166,7 +166,10 @@ const Admin = () => {
 
   const filterProductsForTab = (items: DBProduct[]) => {
     let result = items;
-    if (adminCategoryFilter !== "all") result = result.filter((p) => p.category === adminCategoryFilter);
+    if (adminCategoryFilter !== "all") {
+      const matchSlugs = getCategorySlugsIncludingChildren(allCategories, adminCategoryFilter);
+      result = result.filter((p) => matchSlugs.includes(p.category));
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter((p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q));
