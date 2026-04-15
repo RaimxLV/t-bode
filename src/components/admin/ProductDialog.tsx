@@ -122,34 +122,17 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
             <div>
               <Label className="font-body text-sm">{t("admin.category")}</Label>
-              <Select value={selectedTopSlug} onValueChange={handleTopCategoryChange}>
+              <Select value={product.category} onValueChange={(slug) => onProductChange({ ...product, category: slug })}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {topCategories.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
+                  {categoryOptions.map((opt) => (
+                    <SelectItem key={opt.slug} value={opt.slug}>
+                      {opt.isChild ? `  └ ${opt.label}` : opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Subcategory selector – shown when parent has children */}
-          {subcategories.length > 0 && (
-            <div>
-              <Label className="font-body text-sm">Apakškategorija</Label>
-              <Select
-                value={subcategories.find((s) => s.slug === product.category)?.slug ?? ""}
-                onValueChange={handleSubCategoryChange}
-              >
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Izvēlies apakškategoriju (neobligāti)" /></SelectTrigger>
-                <SelectContent>
-                  {subcategories.map((c) => (
-                    <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           <div>
             <Label className="font-body text-sm">{t("admin.description")}</Label>
