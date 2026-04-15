@@ -209,7 +209,12 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {product.description && <p className="text-sm text-muted-foreground font-body mb-6 leading-relaxed">{product.description}</p>}
+              {product.description && (
+                <div
+                  className="text-sm text-muted-foreground font-body mb-6 leading-relaxed prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-foreground [&_em]:italic [&_u]:underline"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              )}
 
               {/* Desktop: color, size, quantity after description */}
               <div className="hidden lg:flex lg:flex-col">

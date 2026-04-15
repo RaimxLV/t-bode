@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -168,7 +168,9 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">{t("admin.description")}</Label>
-            <Textarea value={product.description} onChange={(e) => onProductChange({ ...product, description: e.target.value })} className="mt-1" rows={3} />
+            <div className="mt-1">
+              <RichTextEditor value={product.description} onChange={(html) => onProductChange({ ...product, description: html })} />
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
