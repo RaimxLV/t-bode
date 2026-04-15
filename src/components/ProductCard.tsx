@@ -63,7 +63,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       className="group flex flex-col h-full bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
     >
       {/* Image — aspect-square, overflow-hidden, rounded top */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-muted">
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
         <div ref={emblaRef} className="overflow-hidden w-full h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
@@ -75,7 +75,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 <img
                   src={img}
                   alt={`${product.name} ${i + 1}`}
-                  className="w-full h-full object-contain bg-muted"
+                  className="w-full h-full object-contain bg-white"
                   loading="lazy"
                 />
               </Link>
