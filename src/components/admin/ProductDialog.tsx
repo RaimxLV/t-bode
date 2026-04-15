@@ -133,6 +133,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
           <div>
             <Label className="font-body text-sm">{t("admin.description")}</Label>
