@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -65,6 +66,12 @@ const Auth = () => {
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    // Rate limit: max 5 attempts per 5 min per browser
+    const rl = checkRateLimit({ key: `auth_${isLogin ? "login" : "register"}`, max: 5, windowMs: 5 * 60 * 1000 });
+    if (!rl.allowed) {
+      toast.error(t("auth.rateLimited", { seconds: rl.retryAfter ?? 60 }));
+      return;
+    }
     setLoading(true);
     try {
       if (isLogin) {
