@@ -86,7 +86,7 @@ export const ProductsSection = () => {
           viewport={{ once: true }}
           className="text-4xl md:text-5xl text-center mb-4"
         >
-          {t("products.title")}
+          {t("products.designTitle")}
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
@@ -95,7 +95,7 @@ export const ProductsSection = () => {
           transition={{ delay: 0.1 }}
           className="text-muted-foreground text-center mb-12 max-w-xl mx-auto font-body"
         >
-          {t("products.subtitle")}
+          {t("products.designDesc")}
         </motion.p>
 
         {isMobile ? (
