@@ -62,7 +62,8 @@
     "errorMessage": "Error submitting the request. Please try again.",
     "thankYouTitle": "Thank you for your request!",
     "thankYouDesc": "We will get back to you shortly.",
-    "sendAnother": "Send another request"
+    "sendAnother": "Send another request",
+    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds."
   },
   "products": {
     "designTitle": "Design Your Own",
@@ -166,7 +167,21 @@
     "loginSuccess": "Successfully signed in!",
     "registerSuccess": "Check your email to confirm your account!",
     "authError": "Authentication error",
-    "googleError": "Google sign-in failed"
+    "googleError": "Google sign-in failed",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Forgot password?",
+    "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
+    "sendResetLink": "Send link",
+    "resetEmailSent": "If an account exists, a password reset link has been sent. Please also check your spam folder.",
+    "resetPasswordTitle": "New password",
+    "resetPasswordSubtitle": "Enter your new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "updatePassword": "Update password",
+    "passwordUpdated": "Password updated successfully!",
+    "invalidResetLink": "Invalid or expired link. Please request a new password reset email.",
+    "backToLogin": "Back to sign in",
+    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds."
   },
   "admin": {
     "panel": "STAFF PANEL",
@@ -181,6 +196,13 @@
     "editProduct": "Edit product",
     "newProduct": "New product",
     "productName": "Name",
+    "productNameLv": "Name (LV)",
+    "productNameEn": "Name (EN)",
+    "autoTranslate": "Auto-translate",
+    "autoTranslateDesc": "LV → EN",
+    "translateEmpty": "Please enter text in Latvian first",
+    "translateSuccess": "Translated!",
+    "translateError": "Translation error",
     "slug": "Slug (URL)",
     "price": "Price (€)",
     "category": "Category",
@@ -284,12 +306,32 @@
     "backToHome": "Back to Home",
     "continueShopping": "Continue Shopping"
   },
+  "profile": {
+    "back": "Back",
+    "title": "My profile",
+    "profileTab": "Profile",
+    "ordersTab": "Orders",
+    "wishlistTab": "Wishlist",
+    "personalInfo": "Personal information",
+    "email": "Email",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Enter your full name",
+    "phone": "Phone",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Profile saved!",
+    "saveError": "Failed to save profile",
+    "noOrders": "You don't have any orders yet",
+    "startShopping": "Start shopping",
+    "invoice": "Invoice"
+  },
   "cookies": {
     "title": "Cookie Usage",
     "description": "We use cookies to improve your browsing experience, analyze site traffic, and ensure website functionality. By continuing to use this site, you agree to the use of cookies.",
     "learnMore": "Learn more",
     "accept": "Accept all",
-    "decline": "Essential only"
+    "decline": "Essential only",
+    "close": "Close"
   },
   "language": {
     "lv": "LV",

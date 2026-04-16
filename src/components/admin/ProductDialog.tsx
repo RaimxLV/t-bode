@@ -137,11 +137,52 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
         </DialogHeader>
 
         <div className="space-y-4 sm:space-y-6">
+          {/* Bilingual name fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label className="font-body text-sm">{t("admin.productName")}</Label>
-              <Input value={product.name} onChange={(e) => { const name = e.target.value; onProductChange({ ...product, name, slug: product.id ? product.slug : generateSlug(name) }); }} placeholder={t("admin.productName")} className="mt-1" />
+              <div className="flex items-center justify-between">
+                <Label className="font-body text-sm">{t("admin.productNameLv", "Nosaukums (LV)")}</Label>
+              </div>
+              <Input
+                value={product.name_lv || ""}
+                onChange={(e) => {
+                  const nameLv = e.target.value;
+                  onProductChange({
+                    ...product,
+                    name_lv: nameLv,
+                    name: nameLv,
+                    slug: product.id ? product.slug : generateSlug(nameLv),
+                  });
+                }}
+                placeholder={t("admin.productNameLv", "Nosaukums (LV)")}
+                className="mt-1"
+              />
             </div>
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <Label className="font-body text-sm">{t("admin.productNameEn", "Name (EN)")}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => handleAutoTranslate("name")}
+                  disabled={translating === "name"}
+                >
+                  {translating === "name" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3 mr-1" />}
+                  {t("admin.autoTranslate", "Auto-tulkot")}
+                </Button>
+              </div>
+              <Input
+                value={product.name_en || ""}
+                onChange={(e) => onProductChange({ ...product, name_en: e.target.value })}
+                placeholder={t("admin.productNameEn", "Name (EN)")}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <Label className="font-body text-sm">{t("admin.slug")}</Label>
               <Input value={product.slug} onChange={(e) => onProductChange({ ...product, slug: e.target.value })} placeholder="produkta-slug" className="mt-1" />
@@ -150,7 +191,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <Label className="font-body text-sm">{t("admin.price")}</Label>
               <Input type="number" step="0.01" value={product.price} onChange={(e) => onProductChange({ ...product, price: parseFloat(e.target.value) || 0 })} className="mt-1" />
             </div>
-            <div>
+            <div className="sm:col-span-2">
               <Label className="font-body text-sm">{t("admin.category")}</Label>
               <Select value={product.category} onValueChange={(slug) => onProductChange({ ...product, category: slug })}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -165,11 +206,42 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
           </div>
 
+          {/* Bilingual descriptions in tabs */}
           <div>
-            <Label className="font-body text-sm">{t("admin.description")}</Label>
-            <div className="mt-1">
-              <RichTextEditor value={product.description} onChange={(html) => onProductChange({ ...product, description: html })} />
+            <div className="flex items-center justify-between mb-2">
+              <Label className="font-body text-sm">{t("admin.description")}</Label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => handleAutoTranslate("description")}
+                disabled={translating === "description"}
+              >
+                {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
+                {t("admin.autoTranslateDesc", "LV → EN")}
+              </Button>
             </div>
+            <Tabs defaultValue="lv">
+              <TabsList className="mb-2">
+                <TabsTrigger value="lv">LV</TabsTrigger>
+                <TabsTrigger value="en">EN</TabsTrigger>
+              </TabsList>
+              <TabsContent value="lv">
+                <RichTextEditor
+                  value={product.description_lv || product.description || ""}
+                  onChange={(html) =>
+                    onProductChange({ ...product, description_lv: html, description: html })
+                  }
+                />
+              </TabsContent>
+              <TabsContent value="en">
+                <RichTextEditor
+                  value={product.description_en || ""}
+                  onChange={(html) => onProductChange({ ...product, description_en: html })}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
