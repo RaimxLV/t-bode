@@ -40,9 +40,6 @@ export const HeroSection = () => {
 
       <div className="relative z-10 flex items-center justify-center h-full container mx-auto px-4 pt-32 md:pt-40">
         <div className="max-w-3xl text-center">
-          <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase rounded-full bg-white/10 text-white/80 backdrop-blur-sm border border-white/20">
-            ✓ Gatavs lietošanai
-          </span>
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
