@@ -197,9 +197,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border ${statusInfo.color}`}>
                           {t(statusInfo.key)}
                         </span>
+                        {order.is_business && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-blue-100 text-blue-800 border-blue-200">
+                            B2B
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
-                        {order.shipping_name && <span className="text-xs text-muted-foreground font-body">{order.shipping_name}</span>}
+                        {(order.is_business ? order.company_name : order.shipping_name) && (
+                          <span className="text-xs text-muted-foreground font-body truncate">
+                            {order.is_business ? order.company_name : order.shipping_name}
+                          </span>
+                        )}
                         <span className="text-xs text-muted-foreground font-body">
                           {new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
