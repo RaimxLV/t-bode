@@ -62,7 +62,8 @@
     "errorMessage": "Kļūda nosūtot pieprasījumu. Lūdzu, mēģiniet vēlreiz.",
     "thankYouTitle": "Paldies par jūsu pieprasījumu!",
     "thankYouDesc": "Mēs ar jums sazināsimies drīzumā.",
-    "sendAnother": "Nosūtīt vēl vienu pieprasījumu"
+    "sendAnother": "Nosūtīt vēl vienu pieprasījumu",
+    "rateLimited": "Pārāk daudz mēģinājumu. Lūdzu, mēģiniet vēlreiz pēc {{seconds}} sekundēm."
   },
   "products": {
     "designTitle": "Izveido dizainu pats",
@@ -178,7 +179,8 @@
     "updatePassword": "Atjaunot paroli",
     "passwordUpdated": "Parole veiksmīgi nomainīta!",
     "invalidResetLink": "Nederīgs vai novecojis links. Lūdzu pieprasi jaunu paroles atjaunošanas e-pastu.",
-    "backToLogin": "Atpakaļ uz pieslēgšanos"
+    "backToLogin": "Atpakaļ uz pieslēgšanos",
+    "rateLimited": "Pārāk daudz mēģinājumu. Lūdzu, mēģiniet vēlreiz pēc {{seconds}} sekundēm."
   },
   "admin": {
     "panel": "DARBINIEKA PANELIS",
@@ -292,6 +294,14 @@
     "orderId": "Pasūtījuma ID",
     "backToHome": "Uz sākumu",
     "continueShopping": "Turpināt iepirkties"
+  },
+  "cookies": {
+    "title": "Sīkdatņu izmantošana",
+    "description": "Mēs izmantojam sīkdatnes, lai uzlabotu jūsu pārlūkošanas pieredzi, analizētu vietnes apmeklējumu un nodrošinātu vietnes funkcionalitāti. Turpinot lietot šo vietni, jūs piekrītat sīkdatņu izmantošanai.",
+    "learnMore": "Uzzināt vairāk",
+    "accept": "Pieņemt visas",
+    "decline": "Tikai nepieciešamās",
+    "close": "Aizvērt"
   },
   "language": {
     "lv": "LV",
