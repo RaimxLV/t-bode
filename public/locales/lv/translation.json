@@ -165,7 +165,20 @@
     "loginSuccess": "Veiksmīgi pieslēdzies!",
     "registerSuccess": "Pārbaudi savu e-pastu, lai apstiprinātu kontu!",
     "authError": "Kļūda autentifikācijā",
-    "googleError": "Google pieslēgšanās neizdevās"
+    "googleError": "Google pieslēgšanās neizdevās",
+    "forgotPassword": "Aizmirsi paroli?",
+    "forgotPasswordTitle": "Aizmirsi paroli?",
+    "forgotPasswordSubtitle": "Ievadi savu e-pastu un mēs nosūtīsim linku paroles atjaunošanai.",
+    "sendResetLink": "Nosūtīt linku",
+    "resetEmailSent": "Ja konts eksistē, e-pasts ar paroles atjaunošanas linku ir nosūtīts. Pārbaudi arī spam mapi.",
+    "resetPasswordTitle": "Jauna parole",
+    "resetPasswordSubtitle": "Ievadi savu jauno paroli",
+    "newPassword": "Jaunā parole",
+    "confirmPassword": "Apstiprini paroli",
+    "updatePassword": "Atjaunot paroli",
+    "passwordUpdated": "Parole veiksmīgi nomainīta!",
+    "invalidResetLink": "Nederīgs vai novecojis links. Lūdzu pieprasi jaunu paroles atjaunošanas e-pastu.",
+    "backToLogin": "Atpakaļ uz pieslēgšanos"
   },
   "admin": {
     "panel": "DARBINIEKA PANELIS",

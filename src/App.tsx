@@ -27,6 +27,7 @@ const Profile = lazy(() => import("./pages/Profile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/collection" element={<OurCollection />} />
                   <Route path="/product/:slug" element={<ProductDetail />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
