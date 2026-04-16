@@ -258,10 +258,14 @@ export type Database = {
           created_at: string
           customizable: boolean
           description: string | null
+          description_en: string | null
+          description_lv: string | null
           id: string
           image_url: string | null
           in_stock: boolean
           name: string
+          name_en: string | null
+          name_lv: string | null
           price: number
           sizes: string[] | null
           slug: string
@@ -275,10 +279,14 @@ export type Database = {
           created_at?: string
           customizable?: boolean
           description?: string | null
+          description_en?: string | null
+          description_lv?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean
           name: string
+          name_en?: string | null
+          name_lv?: string | null
           price: number
           sizes?: string[] | null
           slug: string
@@ -292,10 +300,14 @@ export type Database = {
           created_at?: string
           customizable?: boolean
           description?: string | null
+          description_en?: string | null
+          description_lv?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean
           name?: string
+          name_en?: string | null
+          name_lv?: string | null
           price?: number
           sizes?: string[] | null
           slug?: string
