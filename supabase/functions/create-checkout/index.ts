@@ -19,31 +19,52 @@ serve(async (req) => {
   );
 
   try {
-    // Authenticate user
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: authData } = await supabaseClient.auth.getUser(token);
-    const user = authData.user;
-    if (!user?.email) throw new Error("User not authenticated");
+    // Try to authenticate user (optional for guest checkout)
+    let user: { id: string; email: string } | null = null;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: authData } = await supabaseClient.auth.getUser(token);
+      if (authData.user?.email) {
+        user = { id: authData.user.id, email: authData.user.email };
+      }
+    }
 
-    const { order_id, items, origin_url } = await req.json();
+    const { order_id, items, origin_url, guest_email, business } = await req.json();
 
     if (!order_id || !items || !Array.isArray(items) || items.length === 0) {
       throw new Error("Missing order_id or items");
     }
 
+    // Determine customer email
+    const customerEmail = user?.email ?? guest_email;
+    if (!customerEmail) throw new Error("Email required for checkout");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
-    // Check for existing Stripe customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    // Find or create Stripe customer
+    const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+    } else if (business?.is_business) {
+      // Create customer up front for business so we can attach invoice details
+      const newCustomer = await stripe.customers.create({
+        email: customerEmail,
+        name: business.company_name,
+        address: business.company_address ? { line1: business.company_address } : undefined,
+        metadata: {
+          company_name: business.company_name ?? "",
+          company_reg_number: business.company_reg_number ?? "",
+          company_vat_number: business.company_vat_number ?? "",
+        },
+      });
+      customerId = newCustomer.id;
     }
 
-    // Build line items from cart
+    // Build line items
     const line_items = items.map((item: any) => ({
       price_data: {
         currency: "eur",
@@ -61,7 +82,7 @@ serve(async (req) => {
       quantity: item.quantity,
     }));
 
-    // Add shipping as a line item
+    // Add shipping
     const shippingCost = items[0]?.shippingCost;
     if (shippingCost) {
       line_items.push({
@@ -77,20 +98,45 @@ serve(async (req) => {
       });
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+      customer_email: customerId ? undefined : customerEmail,
       line_items,
       mode: "payment",
       success_url: `${origin_url}/payment-success?order_id=${order_id}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin_url}/checkout`,
       metadata: {
         order_id,
-        user_id: user.id,
+        user_id: user?.id ?? "",
+        guest_email: user ? "" : (guest_email ?? ""),
+        is_business: business?.is_business ? "true" : "false",
       },
-    });
+    };
 
-    // Update order with stripe session id
+    // Enable invoice creation for business orders → generates branded PDF invoice
+    if (business?.is_business) {
+      sessionParams.invoice_creation = {
+        enabled: true,
+        invoice_data: {
+          description: `T-Bode pasūtījums ${order_id.slice(0, 8).toUpperCase()}`,
+          metadata: {
+            order_id,
+            company_name: business.company_name ?? "",
+            company_reg_number: business.company_reg_number ?? "",
+            company_vat_number: business.company_vat_number ?? "",
+          },
+          custom_fields: [
+            ...(business.company_reg_number ? [{ name: "Reģ. Nr.", value: business.company_reg_number }] : []),
+            ...(business.company_vat_number ? [{ name: "PVN Nr.", value: business.company_vat_number }] : []),
+          ].slice(0, 4),
+          footer: "Paldies, ka iepērkaties pie T-Bode!",
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    // Update order with stripe session id (use service role for guest orders)
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""

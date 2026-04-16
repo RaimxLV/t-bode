@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
 import { getProductName } from "@/hooks/useProducts";
+import { WishlistButton } from "@/components/WishlistButton";
 
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
@@ -135,6 +136,11 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
             {t("products.outOfStock", "Nav noliktavā")}
           </div>
         )}
+
+        {/* Wishlist heart top-right */}
+        <div className="absolute top-2 right-2 z-10">
+          <WishlistButton productId={product.id} size="sm" variant="floating" />
+        </div>
       </div>
 
       {/* Content — flex-1 pushes bottom block down */}

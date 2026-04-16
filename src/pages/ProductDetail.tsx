@@ -12,6 +12,8 @@ import { useProductBySlug, getProductName, getProductDescription } from "@/hooks
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
+import { RelatedProducts } from "@/components/RelatedProducts";
+import { WishlistButton } from "@/components/WishlistButton";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -163,7 +165,10 @@ const ProductDetail = () => {
 
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex flex-col">
               <span className="text-xs font-body font-medium uppercase tracking-wider text-muted-foreground mb-2">{product.category}</span>
-              <h1 className="text-3xl md:text-4xl mb-4">{displayName}</h1>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="text-3xl md:text-4xl flex-1">{displayName}</h1>
+                <WishlistButton productId={product.id} size="lg" variant="icon" className="border border-border" />
+              </div>
               <p className="text-3xl font-bold font-body mb-6" style={{ color: "hsl(var(--primary))" }}>
                 {product.price.toFixed(2).replace(".", ",")} €
               </p>
@@ -287,6 +292,9 @@ const ProductDetail = () => {
               )}
             </motion.div>
           </div>
+
+          {/* Related products */}
+          <RelatedProducts category={product.category} excludeId={product.id} />
         </div>
       </main>
       <ImageLightbox

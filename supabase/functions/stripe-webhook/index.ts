@@ -5,7 +5,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type, stripe-signature",
 };
 
 serve(async (req) => {
@@ -27,7 +27,6 @@ serve(async (req) => {
     if (webhookSecret && signature) {
       event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
     } else {
-      // For testing without signature verification
       event = JSON.parse(body) as Stripe.Event;
       console.warn("⚠️ Webhook signature not verified - dev/test mode");
     }
@@ -49,41 +48,54 @@ serve(async (req) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const orderId = session.metadata?.order_id;
-
         if (!orderId) {
           console.error("No order_id in session metadata");
           break;
         }
 
-        console.log(`✅ Payment completed for order ${orderId}`);
+        const updateData: any = {
+          status: "confirmed",
+          stripe_session_id: session.id,
+        };
 
-        // Update order status to confirmed
-        const { error: updateError } = await supabase
-          .from("orders")
-          .update({
-            status: "confirmed",
-            stripe_session_id: session.id,
-          })
-          .eq("id", orderId);
-
-        if (updateError) {
-          console.error(`Failed to update order ${orderId}:`, updateError);
-          throw updateError;
+        // Capture invoice info if it was created (business orders)
+        if (session.invoice) {
+          const invoiceId = typeof session.invoice === "string" ? session.invoice : session.invoice.id;
+          try {
+            const invoice = await stripe.invoices.retrieve(invoiceId);
+            updateData.stripe_invoice_id = invoiceId;
+            updateData.stripe_invoice_pdf = invoice.invoice_pdf ?? null;
+          } catch (e: any) {
+            console.error("Failed to fetch invoice PDF:", e.message);
+          }
         }
 
-        console.log(`Order ${orderId} status updated to confirmed`);
+        const { error: updateError } = await supabase
+          .from("orders")
+          .update(updateData)
+          .eq("id", orderId);
+
+        if (updateError) throw updateError;
+        console.log(`✅ Order ${orderId} confirmed`);
         break;
       }
 
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
         const orderId = session.metadata?.order_id;
-
         if (orderId) {
-          console.log(`⏰ Checkout expired for order ${orderId}`);
+          await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
+        }
+        break;
+      }
+
+      case "invoice.finalized": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const orderId = invoice.metadata?.order_id;
+        if (orderId) {
           await supabase
             .from("orders")
-            .update({ status: "cancelled" })
+            .update({ stripe_invoice_id: invoice.id, stripe_invoice_pdf: invoice.invoice_pdf ?? null })
             .eq("id", orderId);
         }
         break;

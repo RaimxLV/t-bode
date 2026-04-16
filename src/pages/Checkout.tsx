@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn } from "lucide-react";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
@@ -18,18 +19,24 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
+type CheckoutMode = "choose" | "guest" | "loggedin";
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
   phone: z.string().trim().min(8, "Ievadiet derīgu telefona numuru").max(20),
+  email: z.string().trim().email("Ievadiet derīgu e-pasta adresi").max(255),
   notes: z.string().max(500).optional(),
 });
 
-const omnivaSchema = baseSchema.extend({
-  selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu"),
+const businessFields = z.object({
+  company_name: z.string().trim().min(2, "Uzņēmuma nosaukums obligāts").max(200),
+  company_reg_number: z.string().trim().min(4, "Reģistrācijas numurs obligāts").max(50),
+  company_vat_number: z.string().trim().max(50).optional(),
+  company_address: z.string().trim().min(5, "Juridiskā adrese obligāta").max(300),
 });
 
-const courierSchema = baseSchema.extend({
+const omnivaFields = z.object({ selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu") });
+const courierFields = z.object({
   address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
   city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
   zip: z.string().trim().min(4, "Ievadiet pasta indeksu").max(10),
@@ -39,16 +46,31 @@ type FieldErrors = Record<string, string>;
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice } = useCart();
   const { user } = useAuth();
   const { locations, loading: omnivaLoading } = useOmnivaLocations();
   const { t } = useTranslation();
 
+  // Mode: if logged in skip choose; if not, show choose first
+  const [mode, setMode] = useState<CheckoutMode>(user ? "loggedin" : "choose");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("omniva");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", address: "", city: "", zip: "", phone: "", notes: "" });
+  const [isBusiness, setIsBusiness] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: user?.email ?? "",
+    address: "",
+    city: "",
+    zip: "",
+    phone: "",
+    notes: "",
+    company_name: "",
+    company_reg_number: "",
+    company_vat_number: "",
+    company_address: "",
+  });
   const [errors, setErrors] = useState<FieldErrors>({});
 
   const filteredLocations = useMemo(() => {
@@ -66,14 +88,31 @@ const Checkout = () => {
   };
 
   const validate = (): boolean => {
-    const data = shippingMethod === "omniva"
-      ? { name: form.name, phone: form.phone, notes: form.notes, selectedOmniva }
-      : { name: form.name, phone: form.phone, notes: form.notes, address: form.address, city: form.city, zip: form.zip };
-    const schema = shippingMethod === "omniva" ? omnivaSchema : courierSchema;
+    const data: any = {
+      name: form.name,
+      phone: form.phone,
+      email: user?.email ?? form.email,
+      notes: form.notes,
+    };
+    if (shippingMethod === "omniva") data.selectedOmniva = selectedOmniva;
+    else { data.address = form.address; data.city = form.city; data.zip = form.zip; }
+
+    let schema: any = baseSchema;
+    if (shippingMethod === "omniva") schema = schema.merge(omnivaFields);
+    else schema = schema.merge(courierFields);
+
+    if (isBusiness) {
+      schema = schema.merge(businessFields);
+      data.company_name = form.company_name;
+      data.company_reg_number = form.company_reg_number;
+      data.company_vat_number = form.company_vat_number;
+      data.company_address = form.company_address;
+    }
+
     const result = schema.safeParse(data);
     if (!result.success) {
       const fieldErrors: FieldErrors = {};
-      result.error.errors.forEach((err) => {
+      result.error.errors.forEach((err: any) => {
         const field = err.path[0] as string;
         if (!fieldErrors[field]) fieldErrors[field] = err.message;
       });
@@ -85,22 +124,52 @@ const Checkout = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) { toast.error(t("checkout.loginError")); navigate("/auth"); return; }
     if (!validate() || items.length === 0) return;
     setSubmitting(true);
     try {
-      const { data: order, error: orderError } = await supabase.from("orders").insert({
-        user_id: user.id, total: orderTotal, shipping_name: form.name.trim(),
+      const orderPayload: any = {
+        total: orderTotal,
+        shipping_name: form.name.trim(),
         shipping_address: shippingMethod === "courier" ? form.address.trim() : null,
         shipping_city: shippingMethod === "courier" ? form.city.trim() : null,
         shipping_zip: shippingMethod === "courier" ? form.zip.trim() : null,
         shipping_phone: form.phone.trim(),
         omniva_pickup_point: shippingMethod === "omniva" ? selectedOmniva : null,
         notes: form.notes?.trim() || null,
-      }).select("id").single();
+        is_business: isBusiness,
+      };
+
+      if (user) {
+        orderPayload.user_id = user.id;
+      } else {
+        orderPayload.guest_email = form.email.trim();
+      }
+
+      if (isBusiness) {
+        orderPayload.company_name = form.company_name.trim();
+        orderPayload.company_reg_number = form.company_reg_number.trim();
+        orderPayload.company_vat_number = form.company_vat_number?.trim() || null;
+        orderPayload.company_address = form.company_address.trim();
+      }
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert(orderPayload)
+        .select("id")
+        .single();
       if (orderError) throw orderError;
 
-      const orderItems = items.map((item) => ({ order_id: order.id, product_id: item.productId, product_name: item.name, size: item.size, color: item.color, quantity: item.quantity, unit_price: item.price, zakeke_design_id: item.designId || null, zakeke_thumbnail_url: item.designThumbnail || null }));
+      const orderItems = items.map((item) => ({
+        order_id: order.id,
+        product_id: item.productId,
+        product_name: item.name,
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity,
+        unit_price: item.price,
+        zakeke_design_id: item.designId || null,
+        zakeke_thumbnail_url: item.designThumbnail || null,
+      }));
       const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
@@ -110,7 +179,19 @@ const Checkout = () => {
       }));
 
       const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
-        body: { order_id: order.id, items: stripeItems, origin_url: window.location.origin },
+        body: {
+          order_id: order.id,
+          items: stripeItems,
+          origin_url: window.location.origin,
+          guest_email: user ? null : form.email.trim(),
+          business: isBusiness ? {
+            is_business: true,
+            company_name: form.company_name.trim(),
+            company_reg_number: form.company_reg_number.trim(),
+            company_vat_number: form.company_vat_number?.trim() || null,
+            company_address: form.company_address.trim(),
+          } : { is_business: false },
+        },
       });
 
       if (sessionError) throw sessionError;
@@ -143,6 +224,45 @@ const Checkout = () => {
     );
   }
 
+  // Step 1: choose login or guest
+  if (mode === "choose" && !user) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 pt-24 pb-16">
+          <div className="container mx-auto px-4 max-w-2xl">
+            <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm">
+              <ArrowLeft className="w-4 h-4" />{t("checkout.back")}
+            </button>
+            <h1 className="text-3xl font-display mb-2">{t("checkout.title")}</h1>
+            <p className="text-muted-foreground font-body mb-8">{t("checkout.chooseHowToContinue", "Izvēlies, kā turpināt")}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate("/auth?redirect=/checkout")}
+                className="bg-card border-2 border-border hover:border-primary rounded-lg p-6 text-left transition-all"
+              >
+                <LogIn className="w-8 h-8 mb-3 text-primary" />
+                <h3 className="font-display text-lg mb-1">{t("checkout.loginOption", "Ielogoties")}</h3>
+                <p className="text-sm text-muted-foreground font-body">{t("checkout.loginBenefits", "Saglabā pasūtījumu vēsturi un ātrāku checkout nākotnē")}</p>
+              </button>
+
+              <button
+                onClick={() => setMode("guest")}
+                className="bg-card border-2 border-border hover:border-primary rounded-lg p-6 text-left transition-all"
+              >
+                <UserIcon className="w-8 h-8 mb-3 text-primary" />
+                <h3 className="font-display text-lg mb-1">{t("checkout.guestOption", "Turpināt kā viesis")}</h3>
+                <p className="text-sm text-muted-foreground font-body">{t("checkout.guestBenefits", "Bez konta — tikai ievadi e-pastu pasūtījuma apstiprinājumam")}</p>
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const FieldError = ({ field }: { field: string }) =>
     errors[field] ? <p className="text-xs text-destructive mt-1 font-body">{errors[field]}</p> : null;
 
@@ -154,10 +274,14 @@ const Checkout = () => {
           <button onClick={() => navigate(-1)} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 font-body text-sm">
             <ArrowLeft className="w-4 h-4" />{t("checkout.back")}
           </button>
-          <h1 className="text-3xl font-display mb-8">{t("checkout.title")}</h1>
+          <div className="flex items-center gap-3 mb-8">
+            <h1 className="text-3xl font-display">{t("checkout.title")}</h1>
+            {!user && <span className="text-xs px-2 py-1 rounded-full bg-muted text-muted-foreground font-body">{t("checkout.guestBadge", "Viesa pirkums")}</span>}
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2 space-y-8">
+              {/* Contact */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.contact")}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,9 +295,62 @@ const Checkout = () => {
                     <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+371 20000000" className={`mt-1 ${errors.phone ? "border-destructive" : ""}`} maxLength={20} />
                     <FieldError field="phone" />
                   </div>
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="email" className="font-body text-sm">{t("checkout.email", "E-pasts")}</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={user?.email ?? form.email}
+                      onChange={(e) => updateField("email", e.target.value)}
+                      disabled={!!user}
+                      placeholder="tavs@epasts.lv"
+                      className={`mt-1 ${errors.email ? "border-destructive" : ""} ${user ? "bg-muted" : ""}`}
+                      maxLength={255}
+                    />
+                    <FieldError field="email" />
+                  </div>
                 </div>
               </section>
 
+              {/* Business toggle */}
+              <section className="bg-card border border-border rounded-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <h2 className="text-lg font-display">{t("checkout.buyAsCompany", "Pērku kā uzņēmums")}</h2>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.invoiceWillBeIssued", "Saņemsiet rēķinu uz uzņēmuma datiem")}</p>
+                    </div>
+                  </div>
+                  <Switch checked={isBusiness} onCheckedChange={setIsBusiness} />
+                </div>
+
+                {isBusiness && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="company_name" className="font-body text-sm">{t("checkout.companyName", "Uzņēmuma nosaukums")} *</Label>
+                      <Input id="company_name" value={form.company_name} onChange={(e) => updateField("company_name", e.target.value)} placeholder="SIA Mans Uzņēmums" className={`mt-1 ${errors.company_name ? "border-destructive" : ""}`} maxLength={200} />
+                      <FieldError field="company_name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="company_reg_number" className="font-body text-sm">{t("checkout.companyRegNumber", "Reģistrācijas numurs")} *</Label>
+                      <Input id="company_reg_number" value={form.company_reg_number} onChange={(e) => updateField("company_reg_number", e.target.value)} placeholder="40000000000" className={`mt-1 ${errors.company_reg_number ? "border-destructive" : ""}`} maxLength={50} />
+                      <FieldError field="company_reg_number" />
+                    </div>
+                    <div>
+                      <Label htmlFor="company_vat_number" className="font-body text-sm">{t("checkout.companyVatNumber", "PVN numurs")}</Label>
+                      <Input id="company_vat_number" value={form.company_vat_number} onChange={(e) => updateField("company_vat_number", e.target.value)} placeholder="LV40000000000" className="mt-1" maxLength={50} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="company_address" className="font-body text-sm">{t("checkout.companyAddress", "Juridiskā adrese")} *</Label>
+                      <Input id="company_address" value={form.company_address} onChange={(e) => updateField("company_address", e.target.value)} placeholder="Brīvības iela 1, Rīga, LV-1010" className={`mt-1 ${errors.company_address ? "border-destructive" : ""}`} maxLength={300} />
+                      <FieldError field="company_address" />
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              {/* Shipping */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.shippingMethod")}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -275,7 +452,6 @@ const Checkout = () => {
                 <Button className="w-full mt-6 py-6 text-base font-body font-semibold" style={{ background: "var(--gradient-brand)" }} disabled={submitting} onClick={handleSubmit}>
                   {submitting ? t("checkout.processing") : t("checkout.submit")}
                 </Button>
-                {!user && <p className="text-xs text-muted-foreground text-center mt-2 font-body">{t("checkout.loginRequired")}</p>}
               </div>
             </motion.div>
           </div>

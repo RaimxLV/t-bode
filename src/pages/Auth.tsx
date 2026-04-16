@@ -35,14 +35,14 @@ const Auth = () => {
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
 
-  // Redirect after login: admins → /admin, others → /
+  // Redirect after login: ?redirect=... wins, else admins → /admin, others → /
   useEffect(() => {
     if (!user || adminLoading) return;
-    if (isAdmin) {
-      navigate("/admin");
-    } else {
-      navigate("/");
-    }
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+    if (redirect) { navigate(redirect); return; }
+    if (isAdmin) navigate("/admin");
+    else navigate("/");
   }, [user, isAdmin, adminLoading, navigate]);
 
   const validate = (): boolean => {

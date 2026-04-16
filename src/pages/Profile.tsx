@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Package, Save } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -26,6 +27,7 @@ const ORDER_STATUS_COLORS: Record<string, string> = {
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
+  const { productIds: wishlistIds, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -35,6 +37,8 @@ const Profile = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -129,6 +133,11 @@ const Profile = () => {
                 {t("profile.ordersTab", "Pasūtījumi")}
                 {orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}
               </TabsTrigger>
+              <TabsTrigger value="wishlist" className="gap-2">
+                <Heart className="w-4 h-4" />
+                {t("profile.wishlistTab", "Vēlmju saraksts")}
+                {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{wishlistIds.size}</Badge>}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
@@ -212,6 +221,12 @@ const Profile = () => {
                             <span className="font-body font-bold text-sm">
                               {Number(order.total).toFixed(2).replace(".", ",")} €
                             </span>
+                            {order.stripe_invoice_pdf && (
+                              <a href={order.stripe_invoice_pdf} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-body">
+                                <FileText className="w-3 h-3" />
+                                {t("profile.invoice", "Rēķins")}
+                              </a>
+                            )}
                           </div>
                         </div>
                         {orderItems[order.id] && (
