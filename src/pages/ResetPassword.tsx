@@ -24,20 +24,83 @@ const ResetPassword = () => {
   const [form, setForm] = useState({ password: "", confirm: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [validSession, setValidSession] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // Supabase puts the recovery token in the URL hash and auto-creates a session
+    let mounted = true;
+
+    const init = async () => {
+      try {
+        // Flow 1: Newer Supabase — query params with token_hash + type=recovery
+        const url = new URL(window.location.href);
+        const tokenHash = url.searchParams.get("token_hash");
+        const type = url.searchParams.get("type");
+        const code = url.searchParams.get("code");
+
+        if (tokenHash && type === "recovery") {
+          const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+          if (!error && mounted) {
+            setValidSession(true);
+            window.history.replaceState({}, "", "/reset-password");
+            setChecking(false);
+            return;
+          }
+        }
+
+        // Flow 2: PKCE — ?code=... exchange
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error && mounted) {
+            setValidSession(true);
+            window.history.replaceState({}, "", "/reset-password");
+            setChecking(false);
+            return;
+          }
+        }
+
+        // Flow 3: Implicit — hash with access_token + type=recovery
+        if (window.location.hash && window.location.hash.includes("access_token")) {
+          const hash = new URLSearchParams(window.location.hash.slice(1));
+          const accessToken = hash.get("access_token");
+          const refreshToken = hash.get("refresh_token");
+          if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (!error && mounted) {
+              setValidSession(true);
+              window.history.replaceState({}, "", "/reset-password");
+              setChecking(false);
+              return;
+            }
+          }
+        }
+
+        // Fallback: existing session (e.g. PASSWORD_RECOVERY already fired)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          if (session) setValidSession(true);
+          setChecking(false);
+        }
+      } catch {
+        if (mounted) setChecking(false);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-        setValidSession(true);
+        if (mounted) setValidSession(true);
       }
     });
-    // Also check existing session (in case event already fired)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setValidSession(true);
-    });
-    return () => subscription.unsubscribe();
+
+    init();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
