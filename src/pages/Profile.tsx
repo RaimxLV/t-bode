@@ -266,6 +266,30 @@ const Profile = () => {
                 </div>
               )}
             </TabsContent>
+
+            <TabsContent value="wishlist">
+              {loadingWishlist ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-64 w-full rounded-lg" />)}
+                </div>
+              ) : wishlistProducts.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground font-body">{t("profile.noWishlist", "Vēlmju saraksts ir tukšs")}</p>
+                    <Button variant="outline" onClick={() => navigate("/collection")} className="mt-4">
+                      {t("profile.browseProducts", "Pārlūkot produktus")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {wishlistProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       </main>
