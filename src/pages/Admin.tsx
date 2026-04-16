@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -12,13 +12,22 @@ import { ProductCard } from "@/components/ProductCard";
 import { useTranslation } from "react-i18next";
 import { CATEGORY_ICONS } from "@/components/CategoryIcons";
 import logo from "@/assets/logo.svg";
-import { ProductDialog, EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
-import { OrdersList } from "@/components/admin/OrdersList";
-import { FAQManager } from "@/components/admin/FAQManager";
-import { CategoryManager } from "@/components/admin/CategoryManager";
-import { ProductStats } from "@/components/admin/ProductStats";
 import type { DBProduct } from "@/hooks/useProducts";
 import { useCategories, getTopLevel, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
+import { EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
+
+// Lazy-load heavy admin tab components — only fetched when admin opens that tab
+const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
+const OrdersList = lazy(() => import("@/components/admin/OrdersList").then(m => ({ default: m.OrdersList })));
+const FAQManager = lazy(() => import("@/components/admin/FAQManager").then(m => ({ default: m.FAQManager })));
+const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").then(m => ({ default: m.CategoryManager })));
+const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
+
+const TabFallback = () => (
+  <div className="flex items-center justify-center py-16">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: string; value: string | number; accent?: string }) => (
   <Card className="border border-border">
