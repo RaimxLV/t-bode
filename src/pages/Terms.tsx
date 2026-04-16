@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 const Terms = () => {
   const { i18n } = useTranslation();
@@ -87,7 +88,7 @@ const TermsContentLV = () => (
 
     <h2>9. Privātums</h2>
     <p>
-      Personas datu apstrāde notiek saskaņā ar mūsu <a href="/privacy">Privātuma politiku</a>.
+      Personas datu apstrāde notiek saskaņā ar mūsu <Link to="/privacy">Privātuma politiku</Link>.
     </p>
 
     <h2>10. Kontaktinformācija</h2>
@@ -122,7 +123,7 @@ const TermsContentEN = () => (
 
     <h2>3. Pricing and Payment</h2>
     <ul>
-      <li>All prices are shown in евро and include VAT where applicable.</li>
+      <li>All prices are shown in euro and include VAT where applicable.</li>
       <li>Payment is made using the payment methods available on the website during checkout.</li>
       <li>The seller reserves the right to change prices at any time, but the price valid at the time of purchase applies to the order.</li>
     </ul>
@@ -161,7 +162,7 @@ const TermsContentEN = () => (
 
     <h2>9. Privacy</h2>
     <p>
-      Personal data is processed in accordance with our <a href="/privacy">Privacy Policy</a>.
+      Personal data is processed in accordance with our <Link to="/privacy">Privacy Policy</Link>.
     </p>
 
     <h2>10. Contact</h2>
