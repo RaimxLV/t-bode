@@ -8,8 +8,9 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette } from "lucide-react";
+import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 
@@ -31,9 +32,38 @@ interface ProductDialogProps {
 export const ProductDialog = ({ open, onOpenChange, product, onProductChange, onSaved }: ProductDialogProps) => {
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState<"name" | "description" | null>(null);
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const { data: allCategories = [] } = useCategories();
+
+  const handleAutoTranslate = async (field: "name" | "description") => {
+    if (!product) return;
+    const sourceText = field === "name" ? (product.name_lv || product.name) : (product.description_lv || product.description);
+    if (!sourceText?.trim()) {
+      toast.error(t("admin.translateEmpty", "Vispirms ievadi tekstu latviski"));
+      return;
+    }
+    setTranslating(field);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-product", {
+        body: { text: sourceText, from: "lv", to: "en", isHtml: field === "description" },
+      });
+      if (error) throw error;
+      const translated = data?.translated;
+      if (!translated) throw new Error("No translation returned");
+      if (field === "name") {
+        onProductChange({ ...product, name_en: translated });
+      } else {
+        onProductChange({ ...product, description_en: translated });
+      }
+      toast.success(t("admin.translateSuccess", "Iztulkots!"));
+    } catch (e: any) {
+      toast.error(t("admin.translateError", "Tulkošanas kļūda") + ": " + (e.message || "unknown"));
+    } finally {
+      setTranslating(null);
+    }
+  };
 
   if (!product) return null;
 
