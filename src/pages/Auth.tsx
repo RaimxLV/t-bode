@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
+import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -34,6 +35,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   useEffect(() => {
     if (!user || adminLoading) return;
@@ -214,6 +216,15 @@ const Auth = () => {
                   </button>
                 </div>
                 {errors.password && <p className="text-xs text-destructive mt-1 font-body">{errors.password}</p>}
+                {isLogin && (
+                  <button
+                    type="button"
+                    onClick={() => setForgotOpen(true)}
+                    className="text-xs text-white/60 hover:text-white font-body mt-2 underline-offset-4 hover:underline transition-colors"
+                  >
+                    {t("auth.forgotPassword", "Aizmirsi paroli?")}
+                  </button>
+                )}
               </div>
               <Button
                 type="submit"
@@ -237,6 +248,7 @@ const Auth = () => {
           </div>
         </motion.div>
       </div>
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={form.email} />
     </div>
   );
 };
