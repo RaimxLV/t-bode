@@ -48,7 +48,7 @@ const App = () => (
           <CartProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
+            <BrowserRouter basename={import.meta.env.BASE_URL}>
               <DynamicLang />
               <ScrollToTop />
               <CartSidebar />
