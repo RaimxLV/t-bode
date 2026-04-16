@@ -92,7 +92,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={`/product/${product.slug}`}
                 className="min-w-0 shrink-0 grow-0 basis-full h-full"
               >
-                <ProductImage src={img} alt={`${product.name} ${i + 1}`} />
+                <ProductImage src={img} alt={`${displayName} ${i + 1}`} />
               </Link>
             ))}
           </div>
@@ -143,7 +143,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         <div className="flex-1 min-h-0">
           <Link to={`/product/${product.slug}`}>
             <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
-              {product.name}
+              {displayName}
             </h3>
           </Link>
 
