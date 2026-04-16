@@ -21,15 +21,25 @@ serve(async (req) => {
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   const body = await req.text();
 
-  let event: Stripe.Event;
+  // STRICT: signature verification is mandatory. No fallback.
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured. Refusing request.");
+    return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  if (!signature) {
+    console.error("Missing stripe-signature header");
+    return new Response(JSON.stringify({ error: "Missing signature" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
+  let event: Stripe.Event;
   try {
-    if (webhookSecret && signature) {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
-      console.warn("⚠️ Webhook signature not verified - dev/test mode");
-    }
+    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
   } catch (err: any) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return new Response(JSON.stringify({ error: "Invalid signature" }), {
