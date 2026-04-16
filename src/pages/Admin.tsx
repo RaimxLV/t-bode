@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3 } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
@@ -22,6 +22,7 @@ const OrdersList = lazy(() => import("@/components/admin/OrdersList").then(m => 
 const FAQManager = lazy(() => import("@/components/admin/FAQManager").then(m => ({ default: m.FAQManager })));
 const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").then(m => ({ default: m.CategoryManager })));
 const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
+const CustomersList = lazy(() => import("@/components/admin/CustomersList").then(m => ({ default: m.CustomersList })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -277,6 +278,7 @@ const Admin = () => {
             <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5 text-sm"><BarChart3 className="w-4 h-4" /> Statistika</TabsTrigger>
             <TabsTrigger value="categories" className="gap-1.5 text-sm"><FolderTree className="w-4 h-4" /> Kategorijas</TabsTrigger>
+            <TabsTrigger value="customers" className="gap-1.5 text-sm"><Users className="w-4 h-4" /> Klienti</TabsTrigger>
             <TabsTrigger value="access" className="gap-1.5 text-sm"><UserCheck className="w-4 h-4" /> Piekļuve</TabsTrigger>
           </TabsList>
 
@@ -315,6 +317,12 @@ const Admin = () => {
           <TabsContent value="categories">
             <Suspense fallback={<TabFallback />}>
               <CategoryManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="customers">
+            <Suspense fallback={<TabFallback />}>
+              <CustomersList />
             </Suspense>
           </TabsContent>
 
@@ -367,6 +375,7 @@ const Admin = () => {
           { value: "collection", icon: ShoppingBag, label: "Kolekcija" },
           { value: "orders", icon: Package, label: "Pasūtījumi" },
           { value: "stats", icon: BarChart3, label: "Stat." },
+          { value: "customers", icon: Users, label: "Klienti" },
           { value: "categories", icon: FolderTree, label: "Kat." },
           { value: "faq", icon: HelpCircle, label: "FAQ" },
           { value: "access", icon: UserCheck, label: "Piekļuve" },
