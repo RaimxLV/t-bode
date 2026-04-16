@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface OmnivaLocation {
   ZIP: string;
@@ -18,16 +19,31 @@ export const useOmnivaLocations = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://www.omniva.lv/locations.json")
-      .then((res) => res.json())
-      .then((data: OmnivaLocation[]) => {
-        const latvian = data.filter(
-          (loc) => loc.A0_NAME === "LV" && loc.TYPE === "0"
-        );
-        setLocations(latvian);
-      })
-      .catch(() => setLocations([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("omniva-locations");
+        if (error) throw error;
+        const list = (data as OmnivaLocation[]) || [];
+        const latvian = list.filter((loc) => loc.A0_NAME === "LV" && loc.TYPE === "0");
+        if (!cancelled) setLocations(latvian);
+      } catch {
+        // Fallback: try direct fetch (might fail due to CORS, but worth a shot)
+        try {
+          const res = await fetch("https://www.omniva.lv/locations.json");
+          const data: OmnivaLocation[] = await res.json();
+          const latvian = data.filter((loc) => loc.A0_NAME === "LV" && loc.TYPE === "0");
+          if (!cancelled) setLocations(latvian);
+        } catch {
+          if (!cancelled) setLocations([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return { locations, loading };

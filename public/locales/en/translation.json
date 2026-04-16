@@ -62,7 +62,8 @@
     "errorMessage": "Error submitting the request. Please try again.",
     "thankYouTitle": "Thank you for your request!",
     "thankYouDesc": "We will get back to you shortly.",
-    "sendAnother": "Send another request"
+    "sendAnother": "Send another request",
+    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds."
   },
   "products": {
     "designTitle": "Design Your Own",
@@ -178,7 +179,8 @@
     "updatePassword": "Update password",
     "passwordUpdated": "Password successfully updated!",
     "invalidResetLink": "Invalid or expired link. Please request a new password reset email.",
-    "backToLogin": "Back to sign in"
+    "backToLogin": "Back to sign in",
+    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds."
   },
   "admin": {
     "panel": "STAFF PANEL",
@@ -292,6 +294,14 @@
     "orderId": "Order ID",
     "backToHome": "Back to Home",
     "continueShopping": "Continue Shopping"
+  },
+  "cookies": {
+    "title": "Cookie usage",
+    "description": "We use cookies to improve your browsing experience, analyse site traffic and provide site functionality. By continuing to use this site you agree to the use of cookies.",
+    "learnMore": "Learn more",
+    "accept": "Accept all",
+    "decline": "Only essential",
+    "close": "Close"
   },
   "language": {
     "lv": "LV",
