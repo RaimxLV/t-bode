@@ -387,13 +387,17 @@ const Admin = () => {
       {/* Bottom padding for mobile nav */}
       <div className="sm:hidden h-16" />
 
-      <ProductDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        product={editingProduct}
-        onProductChange={setEditingProduct}
-        onSaved={loadProducts}
-      />
+      {dialogOpen && (
+        <Suspense fallback={null}>
+          <ProductDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            product={editingProduct}
+            onProductChange={setEditingProduct}
+            onSaved={loadProducts}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
