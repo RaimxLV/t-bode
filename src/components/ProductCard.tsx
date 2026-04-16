@@ -1,10 +1,28 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
+
+const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className="relative w-full h-full bg-muted">
+      {!loaded && (
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
+};
 
 interface ProductCardProps {
   product: DBProduct;
@@ -72,12 +90,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={`/product/${product.slug}`}
                 className="min-w-0 shrink-0 grow-0 basis-full h-full"
               >
-                <img
-                  src={img}
-                  alt={`${product.name} ${i + 1}`}
-                  className="w-full h-full object-contain bg-white"
-                  loading="lazy"
-                />
+                <ProductImage src={img} alt={`${product.name} ${i + 1}`} />
               </Link>
             ))}
           </div>

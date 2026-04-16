@@ -280,6 +280,13 @@
     "backToHome": "Uz sākumu",
     "continueShopping": "Turpināt iepirkties"
   },
+  "cookies": {
+    "title": "Sīkdatņu izmantošana",
+    "description": "Mēs izmantojam sīkdatnes, lai uzlabotu jūsu pārlūkošanas pieredzi, analizētu vietnes apmeklējumu un nodrošinātu vietnes funkcionalitāti. Turpinot lietot šo vietni, jūs piekrītat sīkdatņu izmantošanai.",
+    "learnMore": "Uzzināt vairāk",
+    "accept": "Pieņemt visas",
+    "decline": "Tikai nepieciešamās"
+  },
   "language": {
     "lv": "LV",
     "en": "EN"

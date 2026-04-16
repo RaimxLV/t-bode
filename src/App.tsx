@@ -11,6 +11,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { CookieConsent } from "@/components/CookieConsent";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded routes for code splitting
@@ -23,6 +24,7 @@ const Admin = lazy(() => import("./pages/Admin.tsx"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,7 @@ const App = () => (
               <DynamicLang />
               <ScrollToTop />
               <CartSidebar />
+              <CookieConsent />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -63,6 +66,7 @@ const App = () => (
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
