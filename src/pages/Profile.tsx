@@ -15,6 +15,7 @@ import { useWishlist } from "@/context/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ProductCard } from "@/components/ProductCard";
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -46,6 +47,20 @@ const Profile = () => {
     loadProfile();
     loadOrders();
   }, [user, authLoading]);
+
+  useEffect(() => {
+    if (!user) return;
+    const ids = Array.from(wishlistIds);
+    if (ids.length === 0) {
+      setWishlistProducts([]);
+      return;
+    }
+    setLoadingWishlist(true);
+    supabase.from("products").select("*").in("id", ids).then(({ data }) => {
+      setWishlistProducts(data || []);
+      setLoadingWishlist(false);
+    });
+  }, [user, wishlistIds]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -247,6 +262,30 @@ const Profile = () => {
                         )}
                       </CardContent>
                     </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="wishlist">
+              {loadingWishlist ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => <Skeleton key={i} className="h-64 w-full rounded-lg" />)}
+                </div>
+              ) : wishlistProducts.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <Heart className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground font-body">{t("profile.noWishlist", "Vēlmju saraksts ir tukšs")}</p>
+                    <Button variant="outline" onClick={() => navigate("/collection")} className="mt-4">
+                      {t("profile.browseProducts", "Pārlūkot produktus")}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {wishlistProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
               )}
