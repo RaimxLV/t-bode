@@ -37,25 +37,37 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const { data: allCategories = [] } = useCategories();
 
-  const handleAutoTranslate = async (field: "name" | "description") => {
+  const handleAutoTranslate = async (field: "name" | "description", direction: "lv-en" | "en-lv") => {
     if (!product) return;
-    const sourceText = field === "name" ? (product.name_lv || product.name) : (product.description_lv || product.description);
+    const isLvToEn = direction === "lv-en";
+    const sourceText = field === "name"
+      ? (isLvToEn ? (product.name_lv || product.name) : product.name_en)
+      : (isLvToEn ? (product.description_lv || product.description) : product.description_en);
     if (!sourceText?.trim()) {
-      toast.error(t("admin.translateEmpty", "Vispirms ievadi tekstu latviski"));
+      toast.error(t("admin.translateEmpty", isLvToEn ? "Vispirms ievadi tekstu latviski" : "Vispirms ievadi tekstu angliski"));
       return;
     }
     setTranslating(field);
     try {
       const { data, error } = await supabase.functions.invoke("translate-product", {
-        body: { text: sourceText, from: "lv", to: "en", isHtml: field === "description" },
+        body: {
+          text: sourceText,
+          from: isLvToEn ? "lv" : "en",
+          to: isLvToEn ? "en" : "lv",
+          isHtml: field === "description",
+        },
       });
       if (error) throw error;
       const translated = data?.translated;
       if (!translated) throw new Error("No translation returned");
       if (field === "name") {
-        onProductChange({ ...product, name_en: translated });
+        onProductChange(isLvToEn
+          ? { ...product, name_en: translated }
+          : { ...product, name_lv: translated, name: translated });
       } else {
-        onProductChange({ ...product, description_en: translated });
+        onProductChange(isLvToEn
+          ? { ...product, description_en: translated }
+          : { ...product, description_lv: translated, description: translated });
       }
       toast.success(t("admin.translateSuccess", "Iztulkots!"));
     } catch (e: any) {
