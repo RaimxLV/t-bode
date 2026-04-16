@@ -368,33 +368,38 @@ const Admin = () => {
         </Tabs>
       </main>
 
-      {/* Mobile bottom navigation */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border flex justify-around py-1.5 safe-bottom">
-        {[
-          { value: "design", icon: Brush, label: "Dizains" },
-          { value: "collection", icon: ShoppingBag, label: "Kolekcija" },
-          { value: "orders", icon: Package, label: "Pasūtījumi" },
-          { value: "stats", icon: BarChart3, label: "Stat." },
-          { value: "customers", icon: Users, label: "Klienti" },
-          { value: "categories", icon: FolderTree, label: "Kat." },
-          { value: "faq", icon: HelpCircle, label: "FAQ" },
-          { value: "access", icon: UserCheck, label: "Piekļuve" },
-        ].map(({ value, icon: Icon, label }) => (
-          <button
-            key={value}
-            onClick={() => { setActiveTab(value); setAdminCategoryFilter("all"); }}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-body transition-colors ${
-              activeTab === value ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <Icon className="w-5 h-5" />
-            {label}
-          </button>
-        ))}
+      {/* Mobile bottom navigation — scrollable for 8 tabs */}
+      <nav
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border overflow-x-auto"
+        style={{ paddingBottom: "max(0.375rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex items-stretch min-w-max px-1 pt-1.5">
+          {[
+            { value: "design", icon: Brush, label: "Dizains" },
+            { value: "collection", icon: ShoppingBag, label: "Kolekc." },
+            { value: "orders", icon: Package, label: "Pasūt." },
+            { value: "stats", icon: BarChart3, label: "Stat." },
+            { value: "customers", icon: Users, label: "Klienti" },
+            { value: "categories", icon: FolderTree, label: "Kat." },
+            { value: "faq", icon: HelpCircle, label: "FAQ" },
+            { value: "access", icon: UserCheck, label: "Piekļ." },
+          ].map(({ value, icon: Icon, label }) => (
+            <button
+              key={value}
+              onClick={() => { setActiveTab(value); setAdminCategoryFilter("all"); }}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-body transition-colors shrink-0 min-w-[60px] ${
+                activeTab === value ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              {label}
+            </button>
+          ))}
+        </div>
       </nav>
 
-      {/* Bottom padding for mobile nav */}
-      <div className="sm:hidden h-16" />
+      {/* Bottom padding for mobile nav (extra for PWA safe area) */}
+      <div className="sm:hidden h-20" />
 
       {dialogOpen && (
         <Suspense fallback={null}>
