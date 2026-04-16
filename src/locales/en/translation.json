@@ -71,7 +71,8 @@
     "collectionDesc": "Ready-made designs inspired by Latvia — grab your favourite and go.",
     "customize": "Customize",
     "selectOptions": "Select options",
-    "noProducts": "No products found"
+    "noProducts": "No products found",
+    "outOfStock": "Out of stock"
   },
   "categories": {
     "all": "All Products",
