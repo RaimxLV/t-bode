@@ -223,12 +223,35 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
                   {isExpanded && (
                     <div className="border-t border-border px-3 sm:px-4 pb-4 pt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                      {order.is_business && (
+                        <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 space-y-1">
+                          <p className="text-xs font-semibold font-body text-blue-900 flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5" /> Juridiskās personas dati
+                          </p>
+                          {order.company_name && <p className="text-xs text-blue-900 font-body">🏢 {order.company_name}</p>}
+                          {order.company_reg_number && <p className="text-xs text-blue-900 font-body">📄 Reģ. Nr.: {order.company_reg_number}</p>}
+                          {order.company_vat_number && <p className="text-xs text-blue-900 font-body">💼 PVN Nr.: {order.company_vat_number}</p>}
+                          {order.company_address && <p className="text-xs text-blue-900 font-body">📍 {order.company_address}</p>}
+                          {order.stripe_invoice_pdf && (
+                            <a
+                              href={order.stripe_invoice_pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-blue-700 underline font-body mt-1"
+                            >
+                              <FileText className="w-3.5 h-3.5" /> Lejupielādēt rēķinu (PDF)
+                            </a>
+                          )}
+                        </div>
+                      )}
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <p className="text-xs font-semibold font-body text-foreground">Piegādes informācija</p>
                           {order.shipping_name && <p className="text-xs text-muted-foreground font-body">👤 {order.shipping_name} · {order.shipping_phone}</p>}
                           {order.shipping_address && <p className="text-xs text-muted-foreground font-body">📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>}
                           {order.omniva_pickup_point && <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>}
+                          {order.guest_email && <p className="text-xs text-muted-foreground font-body">✉️ {order.guest_email}</p>}
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
                         </div>
                         <div className="flex flex-col items-start sm:items-end gap-2">
