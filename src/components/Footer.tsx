@@ -1,5 +1,5 @@
 import { Lock, MapPin, Instagram, Facebook, Mail, Phone } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
 
@@ -27,8 +27,8 @@ export const Footer = () => {
           <div>
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.shop")}</h4>
             <ul className="space-y-3 text-sm font-body">
-              <li><a href="/design" className="text-gray-400 hover:text-white transition-colors">{t("footer.designYourOwn")}</a></li>
-              <li><a href="/collection" className="text-gray-400 hover:text-white transition-colors">{t("footer.ourCollection")}</a></li>
+              <li><Link to="/design" className="text-gray-400 hover:text-white transition-colors">{t("footer.designYourOwn")}</Link></li>
+              <li><Link to="/collection" className="text-gray-400 hover:text-white transition-colors">{t("footer.ourCollection")}</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">{t("footer.news")}</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white transition-colors">{t("footer.giftCards")}</a></li>
             </ul>
@@ -78,8 +78,8 @@ export const Footer = () => {
         <div className="container mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500 font-body">{t("footer.copyright")}</p>
           <div className="flex items-center gap-5 text-xs font-body">
-            <a href="/privacy" className="text-gray-500 hover:text-white transition-colors">{t("footer.privacy")}</a>
-            <a href="#" className="text-gray-500 hover:text-white transition-colors">{t("footer.terms")}</a>
+            <Link to="/privacy" className="text-gray-500 hover:text-white transition-colors">{t("footer.privacy")}</Link>
+            <Link to="/terms" className="text-gray-500 hover:text-white transition-colors">{t("footer.terms")}</Link>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-gray-500 border border-gray-700 rounded px-2 py-1 font-body">VISA</span>

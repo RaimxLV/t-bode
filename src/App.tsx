@@ -25,6 +25,7 @@ const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
+const Terms = lazy(() => import("./pages/Terms.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,11 @@ const App = () => (
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/privatuma-politika" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/terms-and-conditions" element={<Terms />} />
+                  <Route path="/noteikumi" element={<Terms />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
