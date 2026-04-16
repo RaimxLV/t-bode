@@ -198,8 +198,14 @@ export type Database = {
       }
       orders: {
         Row: {
+          company_address: string | null
+          company_name: string | null
+          company_reg_number: string | null
+          company_vat_number: string | null
           created_at: string
+          guest_email: string | null
           id: string
+          is_business: boolean
           notes: string | null
           omniva_pickup_point: string | null
           order_number: number
@@ -209,14 +215,22 @@ export type Database = {
           shipping_phone: string | null
           shipping_zip: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_invoice_id: string | null
+          stripe_invoice_pdf: string | null
           stripe_session_id: string | null
           total: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
+          company_address?: string | null
+          company_name?: string | null
+          company_reg_number?: string | null
+          company_vat_number?: string | null
           created_at?: string
+          guest_email?: string | null
           id?: string
+          is_business?: boolean
           notes?: string | null
           omniva_pickup_point?: string | null
           order_number?: number
@@ -226,14 +240,22 @@ export type Database = {
           shipping_phone?: string | null
           shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_invoice_id?: string | null
+          stripe_invoice_pdf?: string | null
           stripe_session_id?: string | null
           total?: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
+          company_address?: string | null
+          company_name?: string | null
+          company_reg_number?: string | null
+          company_vat_number?: string | null
           created_at?: string
+          guest_email?: string | null
           id?: string
+          is_business?: boolean
           notes?: string | null
           omniva_pickup_point?: string | null
           order_number?: number
@@ -243,10 +265,12 @@ export type Database = {
           shipping_phone?: string | null
           shipping_zip?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_invoice_id?: string | null
+          stripe_invoice_pdf?: string | null
           stripe_session_id?: string | null
           total?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -363,6 +387,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
