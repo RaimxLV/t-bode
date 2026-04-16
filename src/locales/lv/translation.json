@@ -277,9 +277,12 @@
   "payment": {
     "successTitle": "Maksājums veiksmīgs!",
     "successDesc": "Paldies par jūsu pasūtījumu. Mēs sāksim tā apstrādi nekavējoties.",
+    "successDescGuest": "Paldies par jūsu pasūtījumu! Apstiprinājums un rēķins (ja attiecināms) ir nosūtīts uz jūsu e-pastu.",
     "orderId": "Pasūtījuma ID",
     "backToHome": "Uz sākumu",
-    "continueShopping": "Turpināt iepirkties"
+    "continueShopping": "Turpināt iepirkties",
+    "viewInProfile": "Skatīt manā profilā",
+    "createAccountHint": "Vēlies sekot līdzi pasūtījumam? Izveido kontu ar to pašu e-pastu."
   },
   "cookies": {
     "title": "Sīkdatņu izmantošana",
