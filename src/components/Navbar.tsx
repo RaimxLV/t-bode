@@ -64,7 +64,7 @@ export const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           <button
             onClick={toggleLanguage}
             className="px-2 py-1 text-xs font-body font-bold text-white/70 hover:text-white transition-colors border border-white/20 rounded"
@@ -73,7 +73,7 @@ export const Navbar = () => {
           </button>
 
 {user ? (
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-0 sm:gap-0.5">
               {showAdmin && (
                 <button
                   onClick={() => navigate("/admin")}
@@ -85,7 +85,7 @@ export const Navbar = () => {
               )}
               <button
                 onClick={() => navigate("/profile")}
-                className="p-2 text-white/70 hover:text-white transition-colors"
+                className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
                 title={t("profile.title", "Mans profils")}
                 aria-label={t("profile.title", "Mans profils")}
               >
@@ -93,7 +93,7 @@ export const Navbar = () => {
               </button>
               <button
                 onClick={signOut}
-                className="p-2 text-white/70 hover:text-white transition-colors"
+                className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
                 title={t("auth.signOut", "Izrakstīties")}
                 aria-label={t("auth.signOut", "Izrakstīties")}
               >
@@ -103,7 +103,7 @@ export const Navbar = () => {
           ) : (
             <button
               onClick={() => navigate("/auth")}
-              className="p-2 text-white/70 hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
               title={t("auth.login")}
               aria-label={t("auth.login")}
             >
@@ -111,7 +111,7 @@ export const Navbar = () => {
             </button>
           )}
           <button
-            className="relative p-2 text-white/70 hover:text-white transition-colors"
+            className="relative p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
             onClick={() => setCartOpen(true)}
             aria-label={t("cart.openCart", "Atvērt grozu") + (totalItems > 0 ? ` (${totalItems})` : "")}
           >
@@ -123,7 +123,7 @@ export const Navbar = () => {
             )}
           </button>
           <button
-            className="lg:hidden p-2 text-white/70"
+            className="lg:hidden p-1.5 sm:p-2 text-white/70"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? t("nav.closeMenu", "Aizvērt izvēlni") : t("nav.openMenu", "Atvērt izvēlni")}
             aria-expanded={isOpen}
