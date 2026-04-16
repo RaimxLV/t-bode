@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Package, Save } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -26,6 +27,7 @@ const ORDER_STATUS_COLORS: Record<string, string> = {
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
+  const { productIds: wishlistIds, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -35,6 +37,8 @@ const Profile = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
+  const [loadingWishlist, setLoadingWishlist] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
