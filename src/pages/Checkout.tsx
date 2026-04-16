@@ -79,6 +79,8 @@ const Checkout = () => {
     return locations.filter((loc) => loc.NAME.toLowerCase().includes(q) || loc.A1_NAME?.toLowerCase().includes(q) || loc.A5_NAME?.toLowerCase().includes(q)).slice(0, 20);
   }, [locations, omnivaSearch]);
 
+  const appOriginUrl = new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\/$/, "");
+
   const shippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
   const orderTotal = totalPrice + shippingCost;
 
@@ -182,7 +184,7 @@ const Checkout = () => {
         body: {
           order_id: order.id,
           items: stripeItems,
-          origin_url: window.location.origin,
+          origin_url: appOriginUrl,
           guest_email: user ? null : form.email.trim(),
           business: isBusiness ? {
             is_business: true,
