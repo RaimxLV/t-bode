@@ -48,6 +48,20 @@ const Profile = () => {
     loadOrders();
   }, [user, authLoading]);
 
+  useEffect(() => {
+    if (!user) return;
+    const ids = Array.from(wishlistIds);
+    if (ids.length === 0) {
+      setWishlistProducts([]);
+      return;
+    }
+    setLoadingWishlist(true);
+    supabase.from("products").select("*").in("id", ids).then(({ data }) => {
+      setWishlistProducts(data || []);
+      setLoadingWishlist(false);
+    });
+  }, [user, wishlistIds]);
+
   const loadProfile = async () => {
     if (!user) return;
     setLoadingProfile(true);
