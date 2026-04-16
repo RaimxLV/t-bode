@@ -233,26 +233,26 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           {/* Bilingual descriptions in tabs */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="font-body text-sm">{t("admin.description")}</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleAutoTranslate("description")}
-                disabled={translating === "description"}
-              >
-                {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
-                {t("admin.autoTranslateDesc", "LV → EN")}
-              </Button>
-            </div>
+            <Label className="font-body text-sm mb-2 block">{t("admin.description")}</Label>
             <Tabs defaultValue="lv">
               <TabsList className="mb-2">
                 <TabsTrigger value="lv">LV</TabsTrigger>
                 <TabsTrigger value="en">EN</TabsTrigger>
               </TabsList>
               <TabsContent value="lv">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleAutoTranslate("description", "en-lv")}
+                    disabled={translating === "description"}
+                  >
+                    {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
+                    EN → LV
+                  </Button>
+                </div>
                 <RichTextEditor
                   value={product.description_lv || product.description || ""}
                   onChange={(html) =>
@@ -261,6 +261,19 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                 />
               </TabsContent>
               <TabsContent value="en">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleAutoTranslate("description", "lv-en")}
+                    disabled={translating === "description"}
+                  >
+                    {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
+                    LV → EN
+                  </Button>
+                </div>
                 <RichTextEditor
                   value={product.description_en || ""}
                   onChange={(html) => onProductChange({ ...product, description_en: html })}
