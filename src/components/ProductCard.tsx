@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -72,12 +72,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={`/product/${product.slug}`}
                 className="min-w-0 shrink-0 grow-0 basis-full h-full"
               >
-                <img
-                  src={img}
-                  alt={`${product.name} ${i + 1}`}
-                  className="w-full h-full object-contain bg-white"
-                  loading="lazy"
-                />
+                <ProductImage src={img} alt={`${product.name} ${i + 1}`} />
               </Link>
             ))}
           </div>
