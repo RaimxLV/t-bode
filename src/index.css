@@ -101,6 +101,12 @@
   }
 }
 
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 /* Zakeke designer iframe sizing */
 #zakeke-container iframe {
   width: 100% !important;

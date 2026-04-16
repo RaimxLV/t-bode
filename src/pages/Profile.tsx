@@ -123,20 +123,21 @@ const Profile = () => {
           <h1 className="text-3xl md:text-4xl mb-6">{t("profile.title", "Mans profils")}</h1>
 
           <Tabs defaultValue="profile">
-            <TabsList className="mb-6">
-              <TabsTrigger value="profile" className="gap-2">
-                <User className="w-4 h-4" />
-                {t("profile.profileTab", "Profils")}
+            <TabsList className="mb-6 w-full grid grid-cols-3 h-auto">
+              <TabsTrigger value="profile" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
+                <User className="w-4 h-4 shrink-0" />
+                <span className="truncate">{t("profile.profileTab", "Profils")}</span>
               </TabsTrigger>
-              <TabsTrigger value="orders" className="gap-2">
-                <Package className="w-4 h-4" />
-                {t("profile.ordersTab", "Pasūtījumi")}
-                {orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}
+              <TabsTrigger value="orders" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
+                <Package className="w-4 h-4 shrink-0" />
+                <span className="truncate">{t("profile.ordersTab", "Pasūtījumi")}</span>
+                {orders.length > 0 && <Badge variant="secondary" className="ml-0.5 text-[10px] px-1.5 h-4">{orders.length}</Badge>}
               </TabsTrigger>
-              <TabsTrigger value="wishlist" className="gap-2">
-                <Heart className="w-4 h-4" />
-                {t("profile.wishlistTab", "Vēlmju saraksts")}
-                {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{wishlistIds.size}</Badge>}
+              <TabsTrigger value="wishlist" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
+                <Heart className="w-4 h-4 shrink-0" />
+                <span className="truncate hidden sm:inline">{t("profile.wishlistTab", "Vēlmju saraksts")}</span>
+                <span className="truncate sm:hidden">{t("profile.wishlistTabShort", "Vēlmes")}</span>
+                {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-0.5 text-[10px] px-1.5 h-4">{wishlistIds.size}</Badge>}
               </TabsTrigger>
             </TabsList>
 
