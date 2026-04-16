@@ -78,7 +78,7 @@ export const Footer = () => {
         <div className="container mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-500 font-body">{t("footer.copyright")}</p>
           <div className="flex items-center gap-5 text-xs font-body">
-            <a href="#" className="text-gray-500 hover:text-white transition-colors">{t("footer.privacy")}</a>
+            <a href="/privacy" className="text-gray-500 hover:text-white transition-colors">{t("footer.privacy")}</a>
             <a href="#" className="text-gray-500 hover:text-white transition-colors">{t("footer.terms")}</a>
           </div>
           <div className="flex items-center gap-3">

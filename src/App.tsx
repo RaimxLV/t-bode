@@ -54,6 +54,7 @@ const App = () => (
               <DynamicLang />
               <ScrollToTop />
               <CartSidebar />
+              <CookieConsent />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -65,6 +66,7 @@ const App = () => (
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
