@@ -260,14 +260,6 @@ const Admin = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
-          <StatCard icon={Layers} label="Kopā produkti" value={stats.total} />
-          <StatCard icon={Brush} label="Dizaina produkti" value={stats.activeDesigns} accent="bg-blue-50 text-blue-600" />
-          <StatCard icon={ShoppingBag} label="Kolekcijas produkti" value={stats.collectionCount} accent="bg-purple-50 text-purple-600" />
-          <StatCard icon={AlertTriangle} label="Nav noliktavā" value={stats.outOfStock} accent="bg-destructive/10 text-destructive" />
-          <StatCard icon={Clock} label="Gaida apstiprinājumu" value={stats.pendingOrders} accent={stats.pendingOrders > 0 ? "bg-yellow-50 text-yellow-600" : "bg-muted text-muted-foreground"} />
-          <StatCard icon={Euro} label="Kopējie ieņēmumi" value={`${stats.totalRevenue.toFixed(2)} €`} accent="bg-green-50 text-green-600" />
-        </div>
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
           {/* Fixed bottom nav on mobile, top tabs on desktop */}
