@@ -58,7 +58,7 @@ const TypewriterGlow = forwardRef<HTMLSpanElement, { text: string; delay: number
 TypewriterGlow.displayName = "TypewriterGlow";
 
 export const HeroAnimatedText = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
@@ -77,13 +77,15 @@ export const HeroAnimatedText = () => {
 
   return (
     <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4 pointer-events-none">
-      <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+      {/* key={i18n.language} resets animations when user switches language */}
+      <p key={`l1-${i18n.language}`} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
         {words.map((w, i) => (
-          <WordPow key={i} word={w} delay={i * 0.12} />
+          <WordPow key={`${i18n.language}-${i}`} word={w} delay={i * 0.12} />
         ))}
       </p>
 
       <motion.p
+        key={`l2-${i18n.language}`}
         className="text-sm sm:text-base md:text-lg lg:text-xl font-body text-white/85 max-w-xl text-center leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
@@ -93,12 +95,13 @@ export const HeroAnimatedText = () => {
       </motion.p>
 
       <motion.p
+        key={`l3-${i18n.language}`}
         className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-display font-bold text-white text-center tracking-widest uppercase drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: line3Delay, duration: 0.3 }}
       >
-        <TypewriterGlow text={line3} delay={line3Delay} glowPhrase={glowPhrase} />
+        <TypewriterGlow key={`tw-${i18n.language}`} text={line3} delay={line3Delay} glowPhrase={glowPhrase} />
       </motion.p>
     </div>
   );
