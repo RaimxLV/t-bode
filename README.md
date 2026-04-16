@@ -1,3 +1,5 @@
-# Welcome to your Lovable project
+# T-Bode
 
-TODO: Document your project here
+T-Bode - personalizētu T-kreklu interneta veikals.
+
+Custom apparel e-commerce platform by SIA Ervitex, Riga, Latvia.
