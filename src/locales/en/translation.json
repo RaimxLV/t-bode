@@ -280,6 +280,13 @@
     "backToHome": "Back to Home",
     "continueShopping": "Continue Shopping"
   },
+  "cookies": {
+    "title": "Cookie Usage",
+    "description": "We use cookies to improve your browsing experience, analyze site traffic, and ensure website functionality. By continuing to use this site, you agree to the use of cookies.",
+    "learnMore": "Learn more",
+    "accept": "Accept all",
+    "decline": "Essential only"
+  },
   "language": {
     "lv": "LV",
     "en": "EN"
