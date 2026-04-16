@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
+import { getProductName } from "@/hooks/useProducts";
 
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
@@ -31,7 +32,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayName = getProductName(product, i18n.language);
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const isAdmin = !!(onEdit || onDelete);
 
