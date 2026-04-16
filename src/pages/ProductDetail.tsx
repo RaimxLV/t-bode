@@ -12,6 +12,8 @@ import { useProductBySlug, getProductName, getProductDescription } from "@/hooks
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
+import { RelatedProducts } from "@/components/RelatedProducts";
+import { WishlistButton } from "@/components/WishlistButton";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
