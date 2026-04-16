@@ -120,7 +120,7 @@ const Auth = () => {
       </div>
 
       {/* Centered card with bottom padding so cookie banner doesn't overlap */}
-      <div className="flex-1 flex items-start justify-center px-4 pb-56 pt-4 sm:pt-12">
+      <div className="flex-1 flex items-center justify-center px-4 pb-8 pt-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

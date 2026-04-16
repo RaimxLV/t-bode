@@ -2,21 +2,27 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const COOKIE_KEY = "tbode_cookie_consent";
+const HIDDEN_ROUTES = ["/auth", "/checkout", "/payment-success"];
 
 export const CookieConsent = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (HIDDEN_ROUTES.some((r) => location.pathname.startsWith(r))) {
+      setVisible(false);
+      return;
+    }
     const consent = localStorage.getItem(COOKIE_KEY);
     if (!consent) {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [location.pathname]);
 
   const accept = () => {
     localStorage.setItem(COOKIE_KEY, "accepted");
