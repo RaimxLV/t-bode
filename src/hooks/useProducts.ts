@@ -10,8 +10,12 @@ export interface ColorVariant {
 export interface DBProduct {
   id: string;
   name: string;
+  name_lv: string | null;
+  name_en: string | null;
   slug: string;
   description: string | null;
+  description_lv: string | null;
+  description_en: string | null;
   price: number;
   category: string;
   image_url: string | null;
@@ -23,6 +27,21 @@ export interface DBProduct {
   zakeke_model_code: string | null;
   created_at: string;
   updated_at: string;
+}
+
+/** Returns the product name in the current language with fallback */
+export function getProductName(product: Pick<DBProduct, "name" | "name_lv" | "name_en">, lang: string): string {
+  if (lang === "en") return product.name_en || product.name_lv || product.name;
+  return product.name_lv || product.name || product.name_en || "";
+}
+
+/** Returns the product description in the current language with fallback */
+export function getProductDescription(
+  product: Pick<DBProduct, "description" | "description_lv" | "description_en">,
+  lang: string
+): string {
+  if (lang === "en") return product.description_en || product.description_lv || product.description || "";
+  return product.description_lv || product.description || product.description_en || "";
 }
 
 async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {

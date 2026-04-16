@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
+import { getProductName } from "@/hooks/useProducts";
 
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
@@ -31,7 +32,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayName = getProductName(product, i18n.language);
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const isAdmin = !!(onEdit || onDelete);
 
@@ -90,7 +92,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={`/product/${product.slug}`}
                 className="min-w-0 shrink-0 grow-0 basis-full h-full"
               >
-                <ProductImage src={img} alt={`${product.name} ${i + 1}`} />
+                <ProductImage src={img} alt={`${displayName} ${i + 1}`} />
               </Link>
             ))}
           </div>
@@ -141,7 +143,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         <div className="flex-1 min-h-0">
           <Link to={`/product/${product.slug}`}>
             <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
-              {product.name}
+              {displayName}
             </h3>
           </Link>
 

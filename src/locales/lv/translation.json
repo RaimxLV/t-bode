@@ -71,7 +71,8 @@
     "collectionDesc": "Gatavi dizaini, iedvesmoti no Latvijas — izvēlies savu favorītu un ej.",
     "customize": "Personalizēt",
     "selectOptions": "Izvēlēties",
-    "noProducts": "Produkti netika atrasti"
+    "noProducts": "Produkti netika atrasti",
+    "outOfStock": "Nav noliktavā"
   },
   "categories": {
     "all": "Visi produkti",

@@ -8,17 +8,18 @@ import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette } from "lucide-react";
+import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; slug: string; description: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", slug: "", description: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, zakeke_model_code: "" };
+export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
@@ -31,9 +32,38 @@ interface ProductDialogProps {
 export const ProductDialog = ({ open, onOpenChange, product, onProductChange, onSaved }: ProductDialogProps) => {
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState<"name" | "description" | null>(null);
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const { data: allCategories = [] } = useCategories();
+
+  const handleAutoTranslate = async (field: "name" | "description") => {
+    if (!product) return;
+    const sourceText = field === "name" ? (product.name_lv || product.name) : (product.description_lv || product.description);
+    if (!sourceText?.trim()) {
+      toast.error(t("admin.translateEmpty", "Vispirms ievadi tekstu latviski"));
+      return;
+    }
+    setTranslating(field);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-product", {
+        body: { text: sourceText, from: "lv", to: "en", isHtml: field === "description" },
+      });
+      if (error) throw error;
+      const translated = data?.translated;
+      if (!translated) throw new Error("No translation returned");
+      if (field === "name") {
+        onProductChange({ ...product, name_en: translated });
+      } else {
+        onProductChange({ ...product, description_en: translated });
+      }
+      toast.success(t("admin.translateSuccess", "Iztulkots!"));
+    } catch (e: any) {
+      toast.error(t("admin.translateError", "Tulkošanas kļūda") + ": " + (e.message || "unknown"));
+    } finally {
+      setTranslating(null);
+    }
+  };
 
   if (!product) return null;
 
@@ -54,7 +84,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = { name: product.name, slug: product.slug, description: product.description || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, zakeke_model_code: product.zakeke_model_code || null };
+    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, zakeke_model_code: product.zakeke_model_code || null };
     if (product.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) toast.error(t("admin.saveError") + ": " + error.message);

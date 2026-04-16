@@ -1,0 +1,5 @@
+ALTER TABLE public.products
+  ADD COLUMN IF NOT EXISTS name_lv TEXT,
+  ADD COLUMN IF NOT EXISTS name_en TEXT,
+  ADD COLUMN IF NOT EXISTS description_lv TEXT,
+  ADD COLUMN IF NOT EXISTS description_en TEXT;
