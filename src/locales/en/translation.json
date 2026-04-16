@@ -306,6 +306,25 @@
     "backToHome": "Back to Home",
     "continueShopping": "Continue Shopping"
   },
+  "profile": {
+    "back": "Back",
+    "title": "My profile",
+    "profileTab": "Profile",
+    "ordersTab": "Orders",
+    "wishlistTab": "Wishlist",
+    "personalInfo": "Personal information",
+    "email": "Email",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Enter your full name",
+    "phone": "Phone",
+    "save": "Save",
+    "saving": "Saving...",
+    "saved": "Profile saved!",
+    "saveError": "Failed to save profile",
+    "noOrders": "You don't have any orders yet",
+    "startShopping": "Start shopping",
+    "invoice": "Invoice"
+  },
   "cookies": {
     "title": "Cookie Usage",
     "description": "We use cookies to improve your browsing experience, analyze site traffic, and ensure website functionality. By continuing to use this site, you agree to the use of cookies.",

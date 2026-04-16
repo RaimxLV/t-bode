@@ -291,6 +291,25 @@
     "viewInProfile": "Skatīt manā profilā",
     "createAccountHint": "Vēlies sekot līdzi pasūtījumam? Izveido kontu ar to pašu e-pastu."
   },
+  "profile": {
+    "back": "Atpakaļ",
+    "title": "Mans profils",
+    "profileTab": "Profils",
+    "ordersTab": "Pasūtījumi",
+    "wishlistTab": "Vēlmju saraksts",
+    "personalInfo": "Personīgā informācija",
+    "email": "E-pasts",
+    "fullName": "Vārds, Uzvārds",
+    "fullNamePlaceholder": "Ievadiet vārdu un uzvārdu",
+    "phone": "Telefons",
+    "save": "Saglabāt",
+    "saving": "Saglabā...",
+    "saved": "Profils saglabāts!",
+    "saveError": "Neizdevās saglabāt profilu",
+    "noOrders": "Jums vēl nav pasūtījumu",
+    "startShopping": "Sākt iepirkties",
+    "invoice": "Rēķins"
+  },
   "cookies": {
     "title": "Sīkdatņu izmantošana",
     "description": "Mēs izmantojam sīkdatnes, lai uzlabotu jūsu pārlūkošanas pieredzi, analizētu vietnes apmeklējumu un nodrošinātu vietnes funkcionalitāti. Turpinot lietot šo vietni, jūs piekrītat sīkdatņu izmantošanai.",
