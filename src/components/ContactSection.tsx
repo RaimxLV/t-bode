@@ -168,6 +168,18 @@ export const ContactSection = () => {
             onSubmit={handleSubmit}
             className="space-y-5 bg-card rounded-xl p-6 md:p-8 border border-border shadow-sm"
           >
+            {/* Honeypot field — hidden from real users, bots will fill it */}
+            <div aria-hidden="true" className="absolute -left-[9999px] w-px h-px overflow-hidden">
+              <label htmlFor="contact_company_url">Company URL (leave blank)</label>
+              <input
+                id="contact_company_url"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium font-body mb-1.5">{t("contact.firstName")}</label>
