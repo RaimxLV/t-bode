@@ -64,9 +64,10 @@ const Admin = () => {
     total: products.length,
     outOfStock: products.filter((p) => !p.in_stock).length,
     activeDesigns: designProducts.length,
+    collectionCount: collectionProducts.length,
     pendingOrders: orders.filter((o: any) => o.status === "pending").length,
     totalRevenue: orders.filter((o: any) => o.status !== "cancelled").reduce((sum: number, o: any) => sum + Number(o.total), 0),
-  }), [products, designProducts, orders]);
+  }), [products, designProducts, collectionProducts, orders]);
 
   useEffect(() => {
     if (authLoading || adminLoading) return;
@@ -249,10 +250,11 @@ const Admin = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           <StatCard icon={Layers} label="Kopā produkti" value={stats.total} />
+          <StatCard icon={Brush} label="Dizaina produkti" value={stats.activeDesigns} accent="bg-blue-50 text-blue-600" />
+          <StatCard icon={ShoppingBag} label="Kolekcijas produkti" value={stats.collectionCount} accent="bg-purple-50 text-purple-600" />
           <StatCard icon={AlertTriangle} label="Nav noliktavā" value={stats.outOfStock} accent="bg-destructive/10 text-destructive" />
-          <StatCard icon={Brush} label="Aktīvie dizaini" value={stats.activeDesigns} accent="bg-blue-50 text-blue-600" />
           <StatCard icon={Clock} label="Gaida apstiprinājumu" value={stats.pendingOrders} accent={stats.pendingOrders > 0 ? "bg-yellow-50 text-yellow-600" : "bg-muted text-muted-foreground"} />
           <StatCard icon={Euro} label="Kopējie ieņēmumi" value={`${stats.totalRevenue.toFixed(2)} €`} accent="bg-green-50 text-green-600" />
         </div>
