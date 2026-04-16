@@ -1,5 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect, forwardRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const WordPow = forwardRef<HTMLSpanElement, { word: string; delay: number }>(({ word, delay }, ref) => (
   <motion.span
@@ -56,16 +57,17 @@ const TypewriterGlow = forwardRef<HTMLSpanElement, { text: string; delay: number
 });
 TypewriterGlow.displayName = "TypewriterGlow";
 
-const LINE1 = "Esi unikāls. Radi pats!";
-const LINE2 = "Krekls, hūdijs vai cepure – uztaisi savu stiliņu tūlīt. Tavs apģērbs ir tavs vēstījums pasaulei.";
-const LINE3 = "T-Bode: Tavs dizains – tavs stāsts.";
-const GLOW_PHRASE = "tavs stāsts.";
-
 export const HeroAnimatedText = () => {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
-  const words = LINE1.split(" ");
+  const line1 = t("hero.heroAnim.line1");
+  const line2 = t("hero.heroAnim.line2");
+  const line3 = t("hero.heroAnim.line3");
+  const glowPhrase = t("hero.heroAnim.glowPhrase");
+
+  const words = line1.split(" ");
   const line2Delay = words.length * 0.12 + 0.5;
   const line3Delay = line2Delay + 0.8;
 
@@ -87,7 +89,7 @@ export const HeroAnimatedText = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: line2Delay, duration: 0.7, ease: "easeOut" }}
       >
-        {LINE2}
+        {line2}
       </motion.p>
 
       <motion.p
@@ -96,7 +98,7 @@ export const HeroAnimatedText = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: line3Delay, duration: 0.3 }}
       >
-        <TypewriterGlow text={LINE3} delay={line3Delay} glowPhrase={GLOW_PHRASE} />
+        <TypewriterGlow text={line3} delay={line3Delay} glowPhrase={glowPhrase} />
       </motion.p>
     </div>
   );

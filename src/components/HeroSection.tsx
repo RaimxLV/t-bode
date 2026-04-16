@@ -2,7 +2,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import heroImage from "@/assets/hero.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 
@@ -10,23 +10,28 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  // Parallax: image moves slower than scroll
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
   return (
     <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
-      {/* Parallax image via framer-motion transform */}
+      {/* Preloaded hero image with fade-in */}
       <motion.img
         src={heroImage}
         alt="T-Bode hero"
         className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
         style={{ y: imgY }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: imageLoaded ? 1 : 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        onLoad={() => setImageLoaded(true)}
+        fetchPriority="high"
       />
       <div
         className="absolute inset-0"
@@ -37,7 +42,7 @@ export const HeroSection = () => {
         <div className="max-w-3xl text-center">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-3xl md:text-4xl lg:text-5xl leading-none tracking-tight text-white"
           >
@@ -47,16 +52,16 @@ export const HeroSection = () => {
           </motion.h1>
           <motion.h2
             initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-5xl lg:text-8xl leading-none mt-2 text-gradient-brand font-extrabold md:text-8xl border-none text-destructive bg-transparent whitespace-pre-line text-center"
           >
             {t("hero.line3")}
           </motion.h2>
-          <HeroAnimatedText />
+          {imageLoaded && <HeroAnimatedText />}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
             transition={{ duration: 0.8, delay: 0.9 }}
             className="mt-6 flex flex-col sm:flex-row gap-4 justify-center"
           >
