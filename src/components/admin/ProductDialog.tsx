@@ -37,25 +37,37 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const { data: allCategories = [] } = useCategories();
 
-  const handleAutoTranslate = async (field: "name" | "description") => {
+  const handleAutoTranslate = async (field: "name" | "description", direction: "lv-en" | "en-lv") => {
     if (!product) return;
-    const sourceText = field === "name" ? (product.name_lv || product.name) : (product.description_lv || product.description);
+    const isLvToEn = direction === "lv-en";
+    const sourceText = field === "name"
+      ? (isLvToEn ? (product.name_lv || product.name) : product.name_en)
+      : (isLvToEn ? (product.description_lv || product.description) : product.description_en);
     if (!sourceText?.trim()) {
-      toast.error(t("admin.translateEmpty", "Vispirms ievadi tekstu latviski"));
+      toast.error(t("admin.translateEmpty", isLvToEn ? "Vispirms ievadi tekstu latviski" : "Vispirms ievadi tekstu angliski"));
       return;
     }
     setTranslating(field);
     try {
       const { data, error } = await supabase.functions.invoke("translate-product", {
-        body: { text: sourceText, from: "lv", to: "en", isHtml: field === "description" },
+        body: {
+          text: sourceText,
+          from: isLvToEn ? "lv" : "en",
+          to: isLvToEn ? "en" : "lv",
+          isHtml: field === "description",
+        },
       });
       if (error) throw error;
       const translated = data?.translated;
       if (!translated) throw new Error("No translation returned");
       if (field === "name") {
-        onProductChange({ ...product, name_en: translated });
+        onProductChange(isLvToEn
+          ? { ...product, name_en: translated }
+          : { ...product, name_lv: translated, name: translated });
       } else {
-        onProductChange({ ...product, description_en: translated });
+        onProductChange(isLvToEn
+          ? { ...product, description_en: translated }
+          : { ...product, description_lv: translated, description: translated });
       }
       toast.success(t("admin.translateSuccess", "Iztulkots!"));
     } catch (e: any) {
@@ -140,8 +152,20 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
           {/* Bilingual name fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <Label className="font-body text-sm">{t("admin.productNameLv", "Nosaukums (LV)")}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => handleAutoTranslate("name", "en-lv")}
+                  disabled={translating === "name"}
+                  title="EN → LV"
+                >
+                  {translating === "name" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3 mr-1" />}
+                  EN → LV
+                </Button>
               </div>
               <Input
                 value={product.name_lv || ""}
@@ -166,11 +190,12 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                   variant="ghost"
                   size="sm"
                   className="h-6 px-2 text-xs"
-                  onClick={() => handleAutoTranslate("name")}
+                  onClick={() => handleAutoTranslate("name", "lv-en")}
                   disabled={translating === "name"}
+                  title="LV → EN"
                 >
                   {translating === "name" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3 mr-1" />}
-                  {t("admin.autoTranslate", "Auto-tulkot")}
+                  LV → EN
                 </Button>
               </div>
               <Input
@@ -208,26 +233,26 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           {/* Bilingual descriptions in tabs */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="font-body text-sm">{t("admin.description")}</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => handleAutoTranslate("description")}
-                disabled={translating === "description"}
-              >
-                {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
-                {t("admin.autoTranslateDesc", "LV → EN")}
-              </Button>
-            </div>
+            <Label className="font-body text-sm mb-2 block">{t("admin.description")}</Label>
             <Tabs defaultValue="lv">
               <TabsList className="mb-2">
                 <TabsTrigger value="lv">LV</TabsTrigger>
                 <TabsTrigger value="en">EN</TabsTrigger>
               </TabsList>
               <TabsContent value="lv">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleAutoTranslate("description", "en-lv")}
+                    disabled={translating === "description"}
+                  >
+                    {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
+                    EN → LV
+                  </Button>
+                </div>
                 <RichTextEditor
                   value={product.description_lv || product.description || ""}
                   onChange={(html) =>
@@ -236,6 +261,19 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                 />
               </TabsContent>
               <TabsContent value="en">
+                <div className="flex justify-end mb-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleAutoTranslate("description", "lv-en")}
+                    disabled={translating === "description"}
+                  >
+                    {translating === "description" ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Languages className="w-3 h-3 mr-1" />}
+                    LV → EN
+                  </Button>
+                </div>
                 <RichTextEditor
                   value={product.description_en || ""}
                   onChange={(html) => onProductChange({ ...product, description_en: html })}
