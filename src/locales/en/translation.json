@@ -277,6 +277,9 @@
   "payment": {
     "successTitle": "Payment Successful!",
     "successDesc": "Thank you for your order. We'll start processing it right away.",
+    "successDescGuest": "Thank you for your order! A confirmation and invoice (if applicable) has been sent to your email.",
+    "viewInProfile": "View in my profile",
+    "createAccountHint": "Want to track your order? Create an account with the same email.",
     "orderId": "Order ID",
     "backToHome": "Back to Home",
     "continueShopping": "Continue Shopping"
