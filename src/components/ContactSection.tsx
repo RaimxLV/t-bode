@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
@@ -24,6 +25,8 @@ export const ContactSection = () => {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  // Honeypot — real users never fill this. Bots usually do.
+  const [honeypot, setHoneypot] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const { t } = useTranslation();
 
@@ -46,6 +49,19 @@ export const ContactSection = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Honeypot trap — silently "succeed" to fool bots
+    if (honeypot.trim() !== "") {
+      setSubmitted(true);
+      return;
+    }
+
+    // Rate limit: max 3 submissions per 10 minutes per browser
+    const rl = checkRateLimit({ key: "contact_submit", max: 3, windowMs: 10 * 60 * 1000 });
+    if (!rl.allowed) {
+      toast.error(t("contact.rateLimited", { seconds: rl.retryAfter ?? 60 }));
+      return;
+    }
 
     const result = contactSchema.safeParse(form);
     if (!result.success) {
