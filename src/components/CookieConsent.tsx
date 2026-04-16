@@ -51,18 +51,15 @@ export const CookieConsent = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-display text-base sm:text-lg mb-1">
-                  {t("cookies.title", "Sīkdatņu izmantošana")}
+                  {t("cookies.title")}
                 </h3>
                 <p className="text-xs sm:text-sm text-muted-foreground font-body leading-relaxed mb-3 sm:mb-4">
-                  {t(
-                    "cookies.description",
-                    "Mēs izmantojam sīkdatnes, lai uzlabotu jūsu pārlūkošanas pieredzi, analizētu vietnes apmeklējumu un nodrošinātu vietnes funkcionalitāti. Turpinot lietot šo vietni, jūs piekrītat sīkdatņu izmantošanai."
-                  )}{" "}
+                  {t("cookies.description")}{" "}
                   <Link
                     to="/privacy"
                     className="underline text-foreground hover:text-primary transition-colors"
                   >
-                    {t("cookies.learnMore", "Uzzināt vairāk")}
+                    {t("cookies.learnMore")}
                   </Link>
                 </p>
                 <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -70,20 +67,20 @@ export const CookieConsent = () => {
                     onClick={accept}
                     className="px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-semibold font-body text-white transition-all hover:scale-105 bg-cta-red"
                   >
-                    {t("cookies.accept", "Pieņemt visas")}
+                    {t("cookies.accept")}
                   </button>
                   <button
                     onClick={decline}
                     className="px-4 sm:px-6 py-2 rounded-lg text-xs sm:text-sm font-semibold font-body border border-border text-foreground hover:bg-muted transition-all"
                   >
-                    {t("cookies.decline", "Tikai nepieciešamās")}
+                    {t("cookies.decline")}
                   </button>
                 </div>
               </div>
               <button
                 onClick={decline}
                 className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                aria-label="Close"
+                aria-label={t("cookies.close")}
               >
                 <X className="w-5 h-5" />
               </button>
