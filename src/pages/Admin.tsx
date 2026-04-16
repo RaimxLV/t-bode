@@ -295,19 +295,27 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="orders">
-            <OrdersList orders={orders} orderItems={orderItems} loading={loadingOrders} onRefresh={loadOrders} />
+            <Suspense fallback={<TabFallback />}>
+              <OrdersList orders={orders} orderItems={orderItems} loading={loadingOrders} onRefresh={loadOrders} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="faq">
-            <FAQManager faqs={faqs} loading={loadingFaqs} onRefresh={loadFaqs} />
+            <Suspense fallback={<TabFallback />}>
+              <FAQManager faqs={faqs} loading={loadingFaqs} onRefresh={loadFaqs} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="stats">
-            <ProductStats orders={orders} orderItems={orderItems} />
+            <Suspense fallback={<TabFallback />}>
+              <ProductStats orders={orders} orderItems={orderItems} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="categories">
-            <CategoryManager />
+            <Suspense fallback={<TabFallback />}>
+              <CategoryManager />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="access">
