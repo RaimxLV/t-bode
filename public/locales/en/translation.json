@@ -165,7 +165,20 @@
     "loginSuccess": "Successfully signed in!",
     "registerSuccess": "Check your email to confirm your account!",
     "authError": "Authentication error",
-    "googleError": "Google sign-in failed"
+    "googleError": "Google sign-in failed",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Forgot password?",
+    "forgotPasswordSubtitle": "Enter your email and we'll send you a link to reset your password.",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "If an account exists, a password reset email has been sent. Please also check your spam folder.",
+    "resetPasswordTitle": "New password",
+    "resetPasswordSubtitle": "Enter your new password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "updatePassword": "Update password",
+    "passwordUpdated": "Password successfully updated!",
+    "invalidResetLink": "Invalid or expired link. Please request a new password reset email.",
+    "backToLogin": "Back to sign in"
   },
   "admin": {
     "panel": "STAFF PANEL",
