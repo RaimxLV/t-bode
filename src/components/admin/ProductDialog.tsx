@@ -152,8 +152,20 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
           {/* Bilingual name fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <Label className="font-body text-sm">{t("admin.productNameLv", "Nosaukums (LV)")}</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => handleAutoTranslate("name", "en-lv")}
+                  disabled={translating === "name"}
+                  title="EN → LV"
+                >
+                  {translating === "name" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3 mr-1" />}
+                  EN → LV
+                </Button>
               </div>
               <Input
                 value={product.name_lv || ""}
@@ -178,11 +190,12 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                   variant="ghost"
                   size="sm"
                   className="h-6 px-2 text-xs"
-                  onClick={() => handleAutoTranslate("name")}
+                  onClick={() => handleAutoTranslate("name", "lv-en")}
                   disabled={translating === "name"}
+                  title="LV → EN"
                 >
                   {translating === "name" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Languages className="w-3 h-3 mr-1" />}
-                  {t("admin.autoTranslate", "Auto-tulkot")}
+                  LV → EN
                 </Button>
               </div>
               <Input
