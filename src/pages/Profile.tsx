@@ -133,6 +133,11 @@ const Profile = () => {
                 {t("profile.ordersTab", "Pasūtījumi")}
                 {orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}
               </TabsTrigger>
+              <TabsTrigger value="wishlist" className="gap-2">
+                <Heart className="w-4 h-4" />
+                {t("profile.wishlistTab", "Vēlmju saraksts")}
+                {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{wishlistIds.size}</Badge>}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile">
