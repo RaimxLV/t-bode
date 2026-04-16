@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/context/CartContext";
-import { useProductBySlug } from "@/hooks/useProducts";
+import { useProductBySlug, getProductName, getProductDescription } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
@@ -16,7 +16,9 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading } = useProductBySlug(slug);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const displayName = product ? getProductName(product, i18n.language) : "";
+  const displayDescription = product ? getProductDescription(product, i18n.language) : "";
 
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -72,10 +74,10 @@ const ProductDetail = () => {
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) return;
     addItem({
-      productId: product.id, name: product.name, price: product.price,
+      productId: product.id, name: displayName, price: product.price,
       image: displayImage || product.image_url || "", size: selectedSize, color: selectedColor, quantity, slug: product.slug,
     });
-    toast.success(t("productDetail.addedToCart", { name: product.name }));
+    toast.success(t("productDetail.addedToCart", { name: displayName }));
   };
 
   if (isLoading) {
@@ -131,7 +133,7 @@ const ProductDetail = () => {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxOpen(true); } }}
               >
                 <AnimatePresence mode="wait">
-                  <motion.img key={displayImage} src={displayImage} alt={product.name} className="w-full h-full object-contain bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                  <motion.img key={displayImage} src={displayImage} alt={displayName} className="w-full h-full object-contain bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
@@ -161,7 +163,7 @@ const ProductDetail = () => {
 
             <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="flex flex-col">
               <span className="text-xs font-body font-medium uppercase tracking-wider text-muted-foreground mb-2">{product.category}</span>
-              <h1 className="text-3xl md:text-4xl mb-4">{product.name}</h1>
+              <h1 className="text-3xl md:text-4xl mb-4">{displayName}</h1>
               <p className="text-3xl font-bold font-body mb-6" style={{ color: "hsl(var(--primary))" }}>
                 {product.price.toFixed(2).replace(".", ",")} €
               </p>
@@ -292,14 +294,14 @@ const ProductDetail = () => {
         initialIndex={selectedImageIdx}
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
-        alt={product.name}
+        alt={displayName}
       />
       <Footer />
       {designerOpen && product.customizable && (
         <ZakekeDesigner
           productId={product.id}
           zakekeModelCode={product.zakeke_model_code || product.slug}
-          productName={product.name}
+          productName={displayName}
           productPrice={product.price}
           productSlug={product.slug}
           productImage={displayImage || product.image_url || ""}
