@@ -369,26 +369,22 @@ const Admin = () => {
         </Tabs>
       </main>
 
-      {/* Mobile bottom navigation — scrollable for 8 tabs */}
+      {/* Mobile bottom navigation — 4 primary tabs + "More" sheet for the rest */}
       <nav
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border overflow-x-auto"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border"
         style={{ paddingBottom: "max(0.375rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex items-stretch min-w-max px-1 pt-1.5">
+        <div className="grid grid-cols-5 items-stretch px-1 pt-1.5">
           {[
             { value: "design", icon: Brush, label: "Dizains" },
             { value: "collection", icon: ShoppingBag, label: "Kolekc." },
             { value: "orders", icon: Package, label: "Pasūt." },
             { value: "stats", icon: BarChart3, label: "Stat." },
-            { value: "customers", icon: Users, label: "Klienti" },
-            { value: "categories", icon: FolderTree, label: "Kat." },
-            { value: "faq", icon: HelpCircle, label: "FAQ" },
-            { value: "access", icon: UserCheck, label: "Piekļ." },
           ].map(({ value, icon: Icon, label }) => (
             <button
               key={value}
               onClick={() => { setActiveTab(value); setAdminCategoryFilter("all"); }}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-[10px] font-body transition-colors shrink-0 min-w-[60px] ${
+              className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
                 activeTab === value ? "text-primary" : "text-muted-foreground"
               }`}
             >
@@ -396,6 +392,48 @@ const Admin = () => {
               {label}
             </button>
           ))}
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
+                  ["customers", "categories", "faq", "access"].includes(activeTab)
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                }`}
+                aria-label="Vairāk sadaļu"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+                Vairāk
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="rounded-t-2xl pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+              <SheetHeader className="mb-4">
+                <SheetTitle className="text-left font-display">Vairāk sadaļu</SheetTitle>
+              </SheetHeader>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: "customers", icon: Users, label: "Klienti" },
+                  { value: "categories", icon: FolderTree, label: "Kategorijas" },
+                  { value: "faq", icon: HelpCircle, label: "FAQ" },
+                  { value: "access", icon: UserCheck, label: "Piekļuve" },
+                ].map(({ value, icon: Icon, label }) => (
+                  <SheetClose asChild key={value}>
+                    <button
+                      onClick={() => { setActiveTab(value); setAdminCategoryFilter("all"); }}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border transition-colors ${
+                        activeTab === value
+                          ? "bg-primary/10 border-primary text-primary"
+                          : "bg-card border-border text-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <Icon className="w-6 h-6" />
+                      <span className="text-sm font-body">{label}</span>
+                    </button>
+                  </SheetClose>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </nav>
 
