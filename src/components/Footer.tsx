@@ -9,7 +9,7 @@ export const Footer = () => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = typeof window !== "undefined" ? window.location.origin : "https://t-bode.lv";
+  const shareUrl = "https://RaimxLV.github.io/t-bode/";
   const shareText = t("footer.shareText");
 
   const handleNativeShare = async () => {
