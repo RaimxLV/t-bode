@@ -201,20 +201,26 @@ export const OmnivaMapPicker = ({ locations, loading, selectedName, onSelect }: 
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FlyTo center={flyCenter} zoom={flyZoom} />
-            {filtered.map((p) => {
-              const isSelected = p.loc.NAME === selectedName;
-              return (
-                <Marker
-                  key={p.loc.ZIP}
-                  position={[p.lat, p.lng]}
-                  icon={isSelected ? selectedIcon : new L.Icon.Default()}
-                  ref={(ref) => {
-                    if (ref) markerRefs.current[p.loc.ZIP] = ref;
-                  }}
-                  eventHandlers={{
-                    click: () => onSelect(p.loc),
-                  }}
-                >
+            <MarkerClusterGroup
+              chunkedLoading
+              maxClusterRadius={55}
+              spiderfyOnMaxZoom
+              showCoverageOnHover={false}
+            >
+              {filtered.map((p) => {
+                const isSelected = p.loc.NAME === selectedName;
+                return (
+                  <Marker
+                    key={p.loc.ZIP}
+                    position={[p.lat, p.lng]}
+                    icon={isSelected ? selectedIcon : new L.Icon.Default()}
+                    ref={(ref) => {
+                      if (ref) markerRefs.current[p.loc.ZIP] = ref;
+                    }}
+                    eventHandlers={{
+                      click: () => onSelect(p.loc),
+                    }}
+                  >
                   <Popup>
                     <div className="text-sm space-y-1 min-w-[180px]">
                       <p className="font-semibold">{p.loc.NAME}</p>
@@ -235,7 +241,8 @@ export const OmnivaMapPicker = ({ locations, loading, selectedName, onSelect }: 
                   </Popup>
                 </Marker>
               );
-            })}
+              })}
+            </MarkerClusterGroup>
           </MapContainer>
         </div>
       ) : (
