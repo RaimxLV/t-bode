@@ -113,3 +113,12 @@ html, body {
   height: 100% !important;
   border: none;
 }
+
+/* Leaflet z-index fix — keep map and its controls/popups below fixed navbar (z-50) */
+.leaflet-container { z-index: 0; }
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control { z-index: 10 !important; }
+.leaflet-popup-pane,
+.leaflet-tooltip-pane { z-index: 20 !important; }
