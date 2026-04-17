@@ -20,14 +20,17 @@ export function useExistingColors() {
         .select("color_variants");
       if (error) throw error;
 
+      // Dedupe by lowercased trimmed NAME (not hex) — same color name with
+      // slightly different hex codes should still appear only once.
       const map = new Map<string, ExistingColor>();
       (data ?? []).forEach((row: any) => {
         const variants = Array.isArray(row.color_variants) ? row.color_variants : [];
         variants.forEach((v: any) => {
           if (!v?.hex || !v?.name) return;
-          const key = String(v.hex).toLowerCase();
+          const key = String(v.name).trim().toLowerCase();
+          if (!key) return;
           if (!map.has(key)) {
-            map.set(key, { name: String(v.name), hex: String(v.hex) });
+            map.set(key, { name: String(v.name).trim(), hex: String(v.hex) });
           }
         });
       });
