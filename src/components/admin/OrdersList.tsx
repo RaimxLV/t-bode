@@ -313,6 +313,45 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       </div>
 
+                      {/* Omniva shipment block */}
+                      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                        <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
+                          <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}
+                        </p>
+                        {order.omniva_barcode ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-[11px] text-muted-foreground font-body">{t("admin.omnivaBarcode")}:</span>
+                              <code className="text-xs bg-background px-2 py-0.5 rounded border border-border font-mono">{order.omniva_barcode}</code>
+                              {order.omniva_tracking_status && (
+                                <Badge variant="outline" className="text-[10px]">{order.omniva_tracking_status}</Badge>
+                              )}
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs gap-1.5 h-8"
+                              onClick={() => downloadOmnivaLabel(order.id, order.omniva_barcode)}
+                              disabled={omnivaLoading[order.id] === "label"}
+                            >
+                              {omnivaLoading[order.id] === "label" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                              {t("admin.omnivaDownloadLabel")}
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs gap-1.5 h-8"
+                            onClick={() => createOmnivaShipment(order.id)}
+                            disabled={omnivaLoading[order.id] === "create"}
+                          >
+                            {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                            {t("admin.omnivaCreateShipment")}
+                          </Button>
+                        )}
+                      </div>
+
                       {items.length > 0 && (
                         <div className="border border-border rounded-lg overflow-hidden">
                           <Table>
