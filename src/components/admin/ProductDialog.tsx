@@ -141,6 +141,11 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   };
 
   const addColorVariant = () => onProductChange({ ...product, color_variants: [...product.color_variants, { name: "", hex: "#000000", images: [] }] });
+  const addExistingColor = (c: { name: string; hex: string }) => {
+    const exists = product.color_variants.some((v) => v.hex.toLowerCase() === c.hex.toLowerCase());
+    if (exists) return;
+    onProductChange({ ...product, color_variants: [...product.color_variants, { name: c.name, hex: c.hex, images: [] }] });
+  };
   const removeColorVariant = (i: number) => onProductChange({ ...product, color_variants: product.color_variants.filter((_, idx) => idx !== i) });
   const updateColorVariant = (i: number, field: keyof ColorVariant, value: string | string[]) => { const v = [...product.color_variants]; (v[i] as any)[field] = value; onProductChange({ ...product, color_variants: v }); };
   const removeColorImage = (ci: number, ii: number) => { const v = [...product.color_variants]; v[ci].images = v[ci].images.filter((_, idx) => idx !== ii); onProductChange({ ...product, color_variants: v }); };
@@ -337,9 +342,42 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <Label className="font-body text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> {t("admin.colorVariants")}</Label>
-              <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> {t("admin.addColor")}</Button>
+              <div className="flex gap-2">
+                <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" type="button">
+                      <Palette className="w-3 h-3 mr-1" /> {t("admin.pickExistingColor", "Izvēlēties esošu")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-2 max-h-80 overflow-y-auto" align="end">
+                    {existingColors.length === 0 ? (
+                      <p className="text-xs text-muted-foreground p-2">{t("admin.noExistingColors", "Nav pieejamu krāsu")}</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-1">
+                        {existingColors.map((c) => {
+                          const used = product.color_variants.some((v) => v.hex.toLowerCase() === c.hex.toLowerCase());
+                          return (
+                            <button
+                              key={c.hex}
+                              type="button"
+                              disabled={used}
+                              onClick={() => { addExistingColor(c); setColorPickerOpen(false); }}
+                              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm font-body transition-colors ${used ? "opacity-40 cursor-not-allowed" : "hover:bg-muted"}`}
+                            >
+                              <span className="w-5 h-5 rounded-full border border-border flex-shrink-0" style={{ backgroundColor: c.hex }} />
+                              <span className="flex-1 truncate">{c.name}</span>
+                              <span className="text-xs text-muted-foreground">{c.hex}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </PopoverContent>
+                </Popover>
+                <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> {t("admin.addColor")}</Button>
+              </div>
             </div>
             <div className="space-y-4">
               {product.color_variants.map((variant, ci) => (
