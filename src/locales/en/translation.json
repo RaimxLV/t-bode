@@ -334,7 +334,18 @@
     "saveError": "Failed to save profile",
     "noOrders": "You don't have any orders yet",
     "startShopping": "Start shopping",
-    "invoice": "Invoice"
+    "invoice": "Invoice",
+    "noWishlist": "Wishlist is empty",
+    "browseProducts": "Browse products",
+    "tracking": "Shipment tracking",
+    "trackOnOmniva": "Track on Omniva",
+    "copyBarcode": "Copy tracking number",
+    "barcodeCopied": "Number copied",
+    "copyError": "Copy failed",
+    "tracking_in_transit": "In transit",
+    "tracking_out_for_delivery": "Out for delivery",
+    "tracking_delivered": "Delivered",
+    "tracking_returned": "Returned"
   },
   "cookies": {
     "title": "Cookie Usage",
