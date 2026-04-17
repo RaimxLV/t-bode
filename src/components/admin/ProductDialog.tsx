@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
+import { useExistingColors } from "@/hooks/useExistingColors";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
 export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
@@ -36,6 +38,8 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const [newSize, setNewSize] = useState("");
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const { data: allCategories = [] } = useCategories();
+  const { data: existingColors = [] } = useExistingColors();
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const handleAutoTranslate = async (field: "name" | "description", direction: "lv-en" | "en-lv") => {
     if (!product) return;
