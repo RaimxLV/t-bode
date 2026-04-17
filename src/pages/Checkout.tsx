@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn } from "lucide-react";
+import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -368,30 +369,16 @@ const Checkout = () => {
 
                 {shippingMethod === "omniva" && (
                   <div className="mt-4">
-                    <Label className="font-body text-sm">{t("checkout.selectOmniva")}</Label>
-                    <div className="relative mt-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input value={omnivaSearch} onChange={(e) => setOmnivaSearch(e.target.value)} placeholder={t("checkout.searchOmniva")} className="pl-10" />
-                    </div>
-                    <ScrollArea className="h-48 mt-2 border border-border rounded-md">
-                      <div className="p-2 flex flex-col gap-1">
-                        {omnivaLoading ? (
-                          <p className="text-sm text-muted-foreground p-2 font-body">{t("checkout.loadingOmniva")}</p>
-                        ) : filteredLocations.length === 0 ? (
-                          <p className="text-sm text-muted-foreground p-2 font-body">{t("checkout.notFound")}</p>
-                        ) : (
-                          filteredLocations.map((loc) => (
-                            <button key={loc.ZIP} onClick={() => { setSelectedOmniva(loc.NAME); if (errors.selectedOmniva) setErrors({ ...errors, selectedOmniva: "" }); }} className={`text-left p-2 rounded text-sm font-body transition-colors ${selectedOmniva === loc.NAME ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}>
-                              <span className="font-semibold">{loc.NAME}</span>
-                              <span className="text-xs text-muted-foreground block">{loc.A5_NAME}, {loc.A1_NAME}</span>
-                            </button>
-                          ))
-                        )}
-                      </div>
-                    </ScrollArea>
-                    {selectedOmniva && (
-                      <p className="text-xs text-muted-foreground mt-2 font-body">{t("checkout.selected")}: <span className="font-semibold text-foreground">{selectedOmniva}</span></p>
-                    )}
+                    <Label className="font-body text-sm mb-2 block">{t("checkout.selectOmniva")}</Label>
+                    <OmnivaMapPicker
+                      locations={locations}
+                      loading={omnivaLoading}
+                      selectedName={selectedOmniva}
+                      onSelect={(loc) => {
+                        setSelectedOmniva(loc.NAME);
+                        if (errors.selectedOmniva) setErrors({ ...errors, selectedOmniva: "" });
+                      }}
+                    />
                     <FieldError field="selectedOmniva" />
                   </div>
                 )}
