@@ -14,7 +14,7 @@ import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 }
 import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 import { useExistingColors } from "@/hooks/useExistingColors";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
 export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
@@ -345,37 +345,55 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <Label className="font-body text-sm flex items-center gap-2"><Palette className="w-4 h-4" /> {t("admin.colorVariants")}</Label>
               <div className="flex gap-2">
-                <Popover open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
-                  <PopoverTrigger asChild>
+                <Sheet open={colorPickerOpen} onOpenChange={setColorPickerOpen}>
+                  <SheetTrigger asChild>
                     <Button variant="outline" size="sm" type="button">
                       <Palette className="w-3 h-3 mr-1" /> {t("admin.pickExistingColor", "Izvēlēties esošu")}
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72 p-2 max-h-80 overflow-y-auto" align="end">
-                    {existingColors.length === 0 ? (
-                      <p className="text-xs text-muted-foreground p-2">{t("admin.noExistingColors", "Nav pieejamu krāsu")}</p>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-1">
-                        {existingColors.map((c) => {
-                          const used = product.color_variants.some((v) => v.hex.toLowerCase() === c.hex.toLowerCase());
-                          return (
-                            <button
-                              key={c.hex}
-                              type="button"
-                              disabled={used}
-                              onClick={() => { addExistingColor(c); setColorPickerOpen(false); }}
-                              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-left text-sm font-body transition-colors ${used ? "opacity-40 cursor-not-allowed" : "hover:bg-muted"}`}
-                            >
-                              <span className="w-5 h-5 rounded-full border border-border flex-shrink-0" style={{ backgroundColor: c.hex }} />
-                              <span className="flex-1 truncate">{c.name}</span>
-                              <span className="text-xs text-muted-foreground">{c.hex}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[80vh] flex flex-col p-0 rounded-t-2xl">
+                    <SheetHeader className="px-4 pt-4 pb-3 border-b border-border">
+                      <SheetTitle className="font-display text-base text-left">
+                        {t("admin.pickExistingColor", "Izvēlēties esošu krāsu")}
+                      </SheetTitle>
+                    </SheetHeader>
+                    <div className="flex-1 overflow-y-auto overscroll-contain px-3 py-3">
+                      {existingColors.length === 0 ? (
+                        <p className="text-sm text-muted-foreground p-2 text-center">
+                          {t("admin.noExistingColors", "Nav pieejamu krāsu")}
+                        </p>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-1">
+                          {existingColors.map((c) => {
+                            const used = product.color_variants.some(
+                              (v) => v.name.trim().toLowerCase() === c.name.trim().toLowerCase()
+                            );
+                            return (
+                              <button
+                                key={c.name}
+                                type="button"
+                                disabled={used}
+                                onClick={() => { addExistingColor(c); setColorPickerOpen(false); }}
+                                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-left text-sm font-body transition-colors border border-border/50 ${used ? "opacity-40 cursor-not-allowed" : "hover:bg-muted active:bg-muted"}`}
+                              >
+                                <span
+                                  className="w-7 h-7 rounded-full border border-border flex-shrink-0"
+                                  style={{ backgroundColor: c.hex }}
+                                />
+                                <span className="flex-1 truncate">{c.name}</span>
+                                {used && (
+                                  <span className="text-[10px] text-muted-foreground uppercase">
+                                    {t("admin.alreadyAdded", "pievienots")}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </SheetContent>
+                </Sheet>
                 <Button variant="outline" size="sm" onClick={addColorVariant}><Plus className="w-3 h-3 mr-1" /> {t("admin.addColor")}</Button>
               </div>
             </div>
