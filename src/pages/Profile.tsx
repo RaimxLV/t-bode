@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ const ORDER_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
+const TRACKING_STATUS_COLORS: Record<string, string> = {
+  in_transit: "bg-blue-100 text-blue-800",
+  out_for_delivery: "bg-indigo-100 text-indigo-800",
+  delivered: "bg-green-100 text-green-800",
+  returned: "bg-red-100 text-red-800",
+};
+
+const OMNIVA_TRACK_URL = "https://www.omniva.lv/private/track_and_trace?barcode=";
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const { productIds: wishlistIds, toggleWishlist } = useWishlist();
@@ -40,6 +49,18 @@ const Profile = () => {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [copiedBarcode, setCopiedBarcode] = useState<string | null>(null);
+
+  const copyBarcode = async (barcode: string) => {
+    try {
+      await navigator.clipboard.writeText(barcode);
+      setCopiedBarcode(barcode);
+      toast.success(t("profile.barcodeCopied", "Numurs nokopēts"));
+      setTimeout(() => setCopiedBarcode(null), 2000);
+    } catch {
+      toast.error(t("profile.copyError", "Kļūda kopējot"));
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
