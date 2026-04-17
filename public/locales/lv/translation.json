@@ -277,7 +277,10 @@
     "help": "PALĪDZĪBA",
     "copyright": "© 2026 T-Bode (SIA Ervitex). Visas tiesības aizsargātas.",
     "privacy": "Privātuma politika",
-    "terms": "Noteikumi"
+    "terms": "Noteikumi",
+    "securePayments": "Drošie maksājumi nodrošina",
+    "share": "Dalies",
+    "shareText": "Apskati T-Bode — personalizēta apģērba veikals!"
   },
   "notFound": {
     "title": "404",
