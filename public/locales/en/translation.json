@@ -277,7 +277,10 @@
     "help": "HELP",
     "copyright": "© 2026 T-Bode (SIA Ervitex). All rights reserved.",
     "privacy": "Privacy Policy",
-    "terms": "Terms & Conditions"
+    "terms": "Terms & Conditions",
+    "securePayments": "Secure payments powered by",
+    "share": "Share",
+    "shareText": "Check out T-Bode — personalized apparel store!"
   },
   "notFound": {
     "title": "404",
