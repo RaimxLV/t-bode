@@ -272,7 +272,14 @@
     "noFaqs": "No FAQs added yet",
     "loadingFaqs": "Loading FAQs...",
     "faqSaveError": "Failed to save FAQ",
-    "faqDeleteError": "Failed to delete FAQ"
+    "faqDeleteError": "Failed to delete FAQ",
+    "omnivaShipment": "Omniva shipment",
+    "omnivaBarcode": "Barcode",
+    "omnivaCreateShipment": "Create Omniva shipment",
+    "omnivaDownloadLabel": "Download label (PDF)",
+    "omnivaShipmentCreated": "Shipment created",
+    "omnivaShipmentError": "Failed to create shipment",
+    "omnivaLabelError": "Failed to download label"
   },
   "footer": {
     "brandDesc": "SIA Ervitex — manufacturer of personalized clothing and accessories in Latvia. Create your unique design or choose from our collection.",

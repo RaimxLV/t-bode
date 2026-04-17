@@ -257,7 +257,14 @@
     "noFaqs": "Nav pievienotu BUJ",
     "loadingFaqs": "Ielādē BUJ...",
     "faqSaveError": "Neizdevās saglabāt BUJ",
-    "faqDeleteError": "Neizdevās dzēst BUJ"
+    "faqDeleteError": "Neizdevās dzēst BUJ",
+    "omnivaShipment": "Omniva sūtījums",
+    "omnivaBarcode": "Svītrkods",
+    "omnivaCreateShipment": "Izveidot Omniva sūtījumu",
+    "omnivaDownloadLabel": "Lejupielādēt pavadzīmi (PDF)",
+    "omnivaShipmentCreated": "Sūtījums izveidots",
+    "omnivaShipmentError": "Neizdevās izveidot sūtījumu",
+    "omnivaLabelError": "Neizdevās lejupielādēt pavadzīmi"
   },
   "footer": {
     "brandDesc": "SIA Ervitex — personalizētu apģērbu un aksesuāru ražotājs Latvijā. Izveido savu unikālo dizainu vai izvēlies no mūsu kolekcijas.",

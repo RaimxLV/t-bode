@@ -1,1 +1,16 @@
 project_id = "nkqwhiqrljwvzrivhqyh"
+
+[functions.omniva-create-shipment]
+verify_jwt = true
+
+[functions.omniva-label-pdf]
+verify_jwt = true
+
+[functions.omniva-tracking-sync]
+verify_jwt = false
+
+[functions.send-tracking-email]
+verify_jwt = false
+
+[functions.omniva-locations]
+verify_jwt = false
