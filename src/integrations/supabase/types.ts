@@ -444,6 +444,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_whitelisted: { Args: never; Returns: boolean }
       is_admin_whitelisted: { Args: { _email: string }; Returns: boolean }
     }
     Enums: {
