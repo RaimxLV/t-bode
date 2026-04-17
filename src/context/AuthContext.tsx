@@ -66,20 +66,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Listen for realtime whitelist changes
+  // Re-check whitelist status when user changes (no realtime — admin_whitelist
+  // is intentionally NOT in the realtime publication to avoid leaking admin emails).
   useEffect(() => {
-    const channel = supabase
-      .channel("admin_whitelist_changes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_whitelist" }, () => {
-        if (user?.email) {
-          supabase.rpc("is_admin_whitelisted", { _email: user.email }).then(({ data }) => {
-            setIsWhitelisted(!!data);
-          });
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    if (!user?.email) return;
+    supabase.rpc("is_admin_whitelisted", { _email: user.email }).then(({ data }) => {
+      setIsWhitelisted(!!data);
+    });
   }, [user?.email]);
 
   const signOut = async () => {
