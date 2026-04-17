@@ -207,7 +207,11 @@ export type Database = {
           id: string
           is_business: boolean
           notes: string | null
+          omniva_barcode: string | null
+          omniva_label_url: string | null
           omniva_pickup_point: string | null
+          omniva_shipment_created_at: string | null
+          omniva_tracking_status: string | null
           order_number: number
           shipping_address: string | null
           shipping_city: string | null
@@ -219,6 +223,7 @@ export type Database = {
           stripe_invoice_pdf: string | null
           stripe_session_id: string | null
           total: number
+          tracking_email_sent_at: string | null
           updated_at: string
           user_id: string | null
         }
@@ -232,7 +237,11 @@ export type Database = {
           id?: string
           is_business?: boolean
           notes?: string | null
+          omniva_barcode?: string | null
+          omniva_label_url?: string | null
           omniva_pickup_point?: string | null
+          omniva_shipment_created_at?: string | null
+          omniva_tracking_status?: string | null
           order_number?: number
           shipping_address?: string | null
           shipping_city?: string | null
@@ -244,6 +253,7 @@ export type Database = {
           stripe_invoice_pdf?: string | null
           stripe_session_id?: string | null
           total?: number
+          tracking_email_sent_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -257,7 +267,11 @@ export type Database = {
           id?: string
           is_business?: boolean
           notes?: string | null
+          omniva_barcode?: string | null
+          omniva_label_url?: string | null
           omniva_pickup_point?: string | null
+          omniva_shipment_created_at?: string | null
+          omniva_tracking_status?: string | null
           order_number?: number
           shipping_address?: string | null
           shipping_city?: string | null
@@ -269,6 +283,7 @@ export type Database = {
           stripe_invoice_pdf?: string | null
           stripe_session_id?: string | null
           total?: number
+          tracking_email_sent_at?: string | null
           updated_at?: string
           user_id?: string | null
         }
