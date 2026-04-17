@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2 } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ORDER_STATUSES = [
@@ -56,8 +56,48 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [showArchive, setShowArchive] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
 
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
+
+  const createOmnivaShipment = async (orderId: string) => {
+    setOmnivaLoading((p) => ({ ...p, [orderId]: "create" }));
+    try {
+      const { data, error } = await supabase.functions.invoke("omniva-create-shipment", {
+        body: { order_id: orderId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`${t("admin.omnivaShipmentCreated")}: ${data.barcode}`);
+      onRefresh();
+    } catch (err: any) {
+      toast.error(`${t("admin.omnivaShipmentError")}: ${err.message || err}`);
+    } finally {
+      setOmnivaLoading((p) => ({ ...p, [orderId]: null }));
+    }
+  };
+
+  const downloadOmnivaLabel = async (orderId: string, barcode: string) => {
+    setOmnivaLoading((p) => ({ ...p, [orderId]: "label" }));
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/omniva-label-pdf?order_id=${orderId}`;
+      const resp = await fetch(url, {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `omniva-${barcode}.pdf`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    } catch (err: any) {
+      toast.error(`${t("admin.omnivaLabelError")}: ${err.message || err}`);
+    } finally {
+      setOmnivaLoading((p) => ({ ...p, [orderId]: null }));
+    }
+  };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
