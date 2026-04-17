@@ -37,6 +37,7 @@ export function useExistingColors() {
 
       return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
     },
-    staleTime: 60_000,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
