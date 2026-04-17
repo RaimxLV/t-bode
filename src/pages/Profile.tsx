@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,15 @@ const ORDER_STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
+const TRACKING_STATUS_COLORS: Record<string, string> = {
+  in_transit: "bg-blue-100 text-blue-800",
+  out_for_delivery: "bg-indigo-100 text-indigo-800",
+  delivered: "bg-green-100 text-green-800",
+  returned: "bg-red-100 text-red-800",
+};
+
+const OMNIVA_TRACK_URL = "https://www.omniva.lv/private/track_and_trace?barcode=";
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const { productIds: wishlistIds, toggleWishlist } = useWishlist();
@@ -40,6 +49,18 @@ const Profile = () => {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
   const [loadingWishlist, setLoadingWishlist] = useState(false);
+  const [copiedBarcode, setCopiedBarcode] = useState<string | null>(null);
+
+  const copyBarcode = async (barcode: string) => {
+    try {
+      await navigator.clipboard.writeText(barcode);
+      setCopiedBarcode(barcode);
+      toast.success(t("profile.barcodeCopied", "Numurs nokopēts"));
+      setTimeout(() => setCopiedBarcode(null), 2000);
+    } catch {
+      toast.error(t("profile.copyError", "Kļūda kopējot"));
+    }
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -259,6 +280,44 @@ const Profile = () => {
                         )}
                         {order.omniva_pickup_point && (
                           <p className="text-xs text-muted-foreground font-body mt-2">📦 {order.omniva_pickup_point}</p>
+                        )}
+                        {order.omniva_barcode && (
+                          <div className="border-t border-border mt-3 pt-3 space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-body">
+                              <Truck className="w-4 h-4 text-primary shrink-0" />
+                              <span className="font-semibold">{t("profile.tracking", "Sūtījuma izsekošana")}</span>
+                              {order.omniva_tracking_status && (
+                                <Badge className={`text-xs ${TRACKING_STATUS_COLORS[order.omniva_tracking_status] || "bg-muted text-muted-foreground"}`}>
+                                  {String(t(`profile.tracking_${order.omniva_tracking_status}`, order.omniva_tracking_status))}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
+                                {order.omniva_barcode}
+                              </code>
+                              <button
+                                onClick={() => copyBarcode(order.omniva_barcode)}
+                                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                aria-label={t("profile.copyBarcode", "Kopēt sūtījuma numuru")}
+                              >
+                                {copiedBarcode === order.omniva_barcode ? (
+                                  <Check className="w-3.5 h-3.5 text-green-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                              <a
+                                href={`${OMNIVA_TRACK_URL}${encodeURIComponent(order.omniva_barcode)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-body ml-auto"
+                              >
+                                {t("profile.trackOnOmniva", "Sekot Omniva")}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            </div>
+                          </div>
                         )}
                       </CardContent>
                     </Card>

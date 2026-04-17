@@ -319,7 +319,18 @@
     "saveError": "Neizdevās saglabāt profilu",
     "noOrders": "Jums vēl nav pasūtījumu",
     "startShopping": "Sākt iepirkties",
-    "invoice": "Rēķins"
+    "invoice": "Rēķins",
+    "noWishlist": "Vēlmju saraksts ir tukšs",
+    "browseProducts": "Pārlūkot produktus",
+    "tracking": "Sūtījuma izsekošana",
+    "trackOnOmniva": "Sekot Omniva",
+    "copyBarcode": "Kopēt sūtījuma numuru",
+    "barcodeCopied": "Numurs nokopēts",
+    "copyError": "Kļūda kopējot",
+    "tracking_in_transit": "Ceļā",
+    "tracking_out_for_delivery": "Tiek piegādāts",
+    "tracking_delivered": "Piegādāts",
+    "tracking_returned": "Atgriezts"
   },
   "cookies": {
     "title": "Sīkdatņu izmantošana",
