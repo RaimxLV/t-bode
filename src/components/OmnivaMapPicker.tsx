@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { Search, Crosshair, MapPin, List, Map as MapIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -198,20 +201,26 @@ export const OmnivaMapPicker = ({ locations, loading, selectedName, onSelect }: 
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <FlyTo center={flyCenter} zoom={flyZoom} />
-            {filtered.map((p) => {
-              const isSelected = p.loc.NAME === selectedName;
-              return (
-                <Marker
-                  key={p.loc.ZIP}
-                  position={[p.lat, p.lng]}
-                  icon={isSelected ? selectedIcon : new L.Icon.Default()}
-                  ref={(ref) => {
-                    if (ref) markerRefs.current[p.loc.ZIP] = ref;
-                  }}
-                  eventHandlers={{
-                    click: () => onSelect(p.loc),
-                  }}
-                >
+            <MarkerClusterGroup
+              chunkedLoading
+              maxClusterRadius={55}
+              spiderfyOnMaxZoom
+              showCoverageOnHover={false}
+            >
+              {filtered.map((p) => {
+                const isSelected = p.loc.NAME === selectedName;
+                return (
+                  <Marker
+                    key={p.loc.ZIP}
+                    position={[p.lat, p.lng]}
+                    icon={isSelected ? selectedIcon : new L.Icon.Default()}
+                    ref={(ref) => {
+                      if (ref) markerRefs.current[p.loc.ZIP] = ref;
+                    }}
+                    eventHandlers={{
+                      click: () => onSelect(p.loc),
+                    }}
+                  >
                   <Popup>
                     <div className="text-sm space-y-1 min-w-[180px]">
                       <p className="font-semibold">{p.loc.NAME}</p>
@@ -232,7 +241,8 @@ export const OmnivaMapPicker = ({ locations, loading, selectedName, onSelect }: 
                   </Popup>
                 </Marker>
               );
-            })}
+              })}
+            </MarkerClusterGroup>
           </MapContainer>
         </div>
       ) : (
