@@ -338,7 +338,46 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       </div>
 
-                      {/* Omniva shipment block */}
+                      {/* Bank transfer block */}
+                      {order.payment_method === "bank_transfer" && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2">
+                          <p className="text-xs font-semibold font-body text-amber-900 flex items-center gap-1.5">
+                            <Landmark className="w-3.5 h-3.5" /> {t("admin.bankTransferPayment", "Bankas pārskaitījums")}
+                          </p>
+                          {order.manually_paid_at ? (
+                            <p className="text-xs text-green-800 font-body inline-flex items-center gap-1.5">
+                              <BadgeCheck className="w-3.5 h-3.5" />
+                              {t("admin.markedPaidOn", "Atzīmēts kā apmaksāts")}: {new Date(order.manually_paid_at).toLocaleString("lv-LV")}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-[11px] text-amber-900 font-body">
+                                {t("admin.awaitingBankPayment", "Gaida apmaksu bankas kontā. Atzīmējiet pasūtījumu kā apmaksātu, kad nauda ir saņemta.")}
+                              </p>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => markAsPaid(order.id)}
+                              >
+                                <BadgeCheck className="w-3.5 h-3.5" />
+                                {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
+                              </Button>
+                            </>
+                          )}
+                          {order.stripe_invoice_pdf && (
+                            <a
+                              href={order.stripe_invoice_pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-amber-900 underline font-body"
+                            >
+                              <FileText className="w-3.5 h-3.5" /> {t("admin.downloadInvoice", "Lejupielādēt rēķinu")}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
                       <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                         <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
                           <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}
