@@ -52,6 +52,22 @@ const validateSwift = (raw: string): string | null => {
   return null;
 };
 
+/** LV uzņēmuma reģ.Nr.: tieši 11 cipari. Tukšs = OK (lauks nav obligāts). */
+const validateRegNumber = (raw: string): string | null => {
+  const v = raw.replace(/\s+/g, "");
+  if (!v) return null;
+  if (!/^\d{11}$/.test(v)) return "Reģ.Nr. jābūt 11 cipariem";
+  return null;
+};
+
+/** LV PVN reģ.Nr.: LV + 11 cipari. Tukšs = OK. */
+const validateVatNumber = (raw: string): string | null => {
+  const v = raw.replace(/\s+/g, "").toUpperCase();
+  if (!v) return null;
+  if (!/^LV\d{11}$/.test(v)) return "PVN nr. formāts: LV + 11 cipari";
+  return null;
+};
+
 interface SiteSettings {
   id: string;
   company_name: string;
