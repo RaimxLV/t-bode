@@ -176,7 +176,7 @@ export const SettingsManager = () => {
             </p>
           )}
           {settings.bank_iban && !ibanError && (
-            <p className="text-xs text-green-600 flex items-center gap-1.5">
+            <p className="text-xs text-primary flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs IBAN
             </p>
           )}
