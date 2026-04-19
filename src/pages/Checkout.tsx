@@ -190,6 +190,7 @@ const Checkout = () => {
           items: stripeItems,
           origin_url: appOriginUrl,
           guest_email: user ? null : form.email.trim(),
+          payment_method: paymentMethod,
           business: isBusiness ? {
             is_business: true,
             company_name: form.company_name.trim(),
