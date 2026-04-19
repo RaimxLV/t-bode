@@ -127,17 +127,15 @@ export const SettingsManager = () => {
 
   const ibanError = settings ? validateIban(settings.bank_iban) : null;
   const swiftError = settings ? validateSwift(settings.bank_swift) : null;
+  const regError = settings ? validateRegNumber(settings.company_reg_number ?? "") : null;
+  const vatError = settings ? validateVatNumber(settings.company_vat_number ?? "") : null;
 
   const handleSave = async () => {
     if (!settings) return;
-    if (ibanError) {
-      toast.error("Nederīgs IBAN — " + ibanError);
-      return;
-    }
-    if (swiftError) {
-      toast.error("Nederīgs SWIFT/BIC — " + swiftError);
-      return;
-    }
+    if (ibanError) { toast.error("Nederīgs IBAN — " + ibanError); return; }
+    if (swiftError) { toast.error("Nederīgs SWIFT/BIC — " + swiftError); return; }
+    if (regError) { toast.error("Nederīgs Reģ.Nr. — " + regError); return; }
+    if (vatError) { toast.error("Nederīgs PVN nr. — " + vatError); return; }
     setSaving(true);
     const { id, ...rest } = settings;
     const normalizedIban = normalizeIban(rest.bank_iban);
