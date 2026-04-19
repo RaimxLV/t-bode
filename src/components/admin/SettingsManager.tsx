@@ -6,7 +6,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Building2, Landmark, FileText } from "lucide-react";
+import { Save, Building2, Landmark, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+
+// IBAN length per country (subset of common EU + LV neighbours)
+const IBAN_LENGTHS: Record<string, number> = {
+  LV: 21, LT: 20, EE: 20, FI: 18, SE: 24, DE: 22, GB: 22, IE: 22, FR: 27,
+  ES: 24, IT: 27, NL: 18, BE: 16, AT: 20, PL: 28, DK: 18, NO: 15, PT: 25,
+  LU: 20, CH: 21, CZ: 24, SK: 24, HU: 28, RO: 24, BG: 22, HR: 21, SI: 19,
+  GR: 27, CY: 28, MT: 31, IS: 26,
+};
+
+const normalizeIban = (raw: string) => raw.replace(/\s+/g, "").toUpperCase();
+
+/** Validate IBAN: format + country length + mod-97 checksum. Returns null if valid, else error key. */
+const validateIban = (raw: string): string | null => {
+  const iban = normalizeIban(raw);
+  if (!iban) return "IBAN ir obligāts";
+  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) return "Nederīgs IBAN formāts";
+  const country = iban.slice(0, 2);
+  const expected = IBAN_LENGTHS[country];
+  if (expected && iban.length !== expected) return `${country} IBAN jābūt ${expected} simbolu garumā`;
+  // mod-97: move first 4 chars to end, replace letters with digits (A=10..Z=35), check % 97 === 1
+  const rearranged = iban.slice(4) + iban.slice(0, 4);
+  const numeric = rearranged.replace(/[A-Z]/g, (ch) => (ch.charCodeAt(0) - 55).toString());
+  // Process in chunks to avoid BigInt overhead
+  let remainder = 0;
+  for (let i = 0; i < numeric.length; i += 7) {
+    const chunk = remainder.toString() + numeric.substring(i, i + 7);
+    remainder = parseInt(chunk, 10) % 97;
+  }
+  if (remainder !== 1) return "Nederīga IBAN kontrolsumma";
+  return null;
+};
+
+const formatIban = (raw: string) => normalizeIban(raw).replace(/(.{4})/g, "$1 ").trim();
 
 interface SiteSettings {
   id: string;
