@@ -98,14 +98,23 @@ export const SettingsManager = () => {
     setSettings((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
+  const ibanError = settings ? validateIban(settings.bank_iban) : null;
+
   const handleSave = async () => {
     if (!settings) return;
+    if (ibanError) {
+      toast.error("Nederīgs IBAN — " + ibanError);
+      return;
+    }
     setSaving(true);
     const { id, ...rest } = settings;
+    const normalizedIban = normalizeIban(rest.bank_iban);
     const { error } = await supabase
       .from("site_settings")
       .update({
         ...rest,
+        bank_iban: normalizedIban,
+        bank_swift: rest.bank_swift.trim().toUpperCase(),
         company_reg_number: rest.company_reg_number ?? "",
         company_vat_number: rest.company_vat_number ?? "",
         company_address: rest.company_address ?? "",
@@ -117,6 +126,7 @@ export const SettingsManager = () => {
     if (error) {
       toast.error("Kļūda saglabājot: " + error.message);
     } else {
+      update({ bank_iban: normalizedIban });
       toast.success("Iestatījumi saglabāti");
     }
   };
