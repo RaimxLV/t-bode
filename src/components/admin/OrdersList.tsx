@@ -105,6 +105,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     else { toast.success(t("admin.statusUpdated")); onRefresh(); }
   };
 
+  const markAsPaid = async (orderId: string) => {
+    if (!confirm(t("admin.markPaidConfirm", "Apstiprināt, ka maksājums ir saņemts bankā?"))) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "confirmed" as any,
+        manually_paid_at: new Date().toISOString(),
+      })
+      .eq("id", orderId);
+    if (error) toast.error(t("admin.statusError"));
+    else { toast.success(t("admin.markedAsPaid", "Pasūtījums atzīmēts kā apmaksāts")); onRefresh(); }
+  };
+
   const deleteOrder = async (orderId: string) => {
     if (!confirm("Vai tiešām vēlaties dzēst šo pasūtījumu? Šī darbība ir neatgriezeniska.")) return;
     // Delete order items first, then the order
