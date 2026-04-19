@@ -160,7 +160,27 @@ export const SettingsManager = () => {
           <Field label="Banka" value={settings.bank_name} onChange={(v) => update({ bank_name: v })} placeholder="Swedbank" />
           <Field label="SWIFT / BIC" value={settings.bank_swift} onChange={(v) => update({ bank_swift: v })} placeholder="HABALV22" />
         </div>
-        <Field label="IBAN" value={settings.bank_iban} onChange={(v) => update({ bank_iban: v })} placeholder="LV00HABA0000000000000" />
+        <div className="space-y-1.5">
+          <Label className="text-xs sm:text-sm">IBAN</Label>
+          <Input
+            value={settings.bank_iban}
+            onChange={(e) => update({ bank_iban: e.target.value })}
+            onBlur={() => !ibanError && update({ bank_iban: formatIban(settings.bank_iban) })}
+            placeholder="LV80 BANK 0000 4351 9500 1"
+            className={ibanError && settings.bank_iban ? "border-destructive focus-visible:ring-destructive" : ""}
+            aria-invalid={!!ibanError}
+          />
+          {settings.bank_iban && ibanError && (
+            <p className="text-xs text-destructive flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {ibanError}
+            </p>
+          )}
+          {settings.bank_iban && !ibanError && (
+            <p className="text-xs text-green-600 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs IBAN
+            </p>
+          )}
+        </div>
       </Section>
 
       <Section icon={FileText} title="Maksājuma instrukcijas">
