@@ -368,6 +368,12 @@ const Admin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="settings">
+            <Suspense fallback={<TabFallback />}>
+              <SettingsManager />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
