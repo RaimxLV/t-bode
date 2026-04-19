@@ -298,7 +298,7 @@ export const SettingsManager = () => {
       </Section>
 
       <div className="sticky bottom-20 sm:bottom-4 flex justify-end">
-        <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError} className="bg-primary text-primary-foreground shadow-lg">
+        <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError || !!regError || !!vatError} className="bg-primary text-primary-foreground shadow-lg">
           <Save className="w-4 h-4 mr-2" />
           {saving ? "Saglabā..." : "Saglabāt iestatījumus"}
         </Button>
