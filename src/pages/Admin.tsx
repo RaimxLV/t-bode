@@ -24,6 +24,7 @@ const FAQManager = lazy(() => import("@/components/admin/FAQManager").then(m => 
 const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").then(m => ({ default: m.CategoryManager })));
 const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
 const CustomersList = lazy(() => import("@/components/admin/CustomersList").then(m => ({ default: m.CustomersList })));
+const SettingsManager = lazy(() => import("@/components/admin/SettingsManager").then(m => ({ default: m.SettingsManager })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
