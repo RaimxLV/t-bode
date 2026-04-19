@@ -56,6 +56,7 @@ const Checkout = () => {
   // Mode: if logged in skip choose; if not, show choose first
   const [mode, setMode] = useState<CheckoutMode>(user ? "loggedin" : "choose");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("omniva");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
