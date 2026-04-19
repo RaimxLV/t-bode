@@ -178,8 +178,50 @@ export const SettingsManager = () => {
       <Section icon={Building2} title="Uzņēmuma dati">
         <Field label="Uzņēmuma nosaukums" value={settings.company_name} onChange={(v) => update({ company_name: v })} placeholder="SIA Ervitex" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Reģ. Nr." value={settings.company_reg_number ?? ""} onChange={(v) => update({ company_reg_number: v })} placeholder="40003XXXXXX" />
-          <Field label="PVN reģ. Nr." value={settings.company_vat_number ?? ""} onChange={(v) => update({ company_vat_number: v })} placeholder="LV40003XXXXXX" />
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Reģ. Nr.</Label>
+            <Input
+              value={settings.company_reg_number ?? ""}
+              onChange={(e) => update({ company_reg_number: e.target.value })}
+              placeholder="40003XXXXXX"
+              maxLength={11}
+              inputMode="numeric"
+              className={regError && settings.company_reg_number ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!regError}
+            />
+            {settings.company_reg_number && regError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {regError}
+              </p>
+            )}
+            {settings.company_reg_number && !regError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">PVN reģ. Nr.</Label>
+            <Input
+              value={settings.company_vat_number ?? ""}
+              onChange={(e) => update({ company_vat_number: e.target.value })}
+              onBlur={() => update({ company_vat_number: (settings.company_vat_number ?? "").replace(/\s+/g, "").toUpperCase() })}
+              placeholder="LV40003XXXXXX"
+              maxLength={13}
+              className={vatError && settings.company_vat_number ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!vatError}
+            />
+            {settings.company_vat_number && vatError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {vatError}
+              </p>
+            )}
+            {settings.company_vat_number && !vatError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs
+              </p>
+            )}
+          </div>
         </div>
         <Field label="Juridiskā adrese" value={settings.company_address ?? ""} onChange={(v) => update({ company_address: v })} placeholder="Iela 1, Rīga, LV-1000" />
       </Section>
