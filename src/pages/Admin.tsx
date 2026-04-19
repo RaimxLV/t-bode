@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,7 @@ const FAQManager = lazy(() => import("@/components/admin/FAQManager").then(m => 
 const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").then(m => ({ default: m.CategoryManager })));
 const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
 const CustomersList = lazy(() => import("@/components/admin/CustomersList").then(m => ({ default: m.CustomersList })));
+const SettingsManager = lazy(() => import("@/components/admin/SettingsManager").then(m => ({ default: m.SettingsManager })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -273,6 +274,7 @@ const Admin = () => {
             <TabsTrigger value="categories" className="gap-1.5 text-sm"><FolderTree className="w-4 h-4" /> Kategorijas</TabsTrigger>
             <TabsTrigger value="customers" className="gap-1.5 text-sm"><Users className="w-4 h-4" /> Klienti</TabsTrigger>
             <TabsTrigger value="access" className="gap-1.5 text-sm"><UserCheck className="w-4 h-4" /> Piekļuve</TabsTrigger>
+            <TabsTrigger value="settings" className="gap-1.5 text-sm"><SettingsIcon className="w-4 h-4" /> Iestatījumi</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -366,6 +368,12 @@ const Admin = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="settings">
+            <Suspense fallback={<TabFallback />}>
+              <SettingsManager />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -396,7 +404,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access"].includes(activeTab)
+                  ["customers", "categories", "faq", "access", "settings"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -416,6 +424,7 @@ const Admin = () => {
                   { value: "categories", icon: FolderTree, label: "Kategorijas" },
                   { value: "faq", icon: HelpCircle, label: "FAQ" },
                   { value: "access", icon: UserCheck, label: "Piekļuve" },
+                  { value: "settings", icon: SettingsIcon, label: "Iestatījumi" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
