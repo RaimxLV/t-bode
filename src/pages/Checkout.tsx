@@ -21,6 +21,7 @@ import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
+type PaymentMethod = "card" | "bank_transfer";
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
