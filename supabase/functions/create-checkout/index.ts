@@ -128,10 +128,9 @@ serve(async (req) => {
       for (const item of items) {
         await stripe.invoiceItems.create({
           customer: customerId,
+          amount: Math.round(item.price * 100) * item.quantity,
           currency: "eur",
-          unit_amount: Math.round(item.price * 100),
-          quantity: item.quantity,
-          description: `${item.name}${item.size ? ` · ${item.size}` : ""}${item.color ? ` · ${item.color}` : ""}`,
+          description: `${item.name}${item.size ? ` · ${item.size}` : ""}${item.color ? ` · ${item.color}` : ""}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`,
         });
       }
 
@@ -140,9 +139,8 @@ serve(async (req) => {
       if (shippingCost) {
         await stripe.invoiceItems.create({
           customer: customerId,
+          amount: Math.round(shippingCost * 100),
           currency: "eur",
-          unit_amount: Math.round(shippingCost * 100),
-          quantity: 1,
           description: items[0]?.shippingMethod === "omniva" ? "Omniva Piegāde" : "Kurjera Piegāde",
         });
       }
