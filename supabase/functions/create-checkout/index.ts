@@ -270,7 +270,7 @@ serve(async (req) => {
       sessionParams.invoice_creation = {
         enabled: true,
         invoice_data: {
-          description: `T-Bode pasūtījums ${order_id.slice(0, 8).toUpperCase()}`,
+          description: `${settings.company_name} — pasūtījums ${orderRef}`,
           metadata: {
             order_id,
             company_name: business.company_name ?? "",
@@ -278,10 +278,20 @@ serve(async (req) => {
             company_vat_number: business.company_vat_number ?? "",
           },
           custom_fields: [
-            ...(business.company_reg_number ? [{ name: "Reģ. Nr.", value: business.company_reg_number }] : []),
-            ...(business.company_vat_number ? [{ name: "PVN Nr.", value: business.company_vat_number }] : []),
+            ...(business.company_reg_number
+              ? [{ name: "Pircēja Reģ.Nr.", value: String(business.company_reg_number) }]
+              : []),
+            ...(business.company_vat_number
+              ? [{ name: "Pircēja PVN Nr.", value: String(business.company_vat_number) }]
+              : []),
+            ...(settings.company_reg_number
+              ? [{ name: "Pārdevēja Reģ.Nr.", value: String(settings.company_reg_number) }]
+              : []),
+            ...(settings.company_vat_number
+              ? [{ name: "Pārdevēja PVN Nr.", value: String(settings.company_vat_number) }]
+              : []),
           ].slice(0, 4),
-          footer: "Paldies, ka iepērkaties pie T-Bode!",
+          footer: cardFooter,
         },
       };
     }
