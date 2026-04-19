@@ -424,6 +424,7 @@ const Admin = () => {
                   { value: "categories", icon: FolderTree, label: "Kategorijas" },
                   { value: "faq", icon: HelpCircle, label: "FAQ" },
                   { value: "access", icon: UserCheck, label: "Piekļuve" },
+                  { value: "settings", icon: SettingsIcon, label: "Iestatījumi" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
