@@ -54,6 +54,48 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Load admin-managed site settings (company + bank details + payment instructions)
+    const { data: siteSettings } = await serviceClient
+      .from("site_settings")
+      .select(
+        "company_name, company_reg_number, company_vat_number, company_address, bank_name, bank_iban, bank_swift, bank_beneficiary, payment_instructions_lv, payment_instructions_en"
+      )
+      .limit(1)
+      .maybeSingle();
+
+    const settings = siteSettings ?? {
+      company_name: "SIA Ervitex",
+      company_reg_number: "",
+      company_vat_number: "",
+      company_address: "",
+      bank_name: "Swedbank",
+      bank_iban: "",
+      bank_swift: "",
+      bank_beneficiary: "SIA Ervitex",
+      payment_instructions_lv:
+        "Lūdzu norādiet pasūtījuma numuru maksājuma mērķī. Apmaksas termiņš — 3 darba dienas.",
+      payment_instructions_en:
+        "Please include the order number in the payment reference. Payment is due within 3 business days.",
+    };
+
+    const orderRef = order_id.slice(0, 8).toUpperCase();
+
+    // Bilingual bank-transfer footer assembled from admin settings
+    const bankFooter = [
+      `${settings.payment_instructions_lv ?? ""} / ${settings.payment_instructions_en ?? ""}`.trim(),
+      "",
+      `Saņēmējs / Beneficiary: ${settings.bank_beneficiary}`,
+      `Banka / Bank: ${settings.bank_name}`,
+      `IBAN: ${settings.bank_iban}`,
+      `SWIFT/BIC: ${settings.bank_swift}`,
+      `Maksājuma mērķis / Reference: ${orderRef}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // Card-flow footer (just thank-you + seller line)
+    const cardFooter = `Paldies, ka iepērkaties pie ${settings.company_name}! / Thank you for shopping with ${settings.company_name}!`;
+
     // Find or create Stripe customer
     const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
     let customerId: string | undefined;
@@ -63,7 +105,9 @@ serve(async (req) => {
       const newCustomer = await stripe.customers.create({
         email: customerEmail,
         name: business?.is_business ? business.company_name : undefined,
-        address: business?.company_address ? { line1: business.company_address } : undefined,
+        address: business?.company_address
+          ? { line1: business.company_address }
+          : undefined,
         metadata: {
           order_id,
           company_name: business?.company_name ?? "",
