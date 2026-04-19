@@ -41,6 +41,17 @@ const validateIban = (raw: string): string | null => {
 
 const formatIban = (raw: string) => normalizeIban(raw).replace(/(.{4})/g, "$1 ").trim();
 
+const normalizeSwift = (raw: string) => raw.replace(/\s+/g, "").toUpperCase();
+
+/** Validate SWIFT/BIC: 8 or 11 chars, format AAAA BB CC [DDD]. Returns null if valid. */
+const validateSwift = (raw: string): string | null => {
+  const swift = normalizeSwift(raw);
+  if (!swift) return "SWIFT/BIC ir obligāts";
+  if (swift.length !== 8 && swift.length !== 11) return "SWIFT/BIC jābūt 8 vai 11 simbolu garumā";
+  if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swift)) return "Nederīgs SWIFT/BIC formāts";
+  return null;
+};
+
 interface SiteSettings {
   id: string;
   company_name: string;
@@ -99,11 +110,16 @@ export const SettingsManager = () => {
   };
 
   const ibanError = settings ? validateIban(settings.bank_iban) : null;
+  const swiftError = settings ? validateSwift(settings.bank_swift) : null;
 
   const handleSave = async () => {
     if (!settings) return;
     if (ibanError) {
       toast.error("Nederīgs IBAN — " + ibanError);
+      return;
+    }
+    if (swiftError) {
+      toast.error("Nederīgs SWIFT/BIC — " + swiftError);
       return;
     }
     setSaving(true);
@@ -158,7 +174,28 @@ export const SettingsManager = () => {
         <Field label="Saņēmējs (Beneficiary)" value={settings.bank_beneficiary} onChange={(v) => update({ bank_beneficiary: v })} placeholder="SIA Ervitex" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Banka" value={settings.bank_name} onChange={(v) => update({ bank_name: v })} placeholder="Swedbank" />
-          <Field label="SWIFT / BIC" value={settings.bank_swift} onChange={(v) => update({ bank_swift: v })} placeholder="HABALV22" />
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">SWIFT / BIC</Label>
+            <Input
+              value={settings.bank_swift}
+              onChange={(e) => update({ bank_swift: e.target.value })}
+              onBlur={() => update({ bank_swift: normalizeSwift(settings.bank_swift) })}
+              placeholder="HABALV22"
+              maxLength={11}
+              className={swiftError && settings.bank_swift ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!swiftError}
+            />
+            {settings.bank_swift && swiftError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {swiftError}
+              </p>
+            )}
+            {settings.bank_swift && !swiftError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs SWIFT/BIC
+              </p>
+            )}
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs sm:text-sm">IBAN</Label>
@@ -205,7 +242,7 @@ export const SettingsManager = () => {
       </Section>
 
       <div className="sticky bottom-20 sm:bottom-4 flex justify-end">
-        <Button onClick={handleSave} disabled={saving || !!ibanError} className="bg-primary text-primary-foreground shadow-lg">
+        <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError} className="bg-primary text-primary-foreground shadow-lg">
           <Save className="w-4 h-4 mr-2" />
           {saving ? "Saglabā..." : "Saglabāt iestatījumus"}
         </Button>
