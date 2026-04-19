@@ -408,6 +408,35 @@ const Checkout = () => {
                 )}
               </section>
 
+              {/* Payment method */}
+              <section className="bg-card border border-border rounded-lg p-6">
+                <h2 className="text-lg font-display mb-4">{t("checkout.paymentMethod", "Apmaksas veids")}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "card" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                  >
+                    <CreditCard className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: paymentMethod === "card" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.payCard", "Maksāt ar karti")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.payCardDesc", "Tūlītēja apmaksa caur Stripe (Visa, Mastercard)")}</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("bank_transfer")}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "bank_transfer" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                  >
+                    <Landmark className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: paymentMethod === "bank_transfer" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.payBank", "Bankas pārskaitījums (rēķins)")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.payBankDesc", "Saņemsiet rēķinu uz e-pastu. Pasūtījums tiks apstrādāts pēc maksājuma saņemšanas (1-3 d.d.)")}</p>
+                    </div>
+                  </button>
+                </div>
+              </section>
+
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.notes")}</h2>
                 <textarea value={form.notes} onChange={(e) => updateField("notes", e.target.value)} placeholder={t("checkout.notesPlaceholder")} className="w-full bg-background border border-border rounded-md p-3 text-sm font-body min-h-[80px] resize-y focus:outline-none focus:ring-2 focus:ring-ring" maxLength={500} />
