@@ -110,11 +110,16 @@ export const SettingsManager = () => {
   };
 
   const ibanError = settings ? validateIban(settings.bank_iban) : null;
+  const swiftError = settings ? validateSwift(settings.bank_swift) : null;
 
   const handleSave = async () => {
     if (!settings) return;
     if (ibanError) {
       toast.error("Nederīgs IBAN — " + ibanError);
+      return;
+    }
+    if (swiftError) {
+      toast.error("Nederīgs SWIFT/BIC — " + swiftError);
       return;
     }
     setSaving(true);
