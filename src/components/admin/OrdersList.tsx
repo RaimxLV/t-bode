@@ -255,6 +255,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             B2B
                           </span>
                         )}
+                        {order.payment_method === "bank_transfer" && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-amber-100 text-amber-800 border-amber-200 inline-flex items-center gap-1">
+                            <Landmark className="w-3 h-3" />
+                            {t("admin.paymentBank", "Bankas pārsk.")}
+                          </span>
+                        )}
+                        {order.manually_paid_at && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-green-100 text-green-800 border-green-200 inline-flex items-center gap-1">
+                            <BadgeCheck className="w-3 h-3" />
+                            {t("admin.paidBadge", "Apmaksāts")}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
                         {(order.is_business ? order.company_name : order.shipping_name) && (
