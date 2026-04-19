@@ -147,27 +147,39 @@ serve(async (req) => {
         });
       }
 
+      // Buyer custom fields (only for B2B). Seller info goes into the footer
+      // because Stripe limits custom_fields to 4 entries total.
+      const buyerFields = business?.is_business
+        ? [
+            ...(business.company_reg_number
+              ? [{ name: "Pircēja Reģ.Nr.", value: String(business.company_reg_number) }]
+              : []),
+            ...(business.company_vat_number
+              ? [{ name: "Pircēja PVN Nr.", value: String(business.company_vat_number) }]
+              : []),
+          ]
+        : [];
+
+      const sellerFields = [
+        ...(settings.company_reg_number
+          ? [{ name: "Pārdevēja Reģ.Nr.", value: String(settings.company_reg_number) }]
+          : []),
+        ...(settings.company_vat_number
+          ? [{ name: "Pārdevēja PVN Nr.", value: String(settings.company_vat_number) }]
+          : []),
+      ];
+
       const invoice = await stripe.invoices.create({
         customer: customerId,
         collection_method: "send_invoice",
         days_until_due: 3,
-        description: `T-Bode pasūtījums ${order_id.slice(0, 8).toUpperCase()} — Bankas pārskaitījums`,
+        description: `${settings.company_name} — pasūtījums ${orderRef} — Bankas pārskaitījums`,
         metadata: {
           order_id,
           payment_method: "bank_transfer",
         },
-        custom_fields: business?.is_business
-          ? [
-              ...(business.company_reg_number
-                ? [{ name: "Reģ. Nr.", value: business.company_reg_number }]
-                : []),
-              ...(business.company_vat_number
-                ? [{ name: "PVN Nr.", value: business.company_vat_number }]
-                : []),
-            ].slice(0, 4)
-          : undefined,
-        footer:
-          "Lūdzu veiciet apmaksu uz norādītajiem bankas rekvizītiem 3 darba dienu laikā. Norādiet pasūtījuma numuru maksājuma mērķī.",
+        custom_fields: [...buyerFields, ...sellerFields].slice(0, 4),
+        footer: bankFooter,
       });
 
       // Finalize and send invoice email
