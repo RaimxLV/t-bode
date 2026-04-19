@@ -135,7 +135,7 @@ const PaymentSuccess = () => {
                 {orderRef && (
                   <Row
                     label={t("payment.reference", "Maksājuma mērķis")}
-                    value={`T-Bode ${orderRef}`}
+                    value={`${settings.company_name} ${orderRef}`}
                     onCopy={copy}
                     highlight
                   />
