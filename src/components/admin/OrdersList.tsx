@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2 } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ORDER_STATUSES = [
@@ -103,6 +103,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
     else { toast.success(t("admin.statusUpdated")); onRefresh(); }
+  };
+
+  const markAsPaid = async (orderId: string) => {
+    if (!confirm(t("admin.markPaidConfirm", "Apstiprināt, ka maksājums ir saņemts bankā?"))) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "confirmed" as any,
+        manually_paid_at: new Date().toISOString(),
+      })
+      .eq("id", orderId);
+    if (error) toast.error(t("admin.statusError"));
+    else { toast.success(t("admin.markedAsPaid", "Pasūtījums atzīmēts kā apmaksāts")); onRefresh(); }
   };
 
   const deleteOrder = async (orderId: string) => {
@@ -242,6 +255,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             B2B
                           </span>
                         )}
+                        {order.payment_method === "bank_transfer" && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-amber-100 text-amber-800 border-amber-200 inline-flex items-center gap-1">
+                            <Landmark className="w-3 h-3" />
+                            {t("admin.paymentBank", "Bankas pārsk.")}
+                          </span>
+                        )}
+                        {order.manually_paid_at && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-green-100 text-green-800 border-green-200 inline-flex items-center gap-1">
+                            <BadgeCheck className="w-3 h-3" />
+                            {t("admin.paidBadge", "Apmaksāts")}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-3 mt-0.5">
                         {(order.is_business ? order.company_name : order.shipping_name) && (
@@ -313,7 +338,46 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       </div>
 
-                      {/* Omniva shipment block */}
+                      {/* Bank transfer block */}
+                      {order.payment_method === "bank_transfer" && (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2">
+                          <p className="text-xs font-semibold font-body text-amber-900 flex items-center gap-1.5">
+                            <Landmark className="w-3.5 h-3.5" /> {t("admin.bankTransferPayment", "Bankas pārskaitījums")}
+                          </p>
+                          {order.manually_paid_at ? (
+                            <p className="text-xs text-green-800 font-body inline-flex items-center gap-1.5">
+                              <BadgeCheck className="w-3.5 h-3.5" />
+                              {t("admin.markedPaidOn", "Atzīmēts kā apmaksāts")}: {new Date(order.manually_paid_at).toLocaleString("lv-LV")}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-[11px] text-amber-900 font-body">
+                                {t("admin.awaitingBankPayment", "Gaida apmaksu bankas kontā. Atzīmējiet pasūtījumu kā apmaksātu, kad nauda ir saņemta.")}
+                              </p>
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={() => markAsPaid(order.id)}
+                              >
+                                <BadgeCheck className="w-3.5 h-3.5" />
+                                {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
+                              </Button>
+                            </>
+                          )}
+                          {order.stripe_invoice_pdf && (
+                            <a
+                              href={order.stripe_invoice_pdf}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-amber-900 underline font-body"
+                            >
+                              <FileText className="w-3.5 h-3.5" /> {t("admin.downloadInvoice", "Lejupielādēt rēķinu")}
+                            </a>
+                          )}
+                        </div>
+                      )}
+
                       <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                         <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
                           <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}

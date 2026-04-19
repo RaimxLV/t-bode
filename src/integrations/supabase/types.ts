@@ -206,6 +206,8 @@ export type Database = {
           guest_email: string | null
           id: string
           is_business: boolean
+          manually_paid_at: string | null
+          manually_paid_by: string | null
           notes: string | null
           omniva_barcode: string | null
           omniva_label_url: string | null
@@ -213,6 +215,7 @@ export type Database = {
           omniva_shipment_created_at: string | null
           omniva_tracking_status: string | null
           order_number: number
+          payment_method: string
           shipping_address: string | null
           shipping_city: string | null
           shipping_name: string | null
@@ -236,6 +239,8 @@ export type Database = {
           guest_email?: string | null
           id?: string
           is_business?: boolean
+          manually_paid_at?: string | null
+          manually_paid_by?: string | null
           notes?: string | null
           omniva_barcode?: string | null
           omniva_label_url?: string | null
@@ -243,6 +248,7 @@ export type Database = {
           omniva_shipment_created_at?: string | null
           omniva_tracking_status?: string | null
           order_number?: number
+          payment_method?: string
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
@@ -266,6 +272,8 @@ export type Database = {
           guest_email?: string | null
           id?: string
           is_business?: boolean
+          manually_paid_at?: string | null
+          manually_paid_by?: string | null
           notes?: string | null
           omniva_barcode?: string | null
           omniva_label_url?: string | null
@@ -273,6 +281,7 @@ export type Database = {
           omniva_shipment_created_at?: string | null
           omniva_tracking_status?: string | null
           order_number?: number
+          payment_method?: string
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
@@ -382,6 +391,51 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          bank_beneficiary: string
+          bank_iban: string
+          bank_name: string
+          bank_swift: string
+          company_address: string | null
+          company_name: string
+          company_reg_number: string | null
+          company_vat_number: string | null
+          id: string
+          payment_instructions_en: string | null
+          payment_instructions_lv: string | null
+          updated_at: string
+        }
+        Insert: {
+          bank_beneficiary?: string
+          bank_iban?: string
+          bank_name?: string
+          bank_swift?: string
+          company_address?: string | null
+          company_name?: string
+          company_reg_number?: string | null
+          company_vat_number?: string | null
+          id?: string
+          payment_instructions_en?: string | null
+          payment_instructions_lv?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bank_beneficiary?: string
+          bank_iban?: string
+          bank_name?: string
+          bank_swift?: string
+          company_address?: string | null
+          company_name?: string
+          company_reg_number?: string | null
+          company_vat_number?: string | null
+          id?: string
+          payment_instructions_en?: string | null
+          payment_instructions_lv?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
