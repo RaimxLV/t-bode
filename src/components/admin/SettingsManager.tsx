@@ -174,7 +174,28 @@ export const SettingsManager = () => {
         <Field label="Saņēmējs (Beneficiary)" value={settings.bank_beneficiary} onChange={(v) => update({ bank_beneficiary: v })} placeholder="SIA Ervitex" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Banka" value={settings.bank_name} onChange={(v) => update({ bank_name: v })} placeholder="Swedbank" />
-          <Field label="SWIFT / BIC" value={settings.bank_swift} onChange={(v) => update({ bank_swift: v })} placeholder="HABALV22" />
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">SWIFT / BIC</Label>
+            <Input
+              value={settings.bank_swift}
+              onChange={(e) => update({ bank_swift: e.target.value })}
+              onBlur={() => update({ bank_swift: normalizeSwift(settings.bank_swift) })}
+              placeholder="HABALV22"
+              maxLength={11}
+              className={swiftError && settings.bank_swift ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!swiftError}
+            />
+            {settings.bank_swift && swiftError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {swiftError}
+              </p>
+            )}
+            {settings.bank_swift && !swiftError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs SWIFT/BIC
+              </p>
+            )}
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs sm:text-sm">IBAN</Label>
