@@ -41,6 +41,17 @@ const validateIban = (raw: string): string | null => {
 
 const formatIban = (raw: string) => normalizeIban(raw).replace(/(.{4})/g, "$1 ").trim();
 
+const normalizeSwift = (raw: string) => raw.replace(/\s+/g, "").toUpperCase();
+
+/** Validate SWIFT/BIC: 8 or 11 chars, format AAAA BB CC [DDD]. Returns null if valid. */
+const validateSwift = (raw: string): string | null => {
+  const swift = normalizeSwift(raw);
+  if (!swift) return "SWIFT/BIC ir obligāts";
+  if (swift.length !== 8 && swift.length !== 11) return "SWIFT/BIC jābūt 8 vai 11 simbolu garumā";
+  if (!/^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(swift)) return "Nederīgs SWIFT/BIC formāts";
+  return null;
+};
+
 interface SiteSettings {
   id: string;
   company_name: string;
