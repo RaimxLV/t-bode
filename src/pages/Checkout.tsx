@@ -472,7 +472,11 @@ const Checkout = () => {
                   <span style={{ color: "hsl(var(--primary))" }}>{orderTotal.toFixed(2).replace(".", ",")} €</span>
                 </div>
                 <Button className="w-full mt-6 py-6 text-base font-body font-semibold" style={{ background: "var(--gradient-brand)" }} disabled={submitting} onClick={handleSubmit}>
-                  {submitting ? t("checkout.processing") : t("checkout.submit")}
+                  {submitting
+                    ? t("checkout.processing")
+                    : paymentMethod === "bank_transfer"
+                      ? t("checkout.submitBank", "Veikt pasūtījumu un saņemt rēķinu")
+                      : t("checkout.submit")}
                 </Button>
               </div>
             </motion.div>
