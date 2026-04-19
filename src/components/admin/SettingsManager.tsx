@@ -52,6 +52,22 @@ const validateSwift = (raw: string): string | null => {
   return null;
 };
 
+/** LV uzņēmuma reģ.Nr.: tieši 11 cipari. Tukšs = OK (lauks nav obligāts). */
+const validateRegNumber = (raw: string): string | null => {
+  const v = raw.replace(/\s+/g, "");
+  if (!v) return null;
+  if (!/^\d{11}$/.test(v)) return "Reģ.Nr. jābūt 11 cipariem";
+  return null;
+};
+
+/** LV PVN reģ.Nr.: LV + 11 cipari. Tukšs = OK. */
+const validateVatNumber = (raw: string): string | null => {
+  const v = raw.replace(/\s+/g, "").toUpperCase();
+  if (!v) return null;
+  if (!/^LV\d{11}$/.test(v)) return "PVN nr. formāts: LV + 11 cipari";
+  return null;
+};
+
 interface SiteSettings {
   id: string;
   company_name: string;
@@ -111,17 +127,15 @@ export const SettingsManager = () => {
 
   const ibanError = settings ? validateIban(settings.bank_iban) : null;
   const swiftError = settings ? validateSwift(settings.bank_swift) : null;
+  const regError = settings ? validateRegNumber(settings.company_reg_number ?? "") : null;
+  const vatError = settings ? validateVatNumber(settings.company_vat_number ?? "") : null;
 
   const handleSave = async () => {
     if (!settings) return;
-    if (ibanError) {
-      toast.error("Nederīgs IBAN — " + ibanError);
-      return;
-    }
-    if (swiftError) {
-      toast.error("Nederīgs SWIFT/BIC — " + swiftError);
-      return;
-    }
+    if (ibanError) { toast.error("Nederīgs IBAN — " + ibanError); return; }
+    if (swiftError) { toast.error("Nederīgs SWIFT/BIC — " + swiftError); return; }
+    if (regError) { toast.error("Nederīgs Reģ.Nr. — " + regError); return; }
+    if (vatError) { toast.error("Nederīgs PVN nr. — " + vatError); return; }
     setSaving(true);
     const { id, ...rest } = settings;
     const normalizedIban = normalizeIban(rest.bank_iban);
@@ -131,8 +145,8 @@ export const SettingsManager = () => {
         ...rest,
         bank_iban: normalizedIban,
         bank_swift: rest.bank_swift.trim().toUpperCase(),
-        company_reg_number: rest.company_reg_number ?? "",
-        company_vat_number: rest.company_vat_number ?? "",
+        company_reg_number: (rest.company_reg_number ?? "").replace(/\s+/g, ""),
+        company_vat_number: (rest.company_vat_number ?? "").replace(/\s+/g, "").toUpperCase(),
         company_address: rest.company_address ?? "",
         payment_instructions_lv: rest.payment_instructions_lv ?? "",
         payment_instructions_en: rest.payment_instructions_en ?? "",
@@ -164,8 +178,50 @@ export const SettingsManager = () => {
       <Section icon={Building2} title="Uzņēmuma dati">
         <Field label="Uzņēmuma nosaukums" value={settings.company_name} onChange={(v) => update({ company_name: v })} placeholder="SIA Ervitex" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Field label="Reģ. Nr." value={settings.company_reg_number ?? ""} onChange={(v) => update({ company_reg_number: v })} placeholder="40003XXXXXX" />
-          <Field label="PVN reģ. Nr." value={settings.company_vat_number ?? ""} onChange={(v) => update({ company_vat_number: v })} placeholder="LV40003XXXXXX" />
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Reģ. Nr.</Label>
+            <Input
+              value={settings.company_reg_number ?? ""}
+              onChange={(e) => update({ company_reg_number: e.target.value })}
+              placeholder="40003XXXXXX"
+              maxLength={11}
+              inputMode="numeric"
+              className={regError && settings.company_reg_number ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!regError}
+            />
+            {settings.company_reg_number && regError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {regError}
+              </p>
+            )}
+            {settings.company_reg_number && !regError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs
+              </p>
+            )}
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">PVN reģ. Nr.</Label>
+            <Input
+              value={settings.company_vat_number ?? ""}
+              onChange={(e) => update({ company_vat_number: e.target.value })}
+              onBlur={() => update({ company_vat_number: (settings.company_vat_number ?? "").replace(/\s+/g, "").toUpperCase() })}
+              placeholder="LV40003XXXXXX"
+              maxLength={13}
+              className={vatError && settings.company_vat_number ? "border-destructive focus-visible:ring-destructive" : ""}
+              aria-invalid={!!vatError}
+            />
+            {settings.company_vat_number && vatError && (
+              <p className="text-xs text-destructive flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" /> {vatError}
+              </p>
+            )}
+            {settings.company_vat_number && !vatError && (
+              <p className="text-xs text-primary flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs
+              </p>
+            )}
+          </div>
         </div>
         <Field label="Juridiskā adrese" value={settings.company_address ?? ""} onChange={(v) => update({ company_address: v })} placeholder="Iela 1, Rīga, LV-1000" />
       </Section>
@@ -242,7 +298,7 @@ export const SettingsManager = () => {
       </Section>
 
       <div className="sticky bottom-20 sm:bottom-4 flex justify-end">
-        <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError} className="bg-primary text-primary-foreground shadow-lg">
+        <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError || !!regError || !!vatError} className="bg-primary text-primary-foreground shadow-lg">
           <Save className="w-4 h-4 mr-2" />
           {saving ? "Saglabā..." : "Saglabāt iestatījumus"}
         </Button>
