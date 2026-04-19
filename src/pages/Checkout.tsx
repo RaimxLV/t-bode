@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
