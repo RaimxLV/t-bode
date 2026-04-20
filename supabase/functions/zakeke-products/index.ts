@@ -17,6 +17,8 @@ interface ColorVariant {
   images?: string[];
 }
 
+const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+
 function normalizeHex(hex?: string) {
   if (!hex) return undefined;
   const normalized = hex.trim();
@@ -46,7 +48,56 @@ function isOptionsRequest(url: URL) {
   const decodedSearch = decodeURIComponent(url.search || "").toLowerCase();
   const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
 
-  return decodedPath.endsWith("/options") || decodedSearch.includes("/options");
+  return decodedPath.endsWith("/options") || decodedSearch.includes("/options") || decodedSearch.includes("options=true");
+}
+
+function sanitizeCode(raw: string | null): string | null {
+  if (!raw) return null;
+
+  const decoded = decodeURIComponent(raw).trim();
+  if (!decoded) return null;
+
+  const uuidMatch = decoded.match(UUID_PATTERN);
+  if (uuidMatch) return uuidMatch[0];
+
+  let value = decoded
+    .replace(/^[?#]/, "")
+    .replace(/\{[^}]*\}/g, "")
+    .replace(/^(?:code|id|productId|product_id|productCode)=/i, "")
+    .replace(/^&+/, "")
+    .replace(/\/options.*$/i, "")
+    .trim();
+
+  value = value.replace(/^(?:options=true|page=\d+)+/i, "").replace(/^[-=&?]+/, "").trim();
+
+  const slugMatch = value.match(/[a-z0-9]+(?:-[a-z0-9]+)+/i);
+  if (slugMatch) return slugMatch[0].toLowerCase();
+
+  return value || null;
+}
+
+function resolveProductCode(url: URL) {
+  const queryCandidates = [
+    url.searchParams.get("code"),
+    url.searchParams.get("id"),
+    url.searchParams.get("productId"),
+    url.searchParams.get("product_id"),
+    url.searchParams.get("productCode"),
+    decodeURIComponent(url.search || ""),
+  ];
+
+  for (const candidate of queryCandidates) {
+    const code = sanitizeCode(candidate);
+    if (code) return code;
+  }
+
+  const parts = url.pathname.split("/").filter(Boolean);
+  const idx = parts.indexOf("zakeke-products");
+  if (idx >= 0 && parts[idx + 1]) {
+    return sanitizeCode(parts[idx + 1]);
+  }
+
+  return null;
 }
 
 function buildVariantsPayload(product: any, productCode: string) {
@@ -124,35 +175,8 @@ Deno.serve(async (req) => {
     });
     console.log("FULL_REQUEST_HEADERS", Object.fromEntries(req.headers.entries()));
 
-    function sanitizeCode(raw: string | null): string | null {
-      if (!raw) return null;
-      let v = raw.trim();
-      // Strip any unresolved placeholder fragments like "{productid}"
-      v = v.replace(/\{[^}]*\}/g, "");
-      // Drop trailing path segments (e.g. "/options")
-      v = v.split("/")[0];
-      v = v.trim();
-      return v || null;
-    }
-
-    // Try query params first
-    let code =
-      sanitizeCode(url.searchParams.get("code")) ||
-      sanitizeCode(url.searchParams.get("id")) ||
-      sanitizeCode(url.searchParams.get("productId")) ||
-      sanitizeCode(url.searchParams.get("product_id")) ||
-      sanitizeCode(url.searchParams.get("productCode"));
-
-    // Fallback: path-style /zakeke-products/<code>(/options)?
-    if (!code) {
-      const parts = url.pathname.split("/").filter(Boolean);
-      const idx = parts.indexOf("zakeke-products");
-      if (idx >= 0 && parts[idx + 1]) {
-        code = sanitizeCode(parts[idx + 1]);
-      }
-    }
-
-    const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
+    const code = resolveProductCode(url);
+    const isUuid = !!code && UUID_PATTERN.test(code);
     console.log("ZAKEKE_RESOLVED_CODE", { code, isUuid });
 
     const optionsRequest = isOptionsRequest(url);
