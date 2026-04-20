@@ -6,6 +6,72 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, OPTIONS",
 };
 
+interface ColorVariant {
+  name?: string;
+  hex?: string;
+  images?: string[];
+}
+
+// Build Zakeke-formatted variants payload (Color + Size attributes with combinations)
+function buildVariantsPayload(product: any) {
+  const colorVariants: ColorVariant[] = Array.isArray(product.color_variants)
+    ? product.color_variants
+    : [];
+  const colors: string[] = colorVariants.length
+    ? colorVariants.map((c) => c.name).filter(Boolean) as string[]
+    : (Array.isArray(product.colors) ? product.colors : []);
+  const sizes: string[] = Array.isArray(product.sizes) ? product.sizes : [];
+
+  const attributes: Array<{ name: string; values: { name: string; thumbnail?: string }[] }> = [];
+
+  if (colors.length) {
+    attributes.push({
+      name: "Color",
+      values: colors.map((name) => {
+        const cv = colorVariants.find((c) => c.name === name);
+        return {
+          name,
+          thumbnail: cv?.images?.[0] || product.image_url || "",
+          ...(cv?.hex ? { hex: cv.hex } : {}),
+        } as { name: string; thumbnail?: string; hex?: string };
+      }),
+    });
+  }
+
+  if (sizes.length) {
+    attributes.push({
+      name: "Size",
+      values: sizes.map((name) => ({ name })),
+    });
+  }
+
+  // Generate all combinations (cartesian product) of color × size
+  const colorList = colors.length ? colors : [null];
+  const sizeList = sizes.length ? sizes : [null];
+  const combinations: any[] = [];
+  let idx = 1;
+  for (const color of colorList) {
+    for (const size of sizeList) {
+      const cv = color ? colorVariants.find((c) => c.name === color) : null;
+      const codeParts = [product.zakeke_model_code || product.slug];
+      if (color) codeParts.push(color);
+      if (size) codeParts.push(size);
+      combinations.push({
+        code: codeParts.join("-"),
+        id: idx++,
+        price: Number(product.price) || 0,
+        thumbnail: cv?.images?.[0] || product.image_url || "",
+        attributes: {
+          ...(color ? { Color: color } : {}),
+          ...(size ? { Size: size } : {}),
+        },
+      });
+    }
+  }
+
+  return { attributes, combinations };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -16,8 +82,52 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Support pagination as required by Zakeke
     const url = new URL(req.url);
+    // Zakeke may pass code/productId/id as query param
+    const code =
+      url.searchParams.get("code") ||
+      url.searchParams.get("productId") ||
+      url.searchParams.get("product_id") ||
+      url.searchParams.get("id");
+
+    // ---- Single-product mode (with variants) ----
+    if (code) {
+      const { data: product, error } = await supabase
+        .from("products")
+        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code")
+        .or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!product) {
+        return new Response(JSON.stringify({ error: "Product not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { attributes, combinations } = buildVariantsPayload(product);
+
+      const payload = {
+        code: product.zakeke_model_code || product.slug,
+        id: product.id,
+        name: product.name,
+        description: product.description || "",
+        thumbnail: product.image_url || "",
+        price: Number(product.price) || 0,
+        currency: "EUR",
+        isOutOfStock: !product.in_stock,
+        attributes,
+        variants: combinations,
+      };
+
+      return new Response(JSON.stringify(payload), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    // ---- List mode (paginated) ----
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = 50;
     const from = (page - 1) * pageSize;
