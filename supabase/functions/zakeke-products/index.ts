@@ -93,13 +93,46 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const url = new URL(req.url);
-    const code =
-      url.searchParams.get("code") ||
-      url.searchParams.get("id") ||
-      url.searchParams.get("productId") ||
-      url.searchParams.get("product_id") ||
-      url.searchParams.get("productCode");
+    console.log("ZAKEKE_INCOMING_REQUEST", {
+      method: req.method,
+      url: req.url,
+      pathname: url.pathname,
+      search: url.search,
+      origin: req.headers.get("origin"),
+      referer: req.headers.get("referer"),
+      userAgent: req.headers.get("user-agent"),
+    });
+
+    function sanitizeCode(raw: string | null): string | null {
+      if (!raw) return null;
+      let v = raw.trim();
+      // Strip any unresolved placeholder fragments like "{productid}"
+      v = v.replace(/\{[^}]*\}/g, "");
+      // Drop trailing path segments (e.g. "/options")
+      v = v.split("/")[0];
+      v = v.trim();
+      return v || null;
+    }
+
+    // Try query params first
+    let code =
+      sanitizeCode(url.searchParams.get("code")) ||
+      sanitizeCode(url.searchParams.get("id")) ||
+      sanitizeCode(url.searchParams.get("productId")) ||
+      sanitizeCode(url.searchParams.get("product_id")) ||
+      sanitizeCode(url.searchParams.get("productCode"));
+
+    // Fallback: path-style /zakeke-products/<code>(/options)?
+    if (!code) {
+      const parts = url.pathname.split("/").filter(Boolean);
+      const idx = parts.indexOf("zakeke-products");
+      if (idx >= 0 && parts[idx + 1]) {
+        code = sanitizeCode(parts[idx + 1]);
+      }
+    }
+
     const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
+    console.log("ZAKEKE_RESOLVED_CODE", { code, isUuid });
 
     // ---- Single-product mode (with variants) ----
     if (code) {
