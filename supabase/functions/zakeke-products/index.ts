@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const jsonHeaders = createJsonHeaders(req);
 
     const url = new URL(req.url);
     console.log("ZAKEKE_INCOMING_REQUEST", {
@@ -121,6 +122,7 @@ Deno.serve(async (req) => {
       referer: req.headers.get("referer"),
       userAgent: req.headers.get("user-agent"),
     });
+    console.log("FULL_REQUEST_HEADERS", Object.fromEntries(req.headers.entries()));
 
     function sanitizeCode(raw: string | null): string | null {
       if (!raw) return null;
@@ -173,7 +175,7 @@ Deno.serve(async (req) => {
       if (!product) {
         return new Response(JSON.stringify({ error: "Product not found" }), {
           status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: jsonHeaders,
         });
       }
 
@@ -202,7 +204,7 @@ Deno.serve(async (req) => {
       console.log(optionsRequest ? "ZAKEKE_PRODUCT_OPTIONS_PAYLOAD" : "ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
 
       return new Response(JSON.stringify(payload), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: jsonHeaders,
         status: 200,
       });
     }
@@ -233,14 +235,14 @@ Deno.serve(async (req) => {
     console.log("ZAKEKE_PRODUCTS_LIST_PAYLOAD", JSON.stringify(zakekeProducts));
 
     return new Response(JSON.stringify(zakekeProducts), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: jsonHeaders,
       status: 200,
     });
   } catch (err) {
     console.error("Zakeke products error:", err);
     return new Response(
       JSON.stringify({ error: "Failed to fetch products" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: createJsonHeaders(req) }
     );
   }
 });
