@@ -81,6 +81,8 @@ function buildVariantsPayload(product: any, productCode: string) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -91,12 +93,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const url = new URL(req.url);
-    // Zakeke may pass code/productId/id as query param
     const code =
       url.searchParams.get("code") ||
+      url.searchParams.get("id") ||
       url.searchParams.get("productId") ||
       url.searchParams.get("product_id") ||
-      url.searchParams.get("id");
+      url.searchParams.get("productCode");
     const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
 
     // ---- Single-product mode (with variants) ----
@@ -118,7 +120,7 @@ Deno.serve(async (req) => {
       }
 
       const productCode = getProductCode(product);
-      const { attributes, combinations, variations } = buildVariantsPayload(product, productCode);
+      const { variations } = buildVariantsPayload(product, productCode);
 
       const payload = {
         code: productCode,
@@ -129,9 +131,7 @@ Deno.serve(async (req) => {
         price: Number(product.price) || 0,
         currency: "EUR",
         isOutOfStock: !product.in_stock,
-        attributes,
         variations,
-        variants: combinations,
       };
 
       console.log("ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
@@ -160,9 +160,12 @@ Deno.serve(async (req) => {
 
     const zakekeProducts = (products ?? []).map((p: any) => ({
       code: getProductCode(p),
+      id: p.id,
       name: p.name,
       thumbnail: p.image_url || "",
     }));
+
+    console.log("ZAKEKE_PRODUCTS_LIST_PAYLOAD", JSON.stringify(zakekeProducts));
 
     return new Response(JSON.stringify(zakekeProducts), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
