@@ -1,5 +1,3 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -10,7 +8,7 @@ const corsHeaders = {
 let cache: { data: unknown; expires: number } | null = null;
 const TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
