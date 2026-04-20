@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,14 +89,17 @@ Deno.serve(async (req) => {
       url.searchParams.get("productId") ||
       url.searchParams.get("product_id") ||
       url.searchParams.get("id");
+    const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
 
     // ---- Single-product mode (with variants) ----
     if (code) {
-      const { data: product, error } = await supabase
+      const productQuery = supabase
         .from("products")
-        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code")
-        .or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`)
-        .maybeSingle();
+        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code");
+
+      const { data: product, error } = isUuid
+        ? await productQuery.or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`).maybeSingle()
+        : await productQuery.or(`zakeke_model_code.eq.${code},slug.eq.${code}`).maybeSingle();
 
       if (error) throw error;
       if (!product) {
