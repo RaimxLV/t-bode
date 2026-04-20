@@ -89,14 +89,19 @@ Deno.serve(async (req) => {
       url.searchParams.get("productId") ||
       url.searchParams.get("product_id") ||
       url.searchParams.get("id");
+    const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
 
     // ---- Single-product mode (with variants) ----
     if (code) {
-      const { data: product, error } = await supabase
+      let query = supabase
         .from("products")
-        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code")
-        .or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`)
-        .maybeSingle();
+        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code");
+
+      query = isUuid
+        ? query.or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`)
+        : query.or(`zakeke_model_code.eq.${code},slug.eq.${code}`);
+
+      const { data: product, error } = await query.maybeSingle();
 
       if (error) throw error;
       if (!product) {
