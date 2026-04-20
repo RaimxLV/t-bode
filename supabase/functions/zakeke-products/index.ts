@@ -1,21 +1,14 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const defaultCorsHeaders = {
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Vary": "Origin",
+  "Access-Control-Expose-Headers": "Content-Type",
 };
 
 function buildCorsHeaders(req: Request) {
-  const origin = req.headers.get("origin")?.trim();
-  const allowedOrigin = origin && /(^https:\/\/([a-z0-9-]+\.)*zakeke\.com$)|(^https:\/\/([a-z0-9-]+\.)*zak\.app$)/i.test(origin)
-    ? origin
-    : "*";
-
-  return {
-    ...defaultCorsHeaders,
-    "Access-Control-Allow-Origin": allowedOrigin,
-  };
+  return { ...defaultCorsHeaders };
 }
 
 interface ColorVariant {
@@ -42,6 +35,13 @@ function getProductCode(product: any) {
   return product.zakeke_model_code || product.id || product.slug;
 }
 
+function createJsonHeaders(req: Request) {
+  const headers = new Headers(buildCorsHeaders(req));
+  headers.set("Content-Type", "application/json");
+  headers.set("Cache-Control", "public, max-age=60");
+  return headers;
+}
+
 function isOptionsRequest(url: URL) {
   const decodedSearch = decodeURIComponent(url.search || "").toLowerCase();
   const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
@@ -61,6 +61,7 @@ function buildVariantsPayload(product: any, productCode: string) {
   const colorList = colors.length ? colors : [null];
   const sizeList = sizes.length ? sizes : [null];
   const variations: any[] = [];
+  const usedCodes = new Set<string>();
 
   for (const color of colorList) {
     for (const size of sizeList) {
@@ -69,8 +70,17 @@ function buildVariantsPayload(product: any, productCode: string) {
       const variationCodeParts = [productCode];
       if (size) variationCodeParts.push(sanitizeCodePart(size));
       if (color) variationCodeParts.push(sanitizeCodePart(color));
-      const variationCode = variationCodeParts.join("-");
+      let variationCode = variationCodeParts.join("-") || `${productCode}-variant`;
       const variationLabel = [size, color].filter(Boolean).join(" / ") || product.name;
+
+      if (usedCodes.has(variationCode)) {
+        let suffix = 2;
+        while (usedCodes.has(`${variationCode}-${suffix}`)) {
+          suffix += 1;
+        }
+        variationCode = `${variationCode}-${suffix}`;
+      }
+      usedCodes.add(variationCode);
 
       variations.push({
         code: variationCode,
@@ -84,7 +94,9 @@ function buildVariantsPayload(product: any, productCode: string) {
     }
   }
 
-  return { variations };
+  return {
+    variations: variations.filter((variation) => typeof variation.code === "string" && variation.code.trim().length > 0),
+  };
 }
 
 Deno.serve(async (req) => {
@@ -98,6 +110,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const jsonHeaders = createJsonHeaders(req);
 
     const url = new URL(req.url);
     console.log("ZAKEKE_INCOMING_REQUEST", {
@@ -109,6 +122,7 @@ Deno.serve(async (req) => {
       referer: req.headers.get("referer"),
       userAgent: req.headers.get("user-agent"),
     });
+    console.log("FULL_REQUEST_HEADERS", Object.fromEntries(req.headers.entries()));
 
     function sanitizeCode(raw: string | null): string | null {
       if (!raw) return null;
@@ -161,7 +175,7 @@ Deno.serve(async (req) => {
       if (!product) {
         return new Response(JSON.stringify({ error: "Product not found" }), {
           status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: jsonHeaders,
         });
       }
 
@@ -190,7 +204,7 @@ Deno.serve(async (req) => {
       console.log(optionsRequest ? "ZAKEKE_PRODUCT_OPTIONS_PAYLOAD" : "ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
 
       return new Response(JSON.stringify(payload), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: jsonHeaders,
         status: 200,
       });
     }
@@ -221,14 +235,14 @@ Deno.serve(async (req) => {
     console.log("ZAKEKE_PRODUCTS_LIST_PAYLOAD", JSON.stringify(zakekeProducts));
 
     return new Response(JSON.stringify(zakekeProducts), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: jsonHeaders,
       status: 200,
     });
   } catch (err) {
     console.error("Zakeke products error:", err);
     return new Response(
       JSON.stringify({ error: "Failed to fetch products" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: createJsonHeaders(req) }
     );
   }
 });
