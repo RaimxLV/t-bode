@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.omniva-locations]
 verify_jwt = false
+
+[functions.zakeke-products]
+verify_jwt = false
+
+[functions.zakeke-token]
+verify_jwt = false
