@@ -12,9 +12,26 @@ interface ColorVariant {
   images?: string[];
 }
 
+function normalizeHex(hex?: string) {
+  if (!hex) return undefined;
+  const normalized = hex.trim();
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(normalized) ? normalized.toUpperCase() : undefined;
+}
+
+function sanitizeCodePart(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getProductCode(product: any) {
+  return product.zakeke_model_code || product.id || product.slug;
+}
+
 // Build Zakeke-formatted variants payload (Color + Size attributes with combinations)
-function buildVariantsPayload(product: any) {
-  const storeCode = product.slug;
+function buildVariantsPayload(product: any, productCode: string) {
   const colorVariants: ColorVariant[] = Array.isArray(product.color_variants)
     ? product.color_variants
     : [];
@@ -50,15 +67,20 @@ function buildVariantsPayload(product: any) {
   const colorList = colors.length ? colors : [null];
   const sizeList = sizes.length ? sizes : [null];
   const combinations: any[] = [];
+  const variations: any[] = [];
   let idx = 1;
   for (const color of colorList) {
     for (const size of sizeList) {
       const cv = color ? colorVariants.find((c) => c.name === color) : null;
-      const codeParts = [storeCode];
-      if (color) codeParts.push(color);
-      if (size) codeParts.push(size);
+      const colorHex = normalizeHex(cv?.hex);
+      const variationCodeParts = [productCode];
+      if (size) variationCodeParts.push(sanitizeCodePart(size));
+      if (color) variationCodeParts.push(sanitizeCodePart(color));
+      const variationCode = variationCodeParts.join("-");
+      const variationLabel = [size, color].filter(Boolean).join(" / ") || product.name;
+
       combinations.push({
-        code: codeParts.join("-"),
+        code: variationCode,
         id: idx++,
         price: Number(product.price) || 0,
         thumbnail: cv?.images?.[0] || product.image_url || "",
@@ -67,10 +89,21 @@ function buildVariantsPayload(product: any) {
           ...(size ? { Size: size } : {}),
         },
       });
+
+      variations.push({
+        code: variationCode,
+        name: variationLabel,
+        description: variationLabel,
+        ...(size ? { size } : {}),
+        ...(colorHex ? { color: colorHex } : {}),
+        ...(color ? { colorName: color } : {}),
+        thumbnail: cv?.images?.[0] || product.image_url || "",
+        price: Number(product.price) || 0,
+      });
     }
   }
 
-  return { attributes, combinations };
+  return { attributes, combinations, variations };
 }
 
 Deno.serve(async (req) => {
@@ -110,11 +143,11 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { attributes, combinations } = buildVariantsPayload(product);
-      const storeCode = product.slug;
+      const productCode = getProductCode(product);
+      const { attributes, combinations, variations } = buildVariantsPayload(product, productCode);
 
       const payload = {
-        code: storeCode,
+        code: productCode,
         id: product.id,
         name: product.name,
         description: product.description || "",
@@ -123,8 +156,11 @@ Deno.serve(async (req) => {
         currency: "EUR",
         isOutOfStock: !product.in_stock,
         attributes,
+        variations,
         variants: combinations,
       };
+
+      console.log("ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
 
       return new Response(JSON.stringify(payload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -149,7 +185,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const zakekeProducts = (products ?? []).map((p: any) => ({
-      code: p.slug,
+      code: getProductCode(p),
       name: p.name,
       thumbnail: p.image_url || "",
     }));
