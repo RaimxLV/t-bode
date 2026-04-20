@@ -1,5 +1,5 @@
-import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { constructStripeEvent, createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,9 +12,7 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-    apiVersion: "2025-08-27.basil",
-  });
+  const stripe = createStripeClient();
 
   const signature = req.headers.get("stripe-signature");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
@@ -36,9 +34,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  let event: Stripe.Event;
+  let event: { type: string; data: { object: any } };
   try {
-    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+    event = await constructStripeEvent(body, signature, webhookSecret);
   } catch (err: any) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -55,7 +53,7 @@ Deno.serve(async (req) => {
   try {
     switch (event.type) {
       case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const orderId = session.metadata?.order_id;
         if (!orderId) {
           console.error("No order_id in session metadata");
@@ -90,7 +88,7 @@ Deno.serve(async (req) => {
       }
 
       case "checkout.session.expired": {
-        const session = event.data.object as Stripe.Checkout.Session;
+        const session = event.data.object;
         const orderId = session.metadata?.order_id;
         if (orderId) {
           await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId);
@@ -99,7 +97,7 @@ Deno.serve(async (req) => {
       }
 
       case "invoice.finalized": {
-        const invoice = event.data.object as Stripe.Invoice;
+        const invoice = event.data.object;
         const orderId = invoice.metadata?.order_id;
         if (orderId) {
           await supabase

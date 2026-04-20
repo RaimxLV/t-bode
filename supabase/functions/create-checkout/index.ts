@@ -1,5 +1,5 @@
-import Stripe from "npm:stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createStripeClient } from "../_shared/stripe.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,9 +44,7 @@ Deno.serve(async (req) => {
     const customerEmail = user?.email ?? guest_email;
     if (!customerEmail) throw new Error("Email required for checkout");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
+    const stripe = createStripeClient();
 
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -293,7 +291,7 @@ Deno.serve(async (req) => {
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
     await serviceClient
       .from("orders")
