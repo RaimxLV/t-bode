@@ -14,6 +14,7 @@ interface ColorVariant {
 
 // Build Zakeke-formatted variants payload (Color + Size attributes with combinations)
 function buildVariantsPayload(product: any) {
+  const storeCode = product.slug;
   const colorVariants: ColorVariant[] = Array.isArray(product.color_variants)
     ? product.color_variants
     : [];
@@ -53,7 +54,7 @@ function buildVariantsPayload(product: any) {
   for (const color of colorList) {
     for (const size of sizeList) {
       const cv = color ? colorVariants.find((c) => c.name === color) : null;
-      const codeParts = [product.zakeke_model_code || product.slug];
+      const codeParts = [storeCode];
       if (color) codeParts.push(color);
       if (size) codeParts.push(size);
       combinations.push({
@@ -110,9 +111,10 @@ Deno.serve(async (req) => {
       }
 
       const { attributes, combinations } = buildVariantsPayload(product);
+      const storeCode = product.slug;
 
       const payload = {
-        code: product.zakeke_model_code || product.slug,
+        code: storeCode,
         id: product.id,
         name: product.name,
         description: product.description || "",
@@ -147,7 +149,7 @@ Deno.serve(async (req) => {
     if (error) throw error;
 
     const zakekeProducts = (products ?? []).map((p: any) => ({
-      code: p.zakeke_model_code || p.slug,
+      code: p.slug,
       name: p.name,
       thumbnail: p.image_url || "",
     }));
