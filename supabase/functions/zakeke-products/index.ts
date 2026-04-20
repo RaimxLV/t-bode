@@ -42,6 +42,13 @@ function getProductCode(product: any) {
   return product.zakeke_model_code || product.id || product.slug;
 }
 
+function isOptionsRequest(url: URL) {
+  const decodedSearch = decodeURIComponent(url.search || "").toLowerCase();
+  const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
+
+  return decodedPath.endsWith("/options") || decodedSearch.includes("/options");
+}
+
 function buildVariantsPayload(product: any, productCode: string) {
   const colorVariants: ColorVariant[] = Array.isArray(product.color_variants)
     ? product.color_variants
@@ -134,11 +141,17 @@ Deno.serve(async (req) => {
     const isUuid = !!code && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(code);
     console.log("ZAKEKE_RESOLVED_CODE", { code, isUuid });
 
+    const optionsRequest = isOptionsRequest(url);
+
     // ---- Single-product mode (with variants) ----
     if (code) {
       const productQuery = supabase
         .from("products")
-        .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code");
+        .select(
+          optionsRequest
+            ? "id, name, slug, sizes, colors, color_variants, zakeke_model_code"
+            : "id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code"
+        );
 
       const { data: product, error } = isUuid
         ? await productQuery.or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`).maybeSingle()
@@ -155,19 +168,26 @@ Deno.serve(async (req) => {
       const productCode = getProductCode(product);
       const { variations } = buildVariantsPayload(product, productCode);
 
-      const payload = {
-        code: productCode,
-        id: product.id,
-        name: product.name,
-        description: product.description || "",
-        thumbnail: product.image_url || "",
-        price: Number(product.price) || 0,
-        currency: "EUR",
-        isOutOfStock: !product.in_stock,
-        variations,
-      };
+      const payload = optionsRequest
+        ? {
+            code: productCode,
+            id: product.id,
+            name: product.name,
+            variations,
+          }
+        : {
+            code: productCode,
+            id: product.id,
+            name: product.name,
+            description: product.description || "",
+            thumbnail: product.image_url || "",
+            price: Number(product.price) || 0,
+            currency: "EUR",
+            isOutOfStock: !product.in_stock,
+            variations,
+          };
 
-      console.log("ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
+      console.log(optionsRequest ? "ZAKEKE_PRODUCT_OPTIONS_PAYLOAD" : "ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
 
       return new Response(JSON.stringify(payload), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
