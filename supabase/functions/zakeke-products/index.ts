@@ -93,15 +93,13 @@ Deno.serve(async (req) => {
 
     // ---- Single-product mode (with variants) ----
     if (code) {
-      let query = supabase
+      const productQuery = supabase
         .from("products")
         .select("id, name, slug, description, price, category, image_url, sizes, colors, color_variants, in_stock, zakeke_model_code");
 
-      query = isUuid
-        ? query.or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`)
-        : query.or(`zakeke_model_code.eq.${code},slug.eq.${code}`);
-
-      const { data: product, error } = await query.maybeSingle();
+      const { data: product, error } = isUuid
+        ? await productQuery.or(`zakeke_model_code.eq.${code},slug.eq.${code},id.eq.${code}`).maybeSingle()
+        : await productQuery.or(`zakeke_model_code.eq.${code},slug.eq.${code}`).maybeSingle();
 
       if (error) throw error;
       if (!product) {
