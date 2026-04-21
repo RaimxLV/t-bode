@@ -51,6 +51,11 @@ function isOptionsRequest(url: URL) {
   return decodedPath.endsWith("/options") || decodedSearch.includes("/options") || decodedSearch.includes("options=true");
 }
 
+function isConfiguratorRequest(url: URL) {
+  const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
+  return decodedPath.endsWith("/configurator") || decodedPath.includes("/configurator");
+}
+
 function sanitizeCode(raw: string | null): string | null {
   if (!raw) return null;
 
