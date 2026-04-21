@@ -111,54 +111,42 @@ function resolveProductCode(url: URL) {
   return null;
 }
 
-function buildVariantsPayload(product: any, productCode: string) {
+function buildOptionsPayload(product: any, productCode: string) {
+  // Zakeke wants: [{ code, name, values: [{ code, name }] }]
+  // One entry per attribute (Color, Size), each with its possible values.
   const colorVariants: ColorVariant[] = Array.isArray(product.color_variants)
     ? product.color_variants
     : [];
   const colors: string[] = colorVariants.length
-    ? colorVariants.map((c) => c.name).filter(Boolean) as string[]
+    ? (colorVariants.map((c) => c.name).filter(Boolean) as string[])
     : (Array.isArray(product.colors) ? product.colors : []);
   const sizes: string[] = Array.isArray(product.sizes) ? product.sizes : [];
 
-  const colorList = colors.length ? colors : [null];
-  const sizeList = sizes.length ? sizes : [null];
-  const variations: any[] = [];
-  const usedCodes = new Set<string>();
+  const options: any[] = [];
 
-  for (const color of colorList) {
-    for (const size of sizeList) {
-      const cv = color ? colorVariants.find((c) => c.name === color) : null;
-      const colorHex = normalizeHex(cv?.hex);
-      const variationCodeParts = [productCode];
-      if (size) variationCodeParts.push(sanitizeCodePart(size));
-      if (color) variationCodeParts.push(sanitizeCodePart(color));
-      let variationCode = variationCodeParts.join("-") || `${productCode}-variant`;
-      const variationLabel = [size, color].filter(Boolean).join(" / ") || product.name;
-
-      if (usedCodes.has(variationCode)) {
-        let suffix = 2;
-        while (usedCodes.has(`${variationCode}-${suffix}`)) {
-          suffix += 1;
-        }
-        variationCode = `${variationCode}-${suffix}`;
-      }
-      usedCodes.add(variationCode);
-
-      variations.push({
-        code: variationCode,
-        name: variationLabel,
-        description: variationLabel,
-        attributes: [
-          ...(size ? [{ name: "Size", value: size }] : []),
-          ...(colorHex ? [{ name: "Color", value: colorHex }] : []),
-        ],
-      });
-    }
+  if (colors.length) {
+    options.push({
+      code: `${productCode}-color`,
+      name: "Color",
+      values: colors.map((c) => ({
+        code: `${productCode}-color-${sanitizeCodePart(c)}`,
+        name: c,
+      })),
+    });
   }
 
-  return {
-    variations: variations.filter((variation) => typeof variation.code === "string" && variation.code.trim().length > 0),
-  };
+  if (sizes.length) {
+    options.push({
+      code: `${productCode}-size`,
+      name: "Size",
+      values: sizes.map((s) => ({
+        code: `${productCode}-size-${sanitizeCodePart(s)}`,
+        name: s,
+      })),
+    });
+  }
+
+  return options;
 }
 
 Deno.serve(async (req) => {
