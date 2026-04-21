@@ -29,6 +29,13 @@ interface OrderInfo {
   provider?: string;
   montonio_payment_status?: string | null;
   payment_method?: string;
+  shipping_name?: string | null;
+  shipping_address?: string | null;
+  shipping_city?: string | null;
+  shipping_zip?: string | null;
+  omniva_pickup_point?: string | null;
+  montonio_pickup_point_name?: string | null;
+  montonio_shipping_method_code?: string | null;
 }
 
 const PaymentSuccess = () => {
