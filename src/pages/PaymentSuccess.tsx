@@ -29,6 +29,13 @@ interface OrderInfo {
   provider?: string;
   montonio_payment_status?: string | null;
   payment_method?: string;
+  shipping_name?: string | null;
+  shipping_address?: string | null;
+  shipping_city?: string | null;
+  shipping_zip?: string | null;
+  omniva_pickup_point?: string | null;
+  montonio_pickup_point_name?: string | null;
+  montonio_shipping_method_code?: string | null;
 }
 
 const PaymentSuccess = () => {
@@ -83,7 +90,7 @@ const PaymentSuccess = () => {
     const fetchOrder = async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("order_number,total,stripe_invoice_pdf,status,provider,montonio_payment_status,payment_method")
+        .select("order_number,total,stripe_invoice_pdf,status,provider,montonio_payment_status,payment_method,shipping_name,shipping_address,shipping_city,shipping_zip,omniva_pickup_point,montonio_pickup_point_name,montonio_shipping_method_code")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -203,10 +210,46 @@ const PaymentSuccess = () => {
             </div>
           )}
 
-          {orderRef && (
-            <p className="text-sm text-muted-foreground font-body mb-2">
-              {t("payment.orderId")}: <span className="font-semibold text-foreground">{orderRef}</span>
-            </p>
+          {/* Order summary — only shown once order is loaded & validated from Supabase */}
+          {order && orderId && (
+            <div className="mt-6 rounded-lg border border-border bg-card p-5 text-left">
+              <h2 className="font-display text-lg mb-4">
+                {t("payment.orderSummary", "Pasūtījuma kopsavilkums")}
+              </h2>
+              <dl className="space-y-3 text-sm font-body">
+                {orderRef && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">{t("payment.orderId")}</dt>
+                    <dd className="font-semibold text-foreground">{orderRef}</dd>
+                  </div>
+                )}
+                {order.total != null && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">{t("payment.total", "Kopā")}</dt>
+                    <dd className="font-semibold text-foreground">
+                      {Number(order.total).toFixed(2).replace(".", ",")} €
+                    </dd>
+                  </div>
+                )}
+                {(() => {
+                  const pickup = order.montonio_pickup_point_name || order.omniva_pickup_point;
+                  const address = [order.shipping_address, order.shipping_zip, order.shipping_city]
+                    .filter(Boolean)
+                    .join(", ");
+                  const shippingLabel = pickup
+                    ? `Omniva — ${pickup}`
+                    : address || null;
+                  return shippingLabel ? (
+                    <div className="flex items-start justify-between gap-3">
+                      <dt className="text-muted-foreground shrink-0">
+                        {t("payment.shippingMethod", "Piegāde")}
+                      </dt>
+                      <dd className="text-right text-foreground">{shippingLabel}</dd>
+                    </div>
+                  ) : null;
+                })()}
+              </dl>
+            </div>
           )}
 
           {/* Bank details panel */}
