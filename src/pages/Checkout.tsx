@@ -4,11 +4,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
-import swedbankLogo from "@/assets/banks/swedbank.png";
-import sebLogo from "@/assets/banks/seb.png";
-import luminorLogo from "@/assets/banks/luminor.png";
-import citadeleLogo from "@/assets/banks/citadele.png";
-import lhvLogo from "@/assets/banks/lhv.png";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -27,14 +22,6 @@ import { useTranslation } from "react-i18next";
 type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
-
-const MONTONIO_BANKS: { code: string; name: string; logo: string }[] = [
-  { code: "swedbank", name: "Swedbank", logo: swedbankLogo },
-  { code: "seb", name: "SEB", logo: sebLogo },
-  { code: "luminor", name: "Luminor", logo: luminorLogo },
-  { code: "citadele", name: "Citadele", logo: citadeleLogo },
-  { code: "lhv", name: "LHV", logo: lhvLogo },
-];
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
@@ -70,7 +57,6 @@ const Checkout = () => {
   const [mode, setMode] = useState<CheckoutMode>(user ? "loggedin" : "choose");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("omniva");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
-  const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -217,7 +203,6 @@ const Checkout = () => {
             customer_email: user?.email ?? form.email.trim(),
             customer_name: form.name.trim(),
             customer_phone: form.phone.trim(),
-            preferred_provider: montonioBank,
             shipping:
               shippingMethod === "omniva" && selectedOmniva
                 ? {
@@ -497,32 +482,6 @@ const Checkout = () => {
                     </div>
                   </button>
                 </div>
-
-                {paymentMethod === "montonio" && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <Label className="font-body text-sm mb-3 block">
-                      {t("checkout.selectBank", "Izvēlies banku")}
-                    </Label>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      {MONTONIO_BANKS.map((b) => (
-                        <button
-                          key={b.code}
-                          type="button"
-                          onClick={() => setMontonioBank(b.code)}
-                          className={`flex items-center justify-center px-3 py-3 rounded-md border-2 bg-white transition-all h-16 ${montonioBank === b.code ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-muted-foreground"}`}
-                          aria-label={b.name}
-                        >
-                          <img
-                            src={b.logo}
-                            alt={b.name}
-                            loading="lazy"
-                            className="max-h-10 max-w-full object-contain"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </section>
 
               <section className="bg-card border border-border rounded-lg p-6">

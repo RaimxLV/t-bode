@@ -17,7 +17,6 @@ Deno.serve(async (req) => {
       customer_email,
       customer_name,
       customer_phone,
-      preferred_provider, // bank handle e.g. "swedbank", "seb", "luminor", "citadele"
       shipping, // optional: { method: "omniva-pakomat", pickupPointId, pickupPointName }
     } = body ?? {};
 
@@ -61,7 +60,6 @@ Deno.serve(async (req) => {
         currency: "EUR",
         methodOptions: {
           paymentDescription: `Order #${order_id.slice(0, 8).toUpperCase()}`,
-          ...(preferred_provider ? { preferredProvider: preferred_provider } : {}),
           preferredCountry: "LV",
         },
       },
