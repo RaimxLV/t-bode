@@ -53,7 +53,7 @@ function isOptionsRequest(url: URL) {
 
 function isConfiguratorRequest(url: URL) {
   const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
-  return decodedPath.endsWith("/configurator") || decodedPath.includes("/configurator");
+  return decodedPath.endsWith("/configurator") || decodedPath.endsWith("/customizer");
 }
 
 function sanitizeCode(raw: string | null): string | null {
@@ -88,7 +88,7 @@ function resolveProductCode(url: URL) {
   if (idx >= 0 && parts[idx + 1]) {
     const next = parts[idx + 1];
     // Skip if it's a reserved suffix
-    if (next !== "options" && next !== "configurator") {
+    if (next !== "options" && next !== "configurator" && next !== "customizer") {
       const sanitized = sanitizeCode(next);
       if (sanitized) return sanitized;
     }
