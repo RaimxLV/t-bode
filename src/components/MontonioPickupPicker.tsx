@@ -40,6 +40,13 @@ export const MontonioPickupPicker = ({ selectedId, onSelect }: Props) => {
         const { data, error } = await supabase.functions.invoke("montonio-shipping-methods");
         if (error) throw error;
 
+        // Surface "no carriers activated" as a friendly message
+        if (data?.error || data?.detail?.includes?.("carrier_not_found_for_store")) {
+          throw new Error(
+            "Sandbox veikalā nav aktivēts neviens piegādātājs. Aktivē Omniva carrier Montonio Partner panelī (Shipping → Carriers).",
+          );
+        }
+
         // Montonio returns a structure like:
         // { items: [ { carrierCode, countryCode, pickupPoints: [{ id, name, address, ... }] } ] }
         // Be defensive about variations.
@@ -80,7 +87,7 @@ export const MontonioPickupPicker = ({ selectedId, onSelect }: Props) => {
         if (!cancelled) setPoints(flat);
       } catch (e: any) {
         console.error("Montonio pickup load failed:", e);
-        toast.error(t("checkout.montonioPickupLoadError", "Neizdevās ielādēt Montonio pakomātus"));
+        toast.error(e?.message || t("checkout.montonioPickupLoadError", "Neizdevās ielādēt Montonio pakomātus"));
       } finally {
         if (!cancelled) setLoading(false);
       }
