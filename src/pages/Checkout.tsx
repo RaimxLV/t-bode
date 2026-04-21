@@ -545,7 +545,9 @@ const Checkout = () => {
                     ? t("checkout.processing")
                     : paymentMethod === "bank_transfer"
                       ? t("checkout.submitBank", "Veikt pasūtījumu un saņemt rēķinu")
-                      : t("checkout.submit")}
+                      : paymentMethod === "montonio"
+                        ? t("checkout.submitBankLink", "Maksāt caur banku")
+                        : t("checkout.submit")}
                 </Button>
               </div>
             </motion.div>
