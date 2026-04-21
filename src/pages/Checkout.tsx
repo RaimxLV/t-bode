@@ -21,7 +21,15 @@ import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
-type PaymentMethod = "card" | "bank_transfer";
+type PaymentMethod = "card" | "bank_transfer" | "montonio";
+
+const MONTONIO_BANKS: { code: string; name: string }[] = [
+  { code: "swedbank", name: "Swedbank" },
+  { code: "seb", name: "SEB" },
+  { code: "luminor", name: "Luminor" },
+  { code: "citadele", name: "Citadele" },
+  { code: "lhv", name: "LHV" },
+];
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
@@ -57,6 +65,7 @@ const Checkout = () => {
   const [mode, setMode] = useState<CheckoutMode>(user ? "loggedin" : "choose");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("omniva");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -183,6 +192,35 @@ const Checkout = () => {
         productId: item.productId, name: item.name, price: item.price, quantity: item.quantity,
         size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
       }));
+
+      // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
+      if (paymentMethod === "montonio") {
+        const { data: mData, error: mError } = await supabase.functions.invoke("montonio-create-order", {
+          body: {
+            order_id: order.id,
+            items: stripeItems,
+            origin_url: appOriginUrl,
+            customer_email: user?.email ?? form.email.trim(),
+            customer_name: form.name.trim(),
+            customer_phone: form.phone.trim(),
+            preferred_provider: montonioBank,
+            shipping:
+              shippingMethod === "omniva" && selectedOmniva
+                ? {
+                    method: "omniva-pakomat",
+                    pickupPointId: selectedOmniva,
+                    pickupPointName: selectedOmniva,
+                  }
+                : undefined,
+          },
+        });
+        if (mError) throw mError;
+        if (mData?.url) {
+          window.location.href = mData.url;
+          return;
+        }
+        throw new Error("No Montonio payment URL received");
+      }
 
       const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
         body: {
@@ -411,7 +449,7 @@ const Checkout = () => {
               {/* Payment method */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.paymentMethod", "Apmaksas veids")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
@@ -421,6 +459,17 @@ const Checkout = () => {
                     <div>
                       <p className="font-body font-semibold text-sm">{t("checkout.payCard", "Maksāt ar karti")}</p>
                       <p className="text-xs text-muted-foreground font-body">{t("checkout.payCardDesc", "Tūlītēja apmaksa caur Stripe (Visa, Mastercard)")}</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("montonio")}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "montonio" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                  >
+                    <Landmark className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: paymentMethod === "montonio" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.payBankLink", "Bankas saite")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.payBankLinkDesc", "Tūlītēja apmaksa caur Swedbank, SEB, Citadele, Luminor (Montonio)")}</p>
                     </div>
                   </button>
                   <button
@@ -435,6 +484,26 @@ const Checkout = () => {
                     </div>
                   </button>
                 </div>
+
+                {paymentMethod === "montonio" && (
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <Label className="font-body text-sm mb-3 block">
+                      {t("checkout.selectBank", "Izvēlies banku")}
+                    </Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      {MONTONIO_BANKS.map((b) => (
+                        <button
+                          key={b.code}
+                          type="button"
+                          onClick={() => setMontonioBank(b.code)}
+                          className={`px-3 py-3 rounded-md border-2 text-sm font-body font-semibold transition-all ${montonioBank === b.code ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground"}`}
+                        >
+                          {b.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
 
               <section className="bg-card border border-border rounded-lg p-6">
@@ -476,7 +545,9 @@ const Checkout = () => {
                     ? t("checkout.processing")
                     : paymentMethod === "bank_transfer"
                       ? t("checkout.submitBank", "Veikt pasūtījumu un saņemt rēķinu")
-                      : t("checkout.submit")}
+                      : paymentMethod === "montonio"
+                        ? t("checkout.submitBankLink", "Maksāt caur banku")
+                        : t("checkout.submit")}
                 </Button>
               </div>
             </motion.div>
