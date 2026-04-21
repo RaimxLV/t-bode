@@ -162,6 +162,12 @@ const PaymentSuccess = () => {
           >
             {isBankTransfer ? (
               <Landmark className="w-20 h-20 mx-auto mb-6" style={{ color: "hsl(var(--primary))" }} />
+            ) : paymentState === "verifying" ? (
+              <Loader2 className="w-20 h-20 mx-auto mb-6 animate-spin" style={{ color: "hsl(var(--primary))" }} />
+            ) : paymentState === "failed" ? (
+              <AlertCircle className="w-20 h-20 mx-auto mb-6 text-destructive" />
+            ) : paymentState === "pending" ? (
+              <Loader2 className="w-20 h-20 mx-auto mb-6 animate-spin text-muted-foreground" />
             ) : (
               <CheckCircle className="w-20 h-20 mx-auto mb-6" style={{ color: "hsl(var(--primary))" }} />
             )}
@@ -170,13 +176,32 @@ const PaymentSuccess = () => {
           <h1 className="text-3xl font-display mb-3">
             {isBankTransfer
               ? t("payment.bankTitle", "Pasūtījums saņemts — gaidām apmaksu")
-              : t("payment.successTitle")}
+              : paymentState === "verifying"
+                ? t("payment.verifyingTitle", "Pārbaudām maksājumu...")
+                : paymentState === "failed"
+                  ? t("payment.failedTitle", "Maksājums nav apstiprināts")
+                  : paymentState === "pending"
+                    ? t("payment.pendingTitle", "Gaidām maksājuma apstiprinājumu")
+                    : t("payment.successTitle")}
           </h1>
           <p className="text-muted-foreground font-body mb-2">
             {isBankTransfer
               ? t("payment.bankDesc", "Rēķins ar bankas rekvizītiem nosūtīts uz Jūsu e-pastu. Pasūtījumu apstrādāsim, tiklīdz nauda ienāks mūsu kontā (parasti 1-3 darba dienu laikā).")
-              : isGuest ? t("payment.successDescGuest") : t("payment.successDesc")}
+              : paymentState === "verifying"
+                ? t("payment.verifyingDesc", "Lūdzu, uzgaidiet — apstiprinām maksājumu ar banku.")
+                : paymentState === "failed"
+                  ? t("payment.failedDesc", "Maksājums tika atcelts vai neizdevās. Lūdzu, mēģiniet vēlreiz vai sazinieties ar mums.")
+                  : paymentState === "pending"
+                    ? t("payment.pendingDesc", "Maksājums vēl nav apstiprināts. Tas var aizņemt dažas minūtes. Mēs nosūtīsim e-pastu, tiklīdz tas būs saņemts.")
+                    : isGuest ? t("payment.successDescGuest") : t("payment.successDesc")}
           </p>
+
+          {!isBankTransfer && paymentState === "paid" && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mt-2 rounded-full bg-primary/10 text-primary text-sm font-body font-semibold">
+              <CheckCircle className="w-4 h-4" />
+              {t("payment.statusPaid", "Apmaksāts")}
+            </div>
+          )}
 
           {orderRef && (
             <p className="text-sm text-muted-foreground font-body mb-2">
