@@ -20,3 +20,12 @@ verify_jwt = false
 
 [functions.zakeke-token]
 verify_jwt = false
+
+[functions.montonio-webhook]
+verify_jwt = false
+
+[functions.montonio-shipping-methods]
+verify_jwt = false
+
+[functions.montonio-create-order]
+verify_jwt = false
