@@ -199,17 +199,15 @@ Deno.serve(async (req) => {
     const optionsRequest = isOptionsRequest(url);
     const configuratorRequest = isConfiguratorRequest(url);
 
-    // ---- Configurator enable/disable (POST/DELETE /{code}/configurator) ----
+    // ---- Configurator/Customizer enable/disable (POST/DELETE /{code}/customizer or /configurator) ----
     if (configuratorRequest && code) {
-      console.log("ZAKEKE_CONFIGURATOR_REQUEST", { method: req.method, code });
-      // We don't track this server-side; just acknowledge so Zakeke is happy
-      return new Response(JSON.stringify({ success: true, code }), {
-        headers: jsonHeaders,
-        status: 200,
-      });
+      console.log("ZAKEKE_CONFIGURATOR_REQUEST", { method: req.method, code, path: url.pathname });
+      // We don't track this server-side; just acknowledge so Zakeke is happy.
+      // Zakeke just expects HTTP 200 OK with empty body.
+      return new Response("", { headers: corsHeaders, status: 200 });
     }
 
-    // ---- Single-product mode (with variants) ----
+    // ---- Single-product mode ----
     if (code) {
       const productQuery = supabase
         .from("products")
@@ -232,29 +230,24 @@ Deno.serve(async (req) => {
       }
 
       const productCode = getProductCode(product);
-      const { variations } = buildVariantsPayload(product, productCode);
 
-      const payload = optionsRequest
-        ? {
-            code: productCode,
-            id: product.id,
-            name: product.name,
-            variations,
-          }
-        : {
-            code: productCode,
-            id: product.id,
-            name: product.name,
-            description: product.description || "",
-            thumbnail: product.image_url || "",
-            price: Number(product.price) || 0,
-            currency: "EUR",
-            isOutOfStock: !product.in_stock,
-            variations,
-          };
+      // Per Zakeke spec: /options must return a JSON ARRAY of options
+      if (optionsRequest) {
+        const options = buildOptionsPayload(product, productCode);
+        console.log("ZAKEKE_PRODUCT_OPTIONS_PAYLOAD", JSON.stringify(options));
+        return new Response(JSON.stringify(options), {
+          headers: jsonHeaders,
+          status: 200,
+        });
+      }
 
-      console.log(optionsRequest ? "ZAKEKE_PRODUCT_OPTIONS_PAYLOAD" : "ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
-
+      // Single product fetch (not standard in Zakeke spec, but kept for compatibility)
+      const payload = {
+        code: productCode,
+        name: product.name,
+        thumbnail: product.image_url || "",
+      };
+      console.log("ZAKEKE_PRODUCT_PAYLOAD", JSON.stringify(payload));
       return new Response(JSON.stringify(payload), {
         headers: jsonHeaders,
         status: 200,
@@ -277,9 +270,18 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
-    const zakekeProducts = (products ?? []).map((p: any) => ({
+    // Optional search filter
+    const search = (url.searchParams.get("search") || "").trim().toLowerCase();
+    const filtered = search
+      ? (products ?? []).filter((p: any) =>
+          (p.name || "").toLowerCase().includes(search) ||
+          (getProductCode(p) || "").toLowerCase().includes(search)
+        )
+      : (products ?? []);
+
+    // Per Zakeke spec: only code, name, thumbnail (no extra fields)
+    const zakekeProducts = filtered.map((p: any) => ({
       code: getProductCode(p),
-      id: p.id,
       name: p.name,
       thumbnail: p.image_url || "",
     }));
