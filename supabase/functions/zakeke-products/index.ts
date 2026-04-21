@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 const defaultCorsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
   "Access-Control-Expose-Headers": "Content-Type",
 };
 
@@ -51,6 +51,11 @@ function isOptionsRequest(url: URL) {
   return decodedPath.endsWith("/options") || decodedSearch.includes("/options") || decodedSearch.includes("options=true");
 }
 
+function isConfiguratorRequest(url: URL) {
+  const decodedPath = decodeURIComponent(url.pathname || "").toLowerCase();
+  return decodedPath.endsWith("/configurator") || decodedPath.includes("/configurator");
+}
+
 function sanitizeCode(raw: string | null): string | null {
   if (!raw) return null;
 
@@ -77,24 +82,30 @@ function sanitizeCode(raw: string | null): string | null {
 }
 
 function resolveProductCode(url: URL) {
+  // Zakeke calls: /functions/v1/zakeke-products/{code}/options or /{code}/configurator
+  const parts = url.pathname.split("/").filter(Boolean);
+  const idx = parts.indexOf("zakeke-products");
+  if (idx >= 0 && parts[idx + 1]) {
+    const next = parts[idx + 1];
+    // Skip if it's a reserved suffix
+    if (next !== "options" && next !== "configurator") {
+      const sanitized = sanitizeCode(next);
+      if (sanitized) return sanitized;
+    }
+  }
+
+  // Fallback: query params (legacy)
   const queryCandidates = [
     url.searchParams.get("code"),
     url.searchParams.get("id"),
     url.searchParams.get("productId"),
     url.searchParams.get("product_id"),
     url.searchParams.get("productCode"),
-    decodeURIComponent(url.search || ""),
   ];
 
   for (const candidate of queryCandidates) {
     const code = sanitizeCode(candidate);
     if (code) return code;
-  }
-
-  const parts = url.pathname.split("/").filter(Boolean);
-  const idx = parts.indexOf("zakeke-products");
-  if (idx >= 0 && parts[idx + 1]) {
-    return sanitizeCode(parts[idx + 1]);
   }
 
   return null;
@@ -175,11 +186,40 @@ Deno.serve(async (req) => {
     });
     console.log("FULL_REQUEST_HEADERS", Object.fromEntries(req.headers.entries()));
 
+    // Optional: validate Basic Auth from Zakeke (if configured)
+    const expectedUser = Deno.env.get("ZAKEKE_API_KEY");
+    const expectedPass = Deno.env.get("ZAKEKE_CLIENT_SECRET");
+    const authHeader = req.headers.get("authorization") || "";
+    if (expectedUser && expectedPass && authHeader.toLowerCase().startsWith("basic ")) {
+      try {
+        const decoded = atob(authHeader.slice(6).trim());
+        const [u, p] = decoded.split(":");
+        if (u !== expectedUser || p !== expectedPass) {
+          console.warn("ZAKEKE_BASIC_AUTH_MISMATCH");
+        } else {
+          console.log("ZAKEKE_BASIC_AUTH_OK");
+        }
+      } catch (e) {
+        console.warn("ZAKEKE_BASIC_AUTH_DECODE_ERROR", e);
+      }
+    }
+
     const code = resolveProductCode(url);
     const isUuid = !!code && UUID_PATTERN.test(code);
     console.log("ZAKEKE_RESOLVED_CODE", { code, isUuid });
 
     const optionsRequest = isOptionsRequest(url);
+    const configuratorRequest = isConfiguratorRequest(url);
+
+    // ---- Configurator enable/disable (POST/DELETE /{code}/configurator) ----
+    if (configuratorRequest && code) {
+      console.log("ZAKEKE_CONFIGURATOR_REQUEST", { method: req.method, code });
+      // We don't track this server-side; just acknowledge so Zakeke is happy
+      return new Response(JSON.stringify({ success: true, code }), {
+        headers: jsonHeaders,
+        status: 200,
+      });
+    }
 
     // ---- Single-product mode (with variants) ----
     if (code) {
