@@ -114,12 +114,20 @@ const Checkout = () => {
       email: user?.email ?? form.email,
       notes: form.notes,
     };
-    if (shippingMethod === "omniva") data.selectedOmniva = selectedOmniva;
-    else { data.address = form.address; data.city = form.city; data.zip = form.zip; }
+    const useMontonioPickup = paymentMethod === "montonio" && shippingMethod === "omniva";
+    if (shippingMethod === "omniva") {
+      if (useMontonioPickup) data.selectedMontonioPickupId = selectedMontonioPickupId;
+      else data.selectedOmniva = selectedOmniva;
+    } else {
+      data.address = form.address; data.city = form.city; data.zip = form.zip;
+    }
 
     let schema: any = baseSchema;
-    if (shippingMethod === "omniva") schema = schema.merge(omnivaFields);
-    else schema = schema.merge(courierFields);
+    if (shippingMethod === "omniva") {
+      schema = schema.merge(useMontonioPickup ? montonioPickupFields : omnivaFields);
+    } else {
+      schema = schema.merge(courierFields);
+    }
 
     if (isBusiness) {
       schema = schema.merge(businessFields);
