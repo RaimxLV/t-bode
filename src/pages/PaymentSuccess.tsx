@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, Package, ArrowLeft, User as UserIcon, Landmark, FileText, Copy } from "lucide-react";
+import { CheckCircle, Package, ArrowLeft, User as UserIcon, Landmark, FileText, Copy, Loader2, AlertCircle } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,10 @@ interface OrderInfo {
   order_number: number | null;
   total: number;
   stripe_invoice_pdf: string | null;
+  status?: string;
+  provider?: string;
+  montonio_payment_status?: string | null;
+  payment_method?: string;
 }
 
 const PaymentSuccess = () => {
@@ -34,12 +38,17 @@ const PaymentSuccess = () => {
   const { clearCart } = useCart();
   const { user } = useAuth();
   const orderId = searchParams.get("order_id");
-  const method = searchParams.get("method"); // "bank" => bank transfer
+  const method = searchParams.get("method"); // "bank" => bank transfer, "montonio" => montonio
   const isBankTransfer = method === "bank";
+  const isMontonio = method === "montonio";
 
   const [cleared, setCleared] = useState(false);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [order, setOrder] = useState<OrderInfo | null>(null);
+  const [paymentState, setPaymentState] = useState<"verifying" | "paid" | "pending" | "failed" | "unknown">(
+    isBankTransfer ? "pending" : "verifying"
+  );
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!cleared) {
@@ -48,6 +57,7 @@ const PaymentSuccess = () => {
     }
   }, [cleared, clearCart]);
 
+  // Load bank settings (bank-transfer flow)
   useEffect(() => {
     if (!isBankTransfer) return;
     (async () => {
@@ -57,17 +67,71 @@ const PaymentSuccess = () => {
         .limit(1)
         .maybeSingle();
       if (data) setSettings(data as SiteSettings);
-
-      if (orderId) {
-        const { data: o } = await supabase
-          .from("orders")
-          .select("order_number,total,stripe_invoice_pdf")
-          .eq("id", orderId)
-          .maybeSingle();
-        if (o) setOrder(o as OrderInfo);
-      }
     })();
-  }, [isBankTransfer, orderId]);
+  }, [isBankTransfer]);
+
+  // Validate order status from Supabase + poll while pending (for webhook to confirm)
+  useEffect(() => {
+    if (!orderId) {
+      setPaymentState("unknown");
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 20; // ~40s of polling
+
+    const fetchOrder = async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("order_number,total,stripe_invoice_pdf,status,provider,montonio_payment_status,payment_method")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (error || !data) {
+        setPaymentState("unknown");
+        return;
+      }
+      setOrder(data as OrderInfo);
+
+      const status = (data.status ?? "").toString();
+      const mStatus = (data.montonio_payment_status ?? "").toString().toUpperCase();
+
+      // Bank transfer: stays "pending" until admin marks paid
+      if (isBankTransfer) {
+        setPaymentState(status === "confirmed" || status === "processing" || status === "shipped" || status === "delivered" ? "paid" : "pending");
+        return;
+      }
+
+      // Confirmed via webhook
+      if (status === "confirmed" || status === "processing" || status === "shipped" || status === "delivered" || mStatus === "PAID") {
+        setPaymentState("paid");
+        if (pollRef.current) window.clearInterval(pollRef.current);
+        return;
+      }
+
+      // Explicit failure
+      if (status === "cancelled" || mStatus === "VOIDED" || mStatus === "ABANDONED") {
+        setPaymentState("failed");
+        if (pollRef.current) window.clearInterval(pollRef.current);
+        return;
+      }
+
+      // Still waiting for webhook
+      attempts += 1;
+      if (attempts >= maxAttempts) {
+        setPaymentState("pending");
+        if (pollRef.current) window.clearInterval(pollRef.current);
+      } else {
+        setPaymentState("verifying");
+      }
+    };
+
+    fetchOrder();
+    pollRef.current = window.setInterval(fetchOrder, 2000) as unknown as number;
+    return () => {
+      if (pollRef.current) window.clearInterval(pollRef.current);
+    };
+  }, [orderId, isBankTransfer]);
 
   const isGuest = !user;
   const orderRef = order?.order_number != null
@@ -98,6 +162,12 @@ const PaymentSuccess = () => {
           >
             {isBankTransfer ? (
               <Landmark className="w-20 h-20 mx-auto mb-6" style={{ color: "hsl(var(--primary))" }} />
+            ) : paymentState === "verifying" ? (
+              <Loader2 className="w-20 h-20 mx-auto mb-6 animate-spin" style={{ color: "hsl(var(--primary))" }} />
+            ) : paymentState === "failed" ? (
+              <AlertCircle className="w-20 h-20 mx-auto mb-6 text-destructive" />
+            ) : paymentState === "pending" ? (
+              <Loader2 className="w-20 h-20 mx-auto mb-6 animate-spin text-muted-foreground" />
             ) : (
               <CheckCircle className="w-20 h-20 mx-auto mb-6" style={{ color: "hsl(var(--primary))" }} />
             )}
@@ -106,13 +176,32 @@ const PaymentSuccess = () => {
           <h1 className="text-3xl font-display mb-3">
             {isBankTransfer
               ? t("payment.bankTitle", "Pasūtījums saņemts — gaidām apmaksu")
-              : t("payment.successTitle")}
+              : paymentState === "verifying"
+                ? t("payment.verifyingTitle", "Pārbaudām maksājumu...")
+                : paymentState === "failed"
+                  ? t("payment.failedTitle", "Maksājums nav apstiprināts")
+                  : paymentState === "pending"
+                    ? t("payment.pendingTitle", "Gaidām maksājuma apstiprinājumu")
+                    : t("payment.successTitle")}
           </h1>
           <p className="text-muted-foreground font-body mb-2">
             {isBankTransfer
               ? t("payment.bankDesc", "Rēķins ar bankas rekvizītiem nosūtīts uz Jūsu e-pastu. Pasūtījumu apstrādāsim, tiklīdz nauda ienāks mūsu kontā (parasti 1-3 darba dienu laikā).")
-              : isGuest ? t("payment.successDescGuest") : t("payment.successDesc")}
+              : paymentState === "verifying"
+                ? t("payment.verifyingDesc", "Lūdzu, uzgaidiet — apstiprinām maksājumu ar banku.")
+                : paymentState === "failed"
+                  ? t("payment.failedDesc", "Maksājums tika atcelts vai neizdevās. Lūdzu, mēģiniet vēlreiz vai sazinieties ar mums.")
+                  : paymentState === "pending"
+                    ? t("payment.pendingDesc", "Maksājums vēl nav apstiprināts. Tas var aizņemt dažas minūtes. Mēs nosūtīsim e-pastu, tiklīdz tas būs saņemts.")
+                    : isGuest ? t("payment.successDescGuest") : t("payment.successDesc")}
           </p>
+
+          {!isBankTransfer && paymentState === "paid" && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mt-2 rounded-full bg-primary/10 text-primary text-sm font-body font-semibold">
+              <CheckCircle className="w-4 h-4" />
+              {t("payment.statusPaid", "Apmaksāts")}
+            </div>
+          )}
 
           {orderRef && (
             <p className="text-sm text-muted-foreground font-body mb-2">
