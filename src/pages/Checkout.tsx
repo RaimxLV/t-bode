@@ -21,7 +21,15 @@ import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
-type PaymentMethod = "card" | "bank_transfer";
+type PaymentMethod = "card" | "bank_transfer" | "montonio";
+
+const MONTONIO_BANKS: { code: string; name: string }[] = [
+  { code: "swedbank", name: "Swedbank" },
+  { code: "seb", name: "SEB" },
+  { code: "luminor", name: "Luminor" },
+  { code: "citadele", name: "Citadele" },
+  { code: "lhv", name: "LHV" },
+];
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
