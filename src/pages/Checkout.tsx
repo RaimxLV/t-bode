@@ -120,15 +120,14 @@ const Checkout = () => {
     };
     const useMontonioPickup = paymentMethod === "montonio" && shippingMethod === "omniva";
     if (shippingMethod === "omniva") {
-      if (useMontonioPickup) data.selectedMontonioPickupId = selectedMontonioPickupId;
-      else data.selectedOmniva = selectedOmniva;
+      data.selectedOmniva = selectedOmniva;
     } else {
       data.address = form.address; data.city = form.city; data.zip = form.zip;
     }
 
     let schema: any = baseSchema;
     if (shippingMethod === "omniva") {
-      schema = schema.merge(useMontonioPickup ? montonioPickupFields : omnivaFields);
+      schema = schema.merge(omnivaFields);
     } else {
       schema = schema.merge(courierFields);
     }
@@ -168,7 +167,7 @@ const Checkout = () => {
         shipping_phone: form.phone.trim(),
         omniva_pickup_point:
           shippingMethod === "omniva"
-            ? (paymentMethod === "montonio" ? selectedMontonioPickupName : selectedOmniva)
+            ? selectedOmniva
             : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
@@ -226,11 +225,10 @@ const Checkout = () => {
             customer_phone: form.phone.trim(),
             preferred_provider: montonioBank,
             shipping:
-              shippingMethod === "omniva" && selectedMontonioPickupId
+              shippingMethod === "omniva" && selectedOmniva
                 ? {
                     method: "omniva-pakomat",
-                    pickupPointId: selectedMontonioPickupId,
-                    pickupPointName: selectedMontonioPickupName,
+                    pickupPointName: selectedOmniva,
                   }
                 : undefined,
           },
@@ -430,7 +428,7 @@ const Checkout = () => {
                   </button>
                 </div>
 
-                {shippingMethod === "omniva" && paymentMethod !== "montonio" && (
+                {shippingMethod === "omniva" && (
                   <div className="mt-4">
                     <Label className="font-body text-sm mb-2 block">{t("checkout.selectOmniva")}</Label>
                     <OmnivaMapPicker
@@ -443,25 +441,6 @@ const Checkout = () => {
                       }}
                     />
                     <FieldError field="selectedOmniva" />
-                  </div>
-                )}
-
-                {shippingMethod === "omniva" && paymentMethod === "montonio" && (
-                  <div className="mt-4">
-                    <Label className="font-body text-sm mb-2 block">
-                      {t("checkout.selectMontonioPickup", "Izvēlieties Omniva pakomātu (Montonio)")}
-                    </Label>
-                    <MontonioPickupPicker
-                      selectedId={selectedMontonioPickupId}
-                      onSelect={(p) => {
-                        setSelectedMontonioPickupId(p.id);
-                        setSelectedMontonioPickupName(p.name);
-                        if (errors.selectedMontonioPickupId) {
-                          setErrors({ ...errors, selectedMontonioPickupId: "" });
-                        }
-                      }}
-                    />
-                    <FieldError field="selectedMontonioPickupId" />
                   </div>
                 )}
 
@@ -536,9 +515,15 @@ const Checkout = () => {
                           key={b.code}
                           type="button"
                           onClick={() => setMontonioBank(b.code)}
-                          className={`px-3 py-3 rounded-md border-2 text-sm font-body font-semibold transition-all ${montonioBank === b.code ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground"}`}
+                          className={`flex items-center justify-center px-3 py-3 rounded-md border-2 bg-white transition-all h-16 ${montonioBank === b.code ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-muted-foreground"}`}
+                          aria-label={b.name}
                         >
-                          {b.name}
+                          <img
+                            src={b.logo}
+                            alt={b.name}
+                            loading="lazy"
+                            className="max-h-10 max-w-full object-contain"
+                          />
                         </button>
                       ))}
                     </div>
