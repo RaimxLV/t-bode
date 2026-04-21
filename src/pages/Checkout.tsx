@@ -51,9 +51,6 @@ const businessFields = z.object({
 });
 
 const omnivaFields = z.object({ selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu") });
-const montonioPickupFields = z.object({
-  selectedMontonioPickupId: z.string().min(1, "Lūdzu izvēlieties Montonio pakomātu"),
-});
 const courierFields = z.object({
   address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
   city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
@@ -76,8 +73,6 @@ const Checkout = () => {
   const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
-  const [selectedMontonioPickupId, setSelectedMontonioPickupId] = useState("");
-  const [selectedMontonioPickupName, setSelectedMontonioPickupName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [form, setForm] = useState({
@@ -118,7 +113,6 @@ const Checkout = () => {
       email: user?.email ?? form.email,
       notes: form.notes,
     };
-    const useMontonioPickup = paymentMethod === "montonio" && shippingMethod === "omniva";
     if (shippingMethod === "omniva") {
       data.selectedOmniva = selectedOmniva;
     } else {
