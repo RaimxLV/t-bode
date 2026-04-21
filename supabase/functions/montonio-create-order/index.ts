@@ -81,14 +81,11 @@ Deno.serve(async (req) => {
       })),
     };
 
-    if (shipping?.method) {
-      (payload as any).shipping = {
-        method: shipping.method, // e.g. "omniva-pakomat"
-        pickupPoint: shipping.pickupPointId
-          ? { id: shipping.pickupPointId, name: shipping.pickupPointName ?? "" }
-          : undefined,
-      };
-    }
+    // Note: We intentionally do NOT pass a `shipping` object to Montonio.
+    // Montonio's Shipping V2 schema requires fields (isMontonioShippingMethod,
+    // finalPrice, methodNameDisplay) that don't apply here — we manage Omniva
+    // shipment creation ourselves after payment. Shipping cost is already
+    // included in grandTotal above.
 
     const jwt = await signMontonioJwt(payload);
 
