@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
+import { MontonioPickupPicker, type MontonioPickupPoint } from "@/components/MontonioPickupPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -46,6 +47,9 @@ const businessFields = z.object({
 });
 
 const omnivaFields = z.object({ selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu") });
+const montonioPickupFields = z.object({
+  selectedMontonioPickupId: z.string().min(1, "Lūdzu izvēlieties Montonio pakomātu"),
+});
 const courierFields = z.object({
   address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
   city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
@@ -68,6 +72,8 @@ const Checkout = () => {
   const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
+  const [selectedMontonioPickupId, setSelectedMontonioPickupId] = useState("");
+  const [selectedMontonioPickupName, setSelectedMontonioPickupName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [form, setForm] = useState({
@@ -108,12 +114,20 @@ const Checkout = () => {
       email: user?.email ?? form.email,
       notes: form.notes,
     };
-    if (shippingMethod === "omniva") data.selectedOmniva = selectedOmniva;
-    else { data.address = form.address; data.city = form.city; data.zip = form.zip; }
+    const useMontonioPickup = paymentMethod === "montonio" && shippingMethod === "omniva";
+    if (shippingMethod === "omniva") {
+      if (useMontonioPickup) data.selectedMontonioPickupId = selectedMontonioPickupId;
+      else data.selectedOmniva = selectedOmniva;
+    } else {
+      data.address = form.address; data.city = form.city; data.zip = form.zip;
+    }
 
     let schema: any = baseSchema;
-    if (shippingMethod === "omniva") schema = schema.merge(omnivaFields);
-    else schema = schema.merge(courierFields);
+    if (shippingMethod === "omniva") {
+      schema = schema.merge(useMontonioPickup ? montonioPickupFields : omnivaFields);
+    } else {
+      schema = schema.merge(courierFields);
+    }
 
     if (isBusiness) {
       schema = schema.merge(businessFields);
@@ -148,7 +162,10 @@ const Checkout = () => {
         shipping_city: shippingMethod === "courier" ? form.city.trim() : null,
         shipping_zip: shippingMethod === "courier" ? form.zip.trim() : null,
         shipping_phone: form.phone.trim(),
-        omniva_pickup_point: shippingMethod === "omniva" ? selectedOmniva : null,
+        omniva_pickup_point:
+          shippingMethod === "omniva"
+            ? (paymentMethod === "montonio" ? selectedMontonioPickupName : selectedOmniva)
+            : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
         payment_method: paymentMethod,
@@ -205,11 +222,11 @@ const Checkout = () => {
             customer_phone: form.phone.trim(),
             preferred_provider: montonioBank,
             shipping:
-              shippingMethod === "omniva" && selectedOmniva
+              shippingMethod === "omniva" && selectedMontonioPickupId
                 ? {
                     method: "omniva-pakomat",
-                    pickupPointId: selectedOmniva,
-                    pickupPointName: selectedOmniva,
+                    pickupPointId: selectedMontonioPickupId,
+                    pickupPointName: selectedMontonioPickupName,
                   }
                 : undefined,
           },
@@ -409,7 +426,7 @@ const Checkout = () => {
                   </button>
                 </div>
 
-                {shippingMethod === "omniva" && (
+                {shippingMethod === "omniva" && paymentMethod !== "montonio" && (
                   <div className="mt-4">
                     <Label className="font-body text-sm mb-2 block">{t("checkout.selectOmniva")}</Label>
                     <OmnivaMapPicker
@@ -422,6 +439,25 @@ const Checkout = () => {
                       }}
                     />
                     <FieldError field="selectedOmniva" />
+                  </div>
+                )}
+
+                {shippingMethod === "omniva" && paymentMethod === "montonio" && (
+                  <div className="mt-4">
+                    <Label className="font-body text-sm mb-2 block">
+                      {t("checkout.selectMontonioPickup", "Izvēlieties Omniva pakomātu (Montonio)")}
+                    </Label>
+                    <MontonioPickupPicker
+                      selectedId={selectedMontonioPickupId}
+                      onSelect={(p) => {
+                        setSelectedMontonioPickupId(p.id);
+                        setSelectedMontonioPickupName(p.name);
+                        if (errors.selectedMontonioPickupId) {
+                          setErrors({ ...errors, selectedMontonioPickupId: "" });
+                        }
+                      }}
+                    />
+                    <FieldError field="selectedMontonioPickupId" />
                   </div>
                 )}
 
