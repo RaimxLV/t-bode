@@ -193,6 +193,35 @@ const Checkout = () => {
         size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
       }));
 
+      // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
+      if (paymentMethod === "montonio") {
+        const { data: mData, error: mError } = await supabase.functions.invoke("montonio-create-order", {
+          body: {
+            order_id: order.id,
+            items: stripeItems,
+            origin_url: appOriginUrl,
+            customer_email: user?.email ?? form.email.trim(),
+            customer_name: form.name.trim(),
+            customer_phone: form.phone.trim(),
+            preferred_provider: montonioBank,
+            shipping:
+              shippingMethod === "omniva" && selectedOmniva
+                ? {
+                    method: "omniva-pakomat",
+                    pickupPointId: selectedOmniva,
+                    pickupPointName: selectedOmniva,
+                  }
+                : undefined,
+          },
+        });
+        if (mError) throw mError;
+        if (mData?.url) {
+          window.location.href = mData.url;
+          return;
+        }
+        throw new Error("No Montonio payment URL received");
+      }
+
       const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
         body: {
           order_id: order.id,
