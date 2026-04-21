@@ -162,7 +162,10 @@ const Checkout = () => {
         shipping_city: shippingMethod === "courier" ? form.city.trim() : null,
         shipping_zip: shippingMethod === "courier" ? form.zip.trim() : null,
         shipping_phone: form.phone.trim(),
-        omniva_pickup_point: shippingMethod === "omniva" ? selectedOmniva : null,
+        omniva_pickup_point:
+          shippingMethod === "omniva"
+            ? (paymentMethod === "montonio" ? selectedMontonioPickupName : selectedOmniva)
+            : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
         payment_method: paymentMethod,
@@ -219,11 +222,11 @@ const Checkout = () => {
             customer_phone: form.phone.trim(),
             preferred_provider: montonioBank,
             shipping:
-              shippingMethod === "omniva" && selectedOmniva
+              shippingMethod === "omniva" && selectedMontonioPickupId
                 ? {
                     method: "omniva-pakomat",
-                    pickupPointId: selectedOmniva,
-                    pickupPointName: selectedOmniva,
+                    pickupPointId: selectedMontonioPickupId,
+                    pickupPointName: selectedMontonioPickupName,
                   }
                 : undefined,
           },
@@ -423,7 +426,7 @@ const Checkout = () => {
                   </button>
                 </div>
 
-                {shippingMethod === "omniva" && (
+                {shippingMethod === "omniva" && paymentMethod !== "montonio" && (
                   <div className="mt-4">
                     <Label className="font-body text-sm mb-2 block">{t("checkout.selectOmniva")}</Label>
                     <OmnivaMapPicker
@@ -436,6 +439,25 @@ const Checkout = () => {
                       }}
                     />
                     <FieldError field="selectedOmniva" />
+                  </div>
+                )}
+
+                {shippingMethod === "omniva" && paymentMethod === "montonio" && (
+                  <div className="mt-4">
+                    <Label className="font-body text-sm mb-2 block">
+                      {t("checkout.selectMontonioPickup", "Izvēlieties Omniva pakomātu (Montonio)")}
+                    </Label>
+                    <MontonioPickupPicker
+                      selectedId={selectedMontonioPickupId}
+                      onSelect={(p) => {
+                        setSelectedMontonioPickupId(p.id);
+                        setSelectedMontonioPickupName(p.name);
+                        if (errors.selectedMontonioPickupId) {
+                          setErrors({ ...errors, selectedMontonioPickupId: "" });
+                        }
+                      }}
+                    />
+                    <FieldError field="selectedMontonioPickupId" />
                   </div>
                 )}
 
