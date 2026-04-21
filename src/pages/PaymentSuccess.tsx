@@ -90,7 +90,7 @@ const PaymentSuccess = () => {
     const fetchOrder = async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select("order_number,total,stripe_invoice_pdf,status,provider,montonio_payment_status,payment_method")
+        .select("order_number,total,stripe_invoice_pdf,status,provider,montonio_payment_status,payment_method,shipping_name,shipping_address,shipping_city,shipping_zip,omniva_pickup_point,montonio_pickup_point_name,montonio_shipping_method_code")
         .eq("id", orderId)
         .maybeSingle();
 
