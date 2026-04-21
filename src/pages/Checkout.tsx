@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
+import { MontonioPickupPicker, type MontonioPickupPoint } from "@/components/MontonioPickupPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -46,6 +47,9 @@ const businessFields = z.object({
 });
 
 const omnivaFields = z.object({ selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu") });
+const montonioPickupFields = z.object({
+  selectedMontonioPickupId: z.string().min(1, "Lūdzu izvēlieties Montonio pakomātu"),
+});
 const courierFields = z.object({
   address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
   city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
@@ -68,6 +72,8 @@ const Checkout = () => {
   const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
+  const [selectedMontonioPickupId, setSelectedMontonioPickupId] = useState("");
+  const [selectedMontonioPickupName, setSelectedMontonioPickupName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [form, setForm] = useState({
