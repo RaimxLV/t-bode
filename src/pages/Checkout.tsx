@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
-import { MontonioPickupPicker, type MontonioPickupPoint } from "@/components/MontonioPickupPicker";
 import { z } from "zod";
+import swedbankLogo from "@/assets/banks/swedbank.png";
+import sebLogo from "@/assets/banks/seb.png";
+import luminorLogo from "@/assets/banks/luminor.png";
+import citadeleLogo from "@/assets/banks/citadele.png";
+import lhvLogo from "@/assets/banks/lhv.png";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -24,12 +28,12 @@ type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
 
-const MONTONIO_BANKS: { code: string; name: string }[] = [
-  { code: "swedbank", name: "Swedbank" },
-  { code: "seb", name: "SEB" },
-  { code: "luminor", name: "Luminor" },
-  { code: "citadele", name: "Citadele" },
-  { code: "lhv", name: "LHV" },
+const MONTONIO_BANKS: { code: string; name: string; logo: string }[] = [
+  { code: "swedbank", name: "Swedbank", logo: swedbankLogo },
+  { code: "seb", name: "SEB", logo: sebLogo },
+  { code: "luminor", name: "Luminor", logo: luminorLogo },
+  { code: "citadele", name: "Citadele", logo: citadeleLogo },
+  { code: "lhv", name: "LHV", logo: lhvLogo },
 ];
 
 const baseSchema = z.object({
