@@ -1,59 +1,77 @@
 import { corsHeaders, MONTONIO_SHIPPING_BASE, signMontonioJwt } from "../_shared/montonio.ts";
 
-// Returns Omniva / parcel-machine pickup points via Montonio Shipping V2.
-// Montonio Shipping V2 exposes shipping methods (with embedded pickup points)
-// at POST /api/shipping-v2/shipping-methods, authenticated with a signed JWT.
+// Returns parcel-machine pickup points via Montonio Shipping V2.
+// Flow:
+//   1. GET /api/v2/shipping-methods  -> list active carriers with pickupPoint methods
+//   2. For each carrier offering parcelMachine in the requested country, fetch
+//      GET /api/v2/shipping-methods/pickup-points?carrierCode=...&countryCode=...&type=parcelMachine
+// Returns: { items: [{ carrierCode, countryCode, pickupPoints: [...] }] }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const url = new URL(req.url);
-    const country = (url.searchParams.get("country") ?? "LV").toUpperCase();
+    const reqUrl = new URL(req.url);
+    const country = (reqUrl.searchParams.get("country") ?? "LV").toLowerCase();
 
-    // Signed JWT body — Shipping V2 expects merchant context inside the token.
-    const token = await signMontonioJwt({
-      address: {
-        country,
-      },
+    // Bearer JWT for the Shipping API.
+    const token = await signMontonioJwt({});
+    const authHeader = { Authorization: `Bearer ${token}`, Accept: "application/json" };
+
+    // 1. Fetch all activated shipping methods (per country, per carrier)
+    const methodsRes = await fetch(`${MONTONIO_SHIPPING_BASE}/api/v2/shipping-methods`, {
+      headers: authHeader,
     });
-
-    const endpoint = `${MONTONIO_SHIPPING_BASE}/api/shipping-v2/shipping-methods`;
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: token }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Montonio shipping error:", res.status, text);
-      return new Response(JSON.stringify({ error: "Montonio shipping fetch failed", detail: text }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 502,
-      });
+    if (!methodsRes.ok) {
+      const text = await methodsRes.text();
+      console.error("Montonio /shipping-methods error:", methodsRes.status, text);
+      return new Response(
+        JSON.stringify({ error: "Montonio shipping fetch failed", detail: text }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 502 },
+      );
     }
+    const methodsData = await methodsRes.json();
 
-    const data = await res.json();
-
-    // Normalize: flatten pickup points across all carriers into one list,
-    // tagged with their carrierCode so the client can show them grouped if needed.
-    const items: any[] = [];
-    const carriers = (data?.shippingMethods ?? data?.data ?? []) as any[];
-    for (const method of carriers) {
-      const carrierCode = method?.carrier ?? method?.carrierCode ?? method?.code ?? null;
-      const points = method?.pickupPoints ?? [];
-      if (Array.isArray(points) && points.length > 0) {
-        items.push({
-          carrierCode,
-          countryCode: country,
-          pickupPoints: points,
-        });
+    // Find carriers that offer parcelMachine pickup in the requested country.
+    const carrierCodes = new Set<string>();
+    const countries: any[] = methodsData?.countries ?? [];
+    for (const c of countries) {
+      if ((c?.countryCode ?? "").toLowerCase() !== country) continue;
+      for (const carrier of c?.carriers ?? []) {
+        const offersParcelMachine = (carrier?.shippingMethods ?? []).some(
+          (m: any) =>
+            m?.type === "pickupPoint" &&
+            (m?.subtypes ?? []).some((s: any) => s?.code === "parcelMachine"),
+        );
+        if (offersParcelMachine && carrier?.carrierCode) {
+          carrierCodes.add(carrier.carrierCode);
+        }
       }
     }
 
-    return new Response(JSON.stringify({ items, raw: data }), {
+    // 2. Fetch pickup points for each carrier in parallel.
+    const items: Array<{ carrierCode: string; countryCode: string; pickupPoints: any[] }> = [];
+    await Promise.all(
+      Array.from(carrierCodes).map(async (carrierCode) => {
+        const u = `${MONTONIO_SHIPPING_BASE}/api/v2/shipping-methods/pickup-points?carrierCode=${encodeURIComponent(
+          carrierCode,
+        )}&countryCode=${encodeURIComponent(country)}&type=parcelMachine`;
+        const r = await fetch(u, { headers: authHeader });
+        if (!r.ok) {
+          const t = await r.text();
+          console.warn(`Pickup points fetch failed for ${carrierCode}:`, r.status, t);
+          return;
+        }
+        const j = await r.json();
+        const pts = j?.pickupPoints ?? [];
+        if (Array.isArray(pts) && pts.length > 0) {
+          items.push({ carrierCode, countryCode: country.toUpperCase(), pickupPoints: pts });
+        }
+      }),
+    );
+
+    return new Response(JSON.stringify({ items }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });

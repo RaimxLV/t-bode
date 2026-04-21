@@ -8,8 +8,11 @@ export const MONTONIO_PAYMENTS_BASE =
     ? "https://stargate.montonio.com"
     : "https://sandbox-stargate.montonio.com";
 
-// Shipping V2 lives on the same stargate host, different path prefix
-export const MONTONIO_SHIPPING_BASE = MONTONIO_PAYMENTS_BASE;
+// Shipping V2 lives on a separate host
+export const MONTONIO_SHIPPING_BASE =
+  MONTONIO_ENV === "production"
+    ? "https://shipping.montonio.com"
+    : "https://sandbox-shipping.montonio.com";
 
 function getSecretKey(): CryptoKey | Promise<CryptoKey> {
   const secret = Deno.env.get("MONTONIO_SECRET_KEY");
