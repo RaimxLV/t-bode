@@ -82,24 +82,30 @@ function sanitizeCode(raw: string | null): string | null {
 }
 
 function resolveProductCode(url: URL) {
+  // Zakeke calls: /functions/v1/zakeke-products/{code}/options or /{code}/configurator
+  const parts = url.pathname.split("/").filter(Boolean);
+  const idx = parts.indexOf("zakeke-products");
+  if (idx >= 0 && parts[idx + 1]) {
+    const next = parts[idx + 1];
+    // Skip if it's a reserved suffix
+    if (next !== "options" && next !== "configurator") {
+      const sanitized = sanitizeCode(next);
+      if (sanitized) return sanitized;
+    }
+  }
+
+  // Fallback: query params (legacy)
   const queryCandidates = [
     url.searchParams.get("code"),
     url.searchParams.get("id"),
     url.searchParams.get("productId"),
     url.searchParams.get("product_id"),
     url.searchParams.get("productCode"),
-    decodeURIComponent(url.search || ""),
   ];
 
   for (const candidate of queryCandidates) {
     const code = sanitizeCode(candidate);
     if (code) return code;
-  }
-
-  const parts = url.pathname.split("/").filter(Boolean);
-  const idx = parts.indexOf("zakeke-products");
-  if (idx >= 0 && parts[idx + 1]) {
-    return sanitizeCode(parts[idx + 1]);
   }
 
   return null;
