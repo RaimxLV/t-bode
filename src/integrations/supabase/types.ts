@@ -208,6 +208,14 @@ export type Database = {
           is_business: boolean
           manually_paid_at: string | null
           manually_paid_by: string | null
+          montonio_order_uuid: string | null
+          montonio_payment_method: string | null
+          montonio_payment_status: string | null
+          montonio_pickup_point_id: string | null
+          montonio_pickup_point_name: string | null
+          montonio_shipment_id: string | null
+          montonio_shipping_method_code: string | null
+          montonio_tracking_number: string | null
           notes: string | null
           omniva_barcode: string | null
           omniva_label_url: string | null
@@ -216,6 +224,7 @@ export type Database = {
           omniva_tracking_status: string | null
           order_number: number
           payment_method: string
+          provider: string
           shipping_address: string | null
           shipping_city: string | null
           shipping_name: string | null
@@ -241,6 +250,14 @@ export type Database = {
           is_business?: boolean
           manually_paid_at?: string | null
           manually_paid_by?: string | null
+          montonio_order_uuid?: string | null
+          montonio_payment_method?: string | null
+          montonio_payment_status?: string | null
+          montonio_pickup_point_id?: string | null
+          montonio_pickup_point_name?: string | null
+          montonio_shipment_id?: string | null
+          montonio_shipping_method_code?: string | null
+          montonio_tracking_number?: string | null
           notes?: string | null
           omniva_barcode?: string | null
           omniva_label_url?: string | null
@@ -249,6 +266,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
@@ -274,6 +292,14 @@ export type Database = {
           is_business?: boolean
           manually_paid_at?: string | null
           manually_paid_by?: string | null
+          montonio_order_uuid?: string | null
+          montonio_payment_method?: string | null
+          montonio_payment_status?: string | null
+          montonio_pickup_point_id?: string | null
+          montonio_pickup_point_name?: string | null
+          montonio_shipment_id?: string | null
+          montonio_shipping_method_code?: string | null
+          montonio_tracking_number?: string | null
           notes?: string | null
           omniva_barcode?: string | null
           omniva_label_url?: string | null
@@ -282,6 +308,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
           shipping_name?: string | null
