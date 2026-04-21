@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
-import { MontonioPickupPicker, type MontonioPickupPoint } from "@/components/MontonioPickupPicker";
 import { z } from "zod";
+import swedbankLogo from "@/assets/banks/swedbank.png";
+import sebLogo from "@/assets/banks/seb.png";
+import luminorLogo from "@/assets/banks/luminor.png";
+import citadeleLogo from "@/assets/banks/citadele.png";
+import lhvLogo from "@/assets/banks/lhv.png";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -24,12 +28,12 @@ type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
 
-const MONTONIO_BANKS: { code: string; name: string }[] = [
-  { code: "swedbank", name: "Swedbank" },
-  { code: "seb", name: "SEB" },
-  { code: "luminor", name: "Luminor" },
-  { code: "citadele", name: "Citadele" },
-  { code: "lhv", name: "LHV" },
+const MONTONIO_BANKS: { code: string; name: string; logo: string }[] = [
+  { code: "swedbank", name: "Swedbank", logo: swedbankLogo },
+  { code: "seb", name: "SEB", logo: sebLogo },
+  { code: "luminor", name: "Luminor", logo: luminorLogo },
+  { code: "citadele", name: "Citadele", logo: citadeleLogo },
+  { code: "lhv", name: "LHV", logo: lhvLogo },
 ];
 
 const baseSchema = z.object({
@@ -47,9 +51,6 @@ const businessFields = z.object({
 });
 
 const omnivaFields = z.object({ selectedOmniva: z.string().min(1, "Lūdzu izvēlieties Omniva pakomātu") });
-const montonioPickupFields = z.object({
-  selectedMontonioPickupId: z.string().min(1, "Lūdzu izvēlieties Montonio pakomātu"),
-});
 const courierFields = z.object({
   address: z.string().trim().min(3, "Ievadiet pilnu adresi").max(200),
   city: z.string().trim().min(2, "Ievadiet pilsētu").max(100),
@@ -72,8 +73,6 @@ const Checkout = () => {
   const [montonioBank, setMontonioBank] = useState<string>("swedbank");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
-  const [selectedMontonioPickupId, setSelectedMontonioPickupId] = useState("");
-  const [selectedMontonioPickupName, setSelectedMontonioPickupName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [form, setForm] = useState({
@@ -114,17 +113,15 @@ const Checkout = () => {
       email: user?.email ?? form.email,
       notes: form.notes,
     };
-    const useMontonioPickup = paymentMethod === "montonio" && shippingMethod === "omniva";
     if (shippingMethod === "omniva") {
-      if (useMontonioPickup) data.selectedMontonioPickupId = selectedMontonioPickupId;
-      else data.selectedOmniva = selectedOmniva;
+      data.selectedOmniva = selectedOmniva;
     } else {
       data.address = form.address; data.city = form.city; data.zip = form.zip;
     }
 
     let schema: any = baseSchema;
     if (shippingMethod === "omniva") {
-      schema = schema.merge(useMontonioPickup ? montonioPickupFields : omnivaFields);
+      schema = schema.merge(omnivaFields);
     } else {
       schema = schema.merge(courierFields);
     }
@@ -164,7 +161,7 @@ const Checkout = () => {
         shipping_phone: form.phone.trim(),
         omniva_pickup_point:
           shippingMethod === "omniva"
-            ? (paymentMethod === "montonio" ? selectedMontonioPickupName : selectedOmniva)
+            ? selectedOmniva
             : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
@@ -222,11 +219,10 @@ const Checkout = () => {
             customer_phone: form.phone.trim(),
             preferred_provider: montonioBank,
             shipping:
-              shippingMethod === "omniva" && selectedMontonioPickupId
+              shippingMethod === "omniva" && selectedOmniva
                 ? {
                     method: "omniva-pakomat",
-                    pickupPointId: selectedMontonioPickupId,
-                    pickupPointName: selectedMontonioPickupName,
+                    pickupPointName: selectedOmniva,
                   }
                 : undefined,
           },
@@ -426,7 +422,7 @@ const Checkout = () => {
                   </button>
                 </div>
 
-                {shippingMethod === "omniva" && paymentMethod !== "montonio" && (
+                {shippingMethod === "omniva" && (
                   <div className="mt-4">
                     <Label className="font-body text-sm mb-2 block">{t("checkout.selectOmniva")}</Label>
                     <OmnivaMapPicker
@@ -439,25 +435,6 @@ const Checkout = () => {
                       }}
                     />
                     <FieldError field="selectedOmniva" />
-                  </div>
-                )}
-
-                {shippingMethod === "omniva" && paymentMethod === "montonio" && (
-                  <div className="mt-4">
-                    <Label className="font-body text-sm mb-2 block">
-                      {t("checkout.selectMontonioPickup", "Izvēlieties Omniva pakomātu (Montonio)")}
-                    </Label>
-                    <MontonioPickupPicker
-                      selectedId={selectedMontonioPickupId}
-                      onSelect={(p) => {
-                        setSelectedMontonioPickupId(p.id);
-                        setSelectedMontonioPickupName(p.name);
-                        if (errors.selectedMontonioPickupId) {
-                          setErrors({ ...errors, selectedMontonioPickupId: "" });
-                        }
-                      }}
-                    />
-                    <FieldError field="selectedMontonioPickupId" />
                   </div>
                 )}
 
@@ -532,9 +509,15 @@ const Checkout = () => {
                           key={b.code}
                           type="button"
                           onClick={() => setMontonioBank(b.code)}
-                          className={`px-3 py-3 rounded-md border-2 text-sm font-body font-semibold transition-all ${montonioBank === b.code ? "border-primary bg-primary/10" : "border-border hover:border-muted-foreground"}`}
+                          className={`flex items-center justify-center px-3 py-3 rounded-md border-2 bg-white transition-all h-16 ${montonioBank === b.code ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-muted-foreground"}`}
+                          aria-label={b.name}
                         >
-                          {b.name}
+                          <img
+                            src={b.logo}
+                            alt={b.name}
+                            loading="lazy"
+                            className="max-h-10 max-w-full object-contain"
+                          />
                         </button>
                       ))}
                     </div>
