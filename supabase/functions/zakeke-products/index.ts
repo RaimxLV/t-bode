@@ -186,11 +186,40 @@ Deno.serve(async (req) => {
     });
     console.log("FULL_REQUEST_HEADERS", Object.fromEntries(req.headers.entries()));
 
+    // Optional: validate Basic Auth from Zakeke (if configured)
+    const expectedUser = Deno.env.get("ZAKEKE_API_KEY");
+    const expectedPass = Deno.env.get("ZAKEKE_CLIENT_SECRET");
+    const authHeader = req.headers.get("authorization") || "";
+    if (expectedUser && expectedPass && authHeader.toLowerCase().startsWith("basic ")) {
+      try {
+        const decoded = atob(authHeader.slice(6).trim());
+        const [u, p] = decoded.split(":");
+        if (u !== expectedUser || p !== expectedPass) {
+          console.warn("ZAKEKE_BASIC_AUTH_MISMATCH");
+        } else {
+          console.log("ZAKEKE_BASIC_AUTH_OK");
+        }
+      } catch (e) {
+        console.warn("ZAKEKE_BASIC_AUTH_DECODE_ERROR", e);
+      }
+    }
+
     const code = resolveProductCode(url);
     const isUuid = !!code && UUID_PATTERN.test(code);
     console.log("ZAKEKE_RESOLVED_CODE", { code, isUuid });
 
     const optionsRequest = isOptionsRequest(url);
+    const configuratorRequest = isConfiguratorRequest(url);
+
+    // ---- Configurator enable/disable (POST/DELETE /{code}/configurator) ----
+    if (configuratorRequest && code) {
+      console.log("ZAKEKE_CONFIGURATOR_REQUEST", { method: req.method, code });
+      // We don't track this server-side; just acknowledge so Zakeke is happy
+      return new Response(JSON.stringify({ success: true, code }), {
+        headers: jsonHeaders,
+        status: 200,
+      });
+    }
 
     // ---- Single-product mode (with variants) ----
     if (code) {
