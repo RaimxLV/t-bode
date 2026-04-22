@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 <body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;margin:0;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;">
     <div style="background:#000000;padding:24px;text-align:center;">
-      <h1 style="color:#DC2626;margin:0;font-size:28px;letter-spacing:2px;">T-BODE</h1>
+      <img src="https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="T-Bode" style="height:60px;display:block;margin:0 auto;" />
     </div>
     <div style="padding:32px 24px;">
       <h2 style="color:#111;margin:0 0 16px;">Tavs sūtījums ir ceļā! 📦</h2>

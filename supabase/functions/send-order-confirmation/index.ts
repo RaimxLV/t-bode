@@ -55,7 +55,9 @@ function renderHtml(order: any, items: any[], lang: Lang) {
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
-    <h1 style="font-size:22px;margin:0 0 16px;color:#DC2626;">T-BODE</h1>
+    <div style="text-align:center;margin:0 0 24px;">
+      <img src="https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="T-Bode" style="height:60px;display:inline-block;" />
+    </div>
     <h2 style="font-size:18px;margin:0 0 8px;">${tr.subject}</h2>
     <p style="margin:0 0 16px;">${tr.hi}${order.shipping_name ? `, ${order.shipping_name}` : ""}!</p>
     <p style="margin:0 0 20px;line-height:1.5;">${tr.thanks}</p>
