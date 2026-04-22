@@ -11,9 +11,8 @@ import { useTranslation } from "react-i18next";
 import { Seo } from "@/components/Seo";
 
 const Index = () => {
-  const { t } = useTranslation();
-  const lang = (t as any).i18n?.language || "lv";
-  const isLv = lang === "lv";
+  const { t, i18n } = useTranslation();
+  const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
     ? "T-Bode — Apdrukāti T-krekli, hūdiji un krūzes Latvijā"
     : "T-Bode — Custom printed t-shirts, hoodies and mugs in Latvia";
