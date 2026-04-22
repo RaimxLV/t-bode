@@ -304,8 +304,6 @@ export const SettingsManager = () => {
         </div>
       </Section>
 
-      <Section icon={FileText} title="Maksājuma instrukcijas">
-
       <Section icon={ImageIcon} title="Logo un zīmogs (rēķiniem)">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Logo */}
