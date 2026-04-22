@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Building2, Landmark, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Save, Building2, Landmark, FileText, AlertCircle, CheckCircle2, ImageIcon, Upload, Trash2 } from "lucide-react";
 
 // IBAN length per country (subset of common EU + LV neighbours)
 const IBAN_LENGTHS: Record<string, number> = {
@@ -80,6 +80,8 @@ interface SiteSettings {
   bank_beneficiary: string;
   payment_instructions_lv: string | null;
   payment_instructions_en: string | null;
+  logo_url: string | null;
+  stamp_url: string | null;
 }
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
