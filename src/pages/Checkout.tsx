@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2 } from "lucide-react";
@@ -16,12 +17,26 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useOmnivaLocations } from "@/hooks/useOmnivaLocations";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
 type ShippingMethod = "omniva" | "courier";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
+
+const createGuestCheckoutClient = () =>
+  createClient<Database>(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    }
+  );
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
@@ -184,8 +199,17 @@ const Checkout = () => {
     if (!validate() || items.length === 0) return;
     setSubmitting(true);
     try {
-      // Re-check auth state directly from Supabase to avoid stale context
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const isGuestCheckout = mode === "guest" || !user;
+      const checkoutClient = isGuestCheckout ? createGuestCheckoutClient() : supabase;
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (!isGuestCheckout && !authUser) {
+        throw new Error(t("checkout.authRequired", "Lūdzu, ielogojies vēlreiz, lai pabeigtu pirkumu"));
+      }
+
+      const activeUser = isGuestCheckout ? null : authUser;
 
       const orderPayload: any = {
         total: orderTotal,
@@ -207,11 +231,10 @@ const Checkout = () => {
           : 0,
       };
 
-      if (authUser) {
-        orderPayload.user_id = authUser.id;
-        // Always include email (use authenticated user's email if guest field is empty)
-        if (form.email?.trim() || authUser.email) {
-          orderPayload.guest_email = (form.email?.trim() || authUser.email) ?? null;
+      if (activeUser) {
+        orderPayload.user_id = activeUser.id;
+        if (form.email?.trim() || activeUser.email) {
+          orderPayload.guest_email = (form.email?.trim() || activeUser.email) ?? null;
         }
       } else {
         orderPayload.user_id = null;
@@ -225,7 +248,7 @@ const Checkout = () => {
         orderPayload.company_address = form.company_address.trim();
       }
 
-      const { data: order, error: orderError } = await supabase
+      const { data: order, error: orderError } = await checkoutClient
         .from("orders")
         .insert(orderPayload)
         .select("id")
@@ -243,7 +266,7 @@ const Checkout = () => {
         zakeke_design_id: item.designId || null,
         zakeke_thumbnail_url: item.designThumbnail || null,
       }));
-      const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
+      const { error: itemsError } = await checkoutClient.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
       const stripeItems = items.map((item) => ({
@@ -261,12 +284,12 @@ const Checkout = () => {
 
       // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
       if (paymentMethod === "montonio") {
-        const { data: mData, error: mError } = await supabase.functions.invoke("montonio-create-order", {
+        const { data: mData, error: mError } = await checkoutClient.functions.invoke("montonio-create-order", {
           body: {
             order_id: order.id,
             items: stripeItems,
             origin_url: appOriginUrl,
-            customer_email: user?.email ?? form.email.trim(),
+            customer_email: activeUser?.email ?? form.email.trim(),
             customer_name: form.name.trim(),
             customer_phone: form.phone.trim(),
             promo: promoPayload,
@@ -287,12 +310,12 @@ const Checkout = () => {
         throw new Error("No Montonio payment URL received");
       }
 
-      const { data: sessionData, error: sessionError } = await supabase.functions.invoke("create-checkout", {
+      const { data: sessionData, error: sessionError } = await checkoutClient.functions.invoke("create-checkout", {
         body: {
           order_id: order.id,
           items: stripeItems,
           origin_url: appOriginUrl,
-          guest_email: user ? null : form.email.trim(),
+          guest_email: activeUser ? null : form.email.trim(),
           payment_method: paymentMethod,
           promo: promoPayload,
           business: isBusiness ? {
