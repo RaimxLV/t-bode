@@ -30,6 +30,8 @@ export const ReportsManager = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
