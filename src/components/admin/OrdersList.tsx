@@ -123,7 +123,33 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           toast.warning("Pasūtījumam nav Omniva barcode — e-pasts nav nosūtīts");
         }
       }
+      // Auto-send cancellation email when order is cancelled
+      if (status === "cancelled") {
+        try {
+          const { error: invokeErr } = await supabase.functions.invoke("send-order-cancelled", {
+            body: { order_id: orderId, lang: "lv" },
+          });
+          if (invokeErr) toast.error(`Atcelšanas e-pasts: ${invokeErr.message}`);
+          else toast.success("Atcelšanas e-pasts nosūtīts klientam");
+        } catch (e: any) {
+          toast.error(`Atcelšanas e-pasts: ${e.message}`);
+        }
+      }
       onRefresh();
+    }
+  };
+
+  const sendPaymentReminder = async (orderId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-payment-reminder", {
+        body: { order_id: orderId, lang: "lv" },
+      });
+      if (error) throw error;
+      if ((data as any)?.sent) toast.success("Atgādinājums nosūtīts");
+      else toast.warning(`Izlaists: ${(data as any)?.reason ?? "nezināms iemesls"}`);
+      onRefresh();
+    } catch (e: any) {
+      toast.error(`Atgādinājums neizdevās: ${e.message}`);
     }
   };
 
