@@ -653,6 +653,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _can_insert_order_item: { Args: { _order_id: string }; Returns: boolean }
       get_bank_transfer_details: {
         Args: { _order_id: string }
         Returns: {
