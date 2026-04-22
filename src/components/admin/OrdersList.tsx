@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
+
+const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
 
 const ORDER_STATUSES = [
   { value: "pending", key: "admin.orderStatuses.pending", color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock },
@@ -57,6 +59,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
+  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
 
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
 
@@ -383,6 +386,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Dzēst pasūtījumu
                           </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs gap-1.5 mt-1"
+                            onClick={() => setInvoiceOrder(order)}
+                          >
+                            <FileText className="w-3.5 h-3.5" /> Pārvaldīt dokumentu
+                          </Button>
                         </div>
                       </div>
 
@@ -524,6 +535,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             );
           })}
         </div>
+      )}
+
+      {invoiceOrder && (
+        <Suspense fallback={null}>
+          <InvoiceModal
+            open={!!invoiceOrder}
+            onOpenChange={(o) => !o && setInvoiceOrder(null)}
+            order={invoiceOrder}
+            onSaved={onRefresh}
+          />
+        </Suspense>
       )}
     </div>
   );
