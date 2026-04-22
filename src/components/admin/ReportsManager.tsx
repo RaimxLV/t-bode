@@ -243,6 +243,94 @@ export const ReportsManager = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Package className="w-4 h-4" /> Pasūtījumi ({orders.length})
+          </h3>
+          {orders.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Laiks</TableHead>
+                    <TableHead className="text-xs">Nr.</TableHead>
+                    <TableHead className="text-xs">Klients</TableHead>
+                    <TableHead className="text-xs">Preces</TableHead>
+                    <TableHead className="text-xs text-right">Summa</TableHead>
+                    <TableHead className="text-xs">Maksājums</TableHead>
+                    <TableHead className="text-xs">Statuss</TableHead>
+                    <TableHead className="text-xs text-right">Pavadzīme</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((o) => {
+                    const its = itemsByOrder.get(o.id) ?? [];
+                    const customer = o.is_business
+                      ? (o.company_name ?? o.shipping_name ?? "—")
+                      : (o.shipping_name ?? o.guest_email ?? "—");
+                    return (
+                      <TableRow key={o.id}>
+                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                          {new Date(o.created_at).toLocaleString("lv-LV", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">#{String(o.order_number).padStart(4, "0")}</TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[180px]">{customer}</span>
+                            {o.is_business && <Badge variant="outline" className="text-[9px] w-fit mt-0.5">B2B</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col gap-0.5 max-w-[260px]">
+                            {its.length === 0 ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              its.slice(0, 3).map((it) => (
+                                <span key={it.id} className="truncate">
+                                  <span className="text-muted-foreground">×{it.quantity}</span> {it.product_name}
+                                </span>
+                              ))
+                            )}
+                            {its.length > 3 && <span className="text-muted-foreground">+{its.length - 3} citas…</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</TableCell>
+                        <TableCell className="text-xs">
+                          <Badge variant="outline" className="text-[10px]">{paymentLabel(o)}</Badge>
+                        </TableCell>
+                        <TableCell>{statusBadge(o)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                            title="Skatīt pavadzīmi"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Suspense fallback={null}>
+        <InvoiceModal
+          open={invoiceOpen}
+          onOpenChange={setInvoiceOpen}
+          order={invoiceOrder}
+        />
+      </Suspense>
     </div>
   );
 };
