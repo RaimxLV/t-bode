@@ -518,6 +518,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_settings: {
+        Args: never
+        Returns: {
+          company_address: string
+          company_name: string
+          company_reg_number: string
+          company_vat_number: string
+          payment_instructions_en: string
+          payment_instructions_lv: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
