@@ -131,8 +131,16 @@ export const ZakekeDesigner = ({
 
           getProductAttribute: () => ({}),
 
-          addToCart: (zakekeData: { designId: string; quantity: number; previews?: { url: string }[] }) => {
-            const thumbnail = zakekeData.previews?.[0]?.url || productImage;
+          addToCart: (zakekeData: any) => {
+            console.log("[Zakeke] addToCart payload:", zakekeData);
+            const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
+            const designId =
+              zakekeData?.designId ||
+              zakekeData?.designID ||
+              zakekeData?.design?.id ||
+              zakekeData?.design?.designId ||
+              zakekeData?.id ||
+              null;
             addItem({
               productId,
               name: productName,
@@ -140,9 +148,9 @@ export const ZakekeDesigner = ({
               image: thumbnail,
               size: selectedSize,
               color: selectedColor,
-              quantity: zakekeData.quantity || quantity,
+              quantity: zakekeData?.quantity || quantity,
               slug: productSlug,
-              designId: zakekeData.designId,
+              designId: designId,
               designThumbnail: thumbnail,
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
@@ -150,8 +158,16 @@ export const ZakekeDesigner = ({
             setIsOpen(true);
           },
 
-          editAddToCart: (zakekeData: { designId: string; quantity: number; previews?: { url: string }[] }) => {
-            const thumbnail = zakekeData.previews?.[0]?.url || productImage;
+          editAddToCart: (zakekeData: any) => {
+            console.log("[Zakeke] editAddToCart payload:", zakekeData);
+            const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
+            const designId =
+              zakekeData?.designId ||
+              zakekeData?.designID ||
+              zakekeData?.design?.id ||
+              zakekeData?.design?.designId ||
+              zakekeData?.id ||
+              null;
             addItem({
               productId,
               name: productName,
@@ -159,9 +175,9 @@ export const ZakekeDesigner = ({
               image: thumbnail,
               size: selectedSize,
               color: selectedColor,
-              quantity: zakekeData.quantity || quantity,
+              quantity: zakekeData?.quantity || quantity,
               slug: productSlug,
-              designId: zakekeData.designId,
+              designId: designId,
               designThumbnail: thumbnail,
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
