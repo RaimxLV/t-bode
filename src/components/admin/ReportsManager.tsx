@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Download, Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet } from "lucide-react";
+import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const InvoiceModal = lazy(() => import("./InvoiceModal").then((m) => ({ default: m.InvoiceModal })));
 
 const VAT_RATE = 21;
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -23,6 +30,8 @@ export const ReportsManager = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -73,6 +82,33 @@ export const ReportsManager = () => {
     return { gross: round2(gross), net, vat, paymentSplit, products, orderCount: orders.length };
   }, [orders, items]);
 
+  const itemsByOrder = useMemo(() => {
+    const m = new Map<string, any[]>();
+    for (const it of items) {
+      const arr = m.get(it.order_id) ?? [];
+      arr.push(it);
+      m.set(it.order_id, arr);
+    }
+    return m;
+  }, [items]);
+
+  const paymentLabel = (o: any) => {
+    const k = (o.payment_method || o.provider || "").toLowerCase();
+    if (k.includes("bank")) return "Pārskaitījums";
+    if (k.includes("montonio")) return "Montonio";
+    if (k.includes("stripe") || k.includes("card")) return "Karte";
+    return o.payment_method || o.provider || "—";
+  };
+
+  const statusBadge = (o: any) => {
+    const paid = o.manually_paid_at || ["confirmed", "processing", "shipped", "delivered"].includes(o.status);
+    return paid ? (
+      <Badge className="text-[10px]">Apmaksāts</Badge>
+    ) : (
+      <Badge variant="outline" className="text-[10px]">Gaida</Badge>
+    );
+  };
+
   const exportCsv = () => {
     const rows: string[][] = [
       ["Datums", "Pasūtījuma Nr.", "Rēķina Nr.", "Klients", "Tips", "Reģ.Nr.", "PVN Nr.", "Maksājums", "Statuss", "Bruto EUR", "Neto EUR", "PVN EUR", "PVN likme %"],
@@ -117,11 +153,31 @@ export const ReportsManager = () => {
         <CardContent className="p-4 flex flex-wrap items-end gap-3">
           <div>
             <Label className="text-xs text-muted-foreground">No</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-[150px] text-xs mt-1" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !from && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {from ? format(new Date(from), "dd.MM.yyyy") : "Izvēlies"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={from ? new Date(from) : undefined} onSelect={(d) => d && setFrom(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Līdz</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-[150px] text-xs mt-1" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !to && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {to ? format(new Date(to), "dd.MM.yyyy") : "Izvēlies"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={to ? new Date(to) : undefined} onSelect={(d) => d && setTo(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(1); }}>Šodien</Button>
@@ -187,6 +243,94 @@ export const ReportsManager = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Package className="w-4 h-4" /> Pasūtījumi ({orders.length})
+          </h3>
+          {orders.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Laiks</TableHead>
+                    <TableHead className="text-xs">Nr.</TableHead>
+                    <TableHead className="text-xs">Klients</TableHead>
+                    <TableHead className="text-xs">Preces</TableHead>
+                    <TableHead className="text-xs text-right">Summa</TableHead>
+                    <TableHead className="text-xs">Maksājums</TableHead>
+                    <TableHead className="text-xs">Statuss</TableHead>
+                    <TableHead className="text-xs text-right">Pavadzīme</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((o) => {
+                    const its = itemsByOrder.get(o.id) ?? [];
+                    const customer = o.is_business
+                      ? (o.company_name ?? o.shipping_name ?? "—")
+                      : (o.shipping_name ?? o.guest_email ?? "—");
+                    return (
+                      <TableRow key={o.id}>
+                        <TableCell className="text-xs whitespace-nowrap text-muted-foreground">
+                          {new Date(o.created_at).toLocaleString("lv-LV", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">#{String(o.order_number).padStart(4, "0")}</TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col">
+                            <span className="font-medium truncate max-w-[180px]">{customer}</span>
+                            {o.is_business && <Badge variant="outline" className="text-[9px] w-fit mt-0.5">B2B</Badge>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="flex flex-col gap-0.5 max-w-[260px]">
+                            {its.length === 0 ? (
+                              <span className="text-muted-foreground">—</span>
+                            ) : (
+                              its.slice(0, 3).map((it) => (
+                                <span key={it.id} className="truncate">
+                                  <span className="text-muted-foreground">×{it.quantity}</span> {it.product_name}
+                                </span>
+                              ))
+                            )}
+                            {its.length > 3 && <span className="text-muted-foreground">+{its.length - 3} citas…</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-right font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</TableCell>
+                        <TableCell className="text-xs">
+                          <Badge variant="outline" className="text-[10px]">{paymentLabel(o)}</Badge>
+                        </TableCell>
+                        <TableCell>{statusBadge(o)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                            title="Skatīt pavadzīmi"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Suspense fallback={null}>
+        <InvoiceModal
+          open={invoiceOpen}
+          onOpenChange={setInvoiceOpen}
+          order={invoiceOrder}
+        />
+      </Suspense>
     </div>
   );
 };
