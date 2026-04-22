@@ -28,7 +28,7 @@ export const ContactSection = () => {
   // Honeypot — real users never fill this. Bots usually do.
   const [honeypot, setHoneypot] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
