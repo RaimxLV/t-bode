@@ -153,11 +153,31 @@ export const ReportsManager = () => {
         <CardContent className="p-4 flex flex-wrap items-end gap-3">
           <div>
             <Label className="text-xs text-muted-foreground">No</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-[150px] text-xs mt-1" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !from && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {from ? format(new Date(from), "dd.MM.yyyy") : "Izvēlies"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={from ? new Date(from) : undefined} onSelect={(d) => d && setFrom(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <Label className="text-xs text-muted-foreground">Līdz</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-[150px] text-xs mt-1" />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !to && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                  {to ? format(new Date(to), "dd.MM.yyyy") : "Izvēlies"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={to ? new Date(to) : undefined} onSelect={(d) => d && setTo(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(1); }}>Šodien</Button>
