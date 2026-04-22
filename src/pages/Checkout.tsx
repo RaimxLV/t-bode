@@ -571,7 +571,74 @@ const Checkout = () => {
                 <Separator className="my-4" />
                 <div className="space-y-2 font-body text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.products")}</span><span>{totalPrice.toFixed(2).replace(".", ",")} €</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span>{shippingCost.toFixed(2).replace(".", ",")} €</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("checkout.shipping")}</span>
+                    <span>
+                      {isFreeShipping ? (
+                        <>
+                          <span className="text-muted-foreground line-through mr-2">{baseShippingCost.toFixed(2).replace(".", ",")} €</span>
+                          <span style={{ color: "hsl(var(--primary))" }}>0,00 €</span>
+                        </>
+                      ) : (
+                        `${shippingCost.toFixed(2).replace(".", ",")} €`
+                      )}
+                    </span>
+                  </div>
+                  {productDiscount > 0 && (
+                    <div className="flex justify-between" style={{ color: "hsl(var(--primary))" }}>
+                      <span>{t("checkout.discount", "Atlaide")} ({promo?.code})</span>
+                      <span>−{productDiscount.toFixed(2).replace(".", ",")} €</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Promo code input */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  {!promo ? (
+                    <div>
+                      <Label className="font-body text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                        <Tag className="w-3.5 h-3.5" />
+                        {t("checkout.promoLabel", "Atlaižu kods")}
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={promoInput}
+                          onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
+                          placeholder={t("checkout.promoPlaceholder", "Ievadi kodu")}
+                          className="font-mono uppercase text-sm"
+                          maxLength={40}
+                          disabled={promoApplying}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={applyPromo}
+                          disabled={promoApplying || !promoInput.trim()}
+                          className="shrink-0"
+                        >
+                          {promoApplying ? "..." : t("checkout.promoApply", "Pielietot")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-sm truncate">{promo.code}</p>
+                          <p className="text-xs text-muted-foreground font-body">
+                            {promo.discount_type === "percentage" && `−${promo.discount_value}%`}
+                            {promo.discount_type === "fixed" && `−${promo.discount_value.toFixed(2)} €`}
+                            {promo.discount_type === "free_shipping" && t("checkout.freeShipping", "Bezmaksas piegāde")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={removePromo} className="shrink-0 h-8 w-8">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-between font-body font-bold text-lg">

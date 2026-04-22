@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
       guest_email,
       business,
       payment_method, // "card" | "bank_transfer"
+      promo, // { code, discount_type, discount_amount } | null
     } = await req.json();
 
     if (!order_id || !items || !Array.isArray(items) || items.length === 0) {
@@ -50,6 +51,39 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
+
+    // Atomically redeem the promo code (re-validates server-side and increments usage).
+    // Returns the actual discount amount; if validation fails we abort the checkout.
+    let appliedDiscount = 0;
+    let appliedPromoCode: string | null = null;
+    if (promo?.code) {
+      const orderTotalForValidation =
+        items.reduce((sum: number, it: any) => sum + Number(it.price) * Number(it.quantity), 0);
+      const { data: redeemed, error: redeemErr } = await serviceClient.rpc("redeem_promo_code", {
+        _code: promo.code,
+        _order_id: order_id,
+        _order_total: orderTotalForValidation,
+      });
+      if (redeemErr) {
+        console.error("Promo redeem failed:", redeemErr.message);
+        throw new Error(`Promo code error: ${redeemErr.message}`);
+      }
+      appliedDiscount = Number(redeemed) || 0;
+      appliedPromoCode = promo.code;
+
+      // Free-shipping discount: redeem function returns 0 for product savings;
+      // we instead zero out the shipping line by mutating the items array below.
+      if (promo.discount_type === "free_shipping") {
+        for (const it of items) it.shippingCost = 0;
+        appliedDiscount = 0; // no product-level discount
+      }
+
+      // Persist on order
+      await serviceClient
+        .from("orders")
+        .update({ promo_code: appliedPromoCode, discount_amount: promo.discount_type === "free_shipping" ? Number(promo.discount_amount) : appliedDiscount })
+        .eq("id", order_id);
+    }
 
     // Load admin-managed site settings (company + bank details + payment instructions)
     const { data: siteSettings } = await serviceClient
@@ -139,6 +173,16 @@ Deno.serve(async (req) => {
           amount: Math.round(shippingCost * 100),
           currency: "eur",
           description: items[0]?.shippingMethod === "omniva" ? "Omniva Piegāde" : "Kurjera Piegāde",
+        });
+      }
+
+      // Promo discount line (negative)
+      if (appliedDiscount > 0 && appliedPromoCode) {
+        await stripe.invoiceItems.create({
+          customer: customerId,
+          amount: -Math.round(appliedDiscount * 100),
+          currency: "eur",
+          description: `Atlaide / Discount (${appliedPromoCode})`,
         });
       }
 
@@ -244,6 +288,19 @@ Deno.serve(async (req) => {
       });
     }
 
+    // For card flow, apply discount via Stripe coupon (Checkout doesn't allow negative line items).
+    let stripeDiscounts: { coupon: string }[] | undefined;
+    if (appliedDiscount > 0 && appliedPromoCode) {
+      const coupon = await stripe.coupons.create({
+        amount_off: Math.round(appliedDiscount * 100),
+        currency: "eur",
+        duration: "once",
+        name: `Atlaide ${appliedPromoCode}`,
+        max_redemptions: 1,
+      });
+      stripeDiscounts = [{ coupon: coupon.id }];
+    }
+
     const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : customerEmail,
@@ -258,8 +315,11 @@ Deno.serve(async (req) => {
         guest_email: user ? "" : (guest_email ?? ""),
         is_business: business?.is_business ? "true" : "false",
         payment_method: "card",
+        promo_code: appliedPromoCode ?? "",
+        discount_amount: appliedDiscount ? appliedDiscount.toFixed(2) : "0",
       },
     };
+    if (stripeDiscounts) sessionParams.discounts = stripeDiscounts;
 
     if (business?.is_business) {
       sessionParams.invoice_creation = {
