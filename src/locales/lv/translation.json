@@ -351,5 +351,24 @@
   "language": {
     "lv": "LV",
     "en": "EN"
+  },
+  "install": {
+    "shortLabel": "Instalēt lietotni",
+    "title": "Instalē T-Bode",
+    "description": "Pievieno T-Bode savai sākumlapai un izmanto kā lietotni — ātri, ērti, bez pārlūka joslām.",
+    "installButton": "Instalēt tagad",
+    "readyDesc": "Tava ierīce ir gatava — klikšķini zemāk, lai pievienotu T-Bode sākumlapai.",
+    "installed": "Lietotne veiksmīgi instalēta!",
+    "dismissed": "Instalācija atcelta",
+    "alreadyInstalled": "Jau instalēts ✓",
+    "alreadyInstalledDesc": "Tu jau lieto T-Bode kā instalētu lietotni.",
+    "iosTitle": "Kā instalēt iPhone vai iPad ierīcē",
+    "iosStep1": "Atver Safari kopīgošanas izvēlni",
+    "iosStep2": "Izvēlies “Pievienot sākuma ekrānam”",
+    "iosStep3": "Apstiprini ar “Pievienot” augšējā stūrī",
+    "androidTitle": "Kā instalēt Android ierīcē",
+    "androidManual": "Atver pārlūka izvēlni (⋮) un izvēlies “Pievienot sākuma ekrānam” vai “Instalēt lietotni”.",
+    "desktopTitle": "Kā instalēt datorā",
+    "desktopManual": "Chrome/Edge: noklikšķini uz instalēšanas ikonas adreses joslas labajā pusē, vai izvēlnē izvēlies “Instalēt T-Bode”."
   }
 }
