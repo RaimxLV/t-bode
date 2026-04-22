@@ -653,6 +653,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _debug_auth: { Args: never; Returns: Json }
       get_bank_transfer_details: {
         Args: { _order_id: string }
         Returns: {
