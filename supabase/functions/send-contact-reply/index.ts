@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -93,6 +94,15 @@ Deno.serve(async (req) => {
     const html = renderHtml(submission, language);
     const subject = t(language).subject;
 
+    const messageId = makeMessageId("contact-reply");
+    await logEmailAttempt(service, {
+      message_id: messageId,
+      template_name: "contact-reply",
+      recipient_email: originalRecipient,
+      status: "pending",
+      metadata: { submission_id, lang: language, test_to: toEmail },
+    });
+
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -110,11 +120,27 @@ Deno.serve(async (req) => {
     const text = await resp.text();
     if (!resp.ok) {
       console.error("Resend error:", resp.status, text);
+      await logEmailAttempt(service, {
+        message_id: messageId,
+        template_name: "contact-reply",
+        recipient_email: originalRecipient,
+        status: "failed",
+        error_message: text,
+        metadata: { submission_id, http_status: resp.status },
+      });
       return new Response(JSON.stringify({ error: "Failed to send email", detail: text }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    await logEmailAttempt(service, {
+      message_id: messageId,
+      template_name: "contact-reply",
+      recipient_email: originalRecipient,
+      status: "sent",
+      metadata: { submission_id, lang: language },
+    });
 
     return new Response(JSON.stringify({ sent: true, to: toEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

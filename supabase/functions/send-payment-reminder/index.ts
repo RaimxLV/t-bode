@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +112,15 @@ Deno.serve(async (req) => {
       const html = renderHtml(order, settings, language);
       const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
+      const messageId = makeMessageId("payment-reminder");
+      await logEmailAttempt(service, {
+        message_id: messageId,
+        template_name: "payment-reminder",
+        recipient_email: originalRecipient,
+        status: "pending",
+        metadata: { order_id: orderId, order_number: order.order_number, lang: language, test_to: toEmail },
+      });
+
       const resp = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -127,12 +137,27 @@ Deno.serve(async (req) => {
       if (!resp.ok) {
         const detail = await resp.text();
         console.error("Resend error:", resp.status, detail);
+        await logEmailAttempt(service, {
+          message_id: messageId,
+          template_name: "payment-reminder",
+          recipient_email: originalRecipient,
+          status: "failed",
+          error_message: detail,
+          metadata: { order_id: orderId, http_status: resp.status },
+        });
         return { sent: false, error: detail };
       }
       await service
         .from("orders")
         .update({ last_payment_reminder_at: new Date().toISOString() })
         .eq("id", orderId);
+      await logEmailAttempt(service, {
+        message_id: messageId,
+        template_name: "payment-reminder",
+        recipient_email: originalRecipient,
+        status: "sent",
+        metadata: { order_id: orderId, order_number: order.order_number, lang: language },
+      });
       return { sent: true, to: toEmail };
     };
 

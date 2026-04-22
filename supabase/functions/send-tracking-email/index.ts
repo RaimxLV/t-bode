@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,6 +90,15 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
+    const messageId = makeMessageId("tracking");
+    await logEmailAttempt(supabase, {
+      message_id: messageId,
+      template_name: "tracking",
+      recipient_email: originalRecipient,
+      status: "pending",
+      metadata: { order_id, order_number: order.order_number, barcode: order.omniva_barcode, test_to: recipientEmail },
+    });
+
     const resendResp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -106,6 +116,14 @@ Deno.serve(async (req) => {
     const respJson = await resendResp.json();
     if (!resendResp.ok) {
       console.error("Resend error:", respJson);
+      await logEmailAttempt(supabase, {
+        message_id: messageId,
+        template_name: "tracking",
+        recipient_email: originalRecipient,
+        status: "failed",
+        error_message: JSON.stringify(respJson),
+        metadata: { order_id, http_status: resendResp.status },
+      });
       throw new Error(`Resend ${resendResp.status}: ${JSON.stringify(respJson)}`);
     }
 
@@ -113,6 +131,14 @@ Deno.serve(async (req) => {
       .from("orders")
       .update({ tracking_email_sent_at: new Date().toISOString() })
       .eq("id", order_id);
+
+    await logEmailAttempt(supabase, {
+      message_id: messageId,
+      template_name: "tracking",
+      recipient_email: originalRecipient,
+      status: "sent",
+      metadata: { order_id, order_number: order.order_number, resend_id: respJson.id },
+    });
 
     return new Response(JSON.stringify({ success: true, message_id: respJson.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
