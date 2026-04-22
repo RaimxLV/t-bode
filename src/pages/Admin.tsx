@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").
 const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
 const CustomersList = lazy(() => import("@/components/admin/CustomersList").then(m => ({ default: m.CustomersList })));
 const SettingsManager = lazy(() => import("@/components/admin/SettingsManager").then(m => ({ default: m.SettingsManager })));
+const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m => ({ default: m.EmailPreview })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
