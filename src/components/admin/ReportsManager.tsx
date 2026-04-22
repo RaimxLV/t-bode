@@ -103,7 +103,7 @@ export const ReportsManager = () => {
   const statusBadge = (o: any) => {
     const paid = o.manually_paid_at || ["confirmed", "processing", "shipped", "delivered"].includes(o.status);
     return paid ? (
-      <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/30 text-[10px]">Apmaksāts</Badge>
+      <Badge className="text-[10px]">Apmaksāts</Badge>
     ) : (
       <Badge variant="outline" className="text-[10px]">Gaida</Badge>
     );
