@@ -184,6 +184,9 @@ const Checkout = () => {
     if (!validate() || items.length === 0) return;
     setSubmitting(true);
     try {
+      // Re-check auth state directly from Supabase to avoid stale context
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
       const orderPayload: any = {
         total: orderTotal,
         shipping_name: form.name.trim(),
@@ -204,9 +207,14 @@ const Checkout = () => {
           : 0,
       };
 
-      if (user) {
-        orderPayload.user_id = user.id;
+      if (authUser) {
+        orderPayload.user_id = authUser.id;
+        // Always include email (use authenticated user's email if guest field is empty)
+        if (form.email?.trim() || authUser.email) {
+          orderPayload.guest_email = (form.email?.trim() || authUser.email) ?? null;
+        }
       } else {
+        orderPayload.user_id = null;
         orderPayload.guest_email = form.email.trim();
       }
 
