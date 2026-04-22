@@ -97,7 +97,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
               <Link
                 key={i}
                 to={`/product/${product.slug}`}
-                className="min-w-0 shrink-0 grow-0 basis-full h-full"
+                className="relative flex-[0_0_100%] min-w-0 h-full"
               >
                 <ProductImage src={img} alt={`${displayName} ${i + 1}`} />
               </Link>
