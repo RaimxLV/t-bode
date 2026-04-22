@@ -654,6 +654,10 @@ export type Database = {
     }
     Functions: {
       _debug_auth: { Args: never; Returns: Json }
+      _debug_order_check: {
+        Args: { _guest_email: string; _user_id: string }
+        Returns: Json
+      }
       get_bank_transfer_details: {
         Args: { _order_id: string }
         Returns: {
