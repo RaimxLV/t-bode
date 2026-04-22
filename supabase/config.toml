@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.montonio-create-order]
 verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false
