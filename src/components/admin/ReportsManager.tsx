@@ -1,12 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Download, Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet } from "lucide-react";
+import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
+const InvoiceModal = lazy(() => import("./InvoiceModal").then((m) => ({ default: m.InvoiceModal })));
 
 const VAT_RATE = 21;
 const round2 = (n: number) => Math.round(n * 100) / 100;
