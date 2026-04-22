@@ -518,6 +518,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_bank_transfer_details: {
+        Args: { _order_id: string }
+        Returns: {
+          bank_beneficiary: string
+          bank_iban: string
+          bank_name: string
+          bank_swift: string
+          company_name: string
+          payment_instructions_en: string
+          payment_instructions_lv: string
+        }[]
+      }
+      get_public_settings: {
+        Args: never
+        Returns: {
+          company_address: string
+          company_name: string
+          company_reg_number: string
+          company_vat_number: string
+          payment_instructions_en: string
+          payment_instructions_lv: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
