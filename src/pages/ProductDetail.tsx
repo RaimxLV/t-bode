@@ -15,7 +15,6 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
-import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -61,14 +60,19 @@ const ProductDetail = () => {
     return imgs;
   }, [product, colors]);
 
+  const displayImages = useMemo(() => {
+    if (!product) return [];
+    if (selectedColor) {
+      const colorImages = colors.find((c) => c.name === selectedColor)?.images ?? [];
+      if (colorImages.length > 0) return colorImages;
+    }
+    return galleryImages;
+  }, [product, selectedColor, colors, galleryImages]);
+
   const displayImage = useMemo(() => {
     if (!product) return "";
-    if (selectedColor) {
-      const cv = colors.find((c) => c.name === selectedColor);
-      if (cv?.images?.[0]) return cv.images[0];
-    }
-    return galleryImages[selectedImageIdx] || product.image_url || "";
-  }, [product, selectedColor, selectedImageIdx, galleryImages, colors]);
+    return displayImages[selectedImageIdx] || displayImages[0] || product.image_url || "";
+  }, [product, selectedImageIdx, displayImages]);
 
   const selectedColorHex = useMemo(() => {
     if (!selectedColor) return "";
@@ -165,9 +169,7 @@ const ProductDetail = () => {
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={displayImage}
-                    src={isSupabaseImage(displayImage) ? getOptimizedSrc(displayImage, 1024, 80) : displayImage}
-                    srcSet={buildSrcSet(displayImage, [480, 768, 1024, 1280, 1600], 80) || undefined}
-                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    src={displayImage}
                     alt={displayName}
                     className="w-full h-full object-contain bg-white"
                     decoding="async"
@@ -192,13 +194,13 @@ const ProductDetail = () => {
                   </button>
                 )}
               </div>
-              {galleryImages.length > 1 && (
+              {displayImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
-                  {galleryImages.map((img, idx) => (
-                    <button key={idx} onClick={() => { setSelectedImageIdx(idx); setSelectedColor(""); }}
-                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx && !selectedColor ? "border-primary" : "border-border hover:border-foreground/50"}`}>
+                  {displayImages.map((img, idx) => (
+                    <button key={idx} onClick={() => setSelectedImageIdx(idx)}
+                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx ? "border-primary" : "border-border hover:border-foreground/50"}`}>
                       <img
-                        src={isSupabaseImage(img) ? getOptimizedSrc(img, 128, 70) : img}
+                        src={img}
                         alt=""
                         loading="lazy"
                         decoding="async"
@@ -345,7 +347,7 @@ const ProductDetail = () => {
         </div>
       </main>
       <ImageLightbox
-        images={galleryImages}
+        images={displayImages}
         initialIndex={selectedImageIdx}
         open={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
