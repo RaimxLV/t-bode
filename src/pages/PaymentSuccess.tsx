@@ -67,15 +67,13 @@ const PaymentSuccess = () => {
   // Load bank settings (bank-transfer flow)
   useEffect(() => {
     if (!isBankTransfer) return;
+    if (!orderId) return;
     (async () => {
-      const { data } = await supabase
-        .from("site_settings")
-        .select("company_name,bank_name,bank_iban,bank_swift,bank_beneficiary,payment_instructions_lv,payment_instructions_en")
-        .limit(1)
-        .maybeSingle();
-      if (data) setSettings(data as SiteSettings);
+      const { data } = await supabase.rpc("get_bank_transfer_details", { _order_id: orderId });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) setSettings(row as SiteSettings);
     })();
-  }, [isBankTransfer]);
+  }, [isBankTransfer, orderId]);
 
   // Validate order status from Supabase + poll while pending (for webhook to confirm)
   useEffect(() => {
