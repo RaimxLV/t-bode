@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -7,21 +7,15 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
 import { getProductName } from "@/hooks/useProducts";
 import { WishlistButton } from "@/components/WishlistButton";
-import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
-
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
-  const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
-  const srcSet = buildSrcSet(src, [320, 480, 640, 800], 75) || undefined;
   return (
     <div className="relative w-full h-full bg-muted">
       {!loaded && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
       )}
       <img
-        src={optimized}
-        srcSet={srcSet}
-        sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : undefined}
+        src={src}
         alt={alt}
         className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
@@ -90,7 +84,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       className="group flex flex-col h-full bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
     >
       {/* Image — aspect-square, overflow-hidden, rounded top */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
         <div ref={emblaRef} className="overflow-hidden w-full h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
