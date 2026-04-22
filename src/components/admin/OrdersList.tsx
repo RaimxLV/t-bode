@@ -102,7 +102,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const updateOrderStatus = async (orderId: string, status: string) => {
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
-    else { toast.success(t("admin.statusUpdated")); onRefresh(); }
+    else {
+      toast.success(t("admin.statusUpdated"));
+      // Auto-send tracking email when order is marked as shipped
+      if (status === "shipped") {
+        const order = orders.find((o) => o.id === orderId);
+        if (order?.omniva_barcode) {
+          try {
+            // Reset sent flag so admin re-triggering "shipped" resends the email
+            await supabase.from("orders").update({ tracking_email_sent_at: null }).eq("id", orderId);
+            const { error: invokeErr } = await supabase.functions.invoke("send-tracking-email", {
+              body: { order_id: orderId },
+            });
+            if (invokeErr) toast.error(`Tracking e-pasts: ${invokeErr.message}`);
+            else toast.success("Izsekošanas e-pasts nosūtīts klientam");
+          } catch (e: any) {
+            toast.error(`Tracking e-pasts: ${e.message}`);
+          }
+        } else {
+          toast.warning("Pasūtījumam nav Omniva barcode — e-pasts nav nosūtīts");
+        }
+      }
+      onRefresh();
+    }
   };
 
   const markAsPaid = async (orderId: string) => {

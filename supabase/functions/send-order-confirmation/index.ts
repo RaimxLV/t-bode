@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
+const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <ofsetadruka@gmail.com>";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
