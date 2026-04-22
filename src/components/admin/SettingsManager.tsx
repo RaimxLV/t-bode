@@ -305,6 +305,78 @@ export const SettingsManager = () => {
       </Section>
 
       <Section icon={FileText} title="Maksājuma instrukcijas">
+
+      <Section icon={ImageIcon} title="Logo un zīmogs (rēķiniem)">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Logo */}
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Uzņēmuma logo</Label>
+            <div className="aspect-[3/1] w-full rounded-md border border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+              {settings.logo_url ? (
+                <img src={settings.logo_url} alt="Logo" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Label htmlFor="logo-upload" className="flex-1 cursor-pointer">
+                <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-xs font-body transition-colors">
+                  <Upload className="w-3.5 h-3.5" />
+                  {settings.logo_url ? "Nomainīt logo" : "Augšupielādēt logo"}
+                </div>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadAsset(e.target.files[0], "logo")}
+                />
+              </Label>
+              {settings.logo_url && (
+                <Button variant="outline" size="icon" onClick={() => update({ logo_url: null })} title="Noņemt">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">PNG, JPG, SVG vai WebP. Max 2 MB. Ieteicamais izmērs 600×200 px.</p>
+          </div>
+
+          {/* Zīmogs */}
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Zīmogs / paraksts</Label>
+            <div className="aspect-square w-full max-w-[180px] mx-auto rounded-md border border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+              {settings.stamp_url ? (
+                <img src={settings.stamp_url} alt="Zīmogs" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Label htmlFor="stamp-upload" className="flex-1 cursor-pointer">
+                <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-xs font-body transition-colors">
+                  <Upload className="w-3.5 h-3.5" />
+                  {settings.stamp_url ? "Nomainīt zīmogu" : "Augšupielādēt zīmogu"}
+                </div>
+                <input
+                  id="stamp-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadAsset(e.target.files[0], "stamp")}
+                />
+              </Label>
+              {settings.stamp_url && (
+                <Button variant="outline" size="icon" onClick={() => update({ stamp_url: null })} title="Noņemt">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">PNG ar caurspīdīgu fonu. Max 2 MB.</p>
+          </div>
+        </div>
+      </Section>
+
+      <Section icon={FileText} title="Maksājuma instrukcijas">
         <div className="space-y-1.5">
           <Label className="text-xs sm:text-sm">Latviski (LV)</Label>
           <Textarea
