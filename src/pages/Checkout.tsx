@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2 } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
@@ -76,6 +76,16 @@ const Checkout = () => {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
 
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplying, setPromoApplying] = useState(false);
+  const [promo, setPromo] = useState<{
+    code: string;
+    discount_type: "percentage" | "fixed" | "free_shipping";
+    discount_value: number;
+    discount_amount: number;
+  } | null>(null);
+
   const filteredLocations = useMemo(() => {
     if (!omnivaSearch.trim()) return locations.slice(0, 20);
     const q = omnivaSearch.toLowerCase();
@@ -84,8 +94,44 @@ const Checkout = () => {
 
   const appOriginUrl = new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\/$/, "");
 
-  const shippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
-  const orderTotal = totalPrice + shippingCost;
+  const baseShippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
+  const isFreeShipping = promo?.discount_type === "free_shipping";
+  const shippingCost = isFreeShipping ? 0 : baseShippingCost;
+  const productDiscount = promo && promo.discount_type !== "free_shipping" ? promo.discount_amount : 0;
+  const orderTotal = Math.max(0, totalPrice + shippingCost - productDiscount);
+
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoApplying(true);
+    try {
+      const { data, error } = await supabase.rpc("validate_promo_code", {
+        _code: code,
+        _order_total: totalPrice,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        toast.error(t("checkout.promoInvalid", "Nederīgs vai izsmelts atlaižu kods"));
+        setPromo(null);
+        return;
+      }
+      setPromo({
+        code: row.code,
+        discount_type: row.discount_type,
+        discount_value: Number(row.discount_value),
+        discount_amount: Number(row.discount_amount),
+      });
+      toast.success(t("checkout.promoApplied", "Atlaide piemērota!"));
+    } catch (e: any) {
+      toast.error(e.message || t("checkout.promoInvalid", "Nederīgs atlaižu kods"));
+      setPromo(null);
+    } finally {
+      setPromoApplying(false);
+    }
+  };
+
+  const removePromo = () => { setPromo(null); setPromoInput(""); };
 
   const updateField = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
@@ -152,6 +198,10 @@ const Checkout = () => {
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
         payment_method: paymentMethod,
+        promo_code: promo?.code ?? null,
+        discount_amount: promo
+          ? (promo.discount_type === "free_shipping" ? baseShippingCost : promo.discount_amount)
+          : 0,
       };
 
       if (user) {
@@ -193,6 +243,14 @@ const Checkout = () => {
         size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
       }));
 
+      const promoPayload = promo
+        ? {
+            code: promo.code,
+            discount_type: promo.discount_type,
+            discount_amount: promo.discount_type === "free_shipping" ? baseShippingCost : promo.discount_amount,
+          }
+        : null;
+
       // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
       if (paymentMethod === "montonio") {
         const { data: mData, error: mError } = await supabase.functions.invoke("montonio-create-order", {
@@ -203,6 +261,7 @@ const Checkout = () => {
             customer_email: user?.email ?? form.email.trim(),
             customer_name: form.name.trim(),
             customer_phone: form.phone.trim(),
+            promo: promoPayload,
             shipping:
               shippingMethod === "omniva" && selectedOmniva
                 ? {
@@ -227,6 +286,7 @@ const Checkout = () => {
           origin_url: appOriginUrl,
           guest_email: user ? null : form.email.trim(),
           payment_method: paymentMethod,
+          promo: promoPayload,
           business: isBusiness ? {
             is_business: true,
             company_name: form.company_name.trim(),
@@ -511,7 +571,74 @@ const Checkout = () => {
                 <Separator className="my-4" />
                 <div className="space-y-2 font-body text-sm">
                   <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.products")}</span><span>{totalPrice.toFixed(2).replace(".", ",")} €</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">{t("checkout.shipping")}</span><span>{shippingCost.toFixed(2).replace(".", ",")} €</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("checkout.shipping")}</span>
+                    <span>
+                      {isFreeShipping ? (
+                        <>
+                          <span className="text-muted-foreground line-through mr-2">{baseShippingCost.toFixed(2).replace(".", ",")} €</span>
+                          <span style={{ color: "hsl(var(--primary))" }}>0,00 €</span>
+                        </>
+                      ) : (
+                        `${shippingCost.toFixed(2).replace(".", ",")} €`
+                      )}
+                    </span>
+                  </div>
+                  {productDiscount > 0 && (
+                    <div className="flex justify-between" style={{ color: "hsl(var(--primary))" }}>
+                      <span>{t("checkout.discount", "Atlaide")} ({promo?.code})</span>
+                      <span>−{productDiscount.toFixed(2).replace(".", ",")} €</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Promo code input */}
+                <div className="mt-4 pt-4 border-t border-border">
+                  {!promo ? (
+                    <div>
+                      <Label className="font-body text-xs text-muted-foreground flex items-center gap-1.5 mb-1.5">
+                        <Tag className="w-3.5 h-3.5" />
+                        {t("checkout.promoLabel", "Atlaižu kods")}
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={promoInput}
+                          onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), applyPromo())}
+                          placeholder={t("checkout.promoPlaceholder", "Ievadi kodu")}
+                          className="font-mono uppercase text-sm"
+                          maxLength={40}
+                          disabled={promoApplying}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={applyPromo}
+                          disabled={promoApplying || !promoInput.trim()}
+                          className="shrink-0"
+                        >
+                          {promoApplying ? "..." : t("checkout.promoApply", "Pielietot")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-sm truncate">{promo.code}</p>
+                          <p className="text-xs text-muted-foreground font-body">
+                            {promo.discount_type === "percentage" && `−${promo.discount_value}%`}
+                            {promo.discount_type === "fixed" && `−${promo.discount_value.toFixed(2)} €`}
+                            {promo.discount_type === "free_shipping" && t("checkout.freeShipping", "Bezmaksas piegāde")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="ghost" size="icon" onClick={removePromo} className="shrink-0 h-8 w-8">
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <Separator className="my-4" />
                 <div className="flex justify-between font-body font-bold text-lg">
