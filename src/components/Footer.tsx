@@ -137,6 +137,7 @@ export const Footer = () => {
           <div className="flex items-center gap-5 text-xs font-body">
             <Link to="/privacy" className="text-gray-500 hover:text-white transition-colors">{t("footer.privacy")}</Link>
             <Link to="/terms" className="text-gray-500 hover:text-white transition-colors">{t("footer.terms")}</Link>
+            <Link to="/install" className="text-gray-500 hover:text-white transition-colors">{t("install.shortLabel")}</Link>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-gray-500 font-body">{t("footer.securePayments")}</span>

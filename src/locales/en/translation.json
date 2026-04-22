@@ -366,5 +366,24 @@
   "language": {
     "lv": "LV",
     "en": "EN"
+  },
+  "install": {
+    "shortLabel": "Install app",
+    "title": "Install T-Bode",
+    "description": "Add T-Bode to your home screen and use it like a native app — fast, immersive, no browser bars.",
+    "installButton": "Install now",
+    "readyDesc": "Your device is ready — tap below to add T-Bode to your home screen.",
+    "installed": "App installed successfully!",
+    "dismissed": "Installation dismissed",
+    "alreadyInstalled": "Already installed ✓",
+    "alreadyInstalledDesc": "You're already using T-Bode as an installed app.",
+    "iosTitle": "How to install on iPhone or iPad",
+    "iosStep1": "Open Safari Share menu",
+    "iosStep2": "Choose “Add to Home Screen”",
+    "iosStep3": "Confirm with “Add” in the top corner",
+    "androidTitle": "How to install on Android",
+    "androidManual": "Open the browser menu (⋮) and choose “Add to Home Screen” or “Install app”.",
+    "desktopTitle": "How to install on desktop",
+    "desktopManual": "Chrome/Edge: click the install icon on the right side of the address bar, or choose “Install T-Bode” from the menu."
   }
 }
