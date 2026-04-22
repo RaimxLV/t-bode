@@ -412,7 +412,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings"].includes(activeTab)
+                  ["customers", "categories", "faq", "access", "settings", "emails"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -433,6 +433,7 @@ const Admin = () => {
                   { value: "faq", icon: HelpCircle, label: "FAQ" },
                   { value: "access", icon: UserCheck, label: "Piekļuve" },
                   { value: "settings", icon: SettingsIcon, label: "Iestatījumi" },
+                  { value: "emails", icon: Mail, label: "E-pasti" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
