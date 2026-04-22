@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
         .eq("id", orderId)
         .maybeSingle();
       if (!order) return { skipped: true, reason: "not found" };
-      if (order.payment_method !== "bank") return { skipped: true, reason: "not bank transfer" };
+      if (order.payment_method !== "bank_transfer") return { skipped: true, reason: "not bank transfer" };
       if (order.status !== "pending") return { skipped: true, reason: "not pending" };
 
       let recipientEmail: string | null = order.guest_email;
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     const { data: candidates } = await service
       .from("orders")
       .select("id")
-      .eq("payment_method", "bank")
+      .eq("payment_method", "bank_transfer")
       .eq("status", "pending")
       .lte("created_at", threeDaysAgo)
       .is("last_payment_reminder_at", null);
