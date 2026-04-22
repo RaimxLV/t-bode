@@ -69,6 +69,17 @@ Deno.serve(async (req) => {
 
     await service.from("orders").update(update).eq("id", orderId);
 
+    // Send confirmation email when payment is finalized
+    if (status === "PAID" || status === "FINALIZED") {
+      try {
+        await service.functions.invoke("send-order-confirmation", {
+          body: { order_id: orderId, lang: "lv" },
+        });
+      } catch (e) {
+        console.error("Failed to send confirmation email:", (e as Error).message);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
