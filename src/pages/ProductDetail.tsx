@@ -14,6 +14,7 @@ import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
+import { Seo } from "@/components/Seo";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -116,6 +117,32 @@ const ProductDetail = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo
+        title={displayName}
+        description={(displayDescription || displayName).replace(/<[^>]+>/g, "").slice(0, 160)}
+        image={displayImage || product.image_url || undefined}
+        type="product"
+        jsonLd={{
+          "@context": "https://schema.org/",
+          "@type": "Product",
+          name: displayName,
+          description: (displayDescription || "").replace(/<[^>]+>/g, "").slice(0, 5000),
+          image: galleryImages.length ? galleryImages : [product.image_url].filter(Boolean),
+          sku: product.id,
+          category: product.category,
+          brand: { "@type": "Brand", name: "T-Bode" },
+          offers: {
+            "@type": "Offer",
+            url: typeof window !== "undefined" ? window.location.href : undefined,
+            priceCurrency: "EUR",
+            price: Number(product.price).toFixed(2),
+            availability: product.in_stock
+              ? "https://schema.org/InStock"
+              : "https://schema.org/OutOfStock",
+            itemCondition: "https://schema.org/NewCondition",
+          },
+        }}
+      />
       <Navbar />
       <main className="flex-1 pt-24 pb-16">
         <div className="container mx-auto px-4">
