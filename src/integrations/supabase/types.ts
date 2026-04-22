@@ -172,6 +172,98 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_sequences: {
+        Row: {
+          counter: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          counter?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          counter?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      invoices: {
+        Row: {
+          buyer_snapshot: Json
+          created_at: string
+          generated_at: string
+          gross_amount: number
+          id: string
+          invoice_number: string
+          is_current: boolean
+          items_snapshot: Json
+          net_amount: number
+          notes: string | null
+          order_id: string
+          pdf_path: string
+          seller_snapshot: Json
+          sent_at: string | null
+          updated_at: string
+          vat_amount: number
+          vat_rate: number
+          version: number
+          viewed_at: string | null
+        }
+        Insert: {
+          buyer_snapshot?: Json
+          created_at?: string
+          generated_at?: string
+          gross_amount?: number
+          id?: string
+          invoice_number: string
+          is_current?: boolean
+          items_snapshot?: Json
+          net_amount?: number
+          notes?: string | null
+          order_id: string
+          pdf_path: string
+          seller_snapshot?: Json
+          sent_at?: string | null
+          updated_at?: string
+          vat_amount?: number
+          vat_rate?: number
+          version?: number
+          viewed_at?: string | null
+        }
+        Update: {
+          buyer_snapshot?: Json
+          created_at?: string
+          generated_at?: string
+          gross_amount?: number
+          id?: string
+          invoice_number?: string
+          is_current?: boolean
+          items_snapshot?: Json
+          net_amount?: number
+          notes?: string | null
+          order_id?: string
+          pdf_path?: string
+          seller_snapshot?: Json
+          sent_at?: string | null
+          updated_at?: string
+          vat_amount?: number
+          vat_rate?: number
+          version?: number
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           color: string | null
@@ -567,8 +659,10 @@ export type Database = {
           company_reg_number: string | null
           company_vat_number: string | null
           id: string
+          logo_url: string | null
           payment_instructions_en: string | null
           payment_instructions_lv: string | null
+          stamp_url: string | null
           updated_at: string
         }
         Insert: {
@@ -581,8 +675,10 @@ export type Database = {
           company_reg_number?: string | null
           company_vat_number?: string | null
           id?: string
+          logo_url?: string | null
           payment_instructions_en?: string | null
           payment_instructions_lv?: string | null
+          stamp_url?: string | null
           updated_at?: string
         }
         Update: {
@@ -595,8 +691,10 @@ export type Database = {
           company_reg_number?: string | null
           company_vat_number?: string | null
           id?: string
+          logo_url?: string | null
           payment_instructions_en?: string | null
           payment_instructions_lv?: string | null
+          stamp_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -686,6 +784,7 @@ export type Database = {
       }
       is_admin_or_whitelisted: { Args: never; Returns: boolean }
       is_admin_whitelisted: { Args: { _email: string }; Returns: boolean }
+      next_invoice_number: { Args: { _year?: number }; Returns: string }
       redeem_promo_code: {
         Args: { _code: string; _order_id: string; _order_total: number }
         Returns: number

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Save, Building2, Landmark, FileText, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Save, Building2, Landmark, FileText, AlertCircle, CheckCircle2, ImageIcon, Upload, Trash2 } from "lucide-react";
 
 // IBAN length per country (subset of common EU + LV neighbours)
 const IBAN_LENGTHS: Record<string, number> = {
@@ -80,6 +80,8 @@ interface SiteSettings {
   bank_beneficiary: string;
   payment_instructions_lv: string | null;
   payment_instructions_en: string | null;
+  logo_url: string | null;
+  stamp_url: string | null;
 }
 
 const Section = ({ icon: Icon, title, children }: { icon: any; title: string; children: React.ReactNode }) => (
@@ -130,6 +132,30 @@ export const SettingsManager = () => {
   const regError = settings ? validateRegNumber(settings.company_reg_number ?? "") : null;
   const vatError = settings ? validateVatNumber(settings.company_vat_number ?? "") : null;
 
+  const uploadAsset = async (file: File, kind: "logo" | "stamp") => {
+    if (!settings) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Fails jābūt attēlam (PNG, JPG, SVG)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Faila izmērs nedrīkst pārsniegt 2 MB");
+      return;
+    }
+    const ext = file.name.split(".").pop() || "png";
+    const path = `company/${kind}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("email-assets")
+      .upload(path, file, { cacheControl: "3600", upsert: true });
+    if (upErr) {
+      toast.error("Augšupielāde neizdevās: " + upErr.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("email-assets").getPublicUrl(path);
+    update(kind === "logo" ? { logo_url: pub.publicUrl } : { stamp_url: pub.publicUrl });
+    toast.success(kind === "logo" ? "Logo augšupielādēts" : "Zīmogs augšupielādēts");
+  };
+
   const handleSave = async () => {
     if (!settings) return;
     if (ibanError) { toast.error("Nederīgs IBAN — " + ibanError); return; }
@@ -150,6 +176,8 @@ export const SettingsManager = () => {
         company_address: rest.company_address ?? "",
         payment_instructions_lv: rest.payment_instructions_lv ?? "",
         payment_instructions_en: rest.payment_instructions_en ?? "",
+        logo_url: rest.logo_url ?? null,
+        stamp_url: rest.stamp_url ?? null,
       })
       .eq("id", id);
     setSaving(false);
@@ -273,6 +301,76 @@ export const SettingsManager = () => {
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Derīgs IBAN
             </p>
           )}
+        </div>
+      </Section>
+
+      <Section icon={ImageIcon} title="Logo un zīmogs (rēķiniem)">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Logo */}
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Uzņēmuma logo</Label>
+            <div className="aspect-[3/1] w-full rounded-md border border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+              {settings.logo_url ? (
+                <img src={settings.logo_url} alt="Logo" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Label htmlFor="logo-upload" className="flex-1 cursor-pointer">
+                <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-xs font-body transition-colors">
+                  <Upload className="w-3.5 h-3.5" />
+                  {settings.logo_url ? "Nomainīt logo" : "Augšupielādēt logo"}
+                </div>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadAsset(e.target.files[0], "logo")}
+                />
+              </Label>
+              {settings.logo_url && (
+                <Button variant="outline" size="icon" onClick={() => update({ logo_url: null })} title="Noņemt">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">PNG, JPG, SVG vai WebP. Max 2 MB. Ieteicamais izmērs 600×200 px.</p>
+          </div>
+
+          {/* Zīmogs */}
+          <div className="space-y-2">
+            <Label className="text-xs sm:text-sm">Zīmogs / paraksts</Label>
+            <div className="aspect-square w-full max-w-[180px] mx-auto rounded-md border border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
+              {settings.stamp_url ? (
+                <img src={settings.stamp_url} alt="Zīmogs" className="max-h-full max-w-full object-contain" />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Label htmlFor="stamp-upload" className="flex-1 cursor-pointer">
+                <div className="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border bg-background hover:bg-muted text-xs font-body transition-colors">
+                  <Upload className="w-3.5 h-3.5" />
+                  {settings.stamp_url ? "Nomainīt zīmogu" : "Augšupielādēt zīmogu"}
+                </div>
+                <input
+                  id="stamp-upload"
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  className="hidden"
+                  onChange={(e) => e.target.files?.[0] && uploadAsset(e.target.files[0], "stamp")}
+                />
+              </Label>
+              {settings.stamp_url && (
+                <Button variant="outline" size="icon" onClick={() => update({ stamp_url: null })} title="Noņemt">
+                  <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">PNG ar caurspīdīgu fonu. Max 2 MB.</p>
+          </div>
         </div>
       </Section>
 
