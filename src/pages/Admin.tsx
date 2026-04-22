@@ -376,6 +376,12 @@ const Admin = () => {
               <SettingsManager />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="emails">
+            <Suspense fallback={<TabFallback />}>
+              <EmailPreview />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
