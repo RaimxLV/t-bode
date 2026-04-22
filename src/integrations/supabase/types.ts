@@ -518,6 +518,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_bank_transfer_details: {
+        Args: { _order_id: string }
+        Returns: {
+          bank_beneficiary: string
+          bank_iban: string
+          bank_name: string
+          bank_swift: string
+          company_name: string
+          payment_instructions_en: string
+          payment_instructions_lv: string
+        }[]
+      }
       get_public_settings: {
         Args: never
         Returns: {
