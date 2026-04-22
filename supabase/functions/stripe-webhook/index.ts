@@ -87,6 +87,14 @@ Deno.serve(async (req) => {
 
         // Fire-and-forget order confirmation email (do not block webhook ack)
         try {
+          // Auto-generate invoice PDF first (so email can attach it for B2B)
+          try {
+            await supabase.functions.invoke("generate-invoice", {
+              body: { order_id: orderId },
+            });
+          } catch (e) {
+            console.error("Failed to auto-generate invoice:", (e as Error).message);
+          }
           await supabase.functions.invoke("send-order-confirmation", {
             body: { order_id: orderId, lang: "lv" },
           });
