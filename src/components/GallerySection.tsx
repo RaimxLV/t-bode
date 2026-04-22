@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const galleryImages = [
   "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0025-scaled.jpg",
@@ -17,12 +18,18 @@ const GalleryImage = ({ src, index }: { src: string; index: number }) => {
 
   if (error) return null;
 
+  const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 512, 75) : src;
+  const srcSet = buildSrcSet(src, [256, 384, 512, 640], 75) || undefined;
+
   return (
     <motion.img
-      src={src}
+      src={optimized}
+      srcSet={srcSet}
+      sizes={srcSet ? "(max-width: 768px) 192px, 256px" : undefined}
       alt={`Gallery ${index + 1}`}
       className="w-48 h-48 md:w-64 md:h-64 object-cover rounded-lg flex-shrink-0 bg-muted"
       loading="lazy"
+      decoding="async"
       whileHover={{ scale: 1.05 }}
       onError={() => setError(true)}
     />
