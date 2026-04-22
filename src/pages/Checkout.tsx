@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2 } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
@@ -76,6 +76,16 @@ const Checkout = () => {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
 
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("");
+  const [promoApplying, setPromoApplying] = useState(false);
+  const [promo, setPromo] = useState<{
+    code: string;
+    discount_type: "percentage" | "fixed" | "free_shipping";
+    discount_value: number;
+    discount_amount: number;
+  } | null>(null);
+
   const filteredLocations = useMemo(() => {
     if (!omnivaSearch.trim()) return locations.slice(0, 20);
     const q = omnivaSearch.toLowerCase();
@@ -84,8 +94,44 @@ const Checkout = () => {
 
   const appOriginUrl = new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\/$/, "");
 
-  const shippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
-  const orderTotal = totalPrice + shippingCost;
+  const baseShippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
+  const isFreeShipping = promo?.discount_type === "free_shipping";
+  const shippingCost = isFreeShipping ? 0 : baseShippingCost;
+  const productDiscount = promo && promo.discount_type !== "free_shipping" ? promo.discount_amount : 0;
+  const orderTotal = Math.max(0, totalPrice + shippingCost - productDiscount);
+
+  const applyPromo = async () => {
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+    setPromoApplying(true);
+    try {
+      const { data, error } = await supabase.rpc("validate_promo_code", {
+        _code: code,
+        _order_total: totalPrice,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        toast.error(t("checkout.promoInvalid", "Nederīgs vai izsmelts atlaižu kods"));
+        setPromo(null);
+        return;
+      }
+      setPromo({
+        code: row.code,
+        discount_type: row.discount_type,
+        discount_value: Number(row.discount_value),
+        discount_amount: Number(row.discount_amount),
+      });
+      toast.success(t("checkout.promoApplied", "Atlaide piemērota!"));
+    } catch (e: any) {
+      toast.error(e.message || t("checkout.promoInvalid", "Nederīgs atlaižu kods"));
+      setPromo(null);
+    } finally {
+      setPromoApplying(false);
+    }
+  };
+
+  const removePromo = () => { setPromo(null); setPromoInput(""); };
 
   const updateField = (field: string, value: string) => {
     setForm({ ...form, [field]: value });
@@ -152,6 +198,10 @@ const Checkout = () => {
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
         payment_method: paymentMethod,
+        promo_code: promo?.code ?? null,
+        discount_amount: promo
+          ? (promo.discount_type === "free_shipping" ? baseShippingCost : promo.discount_amount)
+          : 0,
       };
 
       if (user) {
@@ -193,6 +243,14 @@ const Checkout = () => {
         size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
       }));
 
+      const promoPayload = promo
+        ? {
+            code: promo.code,
+            discount_type: promo.discount_type,
+            discount_amount: promo.discount_type === "free_shipping" ? baseShippingCost : promo.discount_amount,
+          }
+        : null;
+
       // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
       if (paymentMethod === "montonio") {
         const { data: mData, error: mError } = await supabase.functions.invoke("montonio-create-order", {
@@ -203,6 +261,7 @@ const Checkout = () => {
             customer_email: user?.email ?? form.email.trim(),
             customer_name: form.name.trim(),
             customer_phone: form.phone.trim(),
+            promo: promoPayload,
             shipping:
               shippingMethod === "omniva" && selectedOmniva
                 ? {
@@ -227,6 +286,7 @@ const Checkout = () => {
           origin_url: appOriginUrl,
           guest_email: user ? null : form.email.trim(),
           payment_method: paymentMethod,
+          promo: promoPayload,
           business: isBusiness ? {
             is_business: true,
             company_name: form.company_name.trim(),
