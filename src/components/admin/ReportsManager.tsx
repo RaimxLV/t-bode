@@ -252,7 +252,60 @@ export const ReportsManager = () => {
           {orders.length === 0 ? (
             <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-2">
+              {orders.map((o) => {
+                const its = itemsByOrder.get(o.id) ?? [];
+                const customer = o.is_business
+                  ? (o.company_name ?? o.shipping_name ?? "—")
+                  : (o.shipping_name ?? o.guest_email ?? "—");
+                return (
+                  <div key={o.id} className="border border-border rounded-lg p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-mono">#{String(o.order_number).padStart(4, "0")}</span>
+                          {o.is_business && <Badge variant="outline" className="text-[9px]">B2B</Badge>}
+                          {statusBadge(o)}
+                        </div>
+                        <p className="text-sm font-medium truncate mt-1">{customer}</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          {new Date(o.created_at).toLocaleString("lv-LV", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                          {" · "}
+                          {paymentLabel(o)}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span className="text-sm font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 gap-1"
+                          onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span className="text-[10px]">PDF</span>
+                        </Button>
+                      </div>
+                    </div>
+                    {its.length > 0 && (
+                      <div className="border-t border-border pt-2 space-y-0.5">
+                        {its.slice(0, 3).map((it) => (
+                          <div key={it.id} className="text-[11px] flex justify-between gap-2">
+                            <span className="truncate"><span className="text-muted-foreground">×{it.quantity}</span> {it.product_name}</span>
+                          </div>
+                        ))}
+                        {its.length > 3 && <p className="text-[10px] text-muted-foreground">+{its.length - 3} citas…</p>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -320,6 +373,7 @@ export const ReportsManager = () => {
                 </TableBody>
               </Table>
             </div>
+            </>
           )}
         </CardContent>
       </Card>
