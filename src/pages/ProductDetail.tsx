@@ -15,6 +15,7 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
+import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
