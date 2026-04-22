@@ -82,6 +82,33 @@ export const ReportsManager = () => {
     return { gross: round2(gross), net, vat, paymentSplit, products, orderCount: orders.length };
   }, [orders, items]);
 
+  const itemsByOrder = useMemo(() => {
+    const m = new Map<string, any[]>();
+    for (const it of items) {
+      const arr = m.get(it.order_id) ?? [];
+      arr.push(it);
+      m.set(it.order_id, arr);
+    }
+    return m;
+  }, [items]);
+
+  const paymentLabel = (o: any) => {
+    const k = (o.payment_method || o.provider || "").toLowerCase();
+    if (k.includes("bank")) return "Pārskaitījums";
+    if (k.includes("montonio")) return "Montonio";
+    if (k.includes("stripe") || k.includes("card")) return "Karte";
+    return o.payment_method || o.provider || "—";
+  };
+
+  const statusBadge = (o: any) => {
+    const paid = o.manually_paid_at || ["confirmed", "processing", "shipped", "delivered"].includes(o.status);
+    return paid ? (
+      <Badge className="bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/20 border-emerald-500/30 text-[10px]">Apmaksāts</Badge>
+    ) : (
+      <Badge variant="outline" className="text-[10px]">Gaida</Badge>
+    );
+  };
+
   const exportCsv = () => {
     const rows: string[][] = [
       ["Datums", "Pasūtījuma Nr.", "Rēķina Nr.", "Klients", "Tips", "Reģ.Nr.", "PVN Nr.", "Maksājums", "Statuss", "Bruto EUR", "Neto EUR", "PVN EUR", "PVN likme %"],
