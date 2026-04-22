@@ -84,6 +84,15 @@ Deno.serve(async (req) => {
 
         if (updateError) throw updateError;
         console.log(`✅ Order ${orderId} confirmed`);
+
+        // Fire-and-forget order confirmation email (do not block webhook ack)
+        try {
+          await supabase.functions.invoke("send-order-confirmation", {
+            body: { order_id: orderId, lang: "lv" },
+          });
+        } catch (e) {
+          console.error("Failed to send confirmation email:", (e as Error).message);
+        }
         break;
       }
 
