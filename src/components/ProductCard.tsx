@@ -7,19 +7,25 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
 import { getProductName } from "@/hooks/useProducts";
 import { WishlistButton } from "@/components/WishlistButton";
+import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
+  const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
+  const srcSet = buildSrcSet(src, [320, 480, 640, 800], 75) || undefined;
   return (
     <div className="relative w-full h-full bg-muted">
       {!loaded && (
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
       )}
       <img
-        src={src}
+        src={optimized}
+        srcSet={srcSet}
+        sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : undefined}
         alt={alt}
         className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
+        decoding="async"
         onLoad={() => setLoaded(true)}
       />
     </div>
