@@ -211,7 +211,15 @@ const Checkout = () => {
 
       const activeUser = isGuestCheckout ? null : authUser;
 
+      // Generate the order ID client-side so guest checkout doesn't need to
+      // SELECT the row back (which RLS would block for anon users).
+      const newOrderId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
       const orderPayload: any = {
+        id: newOrderId,
         total: orderTotal,
         shipping_name: form.name.trim(),
         shipping_address: shippingMethod === "courier" ? form.address.trim() : null,
@@ -248,12 +256,11 @@ const Checkout = () => {
         orderPayload.company_address = form.company_address.trim();
       }
 
-      const { data: order, error: orderError } = await checkoutClient
+      const { error: orderError } = await checkoutClient
         .from("orders")
-        .insert(orderPayload)
-        .select("id")
-        .single();
+        .insert(orderPayload);
       if (orderError) throw orderError;
+      const order = { id: newOrderId };
 
       const orderItems = items.map((item) => ({
         order_id: order.id,
