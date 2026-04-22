@@ -237,6 +237,7 @@ export type Database = {
           company_reg_number: string | null
           company_vat_number: string | null
           created_at: string
+          discount_amount: number
           guest_email: string | null
           id: string
           is_business: boolean
@@ -259,6 +260,7 @@ export type Database = {
           omniva_tracking_status: string | null
           order_number: number
           payment_method: string
+          promo_code: string | null
           provider: string
           shipping_address: string | null
           shipping_city: string | null
@@ -281,6 +283,7 @@ export type Database = {
           company_reg_number?: string | null
           company_vat_number?: string | null
           created_at?: string
+          discount_amount?: number
           guest_email?: string | null
           id?: string
           is_business?: boolean
@@ -303,6 +306,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          promo_code?: string | null
           provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
@@ -325,6 +329,7 @@ export type Database = {
           company_reg_number?: string | null
           company_vat_number?: string | null
           created_at?: string
+          discount_amount?: number
           guest_email?: string | null
           id?: string
           is_business?: boolean
@@ -347,6 +352,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          promo_code?: string | null
           provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
@@ -457,6 +463,96 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      promo_code_redemptions: {
+        Row: {
+          code_snapshot: string
+          created_at: string
+          discount_amount: number
+          id: string
+          order_id: string
+          promo_code_id: string
+        }
+        Insert: {
+          code_snapshot: string
+          created_at?: string
+          discount_amount: number
+          id?: string
+          order_id: string
+          promo_code_id: string
+        }
+        Update: {
+          code_snapshot?: string
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          order_id?: string
+          promo_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_order_total: number
+          updated_at: string
+          used_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_total?: number
+          updated_at?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_order_total?: number
+          updated_at?: string
+          used_count?: number
+          valid_from?: string
+          valid_until?: string | null
         }
         Relationships: []
       }
@@ -589,6 +685,20 @@ export type Database = {
       }
       is_admin_or_whitelisted: { Args: never; Returns: boolean }
       is_admin_whitelisted: { Args: { _email: string }; Returns: boolean }
+      redeem_promo_code: {
+        Args: { _code: string; _order_id: string; _order_total: number }
+        Returns: number
+      }
+      validate_promo_code: {
+        Args: { _code: string; _order_total: number }
+        Returns: {
+          code: string
+          discount_amount: number
+          discount_type: Database["public"]["Enums"]["promo_discount_type"]
+          discount_value: number
+          min_order_total: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -599,6 +709,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
+      promo_discount_type: "percentage" | "fixed" | "free_shipping"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -735,6 +846,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      promo_discount_type: ["percentage", "fixed", "free_shipping"],
     },
   },
 } as const
