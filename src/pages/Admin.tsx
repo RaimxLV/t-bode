@@ -276,6 +276,7 @@ const Admin = () => {
             <TabsTrigger value="customers" className="gap-1.5 text-sm"><Users className="w-4 h-4" /> Klienti</TabsTrigger>
             <TabsTrigger value="access" className="gap-1.5 text-sm"><UserCheck className="w-4 h-4" /> Piekļuve</TabsTrigger>
             <TabsTrigger value="settings" className="gap-1.5 text-sm"><SettingsIcon className="w-4 h-4" /> Iestatījumi</TabsTrigger>
+            <TabsTrigger value="emails" className="gap-1.5 text-sm"><Mail className="w-4 h-4" /> E-pasti</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
