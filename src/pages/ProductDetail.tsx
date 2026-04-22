@@ -197,7 +197,13 @@ const ProductDetail = () => {
                   {galleryImages.map((img, idx) => (
                     <button key={idx} onClick={() => { setSelectedImageIdx(idx); setSelectedColor(""); }}
                       className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx && !selectedColor ? "border-primary" : "border-border hover:border-foreground/50"}`}>
-                      <img src={img} alt="" className="w-full h-full object-contain bg-white" />
+                      <img
+                        src={isSupabaseImage(img) ? getOptimizedSrc(img, 128, 70) : img}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-contain bg-white"
+                      />
                     </button>
                   ))}
                 </div>
