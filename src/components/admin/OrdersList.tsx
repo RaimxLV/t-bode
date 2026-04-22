@@ -402,15 +402,27 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               <p className="text-[11px] text-amber-900 font-body">
                                 {t("admin.awaitingBankPayment", "Gaida apmaksu bankas kontā. Atzīmējiet pasūtījumu kā apmaksātu, kad nauda ir saņemta.")}
                               </p>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => markAsPaid(order.id)}
-                              >
-                                <BadgeCheck className="w-3.5 h-3.5" />
-                                {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
-                              </Button>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={() => markAsPaid(order.id)}
+                                >
+                                  <BadgeCheck className="w-3.5 h-3.5" />
+                                  {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs gap-1.5 h-8 border-amber-300 text-amber-900 hover:bg-amber-100"
+                                  onClick={() => sendPaymentReminder(order.id)}
+                                  title={order.last_payment_reminder_at ? `Pēdējais: ${new Date(order.last_payment_reminder_at).toLocaleString("lv-LV")}` : "Sūtīt atgādinājumu klientam"}
+                                >
+                                  <Bell className="w-3.5 h-3.5" />
+                                  {order.last_payment_reminder_at ? "Atgādināt vēlreiz" : "Atgādināt par apmaksu"}
+                                </Button>
+                              </div>
                             </>
                           )}
                           {order.stripe_invoice_pdf && (
