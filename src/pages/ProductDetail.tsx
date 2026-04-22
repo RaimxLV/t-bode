@@ -15,6 +15,7 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
+import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -162,7 +163,20 @@ const ProductDetail = () => {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxOpen(true); } }}
               >
                 <AnimatePresence mode="wait">
-                  <motion.img key={displayImage} src={displayImage} alt={displayName} className="w-full h-full object-contain bg-white" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} />
+                  <motion.img
+                    key={displayImage}
+                    src={isSupabaseImage(displayImage) ? getOptimizedSrc(displayImage, 1024, 80) : displayImage}
+                    srcSet={buildSrcSet(displayImage, [480, 768, 1024, 1280, 1600], 80) || undefined}
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    alt={displayName}
+                    className="w-full h-full object-contain bg-white"
+                    decoding="async"
+                    fetchPriority="high"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  />
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
@@ -183,7 +197,13 @@ const ProductDetail = () => {
                   {galleryImages.map((img, idx) => (
                     <button key={idx} onClick={() => { setSelectedImageIdx(idx); setSelectedColor(""); }}
                       className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx && !selectedColor ? "border-primary" : "border-border hover:border-foreground/50"}`}>
-                      <img src={img} alt="" className="w-full h-full object-contain bg-white" />
+                      <img
+                        src={isSupabaseImage(img) ? getOptimizedSrc(img, 128, 70) : img}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-contain bg-white"
+                      />
                     </button>
                   ))}
                 </div>

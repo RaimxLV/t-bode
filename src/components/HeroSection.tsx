@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroImage from "@/assets/hero.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
+import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -19,11 +20,17 @@ export const HeroSection = () => {
 
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
+  // Hero is a bundled asset (not Supabase) — helpers no-op on non-Supabase URLs.
+  const heroSrc = isSupabaseImage(heroImage) ? getOptimizedSrc(heroImage, 1600, 80) : heroImage;
+  const heroSrcSet = buildSrcSet(heroImage, [640, 960, 1280, 1600, 1920], 80) || undefined;
+
   return (
     <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
       {/* Preloaded hero image with fade-in */}
       <motion.img
-        src={heroImage}
+        src={heroSrc}
+        srcSet={heroSrcSet}
+        sizes={heroSrcSet ? "100vw" : undefined}
         alt="T-Bode hero"
         className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
         style={{ y: imgY }}
@@ -32,6 +39,7 @@ export const HeroSection = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         onLoad={() => setImageLoaded(true)}
         fetchPriority="high"
+        decoding="async"
       />
       <div
         className="absolute inset-0"
