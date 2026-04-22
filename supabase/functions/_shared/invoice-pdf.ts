@@ -300,21 +300,13 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     y -= 6;
   }
 
-  // === Stamp (optional, bottom right) ===
-  const stamp = await tryEmbedImage(pdf, data.seller.stamp_url);
-  if (stamp) {
-    const h = 70;
-    const w = (stamp.width / stamp.height) * h;
-    page.drawImage(stamp, { x: width - marginX - w, y: 60, width: w, height: h, opacity: 0.85 });
-  }
-
   // === Footer ===
   page.drawLine({ start: { x: marginX, y: 48 }, end: { x: width - marginX, y: 48 }, thickness: 0.5, color: colorLine });
   page.drawText(
     sanitize(`${seller.company_name}${seller.company_reg_number ? ` · Reg. ${seller.company_reg_number}` : ""}${seller.company_vat_number ? ` · PVN ${seller.company_vat_number}` : ""}`),
     { x: marginX, y: 36, size: 8, font, color: colorMuted }
   );
-  page.drawText("Dokuments sagatavots elektroniski un ir deriga bez paraksta.", {
+  page.drawText(sanitize("Dokuments sagatavots elektroniski un ir derīgs bez paraksta."), {
     x: marginX, y: 24, size: 7.5, font, color: colorMuted,
   });
 
