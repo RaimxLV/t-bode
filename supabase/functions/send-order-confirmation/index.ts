@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -132,6 +133,15 @@ Deno.serve(async (req) => {
     const originalRecipient = toEmail;
     toEmail = TEST_OVERRIDE_EMAIL;
 
+    const messageId = makeMessageId("order-confirmation");
+    await logEmailAttempt(service, {
+      message_id: messageId,
+      template_name: "order-confirmation",
+      recipient_email: originalRecipient,
+      status: "pending",
+      metadata: { order_id, order_number: order.order_number, lang: language, test_to: toEmail },
+    });
+
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -149,11 +159,27 @@ Deno.serve(async (req) => {
     const text = await resp.text();
     if (!resp.ok) {
       console.error("Resend error:", resp.status, text);
+      await logEmailAttempt(service, {
+        message_id: messageId,
+        template_name: "order-confirmation",
+        recipient_email: originalRecipient,
+        status: "failed",
+        error_message: text,
+        metadata: { order_id, http_status: resp.status },
+      });
       return new Response(JSON.stringify({ error: "Failed to send email", detail: text }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 502,
       });
     }
+
+    await logEmailAttempt(service, {
+      message_id: messageId,
+      template_name: "order-confirmation",
+      recipient_email: originalRecipient,
+      status: "sent",
+      metadata: { order_id, order_number: order.order_number, lang: language },
+    });
 
     return new Response(JSON.stringify({ sent: true, to: toEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
