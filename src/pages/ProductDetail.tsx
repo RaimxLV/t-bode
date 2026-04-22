@@ -15,7 +15,6 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
-import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -165,9 +164,7 @@ const ProductDetail = () => {
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={displayImage}
-                    src={isSupabaseImage(displayImage) ? getOptimizedSrc(displayImage, 1024, 80) : displayImage}
-                    srcSet={buildSrcSet(displayImage, [480, 768, 1024, 1280, 1600], 80) || undefined}
-                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    src={displayImage}
                     alt={displayName}
                     className="w-full h-full object-contain bg-white"
                     decoding="async"
@@ -198,7 +195,7 @@ const ProductDetail = () => {
                     <button key={idx} onClick={() => { setSelectedImageIdx(idx); setSelectedColor(""); }}
                       className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx && !selectedColor ? "border-primary" : "border-border hover:border-foreground/50"}`}>
                       <img
-                        src={isSupabaseImage(img) ? getOptimizedSrc(img, 128, 70) : img}
+                        src={img}
                         alt=""
                         loading="lazy"
                         decoding="async"
