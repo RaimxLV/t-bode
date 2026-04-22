@@ -34,7 +34,7 @@ const Install = () => {
         {isStandalone ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+              <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-4" />
               <h2 className="font-semibold text-xl mb-2">{t("install.alreadyInstalled")}</h2>
               <p className="text-muted-foreground">{t("install.alreadyInstalledDesc")}</p>
             </CardContent>
