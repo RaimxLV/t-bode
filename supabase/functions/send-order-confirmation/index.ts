@@ -142,6 +142,32 @@ Deno.serve(async (req) => {
       metadata: { order_id, order_number: order.order_number, lang: language, test_to: toEmail },
     });
 
+    // For B2B orders, attach current invoice PDF when available
+    const attachments: { filename: string; content: string }[] = [];
+    if (order.is_business) {
+      try {
+        const { data: inv } = await service
+          .from("invoices").select("pdf_path, invoice_number, version")
+          .eq("order_id", order_id).eq("is_current", true).maybeSingle();
+        if (inv?.pdf_path) {
+          const { data: blob } = await service.storage.from("invoices").download(inv.pdf_path);
+          if (blob) {
+            const buf = new Uint8Array(await blob.arrayBuffer());
+            // Base64 encode for Resend
+            let bin = "";
+            for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+            const b64 = btoa(bin);
+            attachments.push({
+              filename: `${inv.invoice_number}_v${inv.version}.pdf`,
+              content: b64,
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Failed to attach invoice:", (e as Error).message);
+      }
+    }
+
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -153,6 +179,7 @@ Deno.serve(async (req) => {
         to: [toEmail],
         subject: `[TEST → ${originalRecipient}] ${subject}`,
         html,
+        ...(attachments.length ? { attachments } : {}),
       }),
     });
 

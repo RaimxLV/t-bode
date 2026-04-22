@@ -72,6 +72,14 @@ Deno.serve(async (req) => {
     // Send confirmation email when payment is finalized
     if (status === "PAID" || status === "FINALIZED") {
       try {
+        // Auto-generate invoice PDF before sending email (for B2B attachment)
+        try {
+          await service.functions.invoke("generate-invoice", {
+            body: { order_id: orderId },
+          });
+        } catch (e) {
+          console.error("Failed to auto-generate invoice:", (e as Error).message);
+        }
         await service.functions.invoke("send-order-confirmation", {
           body: { order_id: orderId, lang: "lv" },
         });

@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileBarChart } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ const SettingsManager = lazy(() => import("@/components/admin/SettingsManager").
 const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m => ({ default: m.EmailPreview })));
 const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ default: m.EmailLog })));
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
+const ReportsManager = lazy(() => import("@/components/admin/ReportsManager").then(m => ({ default: m.ReportsManager })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -281,6 +282,7 @@ const Admin = () => {
             <TabsTrigger value="emails" className="gap-1.5 text-sm"><Mail className="w-4 h-4" /> E-pastu priekšskat.</TabsTrigger>
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
+            <TabsTrigger value="reports" className="gap-1.5 text-sm"><FileBarChart className="w-4 h-4" /> Atskaites</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -398,6 +400,12 @@ const Admin = () => {
               <PromoCodeManager />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="reports">
+            <Suspense fallback={<TabFallback />}>
+              <ReportsManager />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -429,6 +437,7 @@ const Admin = () => {
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
                   ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo"].includes(activeTab)
+                  || activeTab === "reports"
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -452,6 +461,7 @@ const Admin = () => {
                   { value: "emails", icon: Mail, label: "E-pastu priekšsk." },
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
+                  { value: "reports", icon: FileBarChart, label: "Atskaites" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
