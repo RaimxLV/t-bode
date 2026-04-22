@@ -6,7 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <ofsetadruka@gmail.com>";
+const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
+// Test mode: route all outgoing emails to this verified Resend address
+const TEST_OVERRIDE_EMAIL = "ofsetadruka@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
@@ -125,6 +127,8 @@ Deno.serve(async (req) => {
 
     const html = renderHtml(order, items ?? [], language);
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
+    const originalRecipient = toEmail;
+    toEmail = TEST_OVERRIDE_EMAIL;
 
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -135,7 +139,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [toEmail],
-        subject,
+        subject: `[TEST → ${originalRecipient}] ${subject}`,
         html,
       }),
     });
