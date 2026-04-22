@@ -132,6 +132,30 @@ export const SettingsManager = () => {
   const regError = settings ? validateRegNumber(settings.company_reg_number ?? "") : null;
   const vatError = settings ? validateVatNumber(settings.company_vat_number ?? "") : null;
 
+  const uploadAsset = async (file: File, kind: "logo" | "stamp") => {
+    if (!settings) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Fails jābūt attēlam (PNG, JPG, SVG)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Faila izmērs nedrīkst pārsniegt 2 MB");
+      return;
+    }
+    const ext = file.name.split(".").pop() || "png";
+    const path = `company/${kind}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("email-assets")
+      .upload(path, file, { cacheControl: "3600", upsert: true });
+    if (upErr) {
+      toast.error("Augšupielāde neizdevās: " + upErr.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("email-assets").getPublicUrl(path);
+    update(kind === "logo" ? { logo_url: pub.publicUrl } : { stamp_url: pub.publicUrl });
+    toast.success(kind === "logo" ? "Logo augšupielādēts" : "Zīmogs augšupielādēts");
+  };
+
   const handleSave = async () => {
     if (!settings) return;
     if (ibanError) { toast.error("Nederīgs IBAN — " + ibanError); return; }
@@ -152,6 +176,8 @@ export const SettingsManager = () => {
         company_address: rest.company_address ?? "",
         payment_instructions_lv: rest.payment_instructions_lv ?? "",
         payment_instructions_en: rest.payment_instructions_en ?? "",
+        logo_url: rest.logo_url ?? null,
+        stamp_url: rest.stamp_url ?? null,
       })
       .eq("id", id);
     setSaving(false);
