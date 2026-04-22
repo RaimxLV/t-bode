@@ -23,7 +23,7 @@ const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
         srcSet={srcSet}
         sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : undefined}
         alt={alt}
-        className={`w-full h-full object-cover bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
@@ -90,7 +90,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       className="group flex flex-col h-full bg-card rounded-xl overflow-hidden border border-border hover:border-foreground/20 transition-all shadow-sm hover:shadow-md"
     >
       {/* Image — aspect-square, overflow-hidden, rounded top */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
         <div ref={emblaRef} className="overflow-hidden w-full h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
