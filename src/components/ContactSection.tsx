@@ -28,7 +28,7 @@ export const ContactSection = () => {
   // Honeypot — real users never fill this. Bots usually do.
   const [honeypot, setHoneypot] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -94,9 +94,11 @@ export const ContactSection = () => {
       }
 
       // Save to database
+      const submissionId = crypto.randomUUID();
       const { error: insertError } = await supabase
         .from("contact_submissions")
         .insert({
+          id: submissionId,
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim() || null,
@@ -105,6 +107,12 @@ export const ContactSection = () => {
         });
 
       if (insertError) throw insertError;
+
+      // Send confirmation email (fire-and-forget; don't block UX on errors)
+      const lang = (i18n.language || "lv").toLowerCase().startsWith("en") ? "en" : "lv";
+      supabase.functions
+        .invoke("send-contact-reply", { body: { submission_id: submissionId, lang } })
+        .catch((e) => console.error("send-contact-reply failed:", e));
 
       setSubmitted(true);
       setForm({ name: "", email: "", phone: "", message: "" });

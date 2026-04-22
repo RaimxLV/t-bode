@@ -198,6 +198,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          cancellation_email_sent_at: string | null
           company_address: string | null
           company_name: string | null
           company_reg_number: string | null
@@ -206,6 +207,7 @@ export type Database = {
           guest_email: string | null
           id: string
           is_business: boolean
+          last_payment_reminder_at: string | null
           manually_paid_at: string | null
           manually_paid_by: string | null
           montonio_order_uuid: string | null
@@ -240,6 +242,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          cancellation_email_sent_at?: string | null
           company_address?: string | null
           company_name?: string | null
           company_reg_number?: string | null
@@ -248,6 +251,7 @@ export type Database = {
           guest_email?: string | null
           id?: string
           is_business?: boolean
+          last_payment_reminder_at?: string | null
           manually_paid_at?: string | null
           manually_paid_by?: string | null
           montonio_order_uuid?: string | null
@@ -282,6 +286,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          cancellation_email_sent_at?: string | null
           company_address?: string | null
           company_name?: string | null
           company_reg_number?: string | null
@@ -290,6 +295,7 @@ export type Database = {
           guest_email?: string | null
           id?: string
           is_business?: boolean
+          last_payment_reminder_at?: string | null
           manually_paid_at?: string | null
           manually_paid_by?: string | null
           montonio_order_uuid?: string | null

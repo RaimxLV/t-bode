@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const ORDER_STATUSES = [
@@ -123,7 +123,33 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           toast.warning("Pasūtījumam nav Omniva barcode — e-pasts nav nosūtīts");
         }
       }
+      // Auto-send cancellation email when order is cancelled
+      if (status === "cancelled") {
+        try {
+          const { error: invokeErr } = await supabase.functions.invoke("send-order-cancelled", {
+            body: { order_id: orderId, lang: "lv" },
+          });
+          if (invokeErr) toast.error(`Atcelšanas e-pasts: ${invokeErr.message}`);
+          else toast.success("Atcelšanas e-pasts nosūtīts klientam");
+        } catch (e: any) {
+          toast.error(`Atcelšanas e-pasts: ${e.message}`);
+        }
+      }
       onRefresh();
+    }
+  };
+
+  const sendPaymentReminder = async (orderId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-payment-reminder", {
+        body: { order_id: orderId, lang: "lv" },
+      });
+      if (error) throw error;
+      if ((data as any)?.sent) toast.success("Atgādinājums nosūtīts");
+      else toast.warning(`Izlaists: ${(data as any)?.reason ?? "nezināms iemesls"}`);
+      onRefresh();
+    } catch (e: any) {
+      toast.error(`Atgādinājums neizdevās: ${e.message}`);
     }
   };
 
@@ -376,15 +402,27 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               <p className="text-[11px] text-amber-900 font-body">
                                 {t("admin.awaitingBankPayment", "Gaida apmaksu bankas kontā. Atzīmējiet pasūtījumu kā apmaksātu, kad nauda ir saņemta.")}
                               </p>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => markAsPaid(order.id)}
-                              >
-                                <BadgeCheck className="w-3.5 h-3.5" />
-                                {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
-                              </Button>
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  className="text-xs gap-1.5 h-8 bg-green-600 hover:bg-green-700 text-white"
+                                  onClick={() => markAsPaid(order.id)}
+                                >
+                                  <BadgeCheck className="w-3.5 h-3.5" />
+                                  {t("admin.markAsPaid", "Atzīmēt kā apmaksātu")}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs gap-1.5 h-8 border-amber-300 text-amber-900 hover:bg-amber-100"
+                                  onClick={() => sendPaymentReminder(order.id)}
+                                  title={order.last_payment_reminder_at ? `Pēdējais: ${new Date(order.last_payment_reminder_at).toLocaleString("lv-LV")}` : "Sūtīt atgādinājumu klientam"}
+                                >
+                                  <Bell className="w-3.5 h-3.5" />
+                                  {order.last_payment_reminder_at ? "Atgādināt vēlreiz" : "Atgādināt par apmaksu"}
+                                </Button>
+                              </div>
                             </>
                           )}
                           {order.stripe_invoice_pdf && (

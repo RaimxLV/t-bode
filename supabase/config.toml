@@ -32,3 +32,12 @@ verify_jwt = false
 
 [functions.sitemap]
 verify_jwt = false
+
+[functions.send-order-cancelled]
+verify_jwt = false
+
+[functions.send-payment-reminder]
+verify_jwt = false
+
+[functions.send-contact-reply]
+verify_jwt = false
