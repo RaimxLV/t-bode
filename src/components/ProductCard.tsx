@@ -23,7 +23,7 @@ const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
         srcSet={srcSet}
         sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw" : undefined}
         alt={alt}
-        className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+        className={`w-full h-full object-cover bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
