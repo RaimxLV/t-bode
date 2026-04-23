@@ -268,7 +268,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     const { error } = await supabase
       .from("orders")
       .update({
-        status: "confirmed" as any,
+        status: "processing" as any,
         manually_paid_at: new Date().toISOString(),
       })
       .eq("id", orderId);
@@ -356,10 +356,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = orders.filter(o => o.status === "pending").length;
     const activeCount = orders.filter(o => ["confirmed", "processing", "shipped"].includes(o.status)).length;
+    const processingCount = orders.filter(o => o.status === "processing").length;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthRevenue = orders.filter(o => o.status !== "cancelled" && new Date(o.created_at) >= monthStart).reduce((sum, o) => sum + Number(o.total), 0);
-    return { totalRevenue, pendingCount, activeCount, monthRevenue };
+    return { totalRevenue, pendingCount, activeCount, processingCount, monthRevenue };
   }, [orders]);
 
   const filteredOrders = currentOrders.filter((order) => {
@@ -394,6 +395,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <div className="flex gap-2">
           <Button variant={!showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1.5 text-xs">
             <Inbox className="w-3.5 h-3.5" /> Aktīvie <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
+          </Button>
+          <Button
+            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
+            className={`gap-1.5 text-xs ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
+            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
+          >
+            <TrendingUp className="w-3.5 h-3.5" /> Sagatavošanā
+            <Badge
+              variant={stats.processingCount > 0 ? "default" : "secondary"}
+              className="ml-1 text-[10px] px-1.5"
+            >
+              {stats.processingCount}
+            </Badge>
           </Button>
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs">
             <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>

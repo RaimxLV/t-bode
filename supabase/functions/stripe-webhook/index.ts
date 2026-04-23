@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
         }
 
         const updateData: any = {
-          status: "confirmed",
+          status: "processing",
           stripe_session_id: session.id,
         };
 

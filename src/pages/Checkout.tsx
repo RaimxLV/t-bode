@@ -18,6 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useOmnivaLocations } from "@/hooks/useOmnivaLocations";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
@@ -119,6 +120,12 @@ const Checkout = () => {
   const applyPromo = async () => {
     const code = promoInput.trim().toUpperCase();
     if (!code) return;
+    // Client-side rate limit: 5 promo attempts per 60 seconds
+    const rl = checkRateLimit({ key: "promo_apply", max: 5, windowMs: 60_000 });
+    if (!rl.allowed) {
+      toast.error(`Pārāk daudz mēģinājumu. Mēģini pēc ${rl.retryAfter}s.`);
+      return;
+    }
     setPromoApplying(true);
     try {
       const { data, error } = await supabase.rpc("validate_promo_code", {
