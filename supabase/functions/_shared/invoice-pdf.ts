@@ -545,7 +545,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
 
   // Bottom border of items table
   page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
-  y -= 10;
+  y -= 18;
 
   // ============================================================
   // 7. TOTALS BLOCK (right-aligned, on the right half only)
@@ -554,7 +554,6 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const totalsValueRight = xEnd - 4;     // values right-aligned to table edge
   const totalsBlockLeft = xPrice;        // start of label area
 
-  y -= 4;
   // KOPĀ (net subtotal)
   drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
   drawRight(page, fmtNum(totals.net, 2), totalsValueRight, y, bold, 9, colorText);
@@ -563,7 +562,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
-  y -= 20;
+  y -= 24;
 
   // Pavisam apmaksai (highlighted bar)
   const payBarH = 22;
