@@ -555,51 +555,76 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   }
 
   // ============================================================
-  // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma
+  // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma (boxed)
   // ============================================================
-  const sigY = 130;
+  const sigBoxH = 95;
+  const sigBoxY = 60; // bottom Y of box
+  const sigTop = sigBoxY + sigBoxH;
   const colMid = marginX + contentW / 2;
 
+  // Outer box + vertical separator
+  page.drawRectangle({
+    x: marginX, y: sigBoxY, width: contentW, height: sigBoxH,
+    borderColor: colorLine, borderWidth: 0.7, color: rgb(1, 1, 1),
+  });
   page.drawLine({
-    start: { x: marginX, y: sigY + 70 }, end: { x: width - marginX, y: sigY + 70 },
-    thickness: 0.5, color: colorLineSoft,
+    start: { x: colMid, y: sigBoxY }, end: { x: colMid, y: sigTop },
+    thickness: 0.5, color: colorLine,
   });
 
-  // Optional stamp/signature image
+  // Optional stamp/signature image (left side, behind text)
   const stamp = await tryEmbedImage(pdf, seller.stamp_url);
   if (stamp) {
     const stH = 60;
     const stW = (stamp.width / stamp.height) * stH;
-    page.drawImage(stamp, { x: marginX + 60, y: sigY + 5, width: stW, height: stH, opacity: 0.85 });
+    page.drawImage(stamp, { x: marginX + 70, y: sigBoxY + 8, width: stW, height: stH, opacity: 0.85 });
   }
 
+  const issuedBy = seller.issued_by_name ?? "Evita Nesterova";
+  const issuedDateLong = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLvLoc[issue.getMonth()]}`;
+
   // Left: Izsniedza
-  drawText(page, "Izsniedza:", marginX, sigY + 55, font, 9, colorText);
-  drawText(page, "Vārds, uzvārds", marginX, sigY + 40, font, 9, colorMuted);
-  drawText(page, `${issue.getFullYear()}. gada ${issue.getDate()}. ${["janvārī","februārī","martā","aprīlī","maijā","jūnijā","jūlijā","augustā","septembrī","oktobrī","novembrī","decembrī"][issue.getMonth()]}`, marginX, sigY + 25, font, 9, colorText);
-  page.drawLine({ start: { x: marginX + 60, y: sigY + 8 }, end: { x: marginX + 200, y: sigY + 8 }, thickness: 0.5, color: colorLineSoft });
-  drawText(page, "Paraksts", marginX, sigY + 8, font, 9, colorMuted);
-  drawText(page, "Z.v.", marginX, sigY - 8, font, 9, colorMuted);
+  drawText(page, "Izsniedza:", marginX + 8, sigTop - 14, bold, 9, colorText);
+  drawText(page, "Vārds, uzvārds", marginX + 8, sigTop - 30, font, 8.5, colorMuted);
+  drawText(page, issuedBy, marginX + 80, sigTop - 30, bold, 9, colorText);
+  drawText(page, issuedDateLong, marginX + 8, sigTop - 46, font, 8.5, colorText);
+  drawText(page, "Paraksts:", marginX + 8, sigTop - 70, font, 8.5, colorMuted);
+  page.drawLine({
+    start: { x: marginX + 60, y: sigTop - 70 }, end: { x: colMid - 10, y: sigTop - 70 },
+    thickness: 0.4, color: colorLineSoft,
+  });
+  drawText(page, "Z.v.", marginX + 8, sigTop - 86, font, 8.5, colorMuted);
 
   // Right: Pieņēma
-  drawText(page, "Pieņēma:", colMid, sigY + 55, font, 9, colorText);
-  drawText(page, "Vārds, uzvārds", colMid, sigY + 40, font, 9, colorMuted);
-  drawText(page, buyer.name ?? "", colMid + 80, sigY + 40, font, 9, colorText);
-  page.drawLine({ start: { x: colMid + 80, y: sigY + 25 }, end: { x: width - marginX, y: sigY + 25 }, thickness: 0.5, color: colorLineSoft });
-  drawText(page, "Paraksts", colMid, sigY + 8, font, 9, colorMuted);
-  page.drawLine({ start: { x: colMid + 60, y: sigY + 8 }, end: { x: width - marginX, y: sigY + 8 }, thickness: 0.5, color: colorLineSoft });
-  drawText(page, "Z.v.", colMid, sigY - 8, font, 9, colorMuted);
+  drawText(page, "Pieņēma:", colMid + 8, sigTop - 14, bold, 9, colorText);
+  drawText(page, "Vārds, uzvārds", colMid + 8, sigTop - 30, font, 8.5, colorMuted);
+  drawText(page, buyer.name ?? "", colMid + 80, sigTop - 30, bold, 9, colorText);
+  drawText(page, "Datums:", colMid + 8, sigTop - 46, font, 8.5, colorMuted);
+  page.drawLine({
+    start: { x: colMid + 50, y: sigTop - 46 }, end: { x: width - marginX - 8, y: sigTop - 46 },
+    thickness: 0.4, color: colorLineSoft,
+  });
+  drawText(page, "Paraksts:", colMid + 8, sigTop - 70, font, 8.5, colorMuted);
+  page.drawLine({
+    start: { x: colMid + 60, y: sigTop - 70 }, end: { x: width - marginX - 8, y: sigTop - 70 },
+    thickness: 0.4, color: colorLineSoft,
+  });
+  drawText(page, "Z.v.", colMid + 8, sigTop - 86, font, 8.5, colorMuted);
 
   // ============================================================
-  // 10. DOCUMENT FOOTER (compact)
+  // 10. DOCUMENT FOOTER — electronic doc notice
   // ============================================================
+  const electronicNotice = "Dokuments sagatavots elektroniski un ir derīgs bez paraksta";
+  const noticeW = bold.widthOfTextAtSize(electronicNotice, 8);
+  drawText(page, electronicNotice, (width - noticeW) / 2, sigBoxY - 14, bold, 8, colorMuted);
+
   drawText(
     page,
-    `${seller.company_name}${seller.company_reg_number ? ` · Reģ. ${seller.company_reg_number}` : ""}${seller.company_vat_number ? ` · PVN ${seller.company_vat_number}` : ""}`,
-    marginX, 30, font, 7.5, colorMuted,
+    `${seller.company_name}${seller.company_reg_number ? " · Reģ. " + seller.company_reg_number : ""}${seller.company_vat_number ? " · PVN " + seller.company_vat_number : ""}`,
+    marginX, 28, font, 7, colorMuted,
   );
   if ((data.version ?? 1) > 1) {
-    drawRight(page, `versija v${data.version}`, width - marginX, 30, font, 7.5, colorMuted);
+    drawRight(page, `versija v${data.version}`, width - marginX, 28, font, 7, colorMuted);
   }
 
   const bytes = await pdf.save();
