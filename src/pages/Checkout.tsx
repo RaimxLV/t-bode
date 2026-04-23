@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2, Store } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
@@ -21,7 +21,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
-type ShippingMethod = "omniva" | "courier";
+type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
 
@@ -109,7 +109,8 @@ const Checkout = () => {
 
   const appOriginUrl = new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\/$/, "");
 
-  const baseShippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
+  const baseShippingCost =
+    shippingMethod === "pickup" ? 0 : shippingMethod === "omniva" ? 2.99 : 4.99;
   const isFreeShipping = promo?.discount_type === "free_shipping";
   const shippingCost = isFreeShipping ? 0 : baseShippingCost;
   const productDiscount = promo && promo.discount_type !== "free_shipping" ? promo.discount_amount : 0;
@@ -169,9 +170,10 @@ const Checkout = () => {
     let schema: any = baseSchema;
     if (shippingMethod === "omniva") {
       schema = schema.merge(omnivaFields);
-    } else {
+    } else if (shippingMethod === "courier") {
       schema = schema.merge(courierFields);
     }
+    // pickup: no extra fields needed
 
     if (isBusiness) {
       schema = schema.merge(businessFields);
