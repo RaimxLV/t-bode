@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const { order_id, debug } = body;
     log("Parse request", "ok", `order_id=${order_id}, debug=${!!debug}`);
     if (!order_id) {
-      return new Response(JSON.stringify({ error: "order_id required" }), {
+      return new Response(JSON.stringify({ error: "order_id required", steps }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       log("Authorization header", "error", "Missing authorization header");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", steps }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
     if (userErr || !userData.user) {
       log("User verification", "error", userErr?.message ?? "No user in token");
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Unauthorized", steps }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!roleRow) {
       log("Admin role check", "error", `User ${userData.user.email ?? userData.user.id} is not admin`);
-      return new Response(JSON.stringify({ error: "Forbidden" }), {
+      return new Response(JSON.stringify({ error: "Forbidden", steps }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
