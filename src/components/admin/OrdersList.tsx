@@ -459,57 +459,56 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <StatCard icon={ShoppingCart} label="Aktīvie pasūtījumi" value={stats.activeCount} accent="bg-purple-50 text-purple-600" />
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button variant={!showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1.5 text-xs">
-            <Inbox className="w-3.5 h-3.5" /> Aktīvie <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
-          </Button>
-          <Button
-            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
-            className={`gap-1.5 text-xs ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
-            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
-          >
-            <TrendingUp className="w-3.5 h-3.5" /> Sagatavošanā
-            <Badge
-              variant={stats.processingCount > 0 ? "default" : "secondary"}
-              className="ml-1 text-[10px] px-1.5"
+      <div className="space-y-2">
+        <div className="-mx-2 px-2 overflow-x-auto scrollbar-none">
+          <div className="flex gap-2 w-max">
+            <Button variant={!showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1.5 text-xs shrink-0">
+              <Inbox className="w-3.5 h-3.5" /> Aktīvie <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
+            </Button>
+            <Button
+              variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
+              size="sm"
+              onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
+              className={`gap-1.5 text-xs shrink-0 ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
+              title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
             >
-              {stats.processingCount}
-            </Badge>
-          </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs">
-            <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
-          </Button>
-          {showArchive && archivedOrders.length > 0 && (
+              <TrendingUp className="w-3.5 h-3.5" /> Sagatavošanā
+              <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="ml-1 text-[10px] px-1.5">
+                {stats.processingCount}
+              </Badge>
+            </Button>
+            <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs shrink-0">
+              <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
+            </Button>
+            {showArchive && archivedOrders.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearArchive}
+                disabled={bulkLoading}
+                className="gap-1.5 text-xs shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              >
+                {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Iztīrīt arhīvu
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
-              onClick={clearArchive}
+              onClick={regenerateAllInvoices}
               disabled={bulkLoading}
-              className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              className="gap-1.5 text-xs shrink-0"
+              title="Pārģenerēt visus rēķinus ar jaunāko veidni"
             >
-              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              Iztīrīt arhīvu
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              Atjaunot rēķinus
             </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={regenerateAllInvoices}
-            disabled={bulkLoading}
-            className="gap-1.5 text-xs"
-            title="Pārģenerēt visus rēķinus ar jaunāko veidni"
-          >
-            {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-            Atjaunot rēķinus
-          </Button>
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
+        <span className="block text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
+      <div className="space-y-2">
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
@@ -517,30 +516,32 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Meklēt pēc Nr., vārda, telefona..."
-            className="w-48 sm:w-56 pl-8 pr-3 py-2 rounded-lg border border-border bg-card text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full pl-8 pr-3 py-2 rounded-lg border border-border bg-card text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        <div>
-          <Label className="font-body text-xs text-muted-foreground">Statuss</Label>
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[140px] text-xs mt-1"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all" className="text-xs">{t("admin.filterAll")}</SelectItem>
-              {availableStatuses.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="font-body text-xs text-muted-foreground">{t("admin.filterDateFrom")}</Label>
-          <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-[140px] text-xs mt-1" />
-        </div>
-        <div>
-          <Label className="font-body text-xs text-muted-foreground">{t("admin.filterDateTo")}</Label>
-          <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-[140px] text-xs mt-1" />
+        <div className="grid grid-cols-3 gap-2">
+          <div className="min-w-0">
+            <Label className="font-body text-[11px] text-muted-foreground">Statuss</Label>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full text-xs mt-1"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="text-xs">{t("admin.filterAll")}</SelectItem>
+                {availableStatuses.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="min-w-0">
+            <Label className="font-body text-[11px] text-muted-foreground">{t("admin.filterDateFrom")}</Label>
+            <Input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-full text-xs mt-1 px-2" />
+          </div>
+          <div className="min-w-0">
+            <Label className="font-body text-[11px] text-muted-foreground">{t("admin.filterDateTo")}</Label>
+            <Input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-full text-xs mt-1 px-2" />
+          </div>
         </div>
         {(filterStatus !== "all" || filterDateFrom || filterDateTo || searchQuery) && (
-          <Button variant="ghost" size="sm" className="text-xs" onClick={() => { setFilterStatus("all"); setFilterDateFrom(""); setFilterDateTo(""); setSearchQuery(""); }}>
-            <X className="w-3 h-3 mr-1" /> Notīrīt
+          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setFilterStatus("all"); setFilterDateFrom(""); setFilterDateTo(""); setSearchQuery(""); }}>
+            <X className="w-3 h-3 mr-1" /> Notīrīt filtrus
           </Button>
         )}
       </div>
