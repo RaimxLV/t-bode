@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -67,6 +68,55 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [diagPreview, setDiagPreview] = useState<any | null>(null);
   const [diagRunning, setDiagRunning] = useState(false);
   const [diagFatal, setDiagFatal] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const downloadSelectedLabels = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/omniva-bulk-labels`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ order_ids: ids }),
+      });
+      if (!resp.ok) {
+        let detail = `HTTP ${resp.status}`;
+        try { const j = await resp.json(); if (j?.error) detail = j.error; } catch {}
+        throw new Error(detail);
+      }
+      const included = resp.headers.get("X-Labels-Included") ?? "?";
+      const failed = resp.headers.get("X-Labels-Failed") ?? "0";
+      const blob = await resp.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `omniva-labels-${new Date().toISOString().slice(0, 10)}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast.success(`Lejupielādētas ${included} pavadzīmes${Number(failed) > 0 ? ` (${failed} neizdevās)` : ""}`);
+      setSelectedIds(new Set());
+    } catch (e: any) {
+      toast.error(`Bulk lejupielāde neizdevās: ${e.message}`);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
   const runOmnivaTest = async (order: any) => {
     setDiagOrder(order);
