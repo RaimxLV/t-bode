@@ -108,6 +108,19 @@ Deno.serve(async (req) => {
     const paymentUrl: string | undefined = json.paymentUrl ?? json.payment_url;
     const montonioUuid: string | undefined = json.uuid ?? json.orderUuid;
 
+    const bCountry = (
+      req.headers.get("cf-ipcountry") ||
+      req.headers.get("x-vercel-ip-country") ||
+      req.headers.get("x-country") ||
+      ""
+    ).toUpperCase().slice(0, 2) || null;
+    const bIp = (
+      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-real-ip") ||
+      ""
+    ).slice(0, 64) || null;
+
     await service
       .from("orders")
       .update({
@@ -118,15 +131,8 @@ Deno.serve(async (req) => {
         montonio_shipping_method_code: shipping?.method ?? null,
         montonio_pickup_point_id: shipping?.pickupPointId ?? null,
         montonio_pickup_point_name: shipping?.pickupPointName ?? null,
-        ...(((req.headers.get("cf-ipcountry") ||
-              req.headers.get("x-vercel-ip-country") ||
-              req.headers.get("x-country") ||
-              "").toUpperCase().slice(0, 2))
-          ? { buyer_country: (req.headers.get("cf-ipcountry") ||
-                              req.headers.get("x-vercel-ip-country") ||
-                              req.headers.get("x-country") ||
-                              "").toUpperCase().slice(0, 2) }
-          : {}),
+        ...(bCountry ? { buyer_country: bCountry } : {}),
+        ...(bIp ? { buyer_ip: bIp } : {}),
       })
       .eq("id", order_id);
 

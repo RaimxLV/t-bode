@@ -106,6 +106,7 @@ Deno.serve(async (req) => {
       phone: body.buyer_overrides?.phone ?? order.shipping_phone ?? null,
       shipping_address: shippingDisplay,
       ip_country: (order as any).buyer_country ?? null,
+      ip_address: (order as any).buyer_ip ?? null,
     };
 
     const seller = {

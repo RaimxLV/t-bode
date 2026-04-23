@@ -52,6 +52,13 @@ Deno.serve(async (req) => {
       req.headers.get("x-country") ||
       ""
     ).toUpperCase().slice(0, 2) || null;
+    // Capture buyer IP (first hop in x-forwarded-for, falls back to other headers).
+    const buyerIp = (
+      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-real-ip") ||
+      ""
+    ).slice(0, 64) || null;
 
     const stripe = createStripeClient();
 
@@ -363,7 +370,11 @@ Deno.serve(async (req) => {
 
     await serviceClient
       .from("orders")
-      .update({ stripe_session_id: session.id, ...(buyerCountry ? { buyer_country: buyerCountry } : {}) })
+      .update({
+        stripe_session_id: session.id,
+        ...(buyerCountry ? { buyer_country: buyerCountry } : {}),
+        ...(buyerIp ? { buyer_ip: buyerIp } : {}),
+      })
       .eq("id", order_id);
 
     return new Response(JSON.stringify({ url: session.url }), {

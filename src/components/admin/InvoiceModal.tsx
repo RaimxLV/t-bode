@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, RefreshCw, Download, FileText, Send, Eye, Pencil } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface InvoiceModalProps {
   open: boolean;
@@ -34,6 +35,7 @@ interface InvoiceRow {
 }
 
 export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModalProps) => {
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
@@ -161,7 +163,26 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
                 </Button>
               </div>
             ) : pdfUrl ? (
-              <iframe src={pdfUrl} className="w-full h-full" title="Invoice PDF" />
+              isMobile ? (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <FileText className="w-12 h-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    PDF priekšskatījums nav pieejams mobilajā skatā.
+                  </p>
+                  <div className="flex flex-col gap-2 w-full max-w-xs">
+                    <Button size="sm" asChild>
+                      <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                        <Eye className="w-4 h-4 mr-2" /> Atvērt PDF
+                      </a>
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={download}>
+                      <Download className="w-4 h-4 mr-2" /> Lejupielādēt
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <iframe src={pdfUrl} className="w-full h-full" title="Invoice PDF" />
+              )
             ) : (
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             )}
