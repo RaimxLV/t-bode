@@ -12,6 +12,7 @@ export interface InvoiceBuyer {
   vat_number?: string | null;
   email?: string | null;
   phone?: string | null;
+  shipping_address?: string | null;
 }
 
 export interface InvoiceSeller {
