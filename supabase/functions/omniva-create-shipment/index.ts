@@ -24,6 +24,27 @@ Deno.serve(async (req) => {
   };
 
   try {
+    log("Function boot", "info", "Request received");
+
+    const envPresence = {
+      SUPABASE_URL: !!Deno.env.get("SUPABASE_URL"),
+      SUPABASE_SERVICE_ROLE_KEY: !!Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+      OMNIVA_USERNAME: !!Deno.env.get("OMNIVA_USERNAME"),
+      OMNIVA_PASSWORD: !!Deno.env.get("OMNIVA_PASSWORD"),
+      OMNIVA_CUSTOMER_CODE: !!Deno.env.get("OMNIVA_CUSTOMER_CODE"),
+    };
+    log(
+      "Environment variables check",
+      Object.values(envPresence).every(Boolean) ? "ok" : "error",
+      Object.entries(envPresence)
+        .map(([key, present]) => `${key}=${present ? "present" : "missing"}`)
+        .join(", "),
+    );
+
+    if (!envPresence.SUPABASE_URL || !envPresence.SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Server configuration error: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    }
+
     const body = await req.json();
     const { order_id, debug } = body;
     log("Parse request", "ok", `order_id=${order_id}, debug=${!!debug}`);
@@ -42,6 +63,7 @@ Deno.serve(async (req) => {
     // Verify caller is admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      log("Authorization header", "error", "Missing authorization header");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -50,6 +72,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userErr } = await supabase.auth.getUser(token);
     if (userErr || !userData.user) {
+      log("User verification", "error", userErr?.message ?? "No user in token");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -62,6 +85,7 @@ Deno.serve(async (req) => {
       .eq("role", "admin")
       .maybeSingle();
     if (!roleRow) {
+      log("Admin role check", "error", `User ${userData.user.email ?? userData.user.id} is not admin`);
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -86,7 +110,7 @@ Deno.serve(async (req) => {
 
     const customerCode = Deno.env.get("OMNIVA_CUSTOMER_CODE");
     if (!customerCode) throw new Error("OMNIVA_CUSTOMER_CODE not configured");
-    log("Omniva credentials present", "ok", `customerCode=${customerCode}`);
+    log("Omniva credentials present", "ok", "Customer code and login secrets are available");
 
     const recipientName = order.shipping_name || "Recipient";
     const recipientPhone = order.shipping_phone || "";
@@ -128,6 +152,17 @@ Deno.serve(async (req) => {
     // Reference = order number (visible on label)
     const reference = String(order.order_number || order.id.slice(0, 8));
     log("Reference", "ok", reference);
+
+    try {
+      const authHeaderPreview = getOmnivaAuthHeader();
+      log(
+        "Omniva auth header",
+        "ok",
+        `Basic auth encoded (${authHeaderPreview.startsWith("Basic ") ? "valid prefix" : "missing prefix"}, length=${authHeaderPreview.length})`,
+      );
+    } catch (authErr: any) {
+      throw new Error(`Omniva auth header failed: ${authErr?.message ?? String(authErr)}`);
+    }
 
     // DEBUG/TEST MODE: stop before calling Omniva, show what would be sent
     if (debug) {
