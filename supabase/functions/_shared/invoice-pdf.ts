@@ -286,136 +286,138 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const buyer = data.buyer;
 
   // ============================================================
-  // 1. TOP STRIP — date | "Uzskaites Nr. ERV NNNNNNNN" | "1 lpp."
+  // Date helpers
   // ============================================================
   const issue = new Date(data.issue_date);
-  const issueDateLv = `${issue.getFullYear()}. gada ${issue.getDate()}. ${
-    ["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"][issue.getMonth()]
-  }`;
-
-  let y = height - 40;
-  drawText(page, issueDateLv, marginX + 200, y, font, 10, colorText);
-  drawText(page, "Uzskaites Nr.", marginX + 350, y, font, 10, colorText);
-  drawText(page, data.invoice_number, marginX + 420, y, bold, 10, colorText);
-  drawRight(page, "1 lpp.", width - marginX, y, font, 10, colorText);
-
-  // ============================================================
-  // 2. LOGO + "PAVADZĪME" title block
-  // ============================================================
-  y -= 14;
-  const logo = await tryEmbedImage(pdf, seller.logo_url);
-  if (logo) {
-    const logoH = 38;
-    const logoW = Math.min(180, (logo.width / logo.height) * logoH);
-    page.drawImage(logo, { x: marginX, y: y - logoH, width: logoW, height: logoH });
-  } else {
-    drawText(page, seller.company_name.toUpperCase(), marginX, y - 22, bold, 22, colorText);
-  }
-
-  // PAVADZĪME left + Uzskaites Nr right
-  y -= 50;
-  drawText(page, "PAVADZĪME", marginX, y, bold, 14, colorText);
-  drawText(page, "Uzskaites Nr.", width - marginX - 170, y, font, 10, colorText);
-  drawText(page, data.invoice_number, width - marginX - 90, y, bold, 11, colorText);
-
-  y -= 12;
-  drawText(page, issueDateLv, marginX, y, font, 9, colorText);
-
-  y -= 14;
-  // ============================================================
-  // 3. SELLER (Preču nosūtītājs)
-  // ============================================================
-  const labelX = marginX;
-  const valueX = marginX + 130;
-  const lineH = 12;
-
-  const sellerRows: Array<[string, string]> = [
-    ["Preču nosūtītājs", seller.company_name ?? ""],
-    ["Juridiskā adrese", seller.company_address ?? ""],
-    ["Izsniegšanas adrese", seller.company_address ?? ""],
-  ];
-  for (const [k, v] of sellerRows) {
-    drawText(page, k, labelX, y, font, 9, colorText);
-    drawText(page, v, valueX, y, bold, 9, colorText);
-    y -= lineH;
-  }
-
-  // PVN kods (right column, aligned with first seller line area)
-  const pvnLabelX = width - marginX - 200;
-  const pvnValueX = width - marginX - 130;
-  drawText(page, "PVN kods", pvnLabelX, y + lineH * 3, font, 9, colorText);
-  drawText(page, seller.company_vat_number ?? "", pvnValueX, y + lineH * 3, bold, 9, colorText);
-
-  // Banking
-  drawText(page, "Norēķinu rekvizīti", labelX, y, font, 9, colorText);
-  if (seller.bank_name) {
-    drawText(page, seller.bank_name, valueX, y, bold, 9, colorText);
-    drawText(page, "SWIFT", valueX + 130, y, font, 9, colorText);
-    drawText(page, seller.bank_swift ?? "", valueX + 165, y, bold, 9, colorText);
-    drawText(page, "Konts", valueX + 240, y, font, 9, colorText);
-    drawText(page, `${seller.bank_iban ?? ""} (EUR)`, valueX + 275, y, bold, 9, colorText);
-  }
-  y -= lineH;
-
-  // Horizontal divider
-  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.7, color: colorLine });
-  y -= 14;
-
-  // ============================================================
-  // 4. BUYER (Preču saņēmējs)
-  // ============================================================
-  const buyerRows: Array<[string, string]> = [
-    ["Preču saņēmējs", buyer.name ?? ""],
-    ["Reģ. Nr.", buyer.is_business ? (buyer.reg_number ?? "") : ""],
-    ["Adrese", buyer.address ?? ""],
-    ["Piegādes adrese", buyer.address ?? ""],
-  ];
-  for (const [k, v] of buyerRows) {
-    drawText(page, k, labelX, y, font, 9, colorText);
-    drawText(page, v, valueX, y, v === buyer.name ? bold : font, 9, colorText);
-    y -= lineH;
-  }
-
-  // PVN Kods + SWIFT/Konts (buyer side, optional)
-  drawText(page, "PVN Kods", pvnLabelX, y + lineH * 3, font, 9, colorText);
-  drawText(page, buyer.is_business ? (buyer.vat_number ?? "") : "", pvnValueX, y + lineH * 3, bold, 9, colorText);
-
-  drawText(page, "Norēķinu rekvizīti", labelX, y, font, 9, colorText);
-  drawText(page, "SWIFT", valueX + 130, y, font, 9, colorText);
-  drawText(page, "Konts", valueX + 240, y, font, 9, colorText);
-  y -= lineH;
-
-  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.7, color: colorLine });
-  y -= 14;
-
-  // ============================================================
-  // 5. TRANSACTION META — transports / samaksāt līdz / veids
-  // ============================================================
-  // Due date = issue + 14 days unless explicitly provided
+  const monthsLv = ["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"];
+  const monthsLvLoc = ["janvārī","februārī","martā","aprīlī","maijā","jūnijā","jūlijā","augustā","septembrī","oktobrī","novembrī","decembrī"];
+  const issueDateLv = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLv[issue.getMonth()]}`;
   const dueDate = data.due_date ? new Date(data.due_date) : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
   const dueDateLv = `${String(dueDate.getDate()).padStart(2, "0")}.${String(dueDate.getMonth() + 1).padStart(2, "0")}.${dueDate.getFullYear()}.`;
   const payMethodLv = paymentMethodLv(data.payment_method);
 
-  const meta: Array<[string, string]> = [
-    ["Transporta līdzeklis", ""],
-    ["Samaksāt līdz", dueDateLv],
-    ["Samaksas veids", payMethodLv],
-    ["Speciālās atzīmes", ""],
-    ["Darījuma apraksts", "Piegāde (pārdošana)"],
-  ];
-  for (const [k, v] of meta) {
-    drawText(page, k, labelX, y, font, 9, colorText);
-    drawText(page, v, valueX, y, v ? bold : font, 9, colorText);
-    y -= lineH;
+  // ============================================================
+  // 1. HEADER STRIP — logo (left) + "PAVADZĪME" + meta (right)
+  // ============================================================
+  let y = height - 50;
+  const logo = await tryEmbedImage(pdf, seller.logo_url);
+  if (logo) {
+    const logoH = 42;
+    const logoW = Math.min(170, (logo.width / logo.height) * logoH);
+    page.drawImage(logo, { x: marginX, y: y - logoH + 4, width: logoW, height: logoH });
+  } else {
+    drawText(page, seller.company_name.toUpperCase(), marginX, y - 22, bold, 24, colorAccent);
   }
-  // Right side: "Transporta līdzekļa vadītājs" + "Piegādes datums"
-  drawText(page, "Transporta līdzekļa vadītājs", pvnLabelX, y + lineH * 5, font, 9, colorText);
-  drawText(page, "Piegādes datums", pvnLabelX, y + lineH * 4, font, 9, colorText);
+  // Tagline below logo
+  const tagline = seller.tagline ?? "PROMO APĢĒRBS UN APDRUKAS SERVISS";
+  drawText(page, tagline, marginX, y - 50, font, 7, colorMuted);
 
-  y -= 4;
+  // Right side: PAVADZĪME title + Uzskaites Nr + date + lpp
+  drawRight(page, "PAVADZĪME", width - marginX, y, bold, 18, colorText);
+  drawRight(page, `Uzskaites Nr. ${data.invoice_number}`, width - marginX, y - 20, bold, 11, colorText);
+  drawRight(page, issueDateLv, width - marginX, y - 36, font, 9, colorText);
+  drawRight(page, "1 lpp.", width - marginX, y - 50, font, 8, colorMuted);
+
+  y -= 70;
 
   // ============================================================
-  // 6. ITEMS TABLE
+  // Drawing helpers for boxed sections
+  // ============================================================
+  const labelX = marginX + 8;
+  const valueX = marginX + 135;
+  const lineH = 12;
+  const boxPadTop = 10;
+  const boxPadBottom = 10;
+
+  function drawBoxedSection(title: string, rows: Array<[string, string, boolean?]>, extraDrawer?: (innerY: number) => number): number {
+    const rowsCount = rows.length;
+    const extraH = extraDrawer ? 0 : 0; // extraDrawer manages its own height; we add via return value
+    const innerH = rowsCount * lineH + (extraDrawer ? 14 : 0);
+    const boxH = boxPadTop + innerH + boxPadBottom + 14; // +14 for title
+    // Box border
+    page.drawRectangle({
+      x: marginX, y: y - boxH, width: contentW, height: boxH,
+      borderColor: colorLine, borderWidth: 0.7, color: rgb(1, 1, 1),
+    });
+    // Title bar
+    page.drawRectangle({
+      x: marginX, y: y - 14, width: contentW, height: 14,
+      color: rgb(0.93, 0.93, 0.94),
+    });
+    drawText(page, title, labelX, y - 10, bold, 9, colorText);
+    let innerY = y - 14 - boxPadTop - 2;
+    for (const [k, v, isBold] of rows) {
+      drawText(page, k, labelX, innerY, font, 9, colorMuted);
+      drawText(page, v, valueX, innerY, isBold ? bold : font, 9, colorText);
+      innerY -= lineH;
+    }
+    if (extraDrawer) {
+      innerY = extraDrawer(innerY);
+    }
+    y -= boxH + 6;
+    return y;
+  }
+
+  // ============================================================
+  // 2. SELLER BOX — "Preču nosūtītājs"
+  // ============================================================
+  const sellerRows: Array<[string, string, boolean?]> = [
+    ["Nosaukums", seller.company_name ?? "", true],
+    ["Juridiskā adrese", seller.company_address ?? "", false],
+    ["Reģ. Nr. / PVN Nr.", `${seller.company_reg_number ?? ""}${seller.company_vat_number ? "  ·  " + seller.company_vat_number : ""}`, false],
+  ];
+  // Draw seller box with extra banking rows
+  drawBoxedSection("Preču nosūtītājs", sellerRows, (innerY) => {
+    // Bank 1
+    drawText(page, "Banka", labelX, innerY, font, 9, colorMuted);
+    if (seller.bank_name) {
+      drawText(page, seller.bank_name, valueX, innerY, bold, 9, colorText);
+      drawText(page, "SWIFT", valueX + 150, innerY, font, 8.5, colorMuted);
+      drawText(page, seller.bank_swift ?? "", valueX + 185, innerY, bold, 8.5, colorText);
+      drawText(page, "IBAN", valueX + 245, innerY, font, 8.5, colorMuted);
+      drawText(page, seller.bank_iban ?? "", valueX + 275, innerY, bold, 8.5, colorText);
+    }
+    innerY -= lineH;
+    // Bank 2 (Swedbank fallback)
+    const bank2Name = seller.bank2_name ?? "Swedbank AS";
+    const bank2Swift = seller.bank2_swift ?? "HABALV22";
+    const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
+    drawText(page, "Banka", labelX, innerY, font, 9, colorMuted);
+    drawText(page, bank2Name, valueX, innerY, bold, 9, colorText);
+    drawText(page, "SWIFT", valueX + 150, innerY, font, 8.5, colorMuted);
+    drawText(page, bank2Swift, valueX + 185, innerY, bold, 8.5, colorText);
+    drawText(page, "IBAN", valueX + 245, innerY, font, 8.5, colorMuted);
+    drawText(page, bank2Iban, valueX + 275, innerY, bold, 8.5, colorText);
+    innerY -= lineH;
+    return innerY;
+  });
+
+  // ============================================================
+  // 3. BUYER BOX — "Preču saņēmējs"
+  // ============================================================
+  const buyerRows: Array<[string, string, boolean?]> = [
+    ["Nosaukums", buyer.name ?? "", true],
+    ["Reģ. Nr.", buyer.is_business ? (buyer.reg_number ?? "—") : "—", false],
+    ["PVN Nr.", buyer.is_business ? (buyer.vat_number ?? "—") : "—", false],
+    ["Adrese", buyer.address ?? "—", false],
+    ["Piegādes adrese", buyer.address ?? "—", false],
+    ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
+  ];
+  drawBoxedSection("Preču saņēmējs", buyerRows);
+
+  // ============================================================
+  // 4. TRANSACTION BOX — "Dati par darījumu"
+  // ============================================================
+  const txRows: Array<[string, string, boolean?]> = [
+    ["Samaksas veids", payMethodLv, true],
+    ["Samaksāt līdz", dueDateLv, true],
+    ["Darījuma apraksts", "Piegāde (pārdošana)", false],
+    ["Pasūtījuma Nr.", data.order_number ? String(data.order_number) : "—", false],
+  ];
+  drawBoxedSection("Dati par darījumu", txRows);
+
+  // ============================================================
+  // 5. ITEMS TABLE
   // ============================================================
   // Columns: Kods | Nosaukums | Daudz. | Mērv. | Cena | Summa
   const tableX = marginX;
