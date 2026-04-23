@@ -586,10 +586,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"}`}>
                 <CardContent className="p-0">
-                  <div className="w-full p-3 sm:p-4 flex items-center gap-3 text-left">
+                  <div className="w-full p-3 sm:p-4 flex items-start gap-2 sm:gap-3 text-left">
                     <div
                       onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
-                      className="shrink-0 flex items-center"
+                      className="shrink-0 flex items-center pt-1"
                     >
                       <Checkbox
                         checked={selectedIds.has(order.id)}
@@ -597,16 +597,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         aria-label="Atlasīt pasūtījumu"
                       />
                     </div>
-                    <button
-                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                      className="flex-1 flex items-center gap-3 text-left min-w-0"
-                    >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
                       <StatusIcon className="w-3.5 h-3.5" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-body font-semibold text-sm">{formatOrderNumber(order.order_number, order.id)}</span>
+                    <button
+                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                      className="flex-1 min-w-0 text-left space-y-1"
+                    >
+                      {/* Row 1: order #, total, chevron */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-body font-semibold text-sm shrink-0">{formatOrderNumber(order.order_number, order.id)}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-body font-bold text-sm sm:text-base">{Number(order.total).toFixed(2)} €</span>
+                          {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </div>
+
+                      {/* Row 2: status + badges */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border ${statusInfo.color}`}>
                           {t(statusInfo.key)}
                         </span>
@@ -627,23 +635,20 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             {t("admin.paidBadge", "Apmaksāts")}
                           </span>
                         )}
+                        <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5">
+
+                      {/* Row 3: customer + date */}
+                      <div className="flex items-center gap-2 flex-wrap">
                         {(order.is_business ? order.company_name : order.shipping_name) && (
-                          <span className="text-xs text-muted-foreground font-body truncate">
+                          <span className="text-xs text-muted-foreground font-body truncate max-w-full">
                             {order.is_business ? order.company_name : order.shipping_name}
                           </span>
                         )}
-                        <span className="text-xs text-muted-foreground font-body">
+                        <span className="text-[11px] text-muted-foreground font-body">
                           {new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="font-body font-bold text-sm sm:text-base">{Number(order.total).toFixed(2)} €</span>
-                      <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    </div>
                     </button>
                   </div>
 
