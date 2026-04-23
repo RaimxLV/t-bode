@@ -18,6 +18,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useOmnivaLocations } from "@/hooks/useOmnivaLocations";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { checkRateLimit } from "@/lib/rateLimit";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
