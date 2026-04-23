@@ -498,7 +498,7 @@ const Checkout = () => {
               {/* Shipping */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.shippingMethod")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button onClick={() => { setShippingMethod("omniva"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "omniva" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <MapPin className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "omniva" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.omniva")}</p><p className="text-xs text-muted-foreground font-body">2,99 €</p></div>
@@ -506,6 +506,13 @@ const Checkout = () => {
                   <button onClick={() => { setShippingMethod("courier"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <Truck className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "courier" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.courier")}</p><p className="text-xs text-muted-foreground font-body">4,99 €</p></div>
+                  </button>
+                  <button onClick={() => { setShippingMethod("pickup"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
+                    <Store className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "pickup" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.pickupOffice", "Saņemt birojā")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.free", "Bezmaksas")}</p>
+                    </div>
                   </button>
                 </div>
 
@@ -541,6 +548,21 @@ const Checkout = () => {
                       <Label htmlFor="zip" className="font-body text-sm">{t("checkout.zip")}</Label>
                       <Input id="zip" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
                       <FieldError field="zip" />
+                    </div>
+                  </div>
+                )}
+
+                {shippingMethod === "pickup" && (
+                  <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-start gap-3">
+                      <Store className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                      <div className="font-body text-sm">
+                        <p className="font-semibold mb-1">{t("checkout.pickupTitle", "Saņemšana birojā")}</p>
+                        <p className="text-muted-foreground">Braslas iela 29, Ieeja D, Rīga, LV-1084</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {t("checkout.pickupHint", "Pēc pasūtījuma saņemšanas sazināsimies, lai vienotos par ērtu saņemšanas laiku.")}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
