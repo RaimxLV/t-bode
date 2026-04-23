@@ -27,15 +27,28 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
-    const { data: userData } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
-    if (!userData.user) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+    const { data: userData, error: userErr } = await supabase.auth.getUser(authHeader.replace("Bearer ", ""));
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: `Unauthorized: ${userErr?.message ?? "no user"}` }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const { data: roleRow } = await supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", userData.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    if (!roleRow) return new Response("Forbidden", { status: 403, headers: corsHeaders });
+    let allowed = !!roleRow;
+    if (!allowed && userData.user.email) {
+      const { data: wl } = await supabase.rpc("is_admin_whitelisted", { _email: userData.user.email });
+      allowed = !!wl;
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     let useBarcode = barcode;
     if (!useBarcode && orderId) {

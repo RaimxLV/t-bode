@@ -133,9 +133,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       const { data: { session } } = await supabase.auth.getSession();
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/omniva-label-pdf?order_id=${orderId}`;
       const resp = await fetch(url, {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
       });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      if (!resp.ok) {
+        let detail = `HTTP ${resp.status}`;
+        try {
+          const j = await resp.json();
+          if (j?.error) detail = `${detail}: ${j.error}`;
+        } catch {}
+        throw new Error(detail);
+      }
       const blob = await resp.blob();
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
