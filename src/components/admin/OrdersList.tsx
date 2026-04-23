@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -25,6 +25,19 @@ const ORDER_STATUSES = [
 ];
 
 const ARCHIVED_STATUSES = ["delivered", "cancelled"];
+
+// Allowed forward transitions. Status flow is one-way to prevent illogical changes.
+// Admins can still override via an unlock toggle (e.g. correcting mistakes).
+const STATUS_TRANSITIONS: Record<string, string[]> = {
+  pending: ["confirmed", "processing", "cancelled"],
+  confirmed: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: [],
+};
+
+const canTransitionTo = (from: string, to: string) => from === to || (STATUS_TRANSITIONS[from] ?? []).includes(to);
 
 interface OrdersListProps {
   orders: any[];
@@ -70,6 +83,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [diagFatal, setDiagFatal] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  // Per-order override toggle: when true, allow free status changes (admin override)
+  const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
+
+  const toggleOverride = (id: string) => {
+    setStatusOverride((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -248,13 +272,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    const currentStatus = order?.status;
+    const isOverride = statusOverride.has(orderId);
+    if (currentStatus && !isOverride && !canTransitionTo(currentStatus, status)) {
+      toast.error("Šī statusa maiņa nav atļauta. Ieslēdz “Manual override”, lai labotu.");
+      return;
+    }
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
     else {
       toast.success(t("admin.statusUpdated"));
       // Auto-send tracking email when order is marked as shipped
       if (status === "shipped") {
-        const order = orders.find((o) => o.id === orderId);
         if (order?.omniva_barcode) {
           try {
             // Reset sent flag so admin re-triggering "shipped" resends the email
@@ -556,10 +586,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"}`}>
                 <CardContent className="p-0">
-                  <div className="w-full p-3 sm:p-4 flex items-center gap-3 text-left">
+                  <div className="w-full p-3 sm:p-4 flex items-start gap-2 sm:gap-3 text-left">
                     <div
                       onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
-                      className="shrink-0 flex items-center"
+                      className="shrink-0 flex items-center pt-1"
                     >
                       <Checkbox
                         checked={selectedIds.has(order.id)}
@@ -567,16 +597,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         aria-label="Atlasīt pasūtījumu"
                       />
                     </div>
-                    <button
-                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                      className="flex-1 flex items-center gap-3 text-left min-w-0"
-                    >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
                       <StatusIcon className="w-3.5 h-3.5" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-body font-semibold text-sm">{formatOrderNumber(order.order_number, order.id)}</span>
+                    <button
+                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                      className="flex-1 min-w-0 text-left space-y-1"
+                    >
+                      {/* Row 1: order #, total, chevron */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-body font-semibold text-sm shrink-0">{formatOrderNumber(order.order_number, order.id)}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-body font-bold text-sm sm:text-base">{Number(order.total).toFixed(2)} €</span>
+                          {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                        </div>
+                      </div>
+
+                      {/* Row 2: status + badges */}
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border ${statusInfo.color}`}>
                           {t(statusInfo.key)}
                         </span>
@@ -597,23 +635,20 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             {t("admin.paidBadge", "Apmaksāts")}
                           </span>
                         )}
+                        <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
                       </div>
-                      <div className="flex items-center gap-3 mt-0.5">
+
+                      {/* Row 3: customer + date */}
+                      <div className="flex items-center gap-2 flex-wrap">
                         {(order.is_business ? order.company_name : order.shipping_name) && (
-                          <span className="text-xs text-muted-foreground font-body truncate">
+                          <span className="text-xs text-muted-foreground font-body truncate max-w-full">
                             {order.is_business ? order.company_name : order.shipping_name}
                           </span>
                         )}
-                        <span className="text-xs text-muted-foreground font-body">
+                        <span className="text-[11px] text-muted-foreground font-body">
                           {new Date(order.created_at).toLocaleDateString("lv-LV", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="font-body font-bold text-sm sm:text-base">{Number(order.total).toFixed(2)} €</span>
-                      <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
-                      {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-                    </div>
                     </button>
                   </div>
 
@@ -651,13 +686,56 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
                         </div>
                         <div className="flex flex-col items-start sm:items-end gap-2">
-                          <p className="text-xs font-semibold font-body text-foreground">Mainīt statusu</p>
-                          <Select value={order.status} onValueChange={(v) => updateOrderStatus(order.id, v)}>
-                            <SelectTrigger className="w-[160px] text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {ORDER_STATUSES.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center justify-between w-full sm:w-[200px] gap-2">
+                            <p className="text-xs font-semibold font-body text-foreground">Mainīt statusu</p>
+                            <button
+                              type="button"
+                              onClick={() => toggleOverride(order.id)}
+                              className={`inline-flex items-center gap-1 text-[10px] font-body px-1.5 py-0.5 rounded border transition-colors ${
+                                statusOverride.has(order.id)
+                                  ? "bg-destructive/10 text-destructive border-destructive/30"
+                                  : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
+                              }`}
+                              title={statusOverride.has(order.id) ? "Override aktīvs — iespējamas visas pārejas" : "Atbloķēt brīvu statusa maiņu (override)"}
+                            >
+                              {statusOverride.has(order.id) ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                              {statusOverride.has(order.id) ? "Override" : "Bloķēts"}
+                            </button>
+                          </div>
+                          {(() => {
+                            const allowed = statusOverride.has(order.id)
+                              ? ORDER_STATUSES
+                              : ORDER_STATUSES.filter((s) => canTransitionTo(order.status, s.value));
+                            const isLocked = !statusOverride.has(order.id) && allowed.length <= 1;
+                            return (
+                              <>
+                                <Select
+                                  value={order.status}
+                                  onValueChange={(v) => updateOrderStatus(order.id, v)}
+                                  disabled={isLocked}
+                                >
+                                  <SelectTrigger className="w-full sm:w-[200px] text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {allowed.map((s) => (
+                                      <SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {isLocked && (
+                                  <p className="text-[10px] text-muted-foreground font-body sm:text-right">
+                                    {order.status === "delivered"
+                                      ? "Statuss tiek atjaunināts automātiski no Omniva izsekošanas."
+                                      : "Termināls statuss — bez pāreju."}
+                                  </p>
+                                )}
+                                {!isLocked && !statusOverride.has(order.id) && order.omniva_barcode && (
+                                  <p className="text-[10px] text-muted-foreground font-body sm:text-right">
+                                    Tiklīdz klients izņems paku, statuss mainīsies automātiski.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                           <Button
                             variant="ghost"
                             size="sm"
