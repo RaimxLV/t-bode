@@ -592,6 +592,81 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           />
         </Suspense>
       )}
+
+      <Dialog open={diagOpen} onOpenChange={setDiagOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="w-5 h-5 text-primary" />
+              Omniva sūtījuma diagnostika
+            </DialogTitle>
+            <DialogDescription>
+              {diagOrder ? `Pasūtījums ${formatOrderNumber(diagOrder.order_number, diagOrder.id)} — ${diagOrder.shipping_name ?? ""}` : ""}
+              <br />
+              <span className="text-xs">Test režīms: pārbauda visus datus un parāda ko nosūtītu Omniva, bet reālu sūtījumu neveido.</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 mt-2">
+            {diagRunning && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Pārbauda...
+              </div>
+            )}
+
+            {diagSteps.map((s, i) => {
+              const Icon = s.status === "ok" ? CheckCircle : s.status === "error" ? AlertCircle : Info;
+              const colorClass =
+                s.status === "ok" ? "text-green-600 bg-green-50 border-green-200"
+                : s.status === "error" ? "text-destructive bg-destructive/5 border-destructive/30"
+                : "text-blue-600 bg-blue-50 border-blue-200";
+              return (
+                <div key={i} className={`flex items-start gap-2 p-2 rounded border text-xs ${colorClass}`}>
+                  <Icon className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{s.step}</div>
+                    {s.detail && <div className="font-mono text-[10px] break-all opacity-80 mt-0.5">{s.detail}</div>}
+                  </div>
+                </div>
+              );
+            })}
+
+            {diagFatal && (
+              <div className="flex items-start gap-2 p-3 rounded border border-destructive/40 bg-destructive/5 text-destructive text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold mb-1">Kļūda</div>
+                  <div className="font-mono text-[10px] break-all">{diagFatal}</div>
+                </div>
+              </div>
+            )}
+
+            {diagPreview && (
+              <div className="mt-3 p-3 rounded border border-border bg-muted/30">
+                <div className="text-xs font-semibold mb-2">Sūtīšanas dati (preview):</div>
+                <pre className="text-[10px] font-mono whitespace-pre-wrap break-all">
+                  {JSON.stringify(diagPreview, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {!diagRunning && !diagFatal && diagSteps.length > 0 && (
+              <div className="flex justify-end gap-2 mt-3">
+                <Button variant="outline" size="sm" onClick={() => setDiagOpen(false)}>Aizvērt</Button>
+                {diagOrder && !diagOrder.omniva_barcode && (
+                  <Button
+                    size="sm"
+                    onClick={() => { setDiagOpen(false); createOmnivaShipment(diagOrder.id); }}
+                    className="gap-1.5"
+                  >
+                    <Truck className="w-3.5 h-3.5" /> Izveidot reālu sūtījumu
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
