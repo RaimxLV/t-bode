@@ -1,7 +1,7 @@
 project_id = "nkqwhiqrljwvzrivhqyh"
 
 [functions.omniva-create-shipment]
-verify_jwt = true
+verify_jwt = false
 
 [functions.omniva-label-pdf]
 verify_jwt = true
