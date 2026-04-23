@@ -278,7 +278,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   }
 
   // === Layout constants ===
-  const marginX = 40;
+  // 15mm ≈ 42.5pt — keep at least that on every side so nothing is clipped on print.
+  const marginX = 44;
   const contentW = width - marginX * 2;
   const colorText = rgb(0.05, 0.05, 0.05);
   const colorMuted = rgb(0.35, 0.35, 0.4);
@@ -326,28 +327,42 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   // Drawing helpers for boxed sections
   // ============================================================
-  const labelX = marginX + 8;
-  const valueX = marginX + 150; // wider gap so labels never touch values
-  const valueMaxW = contentW - (valueX - marginX) - 8;
+  const labelX = marginX + 10;
+  // value column starts after the widest possible label + 14pt gutter so the
+  // label text NEVER bleeds into the value text.
+  const labelColW = 130;
+  const valueX = labelX + labelColW;
+  const valueMaxW = contentW - (valueX - marginX) - 10;
   const lineH = 13;
-  const boxPadTop = 10;
+  const boxPadTop = 8;
   const boxPadBottom = 10;
 
   function drawBoxedSection(
     title: string,
     rows: Array<[string, string, boolean?]>,
-    extraRows = 0,
-    extraDrawer?: (innerY: number) => number,
   ): number {
     // Pre-compute wrapped value rows so the box height fits the content.
-    const wrapped = rows.map(([k, v, b]) => ({
-      k,
-      lines: wrapText(v || "—", b ? bold : font, 9, valueMaxW),
-      bold: !!b,
-    }));
+    // Empty label means a continuation line of the previous row (e.g. SWIFT/IBAN).
+    const wrapped = rows.map(([k, v, b]) => {
+      // truncate label so it cannot run into the value column
+      const labelMaxW = labelColW - 6;
+      let labelText = k;
+      if (k && font.widthOfTextAtSize(k, 9) > labelMaxW) {
+        // simple ellipsis fallback
+        while (labelText.length > 1 && font.widthOfTextAtSize(labelText + "…", 9) > labelMaxW) {
+          labelText = labelText.slice(0, -1);
+        }
+        labelText = labelText + "…";
+      }
+      return {
+        k: labelText,
+        lines: wrapText(v || "—", b ? bold : font, 9, valueMaxW),
+        bold: !!b,
+      };
+    });
     const valueLineCount = wrapped.reduce((s, r) => s + Math.max(1, r.lines.length), 0);
-    const innerH = valueLineCount * lineH + extraRows * lineH;
-    const boxH = boxPadTop + innerH + boxPadBottom + 14; // +14 for title bar
+    const innerH = valueLineCount * lineH;
+    const boxH = boxPadTop + innerH + boxPadBottom + 16; // +16 for title bar
     // Box border
     page.drawRectangle({
       x: marginX, y: y - boxH, width: contentW, height: boxH,
@@ -355,21 +370,18 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     });
     // Title bar
     page.drawRectangle({
-      x: marginX, y: y - 14, width: contentW, height: 14,
+      x: marginX, y: y - 16, width: contentW, height: 16,
       color: rgb(0.93, 0.93, 0.94),
     });
-    drawText(page, title, labelX, y - 10, bold, 9, colorText);
-    let innerY = y - 14 - boxPadTop - 2;
+    drawText(page, title, labelX, y - 11, bold, 9.5, colorText);
+    let innerY = y - 16 - boxPadTop - 2;
     for (const r of wrapped) {
-      drawText(page, r.k, labelX, innerY, font, 9, colorMuted);
+      if (r.k) drawText(page, r.k, labelX, innerY, font, 9, colorMuted);
       const lines = r.lines.length ? r.lines : [""];
       for (let i = 0; i < lines.length; i++) {
         drawText(page, lines[i], valueX, innerY - i * lineH, r.bold ? bold : font, 9, colorText);
       }
       innerY -= lineH * lines.length;
-    }
-    if (extraDrawer) {
-      innerY = extraDrawer(innerY);
     }
     y -= boxH + 6;
     return y;
@@ -383,24 +395,23 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Juridiskā adrese", seller.company_address ?? "", false],
     ["Reģ. Nr. / PVN Nr.", `${seller.company_reg_number ?? ""}${seller.company_vat_number ? "  ·  " + seller.company_vat_number : ""}`, false],
   ];
-  // Build bank rows: each bank renders as
-  //   "Banka"          <Bank name>
-  //                    SWIFT: xxx   IBAN: xxx
-  // wrapping IBAN onto a new line if needed.
+  // Build bank rows. Each bank takes 3 lines so the long IBAN never wraps
+  // into another field or onto the box border:
+  //   "Banka"        <Bank name>
+  //   "SWIFT"        <code>
+  //   "IBAN"         <iban>
   const bankRows: Array<[string, string, boolean?]> = [];
   if (seller.bank_name || seller.bank_iban) {
-    bankRows.push(["Banka", seller.bank_name ?? "", true]);
-    bankRows.push([
-      "",
-      `SWIFT: ${seller.bank_swift ?? "—"}    IBAN: ${seller.bank_iban ?? "—"}`,
-      false,
-    ]);
+    bankRows.push(["Banka", seller.bank_name ?? "—", true]);
+    bankRows.push(["SWIFT", seller.bank_swift ?? "—", false]);
+    bankRows.push(["IBAN", seller.bank_iban ?? "—", false]);
   }
   const bank2Name = seller.bank2_name ?? "Swedbank AS";
   const bank2Swift = seller.bank2_swift ?? "HABALV22";
   const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
   bankRows.push(["Banka", bank2Name, true]);
-  bankRows.push(["", `SWIFT: ${bank2Swift}    IBAN: ${bank2Iban}`, false]);
+  bankRows.push(["SWIFT", bank2Swift, false]);
+  bankRows.push(["IBAN", bank2Iban, false]);
 
   drawBoxedSection("Preču nosūtītājs", [...sellerRows, ...bankRows]);
 
@@ -432,14 +443,15 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // 5. ITEMS TABLE
   // ============================================================
   // Columns: Kods | Nosaukums | Daudz. | Mērv. | Cena | Summa
+  // Give "Kods" a real fixed slot and let "Nosaukums" take whatever is left.
   const tableX = marginX;
   const tableW = contentW;
-  const cKods = 55;
-  const cQty = 45;
-  const cUnit = 38;
-  const cPrice = 60;
-  const cSum = 65;
-  const cName = tableW - cKods - cQty - cUnit - cPrice - cSum; // flexible
+  const cKods = 80;
+  const cQty = 48;
+  const cUnit = 42;
+  const cPrice = 62;
+  const cSum = 70;
+  const cName = tableW - cKods - cQty - cUnit - cPrice - cSum; // flexible remainder
 
   const xKods = tableX;
   const xName = xKods + cKods;
@@ -450,12 +462,18 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const xEnd = xSum + cSum;
 
   // Header row with light background
-  const headerH = 18;
+  const headerH = 20;
   page.drawRectangle({ x: tableX, y: y - headerH + 4, width: tableW, height: headerH, color: rgb(0.93, 0.93, 0.94) });
   page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
   page.drawLine({ start: { x: tableX, y: y - headerH + 4 }, end: { x: xEnd, y: y - headerH + 4 }, thickness: 0.7, color: colorLine });
+  // Vertical separators between key columns to avoid visual overlap
+  page.drawLine({ start: { x: xName, y: y + 4 }, end: { x: xName, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xQty, y: y + 4 }, end: { x: xQty, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xUnit, y: y + 4 }, end: { x: xUnit, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xPrice, y: y + 4 }, end: { x: xPrice, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xSum, y: y + 4 }, end: { x: xSum, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
 
-  const headerY = y - 8;
+  const headerY = y - 9;
   drawText(page, "Kods", xKods + 4, headerY, bold, 9, colorText);
   drawText(page, "Nosaukums", xName + 4, headerY, bold, 9, colorText);
   drawRight(page, "Daudz.", xUnit - 4, headerY, bold, 9, colorText);
@@ -532,26 +550,29 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   const totalsLabelRight = xSum - 6;     // labels right-edge ends here
   const totalsValueRight = xEnd - 4;     // values right-aligned to table edge
+  const totalsBlockLeft = xPrice;        // start of label area
 
+  y -= 4;
   // KOPĀ (net subtotal)
   drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
   drawRight(page, fmtNum(totals.net, 2), totalsValueRight, y, bold, 9, colorText);
-  y -= 14;
+  y -= 16;
 
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
-  y -= 18;
+  y -= 20;
 
   // Pavisam apmaksai (highlighted bar)
-  const payBarH = 18;
+  const payBarH = 22;
   page.drawRectangle({
-    x: xUnit + cUnit, y: y - 4, width: xEnd - (xUnit + cUnit), height: payBarH,
+    x: totalsBlockLeft, y: y - 6, width: xEnd - totalsBlockLeft, height: payBarH,
     color: rgb(0.95, 0.95, 0.96),
+    borderColor: colorLine, borderWidth: 0.5,
   });
   drawRight(page, "Pavisam apmaksai (EUR):", totalsLabelRight, y + 2, bold, 10, colorText);
   drawRight(page, fmtNum(totals.gross, 2), totalsValueRight, y + 2, bold, 12, colorAccent);
-  y -= payBarH + 10;
+  y -= payBarH + 12;
 
   // ============================================================
   // 8. SUMMA VĀRDIEM
@@ -581,8 +602,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma (boxed)
   // ============================================================
-  const sigBoxH = 95;
-  const sigBoxY = 60; // bottom Y of box
+  const sigBoxH = 100;
+  const sigBoxY = 78; // bottom Y of box — leaves room for notice + footer above 15mm margin
   const sigTop = sigBoxY + sigBoxH;
   const colMid = marginX + contentW / 2;
 
@@ -607,48 +628,73 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const issuedBy = seller.issued_by_name ?? "Evita Nesterova";
   const issuedDateLong = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLvLoc[issue.getMonth()]}`;
 
-  // Left: Izsniedza
-  drawText(page, "Izsniedza:", marginX + 8, sigTop - 14, bold, 9, colorText);
-  drawText(page, "Vārds, uzvārds", marginX + 8, sigTop - 30, font, 8.5, colorMuted);
-  drawText(page, issuedBy, marginX + 80, sigTop - 30, bold, 9, colorText);
-  drawText(page, issuedDateLong, marginX + 8, sigTop - 46, font, 8.5, colorText);
-  drawText(page, "Paraksts:", marginX + 8, sigTop - 70, font, 8.5, colorMuted);
-  page.drawLine({
-    start: { x: marginX + 60, y: sigTop - 70 }, end: { x: colMid - 10, y: sigTop - 70 },
-    thickness: 0.4, color: colorLineSoft,
-  });
-  drawText(page, "Z.v.", marginX + 8, sigTop - 86, font, 8.5, colorMuted);
+  // Helper: render one signature column. Truncates name to fit so it never
+  // bleeds across the column separator or off the page.
+  const renderSigColumn = (
+    leftX: number,
+    rightX: number,
+    title: string,
+    nameValue: string,
+    extraLabel: string,
+    extraValue: string,
+  ) => {
+    const innerLeft = leftX + 10;
+    const innerRight = rightX - 10;
+    const innerW = innerRight - innerLeft;
+    drawText(page, title, innerLeft, sigTop - 16, bold, 9.5, colorText);
 
-  // Right: Pieņēma
-  drawText(page, "Pieņēma:", colMid + 8, sigTop - 14, bold, 9, colorText);
-  drawText(page, "Vārds, uzvārds", colMid + 8, sigTop - 30, font, 8.5, colorMuted);
-  drawText(page, buyer.name ?? "", colMid + 80, sigTop - 30, bold, 9, colorText);
-  drawText(page, "Datums:", colMid + 8, sigTop - 46, font, 8.5, colorMuted);
-  page.drawLine({
-    start: { x: colMid + 50, y: sigTop - 46 }, end: { x: width - marginX - 8, y: sigTop - 46 },
-    thickness: 0.4, color: colorLineSoft,
-  });
-  drawText(page, "Paraksts:", colMid + 8, sigTop - 70, font, 8.5, colorMuted);
-  page.drawLine({
-    start: { x: colMid + 60, y: sigTop - 70 }, end: { x: width - marginX - 8, y: sigTop - 70 },
-    thickness: 0.4, color: colorLineSoft,
-  });
-  drawText(page, "Z.v.", colMid + 8, sigTop - 86, font, 8.5, colorMuted);
+    // Name row: "Vārds, uzvārds"  <name>
+    drawText(page, "Vārds, uzvārds:", innerLeft, sigTop - 34, font, 8.5, colorMuted);
+    const nameLabelW = font.widthOfTextAtSize("Vārds, uzvārds:", 8.5);
+    const nameValX = innerLeft + nameLabelW + 8;
+    const nameMaxW = innerRight - nameValX;
+    let displayName = nameValue || "";
+    while (displayName.length > 1 && bold.widthOfTextAtSize(displayName, 9) > nameMaxW) {
+      displayName = displayName.slice(0, -1);
+    }
+    if (displayName !== nameValue && displayName.length > 1) {
+      displayName = displayName.slice(0, -1) + "…";
+    }
+    drawText(page, displayName, nameValX, sigTop - 34, bold, 9, colorText);
+
+    // Date / extra info row
+    drawText(page, extraLabel, innerLeft, sigTop - 52, font, 8.5, colorMuted);
+    const extraLabelW = font.widthOfTextAtSize(extraLabel, 8.5);
+    drawText(page, extraValue, innerLeft + extraLabelW + 8, sigTop - 52, font, 8.5, colorText);
+    page.drawLine({
+      start: { x: innerLeft + extraLabelW + 8, y: sigTop - 54 },
+      end: { x: innerRight, y: sigTop - 54 },
+      thickness: 0.3, color: colorLineSoft,
+    });
+
+    // Paraksts row
+    drawText(page, "Paraksts:", innerLeft, sigTop - 76, font, 8.5, colorMuted);
+    page.drawLine({
+      start: { x: innerLeft + 50, y: sigTop - 78 },
+      end: { x: innerRight, y: sigTop - 78 },
+      thickness: 0.3, color: colorLineSoft,
+    });
+
+    drawText(page, "Z.v.", innerLeft, sigTop - 92, font, 8.5, colorMuted);
+  };
+
+  renderSigColumn(marginX, colMid, "Izsniedza:", issuedBy, "Datums:", issuedDateLong);
+  renderSigColumn(colMid, width - marginX, "Pieņēma:", buyer.name ?? "", "Datums:", "");
 
   // ============================================================
   // 10. DOCUMENT FOOTER — electronic doc notice
   // ============================================================
   const electronicNotice = "Dokuments sagatavots elektroniski un ir derīgs bez paraksta";
   const noticeW = bold.widthOfTextAtSize(electronicNotice, 8);
-  drawText(page, electronicNotice, (width - noticeW) / 2, sigBoxY - 14, bold, 8, colorMuted);
+  drawText(page, electronicNotice, (width - noticeW) / 2, sigBoxY - 16, bold, 8, colorMuted);
 
   drawText(
     page,
     `${seller.company_name}${seller.company_reg_number ? " · Reģ. " + seller.company_reg_number : ""}${seller.company_vat_number ? " · PVN " + seller.company_vat_number : ""}`,
-    marginX, 28, font, 7, colorMuted,
+    marginX, 44, font, 7, colorMuted,
   );
   if ((data.version ?? 1) > 1) {
-    drawRight(page, `versija v${data.version}`, width - marginX, 28, font, 7, colorMuted);
+    drawRight(page, `versija v${data.version}`, width - marginX, 44, font, 7, colorMuted);
   }
 
   const bytes = await pdf.save();
