@@ -564,18 +564,10 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
   y -= 32;
 
-  // Pavisam apmaksai (highlighted bar)
-  const payBarH = 28;
-  page.drawRectangle({
-    x: totalsBlockLeft, y: y - 10, width: xEnd - totalsBlockLeft, height: payBarH,
-    color: rgb(0.95, 0.95, 0.96),
-    borderColor: colorLine, borderWidth: 0.5,
-  });
-  // Vertically center text inside the bar (bar spans y-10 .. y+18)
-  const payTextY = y - 10 + (payBarH - 12) / 2 + 2; // baseline padding for 12pt text
-  drawRight(page, "Pavisam apmaksai (EUR):", totalsLabelRight, payTextY, bold, 10, colorText);
-  drawRight(page, fmtNum(totals.gross, 2), totalsValueRight, payTextY, bold, 12, colorAccent);
-  y -= payBarH + 16;
+  // Pavisam apmaksai (bez izceltā rāmja)
+  drawRight(page, "Pavisam apmaksai (EUR):", totalsLabelRight, y, bold, 10, colorText);
+  drawRight(page, fmtNum(totals.gross, 2), totalsValueRight, y, bold, 12, colorAccent);
+  y -= 24;
 
   // ============================================================
   // 8. SUMMA VĀRDIEM
