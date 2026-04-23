@@ -285,6 +285,69 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     else { toast.success("Pasūtījums dzēsts"); setExpandedOrder(null); onRefresh(); }
   };
 
+  // Permanently delete every archived order (cancelled/delivered).
+  // Cascading FKs remove order_items, invoices, and promo_code_redemptions.
+  const clearArchive = async () => {
+    const ids = orders
+      .filter((o) => ARCHIVED_STATUSES.includes(o.status))
+      .map((o) => o.id);
+    if (ids.length === 0) {
+      toast.info("Arhīvs jau ir tukšs");
+      return;
+    }
+    if (!confirm(`Vai tiešām dzēst VISUS ${ids.length} arhivētos pasūtījumus? Šī darbība ir neatgriezeniska un izdzēs arī ar tiem saistītos rēķinus un preces.`)) return;
+    setBulkLoading(true);
+    try {
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} arhivētie pasūtījumi`);
+      setExpandedOrder(null);
+      setSelectedIds(new Set());
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda tīrot arhīvu: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // Re-render every existing invoice with the latest PDF template so old
+  // documents look identical to newly issued ones.
+  const regenerateAllInvoices = async () => {
+    const { data: invoiceRows, error: listErr } = await supabase
+      .from("invoices")
+      .select("order_id")
+      .eq("is_current", true);
+    if (listErr) {
+      toast.error("Neizdevās ielādēt rēķinu sarakstu: " + listErr.message);
+      return;
+    }
+    const orderIds = Array.from(new Set((invoiceRows ?? []).map((r: any) => r.order_id)));
+    if (orderIds.length === 0) {
+      toast.info("Nav rēķinu, ko pārģenerēt");
+      return;
+    }
+    if (!confirm(`Pārģenerēt ${orderIds.length} rēķinus ar jaunāko veidni? Vecās versijas tiks saglabātas vēsturē.`)) return;
+    setBulkLoading(true);
+    let ok = 0;
+    let fail = 0;
+    for (const oid of orderIds) {
+      try {
+        const { error } = await supabase.functions.invoke("generate-invoice", {
+          body: { order_id: oid, force_new_version: true },
+        });
+        if (error) throw error;
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setBulkLoading(false);
+    if (fail === 0) toast.success(`Pārģenerēti ${ok} rēķini`);
+    else toast.warning(`Pārģenerēti ${ok}, neizdevās ${fail}`);
+    onRefresh();
+  };
+
   const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const currentOrders = showArchive ? archivedOrders : activeOrders;
