@@ -323,7 +323,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   drawRight(page, issueDateLv, width - marginX, y - 36, font, 9, colorText);
   drawRight(page, "1 lpp.", width - marginX, y - 50, font, 8, colorMuted);
 
-  y -= 70;
+  // Drop further below header so the "1 lpp." line never sits on the next box border.
+  y -= 80;
 
   // ============================================================
   // Drawing helpers for boxed sections
