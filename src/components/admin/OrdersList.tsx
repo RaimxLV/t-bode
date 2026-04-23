@@ -375,6 +375,23 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         )}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <span className="text-xs font-body">
+            Atlasīti <strong>{selectedIds.size}</strong> pasūtījumi
+          </span>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedIds(new Set())}>
+              Notīrīt atlasi
+            </Button>
+            <Button size="sm" className="text-xs gap-1.5" onClick={downloadSelectedLabels} disabled={bulkLoading}>
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
+              Lejupielādēt atlasītās pavadzīmes (ZIP)
+            </Button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingOrders")}</p>
       ) : filteredOrders.length === 0 ? (
@@ -395,10 +412,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"}`}>
                 <CardContent className="p-0">
-                  <button
-                    onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
-                    className="w-full p-3 sm:p-4 flex items-center gap-3 text-left"
-                  >
+                  <div className="w-full p-3 sm:p-4 flex items-center gap-3 text-left">
+                    <div
+                      onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
+                      className="shrink-0 flex items-center"
+                    >
+                      <Checkbox
+                        checked={selectedIds.has(order.id)}
+                        onCheckedChange={() => toggleSelect(order.id)}
+                        aria-label="Atlasīt pasūtījumu"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                      className="flex-1 flex items-center gap-3 text-left min-w-0"
+                    >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
                       <StatusIcon className="w-3.5 h-3.5" />
                     </div>
@@ -442,7 +470,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                       <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                     </div>
-                  </button>
+                    </button>
+                  </div>
 
                   {isExpanded && (
                     <div className="border-t border-border px-3 sm:px-4 pb-4 pt-3 space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
