@@ -556,12 +556,15 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   // 8. SUMMA VĀRDIEM
   // ============================================================
-  drawText(page, "Summa vārdiem:", marginX, y, font, 9, colorText);
-  const wordsLines = wrapText(amountToLatvianWords(totals.gross), bold, 9, contentW - 110);
+  const wordsLabel = "Summa vārdiem:";
+  const wordsLabelW = font.widthOfTextAtSize(wordsLabel, 9);
+  const wordsValueX = marginX + wordsLabelW + 8;
+  drawText(page, wordsLabel, marginX, y, font, 9, colorMuted);
+  const wordsLines = wrapText(amountToLatvianWords(totals.gross), bold, 9, contentW - wordsLabelW - 12);
   for (let i = 0; i < Math.min(wordsLines.length, 2); i++) {
-    drawText(page, wordsLines[i], marginX + 100, y - i * 11, bold, 9, colorText);
+    drawText(page, wordsLines[i], wordsValueX, y - i * 12, bold, 9, colorText);
   }
-  y -= 12 + (Math.min(wordsLines.length, 2) - 1) * 11;
+  y -= 14 + (Math.min(wordsLines.length, 2) - 1) * 12;
 
   // Notes (compact)
   if (data.notes && data.notes.trim()) {
