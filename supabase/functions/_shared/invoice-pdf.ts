@@ -383,31 +383,26 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Juridiskā adrese", seller.company_address ?? "", false],
     ["Reģ. Nr. / PVN Nr.", `${seller.company_reg_number ?? ""}${seller.company_vat_number ? "  ·  " + seller.company_vat_number : ""}`, false],
   ];
-  // Draw seller box with extra banking rows
-  drawBoxedSection("Preču nosūtītājs", sellerRows, (innerY) => {
-    // Bank 1
-    drawText(page, "Banka", labelX, innerY, font, 9, colorMuted);
-    if (seller.bank_name) {
-      drawText(page, seller.bank_name, valueX, innerY, bold, 9, colorText);
-      drawText(page, "SWIFT", valueX + 150, innerY, font, 8.5, colorMuted);
-      drawText(page, seller.bank_swift ?? "", valueX + 185, innerY, bold, 8.5, colorText);
-      drawText(page, "IBAN", valueX + 245, innerY, font, 8.5, colorMuted);
-      drawText(page, seller.bank_iban ?? "", valueX + 275, innerY, bold, 8.5, colorText);
-    }
-    innerY -= lineH;
-    // Bank 2 (Swedbank fallback)
-    const bank2Name = seller.bank2_name ?? "Swedbank AS";
-    const bank2Swift = seller.bank2_swift ?? "HABALV22";
-    const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
-    drawText(page, "Banka", labelX, innerY, font, 9, colorMuted);
-    drawText(page, bank2Name, valueX, innerY, bold, 9, colorText);
-    drawText(page, "SWIFT", valueX + 150, innerY, font, 8.5, colorMuted);
-    drawText(page, bank2Swift, valueX + 185, innerY, bold, 8.5, colorText);
-    drawText(page, "IBAN", valueX + 245, innerY, font, 8.5, colorMuted);
-    drawText(page, bank2Iban, valueX + 275, innerY, bold, 8.5, colorText);
-    innerY -= lineH;
-    return innerY;
-  });
+  // Build bank rows: each bank renders as
+  //   "Banka"          <Bank name>
+  //                    SWIFT: xxx   IBAN: xxx
+  // wrapping IBAN onto a new line if needed.
+  const bankRows: Array<[string, string, boolean?]> = [];
+  if (seller.bank_name || seller.bank_iban) {
+    bankRows.push(["Banka", seller.bank_name ?? "", true]);
+    bankRows.push([
+      "",
+      `SWIFT: ${seller.bank_swift ?? "—"}    IBAN: ${seller.bank_iban ?? "—"}`,
+      false,
+    ]);
+  }
+  const bank2Name = seller.bank2_name ?? "Swedbank AS";
+  const bank2Swift = seller.bank2_swift ?? "HABALV22";
+  const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
+  bankRows.push(["Banka", bank2Name, true]);
+  bankRows.push(["", `SWIFT: ${bank2Swift}    IBAN: ${bank2Iban}`, false]);
+
+  drawBoxedSection("Preču nosūtītājs", [...sellerRows, ...bankRows]);
 
   // ============================================================
   // 3. BUYER BOX — "Preču saņēmējs"
