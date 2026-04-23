@@ -74,7 +74,8 @@
     "officeTitle": "T-Bode Office / Pickup Point",
     "officeDesc": "Pick up your orders in person at our office in Riga, Braslas iela 29, Entrance D.",
     "openWaze": "OPEN IN WAZE",
-    "openGoogleMaps": "OPEN IN GOOGLE MAPS"
+    "openGoogleMaps": "OPEN IN GOOGLE MAPS",
+    "mapInfo": "Braslas Business Centre, Entrance D, 2nd floor"
   },
   "contact": {
     "title": "Looking to outfit your team or planning an event?",
