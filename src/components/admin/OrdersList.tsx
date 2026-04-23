@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -60,6 +61,38 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [searchQuery, setSearchQuery] = useState("");
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
+  const [diagOpen, setDiagOpen] = useState(false);
+  const [diagOrder, setDiagOrder] = useState<any | null>(null);
+  const [diagSteps, setDiagSteps] = useState<Array<{ step: string; status: "ok" | "error" | "info"; detail?: string }>>([]);
+  const [diagPreview, setDiagPreview] = useState<any | null>(null);
+  const [diagRunning, setDiagRunning] = useState(false);
+  const [diagFatal, setDiagFatal] = useState<string | null>(null);
+
+  const runOmnivaTest = async (order: any) => {
+    setDiagOrder(order);
+    setDiagOpen(true);
+    setDiagRunning(true);
+    setDiagSteps([]);
+    setDiagPreview(null);
+    setDiagFatal(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("omniva-create-shipment", {
+        body: { order_id: order.id, debug: true },
+      });
+      if (error) {
+        // Functions invoke wraps non-2xx, try to read body from error context
+        setDiagFatal(error.message || String(error));
+      }
+      const payload: any = data ?? {};
+      if (Array.isArray(payload.steps)) setDiagSteps(payload.steps);
+      if (payload.preview) setDiagPreview(payload.preview);
+      if (payload.error) setDiagFatal(payload.error);
+    } catch (e: any) {
+      setDiagFatal(e?.message ?? String(e));
+    } finally {
+      setDiagRunning(false);
+    }
+  };
 
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
 
@@ -474,16 +507,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="text-xs gap-1.5 h-8"
-                            onClick={() => createOmnivaShipment(order.id)}
-                            disabled={omnivaLoading[order.id] === "create"}
-                          >
-                            {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                            {t("admin.omnivaCreateShipment")}
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="text-xs gap-1.5 h-8"
+                              onClick={() => createOmnivaShipment(order.id)}
+                              disabled={omnivaLoading[order.id] === "create"}
+                            >
+                              {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                              {t("admin.omnivaCreateShipment")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs gap-1.5 h-8"
+                              onClick={() => runOmnivaTest(order)}
+                              title="Test režīms — pārbauda datus bez reāla sūtījuma"
+                            >
+                              <FlaskConical className="w-3.5 h-3.5" />
+                              Test režīms
+                            </Button>
+                          </div>
                         )}
                       </div>
 
@@ -547,6 +592,81 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           />
         </Suspense>
       )}
+
+      <Dialog open={diagOpen} onOpenChange={setDiagOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="w-5 h-5 text-primary" />
+              Omniva sūtījuma diagnostika
+            </DialogTitle>
+            <DialogDescription>
+              {diagOrder ? `Pasūtījums ${formatOrderNumber(diagOrder.order_number, diagOrder.id)} — ${diagOrder.shipping_name ?? ""}` : ""}
+              <br />
+              <span className="text-xs">Test režīms: pārbauda visus datus un parāda ko nosūtītu Omniva, bet reālu sūtījumu neveido.</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2 mt-2">
+            {diagRunning && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" /> Pārbauda...
+              </div>
+            )}
+
+            {diagSteps.map((s, i) => {
+              const Icon = s.status === "ok" ? CheckCircle : s.status === "error" ? AlertCircle : Info;
+              const colorClass =
+                s.status === "ok" ? "text-green-600 bg-green-50 border-green-200"
+                : s.status === "error" ? "text-destructive bg-destructive/5 border-destructive/30"
+                : "text-blue-600 bg-blue-50 border-blue-200";
+              return (
+                <div key={i} className={`flex items-start gap-2 p-2 rounded border text-xs ${colorClass}`}>
+                  <Icon className="w-4 h-4 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{s.step}</div>
+                    {s.detail && <div className="font-mono text-[10px] break-all opacity-80 mt-0.5">{s.detail}</div>}
+                  </div>
+                </div>
+              );
+            })}
+
+            {diagFatal && (
+              <div className="flex items-start gap-2 p-3 rounded border border-destructive/40 bg-destructive/5 text-destructive text-xs">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-semibold mb-1">Kļūda</div>
+                  <div className="font-mono text-[10px] break-all">{diagFatal}</div>
+                </div>
+              </div>
+            )}
+
+            {diagPreview && (
+              <div className="mt-3 p-3 rounded border border-border bg-muted/30">
+                <div className="text-xs font-semibold mb-2">Sūtīšanas dati (preview):</div>
+                <pre className="text-[10px] font-mono whitespace-pre-wrap break-all">
+                  {JSON.stringify(diagPreview, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            {!diagRunning && !diagFatal && diagSteps.length > 0 && (
+              <div className="flex justify-end gap-2 mt-3">
+                <Button variant="outline" size="sm" onClick={() => setDiagOpen(false)}>Aizvērt</Button>
+                {diagOrder && !diagOrder.omniva_barcode && (
+                  <Button
+                    size="sm"
+                    onClick={() => { setDiagOpen(false); createOmnivaShipment(diagOrder.id); }}
+                    className="gap-1.5"
+                  >
+                    <Truck className="w-3.5 h-3.5" /> Izveidot reālu sūtījumu
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
