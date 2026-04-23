@@ -13,6 +13,8 @@ export interface InvoiceBuyer {
   email?: string | null;
   phone?: string | null;
   shipping_address?: string | null;
+  ip_address?: string | null;
+  ip_country?: string | null;
 }
 
 export interface InvoiceSeller {
@@ -318,7 +320,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Tagline removed — logo already includes the slogan.
 
   // Right side: PAVADZĪME title + Uzskaites Nr + date + lpp
-  drawRight(page, "PAVADZĪME", width - marginX, y, bold, 18, colorText);
+  drawRight(page, "RĒĶINS - PAVADZĪME", width - marginX, y, bold, 16, colorText);
   drawRight(page, `Uzskaites Nr. ${data.invoice_number}`, width - marginX, y - 20, bold, 11, colorText);
   drawRight(page, issueDateLv, width - marginX, y - 36, font, 9, colorText);
   drawRight(page, "1 lpp.", width - marginX, y - 50, font, 8, colorMuted);
@@ -395,25 +397,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const sellerRows: Array<[string, string, boolean?]> = [
     ["Nosaukums", seller.company_name ?? "", true],
     ["Juridiskā adrese", seller.company_address ?? "", false],
-    ["Reģ. Nr. / PVN Nr.", `${seller.company_reg_number ?? ""}${seller.company_vat_number ? "  ·  " + seller.company_vat_number : ""}`, false],
+    ["Reģ. Nr.", seller.company_reg_number ?? "—", false],
+    ["PVN Nr.", seller.company_vat_number ?? "—", false],
   ];
-  // Build bank rows. Each bank takes 3 lines so the long IBAN never wraps
-  // into another field or onto the box border:
-  //   "Banka"        <Bank name>
-  //   "SWIFT"        <code>
-  //   "IBAN"         <iban>
+  // Single bank account only.
   const bankRows: Array<[string, string, boolean?]> = [];
-  if (seller.bank_name || seller.bank_iban) {
-    bankRows.push(["Banka", seller.bank_name ?? "—", true]);
-    bankRows.push(["SWIFT", seller.bank_swift ?? "—", false]);
-    bankRows.push(["IBAN", seller.bank_iban ?? "—", false]);
-  }
-  const bank2Name = seller.bank2_name ?? "Swedbank AS";
-  const bank2Swift = seller.bank2_swift ?? "HABALV22";
-  const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
-  bankRows.push(["Banka", bank2Name, true]);
-  bankRows.push(["SWIFT", bank2Swift, false]);
-  bankRows.push(["IBAN", bank2Iban, false]);
+  const bankName = seller.bank_name ?? seller.bank2_name ?? "Swedbank AS";
+  const bankSwift = seller.bank_swift ?? seller.bank2_swift ?? "HABALV22";
+  const bankIban = seller.bank_iban ?? seller.bank2_iban ?? "LV94HABA0551004295328";
+  bankRows.push(["Banka", bankName, true]);
+  bankRows.push(["SWIFT", bankSwift, false]);
+  bankRows.push(["IBAN", bankIban, false]);
 
   drawBoxedSection("Preču nosūtītājs", [...sellerRows, ...bankRows]);
 
@@ -428,6 +422,10 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
+  if (buyer.ip_address || buyer.ip_country) {
+    const ipText = [buyer.ip_address ?? "—", buyer.ip_country ?? null].filter(Boolean).join("  ·  ");
+    buyerRows.push(["IP / Valsts", ipText, false]);
+  }
   drawBoxedSection("Preču saņēmējs", buyerRows);
 
   // ============================================================
@@ -493,6 +491,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   for (const it of data.items) {
     const lineGross = round2(it.unit_price_gross * it.quantity);
     const lineNet = round2(lineGross / (1 + rate / 100));
+    const unitNet = round2(it.unit_price_gross / (1 + rate / 100));
     netSum += lineNet;
     totalQty += Number(it.quantity);
 
@@ -514,8 +513,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     }
     drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(it.unit_price_gross, 2), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(lineGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(unitNet, 2), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(lineNet, 2), xEnd - 4, y - 4, font, 9, colorText);
     y -= rowHeight;
 
     if (y < 240) break; // safety; one-page layout per requirement
@@ -531,8 +530,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     drawText(page, "Piegāde", xName + 4, y - 4, font, 9, colorText);
     drawRight(page, "1", xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipGross, 3), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipNet, 2), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipNet, 2), xEnd - 4, y - 4, font, 9, colorText);
     y -= rowH;
   }
   if (data.discount_gross && data.discount_gross > 0) {
@@ -595,93 +594,11 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   }
 
   // ============================================================
-  // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma (boxed)
-  // ============================================================
-  const sigBoxH = 100;
-  const sigBoxY = 78; // bottom Y of box — leaves room for notice + footer above 15mm margin
-  const sigTop = sigBoxY + sigBoxH;
-  const colMid = marginX + contentW / 2;
-
-  // Outer box + vertical separator
-  page.drawRectangle({
-    x: marginX, y: sigBoxY, width: contentW, height: sigBoxH,
-    borderColor: colorLine, borderWidth: 0.7, color: rgb(1, 1, 1),
-  });
-  page.drawLine({
-    start: { x: colMid, y: sigBoxY }, end: { x: colMid, y: sigTop },
-    thickness: 0.5, color: colorLine,
-  });
-
-  // Optional stamp/signature image (left side, behind text)
-  const stamp = await tryEmbedImage(pdf, seller.stamp_url);
-  if (stamp) {
-    const stH = 60;
-    const stW = (stamp.width / stamp.height) * stH;
-    page.drawImage(stamp, { x: marginX + 70, y: sigBoxY + 8, width: stW, height: stH, opacity: 0.85 });
-  }
-
-  const issuedBy = seller.issued_by_name ?? "Evita Nesterova";
-  const issuedDateLong = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLvLoc[issue.getMonth()]}`;
-
-  // Helper: render one signature column. Truncates name to fit so it never
-  // bleeds across the column separator or off the page.
-  const renderSigColumn = (
-    leftX: number,
-    rightX: number,
-    title: string,
-    nameValue: string,
-    extraLabel: string,
-    extraValue: string,
-  ) => {
-    const innerLeft = leftX + 10;
-    const innerRight = rightX - 10;
-    const innerW = innerRight - innerLeft;
-    drawText(page, title, innerLeft, sigTop - 16, bold, 9.5, colorText);
-
-    // Name row: "Vārds, uzvārds"  <name>
-    drawText(page, "Vārds, uzvārds:", innerLeft, sigTop - 34, font, 8.5, colorMuted);
-    const nameLabelW = font.widthOfTextAtSize("Vārds, uzvārds:", 8.5);
-    const nameValX = innerLeft + nameLabelW + 8;
-    const nameMaxW = innerRight - nameValX;
-    let displayName = nameValue || "";
-    while (displayName.length > 1 && bold.widthOfTextAtSize(displayName, 9) > nameMaxW) {
-      displayName = displayName.slice(0, -1);
-    }
-    if (displayName !== nameValue && displayName.length > 1) {
-      displayName = displayName.slice(0, -1) + "…";
-    }
-    drawText(page, displayName, nameValX, sigTop - 34, bold, 9, colorText);
-
-    // Date / extra info row
-    drawText(page, extraLabel, innerLeft, sigTop - 52, font, 8.5, colorMuted);
-    const extraLabelW = font.widthOfTextAtSize(extraLabel, 8.5);
-    drawText(page, extraValue, innerLeft + extraLabelW + 8, sigTop - 52, font, 8.5, colorText);
-    page.drawLine({
-      start: { x: innerLeft + extraLabelW + 8, y: sigTop - 54 },
-      end: { x: innerRight, y: sigTop - 54 },
-      thickness: 0.3, color: colorLineSoft,
-    });
-
-    // Paraksts row
-    drawText(page, "Paraksts:", innerLeft, sigTop - 76, font, 8.5, colorMuted);
-    page.drawLine({
-      start: { x: innerLeft + 50, y: sigTop - 78 },
-      end: { x: innerRight, y: sigTop - 78 },
-      thickness: 0.3, color: colorLineSoft,
-    });
-
-    drawText(page, "Z.v.", innerLeft, sigTop - 92, font, 8.5, colorMuted);
-  };
-
-  renderSigColumn(marginX, colMid, "Izsniedza:", issuedBy, "Datums:", issuedDateLong);
-  renderSigColumn(colMid, width - marginX, "Pieņēma:", buyer.name ?? "", "Datums:", "");
-
-  // ============================================================
-  // 10. DOCUMENT FOOTER — electronic doc notice
+  // 9. DOCUMENT FOOTER — electronic doc notice
   // ============================================================
   const electronicNotice = "Dokuments sagatavots elektroniski un ir derīgs bez paraksta";
   const noticeW = bold.widthOfTextAtSize(electronicNotice, 8);
-  drawText(page, electronicNotice, (width - noticeW) / 2, sigBoxY - 16, bold, 8, colorMuted);
+  drawText(page, electronicNotice, (width - noticeW) / 2, 70, bold, 9, colorMuted);
 
   drawText(
     page,
