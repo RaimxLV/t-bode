@@ -443,14 +443,15 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // 5. ITEMS TABLE
   // ============================================================
   // Columns: Kods | Nosaukums | Daudz. | Mērv. | Cena | Summa
+  // Give "Kods" a real fixed slot and let "Nosaukums" take whatever is left.
   const tableX = marginX;
   const tableW = contentW;
-  const cKods = 55;
-  const cQty = 45;
-  const cUnit = 38;
-  const cPrice = 60;
-  const cSum = 65;
-  const cName = tableW - cKods - cQty - cUnit - cPrice - cSum; // flexible
+  const cKods = 80;
+  const cQty = 48;
+  const cUnit = 42;
+  const cPrice = 62;
+  const cSum = 70;
+  const cName = tableW - cKods - cQty - cUnit - cPrice - cSum; // flexible remainder
 
   const xKods = tableX;
   const xName = xKods + cKods;
@@ -461,12 +462,18 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const xEnd = xSum + cSum;
 
   // Header row with light background
-  const headerH = 18;
+  const headerH = 20;
   page.drawRectangle({ x: tableX, y: y - headerH + 4, width: tableW, height: headerH, color: rgb(0.93, 0.93, 0.94) });
   page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
   page.drawLine({ start: { x: tableX, y: y - headerH + 4 }, end: { x: xEnd, y: y - headerH + 4 }, thickness: 0.7, color: colorLine });
+  // Vertical separators between key columns to avoid visual overlap
+  page.drawLine({ start: { x: xName, y: y + 4 }, end: { x: xName, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xQty, y: y + 4 }, end: { x: xQty, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xUnit, y: y + 4 }, end: { x: xUnit, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xPrice, y: y + 4 }, end: { x: xPrice, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+  page.drawLine({ start: { x: xSum, y: y + 4 }, end: { x: xSum, y: y - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
 
-  const headerY = y - 8;
+  const headerY = y - 9;
   drawText(page, "Kods", xKods + 4, headerY, bold, 9, colorText);
   drawText(page, "Nosaukums", xName + 4, headerY, bold, 9, colorText);
   drawRight(page, "Daudz.", xUnit - 4, headerY, bold, 9, colorText);
