@@ -686,13 +686,56 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
                         </div>
                         <div className="flex flex-col items-start sm:items-end gap-2">
-                          <p className="text-xs font-semibold font-body text-foreground">Mainīt statusu</p>
-                          <Select value={order.status} onValueChange={(v) => updateOrderStatus(order.id, v)}>
-                            <SelectTrigger className="w-[160px] text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {ORDER_STATUSES.map((s) => (<SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex items-center justify-between w-full sm:w-[200px] gap-2">
+                            <p className="text-xs font-semibold font-body text-foreground">Mainīt statusu</p>
+                            <button
+                              type="button"
+                              onClick={() => toggleOverride(order.id)}
+                              className={`inline-flex items-center gap-1 text-[10px] font-body px-1.5 py-0.5 rounded border transition-colors ${
+                                statusOverride.has(order.id)
+                                  ? "bg-destructive/10 text-destructive border-destructive/30"
+                                  : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
+                              }`}
+                              title={statusOverride.has(order.id) ? "Override aktīvs — iespējamas visas pārejas" : "Atbloķēt brīvu statusa maiņu (override)"}
+                            >
+                              {statusOverride.has(order.id) ? <Unlock className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+                              {statusOverride.has(order.id) ? "Override" : "Bloķēts"}
+                            </button>
+                          </div>
+                          {(() => {
+                            const allowed = statusOverride.has(order.id)
+                              ? ORDER_STATUSES
+                              : ORDER_STATUSES.filter((s) => canTransitionTo(order.status, s.value));
+                            const isLocked = !statusOverride.has(order.id) && allowed.length <= 1;
+                            return (
+                              <>
+                                <Select
+                                  value={order.status}
+                                  onValueChange={(v) => updateOrderStatus(order.id, v)}
+                                  disabled={isLocked}
+                                >
+                                  <SelectTrigger className="w-full sm:w-[200px] text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    {allowed.map((s) => (
+                                      <SelectItem key={s.value} value={s.value} className="text-xs">{t(s.key)}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                {isLocked && (
+                                  <p className="text-[10px] text-muted-foreground font-body sm:text-right">
+                                    {order.status === "delivered"
+                                      ? "Statuss tiek atjaunināts automātiski no Omniva izsekošanas."
+                                      : "Termināls statuss — bez pāreju."}
+                                  </p>
+                                )}
+                                {!isLocked && !statusOverride.has(order.id) && order.omniva_barcode && (
+                                  <p className="text-[10px] text-muted-foreground font-body sm:text-right">
+                                    Tiklīdz klients izņems paku, statuss mainīsies automātiski.
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                           <Button
                             variant="ghost"
                             size="sm"
