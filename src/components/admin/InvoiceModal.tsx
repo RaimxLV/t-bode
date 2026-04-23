@@ -207,26 +207,6 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
                   </div>
                 )}
 
-                {invoices.length > 1 && (
-                  <div className="space-y-1.5">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Vēsture</p>
-                    {invoices.map((inv) => (
-                      <button
-                        key={inv.id}
-                        onClick={() => { setCurrent(inv); loadPdf(inv.id); }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-md border text-xs font-body transition-colors ${
-                          inv.id === current.id ? "border-primary bg-primary/10" : "border-border hover:bg-muted"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono">{inv.invoice_number}</span>
-                          <Badge variant="outline" className="text-[10px]">v{inv.version}</Badge>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">{new Date(inv.generated_at).toLocaleString("lv-LV")}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </>
             )}
           </div>
