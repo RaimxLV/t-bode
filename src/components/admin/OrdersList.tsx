@@ -547,21 +547,26 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between gap-3 p-3 rounded-lg border border-primary/30 bg-primary/5">
-          <span className="text-xs font-body">
-            Atlasīti <strong>{selectedIds.size}</strong> pasūtījumi
-          </span>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setSelectedIds(new Set())}>
-              Notīrīt atlasi
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-body">
+              Atlasīti <strong>{selectedIds.size}</strong>
+            </span>
+            <Button variant="ghost" size="sm" className="text-xs h-7 sm:hidden" onClick={() => setSelectedIds(new Set())}>
+              Notīrīt
             </Button>
-            <Button size="sm" className="text-xs gap-1.5" onClick={downloadSelectedLabels} disabled={bulkLoading}>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Button size="sm" className="text-xs gap-1.5 w-full sm:w-auto" onClick={downloadSelectedLabels} disabled={bulkLoading}>
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
-              Lejupielādēt atlasītās pavadzīmes (ZIP)
+              Pavadzīmes (ZIP)
             </Button>
-            <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={downloadSelectedInvoices} disabled={bulkLoading}>
+            <Button size="sm" variant="outline" className="text-xs gap-1.5 w-full sm:w-auto" onClick={downloadSelectedInvoices} disabled={bulkLoading}>
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
-              Lejupielādēt atlasītos rēķinus (ZIP)
+              Rēķini (ZIP)
+            </Button>
+            <Button variant="ghost" size="sm" className="text-xs hidden sm:inline-flex" onClick={() => setSelectedIds(new Set())}>
+              Notīrīt atlasi
             </Button>
           </div>
         </div>
