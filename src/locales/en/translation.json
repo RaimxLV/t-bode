@@ -4,7 +4,11 @@
     "ourCollection": "Our Collection",
     "ourStory": "Our Story",
     "findStore": "Our Stores",
-    "faq": "FAQs"
+    "faq": "FAQs",
+    "main": "Main navigation",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "skipToContent": "Skip to content"
   },
   "hero": {
     "line1": "Design.",
@@ -12,28 +16,53 @@
     "line3": "Tell Your Story.",
     "description": "Be unique. Create your own design. > \nYour clothing is your message. \nWith our personalization tool, you can create more than just simple clothing – you create your own style icon. \nT-Bode: Your designs – your story.",
     "ctaDesign": "Start Customizing",
-  "heroAnim": {
-    "line1": "Be unique. Create yours!",
-    "line2": "T-shirt, hoodie or cap – make your own style right now. Your clothing is your message to the world.",
-    "line3": "T-Bode: Your design – your story.",
-    "glowPhrase": "your story."
-  },
+    "heroAnim": {
+      "line1": "Be unique. Create yours!",
+      "line2": "T-shirt, hoodie or cap – make your own style right now. Your clothing is your message to the world.",
+      "line3": "T-Bode: Your design – your story.",
+      "glowPhrase": "your story."
+    },
     "ctaCollection": "Our Collection"
   },
   "about": {
     "title": "T-Bode is a place where a T-shirt becomes a story.",
     "description": "In our stores in <strong>Riga, Latvia</strong>, you can visit us in person, try on a T-shirt, choose the color and size, and submit your design or idea – we'll take care of the rest. We use modern <strong>DTF (Direct to Film) technology</strong> for vibrant colors on both light and dark fabrics.",
     "features": {
-      "quality": { "title": "Premium DTF Print Quality", "desc": "Vibrant, durable, and high-quality prints using Direct-to-Film (DTF) technology." },
-      "tool": { "title": "Easy-to-Use Design Tool", "desc": "Effortlessly create your own custom designs with our intuitive built-in builder." },
-      "production": { "title": "Fast Production", "desc": "With a large on-site warehouse, we guarantee quick manufacturing and order processing." },
-      "delivery": { "title": "Convenient Delivery", "desc": "Get your order delivered smoothly to any Omniva parcel machine." }
+      "quality": {
+        "title": "Premium DTF Print Quality",
+        "desc": "Vibrant, durable, and high-quality prints using Direct-to-Film (DTF) technology."
+      },
+      "tool": {
+        "title": "Easy-to-Use Design Tool",
+        "desc": "Effortlessly create your own custom designs with our intuitive built-in builder."
+      },
+      "production": {
+        "title": "Fast Production",
+        "desc": "With a large on-site warehouse, we guarantee quick manufacturing and order processing."
+      },
+      "delivery": {
+        "title": "Convenient Delivery",
+        "desc": "Get your order delivered smoothly to any Omniva parcel machine."
+      }
     },
     "steps": {
-      "s1": { "title": "Choose a Product", "desc": "Select from our catalog of t-shirts, hoodies, and mugs." },
-      "s2": { "title": "Personalize It", "desc": "Customize your item using our built-in design tool." },
-      "s3": { "title": "Place Your Order", "desc": "Complete your checkout and pay securely online." },
-      "s4": { "title": "Receive Your Order", "desc": "Collect your item from any Omniva parcel machine within 1-2 business days." }
+      "s1": {
+        "title": "Choose a Product",
+        "desc": "Select from our catalog of t-shirts, hoodies, and mugs."
+      },
+      "s2": {
+        "title": "Personalize It",
+        "desc": "Customize your item using our built-in design tool."
+      },
+      "s3": {
+        "title": "Place Your Order",
+        "desc": "Complete your checkout and pay securely online."
+      },
+      "s4": {
+        "title": "Receive Your Order",
+        "desc": "Collect your item from any Omniva parcel machine within 1-2 business days."
+      },
+      "step": "STEP"
     },
     "howItWorks": "HOW IT WORKS",
     "howItWorksDesc": "Four simple steps to your unique custom product"
@@ -43,7 +72,9 @@
     "subtitle": "Our Stores in Riga Shopping Centers",
     "pickup": "Orders can be picked up at the T-Bode office: Braslas iela 29, Entrance D, Riga",
     "officeTitle": "T-Bode Office / Pickup Point",
-    "officeDesc": "Pick up your orders in person at our office in Riga, Braslas iela 29, Entrance D."
+    "officeDesc": "Pick up your orders in person at our office in Riga, Braslas iela 29, Entrance D.",
+    "openWaze": "OPEN IN WAZE",
+    "openGoogleMaps": "OPEN IN GOOGLE MAPS"
   },
   "contact": {
     "title": "Looking to outfit your team or planning an event?",
@@ -109,14 +140,18 @@
     "openDesigner": "Open Designer (Zakeke)",
     "zakekeNote": "Zakeke integration will be connected here.",
     "notFound": "Product Not Found",
-    "backLink": "← Back to Products"
+    "backLink": "← Back to Products",
+    "relatedProducts": "Related products",
+    "zoomImage": "Zoom image"
   },
   "cart": {
     "title": "Cart",
     "empty": "Your cart is empty",
     "continueShopping": "Continue Shopping",
     "total": "Total",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "customized": "Customized",
+    "openCart": "Open cart"
   },
   "checkout": {
     "title": "Checkout",
@@ -161,7 +196,41 @@
     "loginRequired": "You need to sign in to place an order",
     "loginError": "Please sign in to place an order",
     "success": "Order placed successfully!",
-    "error": "Error placing order"
+    "error": "Error placing order",
+    "montonioPickupLoadError": "Failed to load Montonio pickup points",
+    "montonioPickupSearch": "Search pickup point (city or address)",
+    "montonioPickupLoading": "Loading pickup points...",
+    "montonioPickupEmpty": "No results",
+    "promoInvalid": "Invalid or expired promo code",
+    "promoApplied": "Discount applied!",
+    "authRequired": "Please sign in again to complete the purchase",
+    "chooseHowToContinue": "Choose how to continue",
+    "loginOption": "Sign in",
+    "loginBenefits": "Save your order history and faster checkout in the future",
+    "guestOption": "Continue as guest",
+    "guestBenefits": "No account — just enter your email for the order confirmation",
+    "guestBadge": "Guest checkout",
+    "email": "Email",
+    "buyAsCompany": "Buy as a company",
+    "invoiceWillBeIssued": "You will receive an invoice with company details",
+    "companyName": "Company name",
+    "companyRegNumber": "Registration number",
+    "companyVatNumber": "VAT number",
+    "companyAddress": "Legal address",
+    "paymentMethod": "Payment method",
+    "payCard": "Pay by card",
+    "payCardDesc": "Instant payment via Stripe (Visa, Mastercard)",
+    "payBankLink": "Bank link",
+    "payBankLinkDesc": "Instant payment via Swedbank, SEB, Citadele, Luminor (Montonio)",
+    "payBank": "Bank transfer (invoice)",
+    "payBankDesc": "You'll receive an invoice by email. Order will be processed after payment is received (1-3 business days)",
+    "discount": "Discount",
+    "promoLabel": "Promo code",
+    "promoPlaceholder": "Enter code",
+    "promoApply": "Apply",
+    "freeShipping": "Free shipping",
+    "submitBank": "Place order and receive invoice",
+    "submitBankLink": "Pay via bank"
   },
   "auth": {
     "login": "Sign In",
@@ -193,7 +262,8 @@
     "passwordUpdated": "Password updated successfully!",
     "invalidResetLink": "Invalid or expired link. Please request a new password reset email.",
     "backToLogin": "Back to sign in",
-    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds."
+    "rateLimited": "Too many attempts. Please try again in {{seconds}} seconds.",
+    "signOut": "Sign out"
   },
   "admin": {
     "panel": "STAFF PANEL",
@@ -291,7 +361,13 @@
     "omnivaDownloadLabel": "Download label (PDF)",
     "omnivaShipmentCreated": "Shipment created",
     "omnivaShipmentError": "Failed to create shipment",
-    "omnivaLabelError": "Failed to download label"
+    "omnivaLabelError": "Failed to download label",
+    "edit": "Edit",
+    "delete": "Delete",
+    "updateError": "Failed to update",
+    "markedInStock": "Marked as in stock",
+    "markedOutOfStock": "Marked as out of stock",
+    "searchProducts": "Search products..."
   },
   "footer": {
     "brandDesc": "SIA Ervitex — manufacturer of personalized clothing and accessories in Latvia. Create your unique design or choose from our collection.",
@@ -326,7 +402,26 @@
     "createAccountHint": "Want to track your order? Create an account with the same email.",
     "orderId": "Order ID",
     "backToHome": "Back to Home",
-    "continueShopping": "Continue Shopping"
+    "continueShopping": "Continue Shopping",
+    "copied": "copied",
+    "bankTitle": "Order received — awaiting payment",
+    "verifyingTitle": "Verifying payment...",
+    "failedTitle": "Payment not confirmed",
+    "pendingTitle": "Awaiting payment confirmation",
+    "bankDesc": "An invoice with bank details has been sent to your email. We'll process your order as soon as the payment arrives in our account (usually within 1-3 business days).",
+    "verifyingDesc": "Please wait — we are confirming the payment with the bank.",
+    "failedDesc": "The payment was cancelled or failed. Please try again or contact us.",
+    "pendingDesc": "Payment is not yet confirmed. This may take a few minutes. We'll send you an email as soon as it is received.",
+    "statusPaid": "Paid",
+    "orderSummary": "Order summary",
+    "total": "Total",
+    "shippingMethod": "Shipping",
+    "bankDetails": "Bank details",
+    "beneficiary": "Beneficiary",
+    "bank": "Bank",
+    "reference": "Payment reference",
+    "amount": "Amount",
+    "downloadInvoice": "Download invoice (PDF)"
   },
   "profile": {
     "back": "Back",
@@ -389,5 +484,12 @@
     "androidManual": "Open the browser menu (⋮) and choose “Add to Home Screen” or “Install app”.",
     "desktopTitle": "How to install on desktop",
     "desktopManual": "Chrome/Edge: click the install icon on the right side of the address bar, or choose “Install T-Bode” from the menu."
+  },
+  "wishlist": {
+    "loginRequired": "Sign in to save items",
+    "added": "Added to wishlist",
+    "removed": "Removed from wishlist",
+    "remove": "Remove from wishlist",
+    "add": "Add to wishlist"
   }
 }
