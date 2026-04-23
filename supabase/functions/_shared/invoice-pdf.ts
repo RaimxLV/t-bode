@@ -550,26 +550,29 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   const totalsLabelRight = xSum - 6;     // labels right-edge ends here
   const totalsValueRight = xEnd - 4;     // values right-aligned to table edge
+  const totalsBlockLeft = xPrice;        // start of label area
 
+  y -= 4;
   // KOPĀ (net subtotal)
   drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
   drawRight(page, fmtNum(totals.net, 2), totalsValueRight, y, bold, 9, colorText);
-  y -= 14;
+  y -= 16;
 
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
-  y -= 18;
+  y -= 20;
 
   // Pavisam apmaksai (highlighted bar)
-  const payBarH = 18;
+  const payBarH = 22;
   page.drawRectangle({
-    x: xUnit + cUnit, y: y - 4, width: xEnd - (xUnit + cUnit), height: payBarH,
+    x: totalsBlockLeft, y: y - 6, width: xEnd - totalsBlockLeft, height: payBarH,
     color: rgb(0.95, 0.95, 0.96),
+    borderColor: colorLine, borderWidth: 0.5,
   });
   drawRight(page, "Pavisam apmaksai (EUR):", totalsLabelRight, y + 2, bold, 10, colorText);
   drawRight(page, fmtNum(totals.gross, 2), totalsValueRight, y + 2, bold, 12, colorAccent);
-  y -= payBarH + 10;
+  y -= payBarH + 12;
 
   // ============================================================
   // 8. SUMMA VĀRDIEM
