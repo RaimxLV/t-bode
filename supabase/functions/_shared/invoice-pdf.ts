@@ -422,6 +422,10 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
+  if (buyer.ip_address || buyer.ip_country) {
+    const ipText = [buyer.ip_address ?? "—", buyer.ip_country ?? null].filter(Boolean).join("  ·  ");
+    buyerRows.push(["IP / Valsts", ipText, false]);
+  }
   drawBoxedSection("Preču saņēmējs", buyerRows);
 
   // ============================================================
