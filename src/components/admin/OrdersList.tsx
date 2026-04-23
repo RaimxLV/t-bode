@@ -118,6 +118,44 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  const downloadSelectedInvoices = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoices-bulk-download`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ order_ids: ids }),
+      });
+      if (!resp.ok) {
+        let detail = `HTTP ${resp.status}`;
+        try { const j = await resp.json(); if (j?.error) detail = j.error; } catch {}
+        throw new Error(detail);
+      }
+      const included = resp.headers.get("X-Invoices-Included") ?? "?";
+      const failed = resp.headers.get("X-Invoices-Failed") ?? "0";
+      const blob = await resp.blob();
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `invoices-${new Date().toISOString().slice(0, 10)}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      toast.success(`Lejupielādēti ${included} rēķini${Number(failed) > 0 ? ` (${failed} neizdevās)` : ""}`);
+      setSelectedIds(new Set());
+    } catch (e: any) {
+      toast.error(`Rēķinu lejupielāde neizdevās: ${e.message}`);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   const runOmnivaTest = async (order: any) => {
     setDiagOrder(order);
     setDiagOpen(true);
@@ -489,6 +527,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             <Button size="sm" className="text-xs gap-1.5" onClick={downloadSelectedLabels} disabled={bulkLoading}>
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileArchive className="w-3.5 h-3.5" />}
               Lejupielādēt atlasītās pavadzīmes (ZIP)
+            </Button>
+            <Button size="sm" variant="outline" className="text-xs gap-1.5" onClick={downloadSelectedInvoices} disabled={bulkLoading}>
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
+              Lejupielādēt atlasītos rēķinus (ZIP)
             </Button>
           </div>
         </div>
