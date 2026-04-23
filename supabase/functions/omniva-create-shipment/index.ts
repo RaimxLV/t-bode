@@ -83,11 +83,30 @@ Deno.serve(async (req) => {
     const isPickup = !!order.omniva_pickup_point;
     const serviceCode = isPickup ? OMNIVA_SERVICE_PA : OMNIVA_SERVICE_COURIER;
 
-    // Pickup point code is encoded in shipping_zip when omniva_pickup_point is set
-    // (or just use the pickup point name; Omniva API needs offloadPostcode = pickup ZIP)
-    const offloadPostcode = isPickup
-      ? (order.shipping_zip || "")
-      : "";
+    // For pickup: Omniva needs the parcel-machine ZIP as offloadPostcode.
+    // We resolve it from the public Omniva locations feed by matching the saved name.
+    let offloadPostcode = "";
+    if (isPickup) {
+      offloadPostcode = order.shipping_zip || "";
+      if (!offloadPostcode) {
+        try {
+          const locResp = await fetch("https://www.omniva.lv/locations.json");
+          const locs = await locResp.json() as Array<{ ZIP: string; NAME: string; A0_NAME: string; TYPE: string }>;
+          const target = String(order.omniva_pickup_point).trim().toLowerCase();
+          const match = locs.find(
+            (l) => l.A0_NAME === "LV" && l.TYPE === "0" && l.NAME.trim().toLowerCase() === target,
+          );
+          if (match) offloadPostcode = match.ZIP;
+        } catch (e) {
+          console.error("Failed to resolve pickup ZIP:", (e as Error).message);
+        }
+      }
+      if (!offloadPostcode) {
+        throw new Error(
+          `Could not resolve Omniva pickup point ZIP for "${order.omniva_pickup_point}". Please set shipping_zip manually.`,
+        );
+      }
+    }
 
     // Reference = order number (visible on label)
     const reference = String(order.order_number || order.id.slice(0, 8));
