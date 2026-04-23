@@ -395,24 +395,23 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Juridiskā adrese", seller.company_address ?? "", false],
     ["Reģ. Nr. / PVN Nr.", `${seller.company_reg_number ?? ""}${seller.company_vat_number ? "  ·  " + seller.company_vat_number : ""}`, false],
   ];
-  // Build bank rows: each bank renders as
-  //   "Banka"          <Bank name>
-  //                    SWIFT: xxx   IBAN: xxx
-  // wrapping IBAN onto a new line if needed.
+  // Build bank rows. Each bank takes 3 lines so the long IBAN never wraps
+  // into another field or onto the box border:
+  //   "Banka"        <Bank name>
+  //   "SWIFT"        <code>
+  //   "IBAN"         <iban>
   const bankRows: Array<[string, string, boolean?]> = [];
   if (seller.bank_name || seller.bank_iban) {
-    bankRows.push(["Banka", seller.bank_name ?? "", true]);
-    bankRows.push([
-      "",
-      `SWIFT: ${seller.bank_swift ?? "—"}    IBAN: ${seller.bank_iban ?? "—"}`,
-      false,
-    ]);
+    bankRows.push(["Banka", seller.bank_name ?? "—", true]);
+    bankRows.push(["SWIFT", seller.bank_swift ?? "—", false]);
+    bankRows.push(["IBAN", seller.bank_iban ?? "—", false]);
   }
   const bank2Name = seller.bank2_name ?? "Swedbank AS";
   const bank2Swift = seller.bank2_swift ?? "HABALV22";
   const bank2Iban = seller.bank2_iban ?? "LV94HABA0551004295328";
   bankRows.push(["Banka", bank2Name, true]);
-  bankRows.push(["", `SWIFT: ${bank2Swift}    IBAN: ${bank2Iban}`, false]);
+  bankRows.push(["SWIFT", bank2Swift, false]);
+  bankRows.push(["IBAN", bank2Iban, false]);
 
   drawBoxedSection("Preču nosūtītājs", [...sellerRows, ...bankRows]);
 
