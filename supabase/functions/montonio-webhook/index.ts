@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
     if (shipmentId) update.montonio_shipment_id = shipmentId;
 
     if (status === "PAID" || status === "FINALIZED") {
-      update.status = "confirmed";
+      update.status = "processing";
     } else if (status === "ABANDONED" || status === "VOIDED" || status === "EXPIRED") {
       update.status = "cancelled";
     }
