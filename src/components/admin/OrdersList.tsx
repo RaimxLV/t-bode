@@ -272,13 +272,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const updateOrderStatus = async (orderId: string, status: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    const currentStatus = order?.status;
+    const isOverride = statusOverride.has(orderId);
+    if (currentStatus && !isOverride && !canTransitionTo(currentStatus, status)) {
+      toast.error("Šī statusa maiņa nav atļauta. Ieslēdz “Manual override”, lai labotu.");
+      return;
+    }
     const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", orderId);
     if (error) toast.error(t("admin.statusError"));
     else {
       toast.success(t("admin.statusUpdated"));
       // Auto-send tracking email when order is marked as shipped
       if (status === "shipped") {
-        const order = orders.find((o) => o.id === orderId);
         if (order?.omniva_barcode) {
           try {
             // Reset sent flag so admin re-triggering "shipped" resends the email
