@@ -108,7 +108,7 @@ async function tryEmbedImage(pdf: PDFDocument, url?: string | null) {
 export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Uint8Array; totals: InvoiceTotals }> {
   const pdf = await PDFDocument.create();
   const page = pdf.addPage([595.28, 841.89]); // A4
-  const { width, height } = page.size();
+  const { width, height } = page.getSize();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
