@@ -83,6 +83,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [diagFatal, setDiagFatal] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  // Per-order override toggle: when true, allow free status changes (admin override)
+  const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
+
+  const toggleOverride = (id: string) => {
+    setStatusOverride((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
