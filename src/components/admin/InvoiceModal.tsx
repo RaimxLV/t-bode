@@ -130,14 +130,14 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b border-border">
-          <DialogTitle className="flex items-center gap-2 font-display">
-            <FileText className="w-5 h-5" />
-            Pārvaldīt rēķinu
+      <DialogContent className="max-w-5xl h-[95vh] sm:h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 border-b border-border shrink-0">
+          <DialogTitle className="flex flex-wrap items-center gap-x-2 gap-y-1.5 font-display text-base sm:text-lg">
+            <FileText className="w-5 h-5 shrink-0" />
+            <span className="mr-1">Pārvaldīt rēķinu</span>
             {current && (
               <>
-                <Badge variant="secondary" className="ml-2 font-mono text-xs">{current.invoice_number}</Badge>
+                <Badge variant="secondary" className="font-mono text-xs whitespace-nowrap">{current.invoice_number}</Badge>
                 <Badge variant="outline" className="text-[10px]">v{current.version}</Badge>
                 {current.viewed_at && <Badge variant="outline" className="text-[10px] gap-1"><Eye className="w-3 h-3" /> Skatīts</Badge>}
                 {current.sent_at && <Badge variant="outline" className="text-[10px] gap-1"><Send className="w-3 h-3" /> Nosūtīts</Badge>}
@@ -146,9 +146,9 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_380px] overflow-hidden">
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_380px] overflow-y-auto md:overflow-hidden">
           {/* PDF preview */}
-          <div className="bg-muted/30 border-r border-border flex items-center justify-center overflow-hidden">
+          <div className="bg-muted/30 md:border-r border-b md:border-b-0 border-border flex items-center justify-center overflow-hidden h-[55vh] md:h-auto">
             {loading ? (
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
             ) : !current ? (
