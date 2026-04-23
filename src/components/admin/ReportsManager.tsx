@@ -109,35 +109,110 @@ export const ReportsManager = () => {
     );
   };
 
-  const exportCsv = () => {
-    const rows: string[][] = [
-      ["Datums", "Pasūtījuma Nr.", "Rēķina Nr.", "Klients", "Tips", "Reģ.Nr.", "PVN Nr.", "Maksājums", "Statuss", "Bruto EUR", "Neto EUR", "PVN EUR", "PVN likme %"],
+  const exportXlsx = async () => {
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "T-Bode";
+    wb.created = new Date();
+    const ws = wb.addWorksheet("Atskaite", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+
+    ws.columns = [
+      { header: "Datums", key: "date", width: 20 },
+      { header: "Pasūtījuma Nr.", key: "order_no", width: 16 },
+      { header: "Rēķina Nr.", key: "invoice_no", width: 16 },
+      { header: "Klients", key: "client", width: 32 },
+      { header: "Tips", key: "type", width: 8 },
+      { header: "Reģ. Nr.", key: "reg_no", width: 16 },
+      { header: "PVN Nr.", key: "vat_no", width: 16 },
+      { header: "Maksājums", key: "payment", width: 16 },
+      { header: "Statuss", key: "status", width: 14 },
+      { header: "Bruto EUR", key: "gross", width: 14 },
+      { header: "Neto EUR", key: "net", width: 14 },
+      { header: "PVN EUR", key: "vat", width: 14 },
+      { header: "PVN likme %", key: "vat_rate", width: 12 },
     ];
+
+    // Header styling
+    const header = ws.getRow(1);
+    header.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    header.alignment = { vertical: "middle", horizontal: "left" };
+    header.height = 22;
+    header.eachCell((cell) => {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FF374151" } },
+        bottom: { style: "thin", color: { argb: "FF374151" } },
+        left: { style: "thin", color: { argb: "FF374151" } },
+        right: { style: "thin", color: { argb: "FF374151" } },
+      };
+    });
+
     for (const o of orders) {
-      const gross = Number(o.total);
+      const gross = round2(Number(o.total));
       const net = round2(gross / (1 + VAT_RATE / 100));
       const vat = round2(gross - net);
-      rows.push([
-        new Date(o.created_at).toLocaleString("lv-LV"),
-        `#${String(o.order_number).padStart(4, "0")}`,
-        "", // invoice number — loaded separately if needed
-        o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? ""),
-        o.is_business ? "B2B" : "B2C",
-        o.company_reg_number ?? "",
-        o.company_vat_number ?? "",
-        o.payment_method ?? o.provider ?? "",
-        o.status,
-        gross.toFixed(2),
-        net.toFixed(2),
-        vat.toFixed(2),
-        String(VAT_RATE),
-      ]);
+      ws.addRow({
+        date: new Date(o.created_at),
+        order_no: `#${String(o.order_number).padStart(4, "0")}`,
+        invoice_no: "",
+        client: o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? ""),
+        type: o.is_business ? "B2B" : "B2C",
+        reg_no: o.company_reg_number ?? "",
+        vat_no: o.company_vat_number ?? "",
+        payment: paymentLabel(o),
+        status: o.status,
+        gross,
+        net,
+        vat,
+        vat_rate: VAT_RATE / 100,
+      });
     }
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+
+    // Number / date formats
+    ws.getColumn("date").numFmt = "dd.mm.yyyy hh:mm";
+    ws.getColumn("gross").numFmt = '#,##0.00 "€"';
+    ws.getColumn("net").numFmt = '#,##0.00 "€"';
+    ws.getColumn("vat").numFmt = '#,##0.00 "€"';
+    ws.getColumn("vat_rate").numFmt = "0.00%";
+
+    // Totals row
+    const lastDataRow = ws.rowCount;
+    if (lastDataRow > 1) {
+      const totalsRow = ws.addRow({
+        date: "",
+        order_no: "",
+        invoice_no: "",
+        client: "KOPĀ",
+        type: "",
+        reg_no: "",
+        vat_no: "",
+        payment: "",
+        status: "",
+        gross: { formula: `SUM(J2:J${lastDataRow})` },
+        net: { formula: `SUM(K2:K${lastDataRow})` },
+        vat: { formula: `SUM(L2:L${lastDataRow})` },
+        vat_rate: "",
+      });
+      totalsRow.font = { bold: true };
+      totalsRow.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } };
+        cell.border = { top: { style: "medium", color: { argb: "FF1F2937" } } };
+      });
+      totalsRow.getCell("gross").numFmt = '#,##0.00 "€"';
+      totalsRow.getCell("net").numFmt = '#,##0.00 "€"';
+      totalsRow.getCell("vat").numFmt = '#,##0.00 "€"';
+    }
+
+    // Auto filter on header
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } };
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `atskaite_${from}_${to}.csv`;
+    link.download = `atskaite_${from}_${to}.xlsx`;
     link.click();
     URL.revokeObjectURL(link.href);
   };
@@ -186,8 +261,8 @@ export const ReportsManager = () => {
           </div>
           <Button size="sm" onClick={load} disabled={loading}>{loading ? "Ielādē..." : "Atsvaidzināt"}</Button>
           <div className="ml-auto">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportCsv} disabled={!orders.length}>
-              <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (CSV)
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!orders.length}>
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
             </Button>
           </div>
         </CardContent>
