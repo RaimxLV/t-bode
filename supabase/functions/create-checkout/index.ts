@@ -45,6 +45,14 @@ Deno.serve(async (req) => {
     const customerEmail = user?.email ?? guest_email;
     if (!customerEmail) throw new Error("Email required for checkout");
 
+    // Capture buyer country from edge headers (Cloudflare/Supabase add cf-ipcountry).
+    const buyerCountry = (
+      req.headers.get("cf-ipcountry") ||
+      req.headers.get("x-vercel-ip-country") ||
+      req.headers.get("x-country") ||
+      ""
+    ).toUpperCase().slice(0, 2) || null;
+
     const stripe = createStripeClient();
 
     const serviceClient = createClient(
@@ -355,7 +363,7 @@ Deno.serve(async (req) => {
 
     await serviceClient
       .from("orders")
-      .update({ stripe_session_id: session.id })
+      .update({ stripe_session_id: session.id, ...(buyerCountry ? { buyer_country: buyerCountry } : {}) })
       .eq("id", order_id);
 
     return new Response(JSON.stringify({ url: session.url }), {
