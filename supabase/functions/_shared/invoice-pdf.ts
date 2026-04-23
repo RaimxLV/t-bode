@@ -320,7 +320,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Tagline removed — logo already includes the slogan.
 
   // Right side: PAVADZĪME title + Uzskaites Nr + date + lpp
-  drawRight(page, "PAVADZĪME", width - marginX, y, bold, 18, colorText);
+  drawRight(page, "RĒĶINS - PAVADZĪME", width - marginX, y, bold, 16, colorText);
   drawRight(page, `Uzskaites Nr. ${data.invoice_number}`, width - marginX, y - 20, bold, 11, colorText);
   drawRight(page, issueDateLv, width - marginX, y - 36, font, 9, colorText);
   drawRight(page, "1 lpp.", width - marginX, y - 50, font, 8, colorMuted);
