@@ -398,6 +398,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs">
             <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
           </Button>
+          {showArchive && archivedOrders.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearArchive}
+              disabled={bulkLoading}
+              className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Iztīrīt arhīvu
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={regenerateAllInvoices}
+            disabled={bulkLoading}
+            className="gap-1.5 text-xs"
+            title="Pārģenerēt visus rēķinus ar jaunāko veidni"
+          >
+            {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Atjaunot rēķinus
+          </Button>
         </div>
         <span className="text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
       </div>
