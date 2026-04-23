@@ -278,7 +278,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   }
 
   // === Layout constants ===
-  const marginX = 40;
+  // 15mm ≈ 42.5pt — keep at least that on every side so nothing is clipped on print.
+  const marginX = 44;
   const contentW = width - marginX * 2;
   const colorText = rgb(0.05, 0.05, 0.05);
   const colorMuted = rgb(0.35, 0.35, 0.4);
