@@ -87,18 +87,24 @@ Deno.serve(async (req) => {
     }
 
     // Build buyer snapshot
+    const shippingAddrParts = [order.shipping_address, order.shipping_city, order.shipping_zip].filter(Boolean).join(", ");
+    const pickupLabel = order.montonio_pickup_point_name
+      ? `${order.montonio_pickup_point_name}`
+      : (order.omniva_pickup_point ?? null);
+    const shippingDisplay = shippingAddrParts || pickupLabel || null;
     const buyer = {
       is_business: !!order.is_business,
       name: body.buyer_overrides?.name
         ?? (order.is_business ? (order.company_name ?? order.shipping_name ?? "") : (order.shipping_name ?? "")),
       address: body.buyer_overrides?.address
         ?? (order.is_business
-            ? (order.company_address ?? [order.shipping_address, order.shipping_city, order.shipping_zip].filter(Boolean).join(", "))
-            : [order.shipping_address, order.shipping_city, order.shipping_zip].filter(Boolean).join(", ")),
+            ? (order.company_address ?? shippingAddrParts)
+            : shippingAddrParts),
       reg_number: body.buyer_overrides?.reg_number ?? order.company_reg_number ?? null,
       vat_number: body.buyer_overrides?.vat_number ?? order.company_vat_number ?? null,
       email: body.buyer_overrides?.email ?? buyerEmail,
       phone: body.buyer_overrides?.phone ?? order.shipping_phone ?? null,
+      shipping_address: shippingDisplay,
     };
 
     const seller = {

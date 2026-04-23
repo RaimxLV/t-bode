@@ -12,6 +12,7 @@ export interface InvoiceBuyer {
   vat_number?: string | null;
   email?: string | null;
   phone?: string | null;
+  shipping_address?: string | null;
 }
 
 export interface InvoiceSeller {
@@ -322,7 +323,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   drawRight(page, issueDateLv, width - marginX, y - 36, font, 9, colorText);
   drawRight(page, "1 lpp.", width - marginX, y - 50, font, 8, colorMuted);
 
-  y -= 70;
+  // Drop further below header so the "1 lpp." line never sits on the next box border.
+  y -= 80;
 
   // ============================================================
   // Drawing helpers for boxed sections
@@ -423,7 +425,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Reģ. Nr.", buyer.is_business ? (buyer.reg_number ?? "—") : "—", false],
     ["PVN Nr.", buyer.is_business ? (buyer.vat_number ?? "—") : "—", false],
     ["Adrese", buyer.address ?? "—", false],
-    ["Piegādes adrese", buyer.address ?? "—", false],
+    ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
   drawBoxedSection("Preču saņēmējs", buyerRows);
@@ -446,7 +448,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Give "Kods" a real fixed slot and let "Nosaukums" take whatever is left.
   const tableX = marginX;
   const tableW = contentW;
-  const cKods = 80;
+  const cKods = 115;
   const cQty = 48;
   const cUnit = 42;
   const cPrice = 62;
@@ -543,7 +545,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
 
   // Bottom border of items table
   page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
-  y -= 10;
+  y -= 18;
 
   // ============================================================
   // 7. TOTALS BLOCK (right-aligned, on the right half only)
@@ -552,7 +554,6 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const totalsValueRight = xEnd - 4;     // values right-aligned to table edge
   const totalsBlockLeft = xPrice;        // start of label area
 
-  y -= 4;
   // KOPĀ (net subtotal)
   drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
   drawRight(page, fmtNum(totals.net, 2), totalsValueRight, y, bold, 9, colorText);
@@ -561,7 +562,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
-  y -= 20;
+  y -= 24;
 
   // Pavisam apmaksai (highlighted bar)
   const payBarH = 22;
