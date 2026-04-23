@@ -112,6 +112,12 @@ Deno.serve(async (req) => {
       bank_beneficiary: settings.bank_beneficiary,
       logo_url: settings.logo_url,
       stamp_url: settings.stamp_url,
+      // Optional second bank account (Swedbank fallback handled in PDF generator)
+      bank2_name: (settings as any).bank2_name ?? null,
+      bank2_iban: (settings as any).bank2_iban ?? null,
+      bank2_swift: (settings as any).bank2_swift ?? null,
+      issued_by_name: (settings as any).issued_by_name ?? null,
+      tagline: (settings as any).tagline ?? null,
     };
 
     const invoiceItems = (items ?? []).map((it: any) => {
