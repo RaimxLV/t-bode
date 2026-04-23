@@ -425,7 +425,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Reģ. Nr.", buyer.is_business ? (buyer.reg_number ?? "—") : "—", false],
     ["PVN Nr.", buyer.is_business ? (buyer.vat_number ?? "—") : "—", false],
     ["Adrese", buyer.address ?? "—", false],
-    ["Piegādes adrese", buyer.address ?? "—", false],
+    ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
   drawBoxedSection("Preču saņēmējs", buyerRows);
