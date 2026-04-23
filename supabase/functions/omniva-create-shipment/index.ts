@@ -263,10 +263,14 @@ Deno.serve(async (req) => {
         omniva_barcode: barcode,
         omniva_tracking_status: "registered",
         omniva_shipment_created_at: new Date().toISOString(),
+        // Auto-advance fulfillment status so admins see shipments ready to ship
+        status: "processing",
+        // Direct download URL for the label PDF (admins only — function checks auth)
+        omniva_label_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/omniva-label-pdf?barcode=${encodeURIComponent(barcode)}`,
       })
       .eq("id", order_id);
     if (updErr) throw updErr;
-    log("Order updated with barcode", "ok");
+    log("Order updated with barcode + status=processing + label URL", "ok");
 
     return new Response(JSON.stringify({ success: true, barcode, steps }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

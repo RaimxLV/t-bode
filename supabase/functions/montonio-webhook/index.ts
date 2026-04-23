@@ -54,6 +54,41 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Validate that merchantReference matches an existing order before any update
+    const { data: existingOrder } = await service
+      .from("orders")
+      .select("id, status")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (!existingOrder) {
+      console.error(`Montonio webhook: orderId ${orderId} not found in DB`);
+      return new Response(JSON.stringify({ error: "Unknown merchantReference" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
+    }
+
+    // Idempotency key: hash of the token (unique per Montonio event delivery)
+    const tokenBuf = new TextEncoder().encode(token);
+    const digest = await crypto.subtle.digest("SHA-256", tokenBuf);
+    const eventId = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    const { data: alreadyProcessed } = await service
+      .from("processed_webhook_events")
+      .select("id")
+      .eq("provider", "montonio")
+      .eq("event_id", eventId)
+      .maybeSingle();
+    if (alreadyProcessed) {
+      console.log(`⏭️  Montonio event ${eventId.slice(0, 12)}… already processed`);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const update: Record<string, unknown> = {
       montonio_payment_status: status || "UNKNOWN",
     };
@@ -68,6 +103,11 @@ Deno.serve(async (req) => {
     }
 
     await service.from("orders").update(update).eq("id", orderId);
+
+    // Record processed BEFORE side-effects to avoid duplicate emails on retry
+    await service
+      .from("processed_webhook_events")
+      .insert({ provider: "montonio", event_id: eventId, order_id: orderId });
 
     // Send confirmation email when payment is finalized
     if (status === "PAID" || status === "FINALIZED") {

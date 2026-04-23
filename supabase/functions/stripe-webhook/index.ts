@@ -60,6 +60,19 @@ Deno.serve(async (req) => {
           break;
         }
 
+        // Idempotency: skip if this Stripe event was already processed
+        const eventId = (event as any).id ?? session.id;
+        const { data: alreadyProcessed } = await supabase
+          .from("processed_webhook_events")
+          .select("id")
+          .eq("provider", "stripe")
+          .eq("event_id", eventId)
+          .maybeSingle();
+        if (alreadyProcessed) {
+          console.log(`⏭️  Stripe event ${eventId} already processed, skipping`);
+          break;
+        }
+
         const updateData: any = {
           status: "confirmed",
           stripe_session_id: session.id,
@@ -84,6 +97,11 @@ Deno.serve(async (req) => {
 
         if (updateError) throw updateError;
         console.log(`✅ Order ${orderId} confirmed`);
+
+        // Record event as processed BEFORE side-effects (emails, invoices)
+        await supabase
+          .from("processed_webhook_events")
+          .insert({ provider: "stripe", event_id: eventId, order_id: orderId });
 
         // Fire-and-forget order confirmation email (do not block webhook ack)
         try {
