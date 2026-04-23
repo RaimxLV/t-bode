@@ -72,25 +72,64 @@ export const CustomersList = () => {
     return { count: customers.length, totalSpent, withOrders, totalOrders };
   }, [customers]);
 
-  const exportCsv = () => {
-    const rows = [
-      ["E-pasts", "Vārds", "Telefons", "Reģistrēts", "Pasūtījumi", "Kopā EUR", "Pēdējais pasūtījums"],
-      ...filtered.map((c) => [
-        c.email ?? "",
-        c.full_name ?? "",
-        c.phone ?? "",
-        c.created_at,
-        String(c.orders_count),
-        c.total_spent.toFixed(2),
-        c.last_order_at ?? "",
-      ]),
+  const exportXlsx = async () => {
+    const ExcelJS = (await import("exceljs")).default;
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "T-Bode";
+    wb.created = new Date();
+    const ws = wb.addWorksheet("Klienti", {
+      views: [{ state: "frozen", ySplit: 1 }],
+    });
+
+    ws.columns = [
+      { header: "E-pasts", key: "email", width: 32 },
+      { header: "Vārds", key: "name", width: 28 },
+      { header: "Telefons", key: "phone", width: 18 },
+      { header: "Reģistrēts", key: "created", width: 18 },
+      { header: "Pasūtījumi", key: "orders", width: 12 },
+      { header: "Kopā EUR", key: "spent", width: 14 },
+      { header: "Pēdējais pasūtījums", key: "last", width: 20 },
     ];
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+
+    const header = ws.getRow(1);
+    header.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    header.alignment = { vertical: "middle", horizontal: "left" };
+    header.height = 22;
+    header.eachCell((cell) => {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FF374151" } },
+        bottom: { style: "thin", color: { argb: "FF374151" } },
+        left: { style: "thin", color: { argb: "FF374151" } },
+        right: { style: "thin", color: { argb: "FF374151" } },
+      };
+    });
+
+    for (const c of filtered) {
+      ws.addRow({
+        email: c.email ?? "",
+        name: c.full_name ?? "",
+        phone: c.phone ?? "",
+        created: c.created_at ? new Date(c.created_at) : "",
+        orders: c.orders_count,
+        spent: Number(c.total_spent),
+        last: c.last_order_at ? new Date(c.last_order_at) : "",
+      });
+    }
+
+    ws.getColumn("created").numFmt = "dd.mm.yyyy";
+    ws.getColumn("last").numFmt = "dd.mm.yyyy";
+    ws.getColumn("spent").numFmt = '#,##0.00 "€"';
+    ws.getColumn("orders").alignment = { horizontal: "right" };
+
+    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } };
+
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `klienti_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `klienti_${new Date().toISOString().slice(0, 10)}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -161,9 +200,9 @@ export const CustomersList = () => {
           <Button variant="outline" onClick={load} disabled={loading} className="shrink-0">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
-          <Button variant="outline" onClick={exportCsv} disabled={filtered.length === 0} className="shrink-0">
+          <Button variant="outline" onClick={exportXlsx} disabled={filtered.length === 0} className="shrink-0">
             <Download className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline">CSV</span>
+            <span className="hidden sm:inline">Excel</span>
           </Button>
         </div>
       </div>
