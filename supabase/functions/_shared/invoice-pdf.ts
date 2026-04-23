@@ -434,12 +434,12 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Columns: Kods | Nosaukums | Daudz. | Mērv. | Cena | Summa
   const tableX = marginX;
   const tableW = contentW;
-  const cKods = 70;
-  const cName = tableW - cKods - 60 - 50 - 70 - 70; // flexible name column
-  const cQty = 60;
-  const cUnit = 50;
-  const cPrice = 70;
-  const cSum = 70;
+  const cKods = 55;
+  const cQty = 45;
+  const cUnit = 38;
+  const cPrice = 60;
+  const cSum = 65;
+  const cName = tableW - cKods - cQty - cUnit - cPrice - cSum; // flexible
 
   const xKods = tableX;
   const xName = xKods + cKods;
