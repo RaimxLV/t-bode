@@ -327,16 +327,27 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Drawing helpers for boxed sections
   // ============================================================
   const labelX = marginX + 8;
-  const valueX = marginX + 135;
-  const lineH = 12;
+  const valueX = marginX + 150; // wider gap so labels never touch values
+  const valueMaxW = contentW - (valueX - marginX) - 8;
+  const lineH = 13;
   const boxPadTop = 10;
   const boxPadBottom = 10;
 
-  function drawBoxedSection(title: string, rows: Array<[string, string, boolean?]>, extraDrawer?: (innerY: number) => number): number {
-    const rowsCount = rows.length;
-    const extraH = extraDrawer ? 0 : 0; // extraDrawer manages its own height; we add via return value
-    const innerH = rowsCount * lineH + (extraDrawer ? 14 : 0);
-    const boxH = boxPadTop + innerH + boxPadBottom + 14; // +14 for title
+  function drawBoxedSection(
+    title: string,
+    rows: Array<[string, string, boolean?]>,
+    extraRows = 0,
+    extraDrawer?: (innerY: number) => number,
+  ): number {
+    // Pre-compute wrapped value rows so the box height fits the content.
+    const wrapped = rows.map(([k, v, b]) => ({
+      k,
+      lines: wrapText(v || "—", b ? bold : font, 9, valueMaxW),
+      bold: !!b,
+    }));
+    const valueLineCount = wrapped.reduce((s, r) => s + Math.max(1, r.lines.length), 0);
+    const innerH = valueLineCount * lineH + extraRows * lineH;
+    const boxH = boxPadTop + innerH + boxPadBottom + 14; // +14 for title bar
     // Box border
     page.drawRectangle({
       x: marginX, y: y - boxH, width: contentW, height: boxH,
@@ -349,10 +360,13 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     });
     drawText(page, title, labelX, y - 10, bold, 9, colorText);
     let innerY = y - 14 - boxPadTop - 2;
-    for (const [k, v, isBold] of rows) {
-      drawText(page, k, labelX, innerY, font, 9, colorMuted);
-      drawText(page, v, valueX, innerY, isBold ? bold : font, 9, colorText);
-      innerY -= lineH;
+    for (const r of wrapped) {
+      drawText(page, r.k, labelX, innerY, font, 9, colorMuted);
+      const lines = r.lines.length ? r.lines : [""];
+      for (let i = 0; i < lines.length; i++) {
+        drawText(page, lines[i], valueX, innerY - i * lineH, r.bold ? bold : font, 9, colorText);
+      }
+      innerY -= lineH * lines.length;
     }
     if (extraDrawer) {
       innerY = extraDrawer(innerY);
