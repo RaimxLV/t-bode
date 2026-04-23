@@ -25,13 +25,24 @@ export const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function encodeBasicAuthUtf8(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
+}
+
 export function getOmnivaAuthHeader(): string {
   const username = Deno.env.get("OMNIVA_USERNAME");
   const password = Deno.env.get("OMNIVA_PASSWORD");
   if (!username || !password) {
     throw new Error("OMNIVA_USERNAME or OMNIVA_PASSWORD not configured");
   }
-  return "Basic " + btoa(`${username}:${password}`);
+  return "Basic " + encodeBasicAuthUtf8(`${username}:${password}`);
 }
 
 export function escapeXml(s: string): string {
