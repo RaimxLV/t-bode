@@ -4,7 +4,7 @@ project_id = "nkqwhiqrljwvzrivhqyh"
 verify_jwt = false
 
 [functions.omniva-label-pdf]
-verify_jwt = true
+verify_jwt = false
 
 [functions.omniva-tracking-sync]
 verify_jwt = false
