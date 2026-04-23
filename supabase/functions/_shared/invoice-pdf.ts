@@ -173,14 +173,19 @@ async function loadFont(url: string): Promise<ArrayBuffer> {
 }
 
 async function getNotoFonts(): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
+  // Use DejaVu Sans — a robust Unicode TTF that pdf-lib embeds reliably
+  // and that all PDF readers (Adobe, Chrome, macOS Preview) render correctly.
+  // The fontsource Noto Sans "latin-ext" subset, when embedded via pdf-lib + subset,
+  // produces a CMap that some readers (incl. Adobe Acrobat) fail to decode,
+  // causing every glyph to appear as a tofu box.
   if (!_cachedRegular) {
     _cachedRegular = await loadFont(
-      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-400-normal.ttf",
+      "https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@version_2_37/ttf/DejaVuSans.ttf",
     );
   }
   if (!_cachedBold) {
     _cachedBold = await loadFont(
-      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-700-normal.ttf",
+      "https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@version_2_37/ttf/DejaVuSans-Bold.ttf",
     );
   }
   return { regular: _cachedRegular!, bold: _cachedBold! };
