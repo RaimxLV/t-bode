@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -60,6 +61,38 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [searchQuery, setSearchQuery] = useState("");
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
+  const [diagOpen, setDiagOpen] = useState(false);
+  const [diagOrder, setDiagOrder] = useState<any | null>(null);
+  const [diagSteps, setDiagSteps] = useState<Array<{ step: string; status: "ok" | "error" | "info"; detail?: string }>>([]);
+  const [diagPreview, setDiagPreview] = useState<any | null>(null);
+  const [diagRunning, setDiagRunning] = useState(false);
+  const [diagFatal, setDiagFatal] = useState<string | null>(null);
+
+  const runOmnivaTest = async (order: any) => {
+    setDiagOrder(order);
+    setDiagOpen(true);
+    setDiagRunning(true);
+    setDiagSteps([]);
+    setDiagPreview(null);
+    setDiagFatal(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("omniva-create-shipment", {
+        body: { order_id: order.id, debug: true },
+      });
+      if (error) {
+        // Functions invoke wraps non-2xx, try to read body from error context
+        setDiagFatal(error.message || String(error));
+      }
+      const payload: any = data ?? {};
+      if (Array.isArray(payload.steps)) setDiagSteps(payload.steps);
+      if (payload.preview) setDiagPreview(payload.preview);
+      if (payload.error) setDiagFatal(payload.error);
+    } catch (e: any) {
+      setDiagFatal(e?.message ?? String(e));
+    } finally {
+      setDiagRunning(false);
+    }
+  };
 
   const getStatusInfo = (status: string) => ORDER_STATUSES.find((s) => s.value === status) || ORDER_STATUSES[0];
 
