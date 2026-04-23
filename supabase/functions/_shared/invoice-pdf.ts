@@ -518,11 +518,12 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     let desc = it.name;
     const extras = [it.size, it.color].filter(Boolean).join(", ");
     if (extras) desc += `, ${extras}`;
-    const nameLines = wrapText(desc, font, 9, cName - 8).slice(0, 3);
-    // Truncate SKU to fit the code column to avoid overflow into name column.
-    const skuLines = wrapText(it.sku ?? "", font, 8.5, cKods - 6).slice(0, 2);
+    // Wrap aggressively — no overflow into adjacent columns.
+    // Allow up to 4 lines for product name, 3 for SKU.
+    const nameLines = wrapText(desc, font, 9, cName - 8).slice(0, 4);
+    const skuLines = wrapText(it.sku ?? "", font, 8.5, cKods - 6).slice(0, 3);
     const linesUsed = Math.max(nameLines.length, skuLines.length, 1);
-    const rowHeight = linesUsed * 11 + 4;
+    const rowHeight = linesUsed * 11 + 6;
 
     for (let i = 0; i < skuLines.length; i++) {
       drawText(page, skuLines[i], xKods + 4, y - 4 - i * 11, font, 8.5, colorText);
@@ -580,12 +581,21 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, `${fmtNum(totals.vat, 2)} EUR`, totalsValueRight, y, font, 9, colorText);
-  y -= 32;
+  y -= 22;
 
-  // Pavisam apmaksai (bez izceltā rāmja)
-  drawRight(page, "Pavisam apmaksai:", totalsLabelRight, y, bold, 10, colorText);
+  // Separator line ABOVE the totals row (well clear of any text)
+  page.drawLine({
+    start: { x: totalsBlockLeft, y: y + 6 },
+    end: { x: totalsValueRight, y: y + 6 },
+    thickness: 0.7,
+    color: colorLine,
+  });
+  y -= 6;
+
+  // Pavisam apmaksai — text + value on the same baseline, both right-aligned
+  drawRight(page, "Pavisam apmaksai:", totalsLabelRight, y, bold, 11, colorText);
   drawRight(page, `${fmtNum(totals.gross, 2)} EUR`, totalsValueRight, y, bold, 12, colorAccent);
-  y -= 24;
+  y -= 28;
 
   // ============================================================
   // 8. SUMMA VĀRDIEM
