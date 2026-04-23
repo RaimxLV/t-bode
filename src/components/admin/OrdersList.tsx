@@ -460,50 +460,53 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       </div>
 
       <div className="space-y-2">
-        <div className="-mx-2 px-2 overflow-x-auto scrollbar-none">
-          <div className="flex gap-2 w-max">
-            <Button variant={!showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1.5 text-xs shrink-0">
-              <Inbox className="w-3.5 h-3.5" /> Aktīvie <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{activeOrders.length}</Badge>
-            </Button>
-            <Button
-              variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
-              size="sm"
-              onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
-              className={`gap-1.5 text-xs shrink-0 ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
-              title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
-            >
-              <TrendingUp className="w-3.5 h-3.5" /> Sagatavošanā
-              <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="ml-1 text-[10px] px-1.5">
-                {stats.processingCount}
-              </Badge>
-            </Button>
-            <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs shrink-0">
-              <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
-            </Button>
-            {showArchive && archivedOrders.length > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearArchive}
-                disabled={bulkLoading}
-                className="gap-1.5 text-xs shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
-              >
-                {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                Iztīrīt arhīvu
-              </Button>
-            )}
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+          <Button variant={!showArchive && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+            <Inbox className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Aktīvie</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
+          </Button>
+          <Button
+            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
+            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
+            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
+          >
+            <TrendingUp className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sagatav.</span>
+            <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">
+              {stats.processingCount}
+            </Badge>
+          </Button>
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+            <Archive className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Arhīvs</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
+          </Button>
+          {showArchive && archivedOrders.length > 0 && (
             <Button
               variant="outline"
               size="sm"
-              onClick={regenerateAllInvoices}
+              onClick={clearArchive}
               disabled={bulkLoading}
-              className="gap-1.5 text-xs shrink-0"
-              title="Pārģenerēt visus rēķinus ar jaunāko veidni"
+              className="col-span-3 sm:col-span-1 gap-1.5 text-[11px] sm:text-xs px-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 justify-center"
             >
-              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-              Atjaunot rēķinus
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Iztīrīt arhīvu
             </Button>
-          </div>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={regenerateAllInvoices}
+            disabled={bulkLoading}
+            className="col-span-3 sm:col-span-1 gap-1.5 text-[11px] sm:text-xs px-2 justify-center"
+            title="Pārģenerēt visus rēķinus ar jaunāko veidni"
+          >
+            {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Atjaunot rēķinus
+          </Button>
         </div>
         <span className="block text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
       </div>
