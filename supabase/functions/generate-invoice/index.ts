@@ -72,7 +72,10 @@ Deno.serve(async (req) => {
     const { data: order, error: orderErr } = await service.from("orders").select("*").eq("id", body.order_id).maybeSingle();
     if (orderErr || !order) throw new Error("Order not found");
 
-    const { data: items } = await service.from("order_items").select("*").eq("order_id", body.order_id);
+    const { data: items } = await service
+      .from("order_items")
+      .select("*, products:product_id(slug)")
+      .eq("order_id", body.order_id);
     const { data: settings } = await service.from("site_settings").select("*").limit(1).maybeSingle();
     if (!settings) throw new Error("Site settings not configured");
 
@@ -111,13 +114,22 @@ Deno.serve(async (req) => {
       stamp_url: settings.stamp_url,
     };
 
-    const invoiceItems = (items ?? []).map((it) => ({
-      name: it.product_name,
-      quantity: Number(it.quantity),
-      unit_price_gross: Number(it.unit_price),
-      size: it.size,
-      color: it.color,
-    }));
+    const invoiceItems = (items ?? []).map((it: any) => {
+      const slug = it.products?.slug ?? null;
+      // Build a SKU like "STTU169_BLK_XL" — slug + color initials + size
+      const colorCode = it.color ? String(it.color).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3) : "";
+      const sizeCode = it.size ? String(it.size).toUpperCase() : "";
+      const skuParts = [slug, colorCode, sizeCode].filter(Boolean);
+      return {
+        name: it.product_name,
+        quantity: Number(it.quantity),
+        unit_price_gross: Number(it.unit_price),
+        size: it.size,
+        color: it.color,
+        sku: skuParts.length ? skuParts.join("_") : null,
+        unit: "gab",
+      };
+    });
 
     // Determine version + number
     const { data: existing } = await service
