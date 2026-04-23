@@ -76,17 +76,31 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     setDiagPreview(null);
     setDiagFatal(null);
     try {
-      const { data, error } = await supabase.functions.invoke("omniva-create-shipment", {
-        body: { order_id: order.id, debug: true },
+      // Use raw fetch so we can read the JSON body even on non-2xx responses
+      // (supabase.functions.invoke discards the body on errors).
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/omniva-create-shipment`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "",
+        },
+        body: JSON.stringify({ order_id: order.id, debug: true }),
       });
-      if (error) {
-        // Functions invoke wraps non-2xx, try to read body from error context
-        setDiagFatal(error.message || String(error));
+      let payload: any = {};
+      try {
+        payload = await resp.json();
+      } catch {
+        setDiagFatal(`HTTP ${resp.status} — atbilde nav JSON formātā`);
       }
-      const payload: any = data ?? {};
       if (Array.isArray(payload.steps)) setDiagSteps(payload.steps);
       if (payload.preview) setDiagPreview(payload.preview);
       if (payload.error) setDiagFatal(payload.error);
+      if (!resp.ok && !payload.error) {
+        setDiagFatal(`HTTP ${resp.status}`);
+      }
     } catch (e: any) {
       setDiagFatal(e?.message ?? String(e));
     } finally {
