@@ -173,14 +173,19 @@ async function loadFont(url: string): Promise<ArrayBuffer> {
 }
 
 async function getNotoFonts(): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
+  // Use the official Noto Sans full TTF (not the fontsource subset).
+  // The fontsource "latin-ext" subset, when embedded by pdf-lib, produces a
+  // CMap that Adobe Acrobat can't decode — every glyph appears as a tofu box.
+  // The full Noto Sans TTF embeds correctly and renders Latvian diacritics
+  // (ā, č, ē, ģ, ī, ķ, ļ, ņ, š, ū, ž) in all PDF viewers.
   if (!_cachedRegular) {
     _cachedRegular = await loadFont(
-      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-400-normal.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/hinted/ttf/NotoSans-Regular.ttf",
     );
   }
   if (!_cachedBold) {
     _cachedBold = await loadFont(
-      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-700-normal.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/hinted/ttf/NotoSans-Bold.ttf",
     );
   }
   return { regular: _cachedRegular!, bold: _cachedBold! };
