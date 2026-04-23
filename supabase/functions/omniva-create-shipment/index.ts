@@ -17,8 +17,16 @@ interface OmnivaLocationLite {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const steps: Array<{ step: string; status: "ok" | "error" | "info"; detail?: string }> = [];
+  const log = (step: string, status: "ok" | "error" | "info", detail?: string) => {
+    steps.push({ step, status, detail });
+    console.log(`[${status.toUpperCase()}] ${step}${detail ? ": " + detail : ""}`);
+  };
+
   try {
-    const { order_id } = await req.json();
+    const body = await req.json();
+    const { order_id, debug } = body;
+    log("Parse request", "ok", `order_id=${order_id}, debug=${!!debug}`);
     if (!order_id) {
       return new Response(JSON.stringify({ error: "order_id required" }), {
         status: 400,
@@ -59,6 +67,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    log("Admin auth verified", "ok", userData.user.email ?? undefined);
 
     // Load order
     const { data: order, error: orderErr } = await supabase
@@ -67,21 +76,24 @@ Deno.serve(async (req) => {
       .eq("id", order_id)
       .single();
     if (orderErr || !order) throw new Error("Order not found");
+    log("Order loaded", "ok", `#${order.order_number} → ${order.shipping_name}`);
     if (order.omniva_barcode) {
       return new Response(
-        JSON.stringify({ error: "Shipment already created", barcode: order.omniva_barcode }),
+        JSON.stringify({ error: "Shipment already created", barcode: order.omniva_barcode, steps }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
     const customerCode = Deno.env.get("OMNIVA_CUSTOMER_CODE");
     if (!customerCode) throw new Error("OMNIVA_CUSTOMER_CODE not configured");
+    log("Omniva credentials present", "ok", `customerCode=${customerCode}`);
 
     const recipientName = order.shipping_name || "Recipient";
     const recipientPhone = order.shipping_phone || "";
     const recipientEmail = order.guest_email || "";
     const isPickup = !!order.omniva_pickup_point;
     const serviceCode = isPickup ? OMNIVA_SERVICE_PA : OMNIVA_SERVICE_COURIER;
+    log("Service resolved", "ok", `${isPickup ? "Parcel machine" : "Courier"} (${serviceCode})`);
 
     // For pickup: Omniva needs the parcel-machine ZIP as offloadPostcode.
     // We resolve it from the public Omniva locations feed by matching the saved name.
@@ -97,9 +109,14 @@ Deno.serve(async (req) => {
             (l) => l.A0_NAME === "LV" && l.TYPE === "0" && l.NAME.trim().toLowerCase() === target,
           );
           if (match) offloadPostcode = match.ZIP;
+          log("Resolved pickup ZIP from feed", match ? "ok" : "error",
+            match ? `${order.omniva_pickup_point} → ${match.ZIP}` : `No match for "${order.omniva_pickup_point}"`);
         } catch (e) {
           console.error("Failed to resolve pickup ZIP:", (e as Error).message);
+          log("Locations feed fetch failed", "error", (e as Error).message);
         }
+      } else {
+        log("Pickup ZIP from order", "ok", offloadPostcode);
       }
       if (!offloadPostcode) {
         throw new Error(
@@ -110,6 +127,30 @@ Deno.serve(async (req) => {
 
     // Reference = order number (visible on label)
     const reference = String(order.order_number || order.id.slice(0, 8));
+    log("Reference", "ok", reference);
+
+    // DEBUG/TEST MODE: stop before calling Omniva, show what would be sent
+    if (debug) {
+      log("DEBUG mode — skipping Omniva API call", "info",
+        `Would POST to ${OMNIVA_API_BASE} with service=${serviceCode}, offloadPostcode=${offloadPostcode || "(courier)"}`);
+      return new Response(JSON.stringify({
+        success: true,
+        debug: true,
+        steps,
+        preview: {
+          service: serviceCode,
+          isPickup,
+          recipient: { name: recipientName, phone: recipientPhone, email: recipientEmail },
+          address: {
+            offloadPostcode,
+            postcode: order.shipping_zip,
+            city: order.shipping_city,
+            street: order.shipping_address,
+          },
+          reference,
+        },
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     // Build Omniva XML SOAP request
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -165,6 +206,8 @@ Deno.serve(async (req) => {
     const respText = await omnivaResp.text();
     console.log("Omniva response status:", omnivaResp.status);
     console.log("Omniva response body:", respText.slice(0, 2000));
+    log("Omniva API responded", omnivaResp.ok ? "ok" : "error",
+      `HTTP ${omnivaResp.status} — ${respText.slice(0, 300)}`);
 
     if (!omnivaResp.ok) {
       throw new Error(`Omniva API error ${omnivaResp.status}: ${respText.slice(0, 500)}`);
@@ -176,6 +219,7 @@ Deno.serve(async (req) => {
     if (!barcode) {
       throw new Error("No barcode in Omniva response: " + respText.slice(0, 500));
     }
+    log("Barcode extracted", "ok", barcode);
 
     // Update order
     const { error: updErr } = await supabase
@@ -187,13 +231,15 @@ Deno.serve(async (req) => {
       })
       .eq("id", order_id);
     if (updErr) throw updErr;
+    log("Order updated with barcode", "ok");
 
-    return new Response(JSON.stringify({ success: true, barcode }), {
+    return new Response(JSON.stringify({ success: true, barcode, steps }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
     console.error("omniva-create-shipment error:", err.message);
-    return new Response(JSON.stringify({ error: err.message }), {
+    log("Fatal error", "error", err.message);
+    return new Response(JSON.stringify({ error: err.message, steps }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
