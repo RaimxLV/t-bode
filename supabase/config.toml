@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.send-contact-reply]
 verify_jwt = false
+
+[functions.omniva-bulk-labels]
+verify_jwt = false
