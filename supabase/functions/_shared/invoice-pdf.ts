@@ -491,6 +491,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   for (const it of data.items) {
     const lineGross = round2(it.unit_price_gross * it.quantity);
     const lineNet = round2(lineGross / (1 + rate / 100));
+    const unitNet = round2(it.unit_price_gross / (1 + rate / 100));
     netSum += lineNet;
     totalQty += Number(it.quantity);
 
@@ -512,8 +513,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     }
     drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(it.unit_price_gross, 2), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(lineGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(unitNet, 2), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(lineNet, 2), xEnd - 4, y - 4, font, 9, colorText);
     y -= rowHeight;
 
     if (y < 240) break; // safety; one-page layout per requirement
