@@ -532,8 +532,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     }
     drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(unitNet, 2), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(lineNet, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, `${fmtNum(unitNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, `${fmtNum(lineNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
     y -= rowHeight;
 
     if (y < 240) break; // safety; one-page layout per requirement
@@ -549,15 +549,15 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     drawText(page, "Piegāde", xName + 4, y - 4, font, 9, colorText);
     drawRight(page, "1", xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipNet, 2), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipNet, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, `${fmtNum(shipNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, `${fmtNum(shipNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
     y -= rowH;
   }
   if (data.discount_gross && data.discount_gross > 0) {
     const d = round2(data.discount_gross);
     drawText(page, "ATL", xKods + 4, y - 4, font, 9, colorAccent);
     drawText(page, "Atlaide", xName + 4, y - 4, font, 9, colorAccent);
-    drawRight(page, `-${fmtNum(d, 2)}`, xEnd - 4, y - 4, font, 9, colorAccent);
+    drawRight(page, `-${fmtNum(d, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorAccent);
     y -= rowH;
   }
 
@@ -574,17 +574,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
 
   // KOPĀ (net subtotal)
   drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
-  drawRight(page, fmtNum(totals.net, 2), totalsValueRight, y, bold, 9, colorText);
+  drawRight(page, `${fmtNum(totals.net, 2)} EUR`, totalsValueRight, y, bold, 9, colorText);
   y -= 16;
 
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
-  drawRight(page, fmtNum(totals.vat, 2), totalsValueRight, y, font, 9, colorText);
+  drawRight(page, `${fmtNum(totals.vat, 2)} EUR`, totalsValueRight, y, font, 9, colorText);
   y -= 32;
 
   // Pavisam apmaksai (bez izceltā rāmja)
-  drawRight(page, "Pavisam apmaksai (EUR):", totalsLabelRight, y, bold, 10, colorText);
-  drawRight(page, fmtNum(totals.gross, 2), totalsValueRight, y, bold, 12, colorAccent);
+  drawRight(page, "Pavisam apmaksai:", totalsLabelRight, y, bold, 10, colorText);
+  drawRight(page, `${fmtNum(totals.gross, 2)} EUR`, totalsValueRight, y, bold, 12, colorAccent);
   y -= 24;
 
   // ============================================================
