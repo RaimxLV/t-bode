@@ -259,6 +259,24 @@ function paymentMethodLv(method?: string | null): string {
   return method || "Pārskaitījums";
 }
 
+// ISO 3166-1 alpha-2 → Latvian country name (covers most EU + common origins).
+const LV_COUNTRY_NAMES: Record<string, string> = {
+  LV: "Latvija", LT: "Lietuva", EE: "Igaunija", PL: "Polija", DE: "Vācija",
+  GB: "Lielbritānija", IE: "Īrija", FR: "Francija", ES: "Spānija", IT: "Itālija",
+  NL: "Nīderlande", BE: "Beļģija", LU: "Luksemburga", DK: "Dānija", SE: "Zviedrija",
+  FI: "Somija", NO: "Norvēģija", IS: "Islande", AT: "Austrija", CH: "Šveice",
+  CZ: "Čehija", SK: "Slovākija", HU: "Ungārija", RO: "Rumānija", BG: "Bulgārija",
+  HR: "Horvātija", SI: "Slovēnija", GR: "Grieķija", PT: "Portugāle", MT: "Malta",
+  CY: "Kipra", US: "Amerikas Savienotās Valstis", CA: "Kanāda", AU: "Austrālija",
+  UA: "Ukraina", BY: "Baltkrievija", RU: "Krievija", MD: "Moldova", GE: "Gruzija",
+  TR: "Turcija", IL: "Izraēla", JP: "Japāna", CN: "Ķīna", IN: "Indija", BR: "Brazīlija",
+};
+function countryCodeToLv(code: string): string {
+  const c = code.trim().toUpperCase();
+  if (!c) return "—";
+  return LV_COUNTRY_NAMES[c] ? `${LV_COUNTRY_NAMES[c]} (${c})` : c;
+}
+
 export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Uint8Array; totals: InvoiceTotals }> {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
@@ -422,9 +440,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
-  if (buyer.ip_address || buyer.ip_country) {
-    const ipText = [buyer.ip_address ?? "—", buyer.ip_country ?? null].filter(Boolean).join("  ·  ");
-    buyerRows.push(["IP / Valsts", ipText, false]);
+  if (buyer.ip_country) {
+    buyerRows.push(["Valsts", countryCodeToLv(buyer.ip_country), false]);
   }
   drawBoxedSection("Preču saņēmējs", buyerRows);
 
