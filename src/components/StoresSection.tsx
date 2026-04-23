@@ -9,7 +9,7 @@ import "leaflet/dist/leaflet.css";
 const OFFICE_LAT = 56.961710;
 const OFFICE_LNG = 24.166054;
 
-const LeafletMap = () => {
+const LeafletMap = ({ infoText }: { infoText: string }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
@@ -58,7 +58,7 @@ const LeafletMap = () => {
             <div style="width:10px;height:10px;border-radius:50%;background:#DC2626;flex-shrink:0;"></div>
             <strong style="font-size:14px;letter-spacing:0.5px;">T-BODE</strong>
           </div>
-          <div style="font-size:12px;color:#bbb;margin-left:18px;">Braslas Biznesa Centrs, ieeja D, 2. stāvs</div>
+          <div style="font-size:12px;color:#bbb;margin-left:18px;">${infoText}</div>
         </div>`;
         return div;
       },
@@ -71,7 +71,7 @@ const LeafletMap = () => {
       map.remove();
       mapInstanceRef.current = null;
     };
-  }, []);
+  }, [infoText]);
 
   return <div ref={mapRef} className="w-full h-full" style={{ zIndex: 0 }} />;
 };
@@ -135,7 +135,7 @@ export const StoresSection = () => {
 
           {/* Light Leaflet map */}
           <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border relative" style={{ zIndex: 0 }}>
-            <LeafletMap />
+            <LeafletMap infoText={t("stores.mapInfo", "Braslas Biznesa Centrs, Entrance D, 2nd floor")} />
           </div>
 
           {/* Pickup info */}

@@ -4,7 +4,11 @@
     "ourCollection": "Mūsu kolekcija",
     "ourStory": "Mūsu stāsts",
     "findStore": "Mūsu veikali",
-    "faq": "BUJ"
+    "faq": "BUJ",
+    "main": "Galvenā navigācija",
+    "closeMenu": "Aizvērt izvēlni",
+    "openMenu": "Atvērt izvēlni",
+    "skipToContent": "Pāriet uz saturu"
   },
   "hero": {
     "line1": "Dizains.",
@@ -24,16 +28,41 @@
     "title": "T-Bode ir vieta, kur T-krekls kļūst par stāstu.",
     "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T-kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
     "features": {
-      "quality": { "title": "Augstas kvalitātes DTF druka", "desc": "Spilgti, izturīgi un kvalitatīvi apdruki, izmantojot DTF (Direct-to-Film) tehnoloģiju." },
-      "tool": { "title": "Ērts dizaina rīks", "desc": "Viegli izveido savus unikālos dizainus ar mūsu intuitīvo iebūvēto redaktoru." },
-      "production": { "title": "Ātra ražošana", "desc": "Ar lielu noliktavu uz vietas mēs garantējam ātru ražošanu un pasūtījumu apstrādi." },
-      "delivery": { "title": "Ērta piegāde", "desc": "Saņem savu pasūtījumu jebkurā Omniva pakomātā." }
+      "quality": {
+        "title": "Augstas kvalitātes DTF druka",
+        "desc": "Spilgti, izturīgi un kvalitatīvi apdruki, izmantojot DTF (Direct-to-Film) tehnoloģiju."
+      },
+      "tool": {
+        "title": "Ērts dizaina rīks",
+        "desc": "Viegli izveido savus unikālos dizainus ar mūsu intuitīvo iebūvēto redaktoru."
+      },
+      "production": {
+        "title": "Ātra ražošana",
+        "desc": "Ar lielu noliktavu uz vietas mēs garantējam ātru ražošanu un pasūtījumu apstrādi."
+      },
+      "delivery": {
+        "title": "Ērta piegāde",
+        "desc": "Saņem savu pasūtījumu jebkurā Omniva pakomātā."
+      }
     },
     "steps": {
-      "s1": { "title": "Izvēlies produktu", "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga." },
-      "s2": { "title": "Personalizē to", "desc": "Pielāgo savu produktu, izmantojot mūsu iebūvēto dizaina rīku." },
-      "s3": { "title": "Noformē pasūtījumu", "desc": "Pabeidz pasūtījumu un samaksā droši tiešsaistē." },
-      "s4": { "title": "Saņem pasūtījumu", "desc": "Saņem savu preci jebkurā Omniva pakomātā 1-2 darba dienu laikā." }
+      "s1": {
+        "title": "Izvēlies produktu",
+        "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga."
+      },
+      "s2": {
+        "title": "Personalizē to",
+        "desc": "Pielāgo savu produktu, izmantojot mūsu iebūvēto dizaina rīku."
+      },
+      "s3": {
+        "title": "Noformē pasūtījumu",
+        "desc": "Pabeidz pasūtījumu un samaksā droši tiešsaistē."
+      },
+      "s4": {
+        "title": "Saņem pasūtījumu",
+        "desc": "Saņem savu preci jebkurā Omniva pakomātā 1-2 darba dienu laikā."
+      },
+      "step": "SOLIS"
     },
     "howItWorks": "KĀ TAS DARBOJAS",
     "howItWorksDesc": "Četri vienkārši soļi līdz tavam unikālajam produktam"
@@ -43,7 +72,10 @@
     "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
     "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
     "officeTitle": "T-Bode Birojs / Saņemšanas punkts",
-    "officeDesc": "Saņem savus pasūtījumus klātienē mūsu birojā Rīgā, Braslas ielā 29, Ieeja D."
+    "officeDesc": "Saņem savus pasūtījumus klātienē mūsu birojā Rīgā, Braslas ielā 29, Ieeja D.",
+    "openWaze": "ATVĒRT WAZE",
+    "openGoogleMaps": "ATVĒRT GOOGLE MAPS",
+    "mapInfo": "Braslas Biznesa Centrs, ieeja D, 2. stāvs"
   },
   "contact": {
     "title": "Vēlies apģērbt savu komandu vai plāno pasākumu?",
@@ -108,14 +140,18 @@
     "openDesigner": "Atvērt dizaineri (Zakeke)",
     "zakekeNote": "Zakeke integrācija tiks savienota šeit.",
     "notFound": "Produkts nav atrasts",
-    "backLink": "← Atpakaļ uz produktiem"
+    "backLink": "← Atpakaļ uz produktiem",
+    "relatedProducts": "Līdzīgie produkti",
+    "zoomImage": "Palielināt attēlu"
   },
   "cart": {
     "title": "Grozs",
     "empty": "Jūsu grozs ir tukšs",
     "continueShopping": "Turpināt iepirkties",
     "total": "Kopā",
-    "checkout": "Noformēt pasūtījumu"
+    "checkout": "Noformēt pasūtījumu",
+    "customized": "Personalizēts",
+    "openCart": "Atvērt grozu"
   },
   "checkout": {
     "title": "Pasūtījuma noformēšana",
@@ -160,7 +196,41 @@
     "loginRequired": "Jums jāpieslēdzas, lai noformētu pasūtījumu",
     "loginError": "Lūdzu, pieslēdzies, lai noformētu pasūtījumu",
     "success": "Pasūtījums veiksmīgi noformēts!",
-    "error": "Kļūda noformējot pasūtījumu"
+    "error": "Kļūda noformējot pasūtījumu",
+    "montonioPickupLoadError": "Neizdevās ielādēt Montonio pakomātus",
+    "montonioPickupSearch": "Meklēt pakomātu (pilsēta vai adrese)",
+    "montonioPickupLoading": "Ielādē pakomātus...",
+    "montonioPickupEmpty": "Nav rezultātu",
+    "promoInvalid": "Nederīgs vai izsmelts atlaižu kods",
+    "promoApplied": "Atlaide piemērota!",
+    "authRequired": "Lūdzu, ielogojies vēlreiz, lai pabeigtu pirkumu",
+    "chooseHowToContinue": "Izvēlies, kā turpināt",
+    "loginOption": "Ielogoties",
+    "loginBenefits": "Saglabā pasūtījumu vēsturi un ātrāku checkout nākotnē",
+    "guestOption": "Turpināt kā viesis",
+    "guestBenefits": "Bez konta — tikai ievadi e-pastu pasūtījuma apstiprinājumam",
+    "guestBadge": "Viesa pirkums",
+    "email": "E-pasts",
+    "buyAsCompany": "Pērku kā uzņēmums",
+    "invoiceWillBeIssued": "Saņemsiet rēķinu uz uzņēmuma datiem",
+    "companyName": "Uzņēmuma nosaukums",
+    "companyRegNumber": "Reģistrācijas numurs",
+    "companyVatNumber": "PVN numurs",
+    "companyAddress": "Juridiskā adrese",
+    "paymentMethod": "Apmaksas veids",
+    "payCard": "Maksāt ar karti",
+    "payCardDesc": "Tūlītēja apmaksa caur Stripe (Visa, Mastercard)",
+    "payBankLink": "Bankas saite",
+    "payBankLinkDesc": "Tūlītēja apmaksa caur Swedbank, SEB, Citadele, Luminor (Montonio)",
+    "payBank": "Bankas pārskaitījums (rēķins)",
+    "payBankDesc": "Saņemsiet rēķinu uz e-pastu. Pasūtījums tiks apstrādāts pēc maksājuma saņemšanas (1-3 d.d.)",
+    "discount": "Atlaide",
+    "promoLabel": "Atlaižu kods",
+    "promoPlaceholder": "Ievadi kodu",
+    "promoApply": "Pielietot",
+    "freeShipping": "Bezmaksas piegāde",
+    "submitBank": "Veikt pasūtījumu un saņemt rēķinu",
+    "submitBankLink": "Maksāt caur banku"
   },
   "auth": {
     "login": "Pieslēgties",
@@ -178,7 +248,21 @@
     "loginSuccess": "Veiksmīgi pieslēdzies!",
     "registerSuccess": "Pārbaudi savu e-pastu, lai apstiprinātu kontu!",
     "authError": "Kļūda autentifikācijā",
-    "googleError": "Google pieslēgšanās neizdevās"
+    "googleError": "Google pieslēgšanās neizdevās",
+    "resetEmailSent": "Ja konts eksistē, e-pasts ar paroles atjaunošanas linku ir nosūtīts. Pārbaudi arī spam mapi.",
+    "forgotPasswordTitle": "Aizmirsi paroli?",
+    "forgotPasswordSubtitle": "Ievadi savu e-pastu un mēs nosūtīsim linku paroles atjaunošanai.",
+    "sendResetLink": "Nosūtīt linku",
+    "signOut": "Izrakstīties",
+    "forgotPassword": "Aizmirsi paroli?",
+    "passwordUpdated": "Parole veiksmīgi nomainīta!",
+    "resetPasswordTitle": "Jauna parole",
+    "resetPasswordSubtitle": "Ievadi savu jauno paroli",
+    "invalidResetLink": "Nederīgs vai novecojis links. Lūdzu pieprasi jaunu paroles atjaunošanas e-pastu.",
+    "backToLogin": "Atpakaļ uz pieslēgšanos",
+    "newPassword": "Jaunā parole",
+    "confirmPassword": "Apstiprini paroli",
+    "updatePassword": "Atjaunot paroli"
   },
   "admin": {
     "panel": "DARBINIEKA PANELIS",
@@ -276,7 +360,13 @@
     "omnivaDownloadLabel": "Lejupielādēt pavadzīmi (PDF)",
     "omnivaShipmentCreated": "Sūtījums izveidots",
     "omnivaShipmentError": "Neizdevās izveidot sūtījumu",
-    "omnivaLabelError": "Neizdevās lejupielādēt pavadzīmi"
+    "omnivaLabelError": "Neizdevās lejupielādēt pavadzīmi",
+    "edit": "Rediģēt",
+    "delete": "Dzēst",
+    "updateError": "Neizdevās atjaunināt",
+    "markedInStock": "Atzīmēts kā pieejams",
+    "markedOutOfStock": "Atzīmēts kā nav noliktavā",
+    "searchProducts": "Meklēt produktus..."
   },
   "footer": {
     "brandDesc": "SIA Ervitex — personalizētu apģērbu un aksesuāru ražotājs Latvijā. Izveido savu unikālo dizainu vai izvēlies no mūsu kolekcijas.",
@@ -311,7 +401,26 @@
     "backToHome": "Uz sākumu",
     "continueShopping": "Turpināt iepirkties",
     "viewInProfile": "Skatīt manā profilā",
-    "createAccountHint": "Vēlies sekot līdzi pasūtījumam? Izveido kontu ar to pašu e-pastu."
+    "createAccountHint": "Vēlies sekot līdzi pasūtījumam? Izveido kontu ar to pašu e-pastu.",
+    "copied": "nokopēts",
+    "bankTitle": "Pasūtījums saņemts — gaidām apmaksu",
+    "verifyingTitle": "Pārbaudām maksājumu...",
+    "failedTitle": "Maksājums nav apstiprināts",
+    "pendingTitle": "Gaidām maksājuma apstiprinājumu",
+    "bankDesc": "Rēķins ar bankas rekvizītiem nosūtīts uz Jūsu e-pastu. Pasūtījumu apstrādāsim, tiklīdz nauda ienāks mūsu kontā (parasti 1-3 darba dienu laikā).",
+    "verifyingDesc": "Lūdzu, uzgaidiet — apstiprinām maksājumu ar banku.",
+    "failedDesc": "Maksājums tika atcelts vai neizdevās. Lūdzu, mēģiniet vēlreiz vai sazinieties ar mums.",
+    "pendingDesc": "Maksājums vēl nav apstiprināts. Tas var aizņemt dažas minūtes. Mēs nosūtīsim e-pastu, tiklīdz tas būs saņemts.",
+    "statusPaid": "Apmaksāts",
+    "orderSummary": "Pasūtījuma kopsavilkums",
+    "total": "Kopā",
+    "shippingMethod": "Piegāde",
+    "bankDetails": "Bankas rekvizīti",
+    "beneficiary": "Saņēmējs",
+    "bank": "Banka",
+    "reference": "Maksājuma mērķis",
+    "amount": "Summa",
+    "downloadInvoice": "Lejupielādēt rēķinu (PDF)"
   },
   "profile": {
     "back": "Atpakaļ",
@@ -374,5 +483,12 @@
     "androidManual": "Atver pārlūka izvēlni (⋮) un izvēlies “Pievienot sākuma ekrānam” vai “Instalēt lietotni”.",
     "desktopTitle": "Kā instalēt datorā",
     "desktopManual": "Chrome/Edge: noklikšķini uz instalēšanas ikonas adreses joslas labajā pusē, vai izvēlnē izvēlies “Instalēt T-Bode”."
+  },
+  "wishlist": {
+    "loginRequired": "Lai saglabātu, ielogojies",
+    "added": "Pievienots vēlmju sarakstam",
+    "removed": "Noņemts no vēlmju saraksta",
+    "remove": "Noņemt no vēlmju saraksta",
+    "add": "Pievienot vēlmju sarakstam"
   }
 }
