@@ -269,7 +269,7 @@ const Admin = () => {
 
         <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setAdminCategoryFilter("all"); }}>
           {/* Fixed bottom nav on mobile, top tabs on desktop */}
-          <TabsList className="hidden sm:flex mb-6 w-full max-w-full overflow-x-auto justify-start">
+          <TabsList className="hidden sm:flex flex-wrap h-auto mb-6 w-full max-w-full justify-start gap-1 p-1">
             <TabsTrigger value="design" className="gap-1.5 text-sm"><Brush className="w-4 h-4" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
