@@ -173,19 +173,19 @@ async function loadFont(url: string): Promise<ArrayBuffer> {
 }
 
 async function getNotoFonts(): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
-  // Use DejaVu Sans — a robust Unicode TTF that pdf-lib embeds reliably
-  // and that all PDF readers (Adobe, Chrome, macOS Preview) render correctly.
-  // The fontsource Noto Sans "latin-ext" subset, when embedded via pdf-lib + subset,
-  // produces a CMap that some readers (incl. Adobe Acrobat) fail to decode,
-  // causing every glyph to appear as a tofu box.
+  // Use the official Noto Sans full TTF (not the fontsource subset).
+  // The fontsource "latin-ext" subset, when embedded by pdf-lib, produces a
+  // CMap that Adobe Acrobat can't decode — every glyph appears as a tofu box.
+  // The full Noto Sans TTF embeds correctly and renders Latvian diacritics
+  // (ā, č, ē, ģ, ī, ķ, ļ, ņ, š, ū, ž) in all PDF viewers.
   if (!_cachedRegular) {
     _cachedRegular = await loadFont(
-      "https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@version_2_37/ttf/DejaVuSans.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/hinted/ttf/NotoSans-Regular.ttf",
     );
   }
   if (!_cachedBold) {
     _cachedBold = await loadFont(
-      "https://cdn.jsdelivr.net/gh/dejavu-fonts/dejavu-fonts@version_2_37/ttf/DejaVuSans-Bold.ttf",
+      "https://cdn.jsdelivr.net/gh/notofonts/notofonts.github.io/fonts/NotoSans/hinted/ttf/NotoSans-Bold.ttf",
     );
   }
   return { regular: _cachedRegular!, bold: _cachedBold! };
