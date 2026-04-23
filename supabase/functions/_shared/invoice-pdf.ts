@@ -448,7 +448,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // Give "Kods" a real fixed slot and let "Nosaukums" take whatever is left.
   const tableX = marginX;
   const tableW = contentW;
-  const cKods = 80;
+  const cKods = 115;
   const cQty = 48;
   const cUnit = 42;
   const cPrice = 62;
