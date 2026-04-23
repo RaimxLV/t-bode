@@ -268,7 +268,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     const { error } = await supabase
       .from("orders")
       .update({
-        status: "confirmed" as any,
+        status: "processing" as any,
         manually_paid_at: new Date().toISOString(),
       })
       .eq("id", orderId);
