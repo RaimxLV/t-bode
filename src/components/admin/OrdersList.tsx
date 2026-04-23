@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -285,6 +285,69 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     else { toast.success("Pasūtījums dzēsts"); setExpandedOrder(null); onRefresh(); }
   };
 
+  // Permanently delete every archived order (cancelled/delivered).
+  // Cascading FKs remove order_items, invoices, and promo_code_redemptions.
+  const clearArchive = async () => {
+    const ids = orders
+      .filter((o) => ARCHIVED_STATUSES.includes(o.status))
+      .map((o) => o.id);
+    if (ids.length === 0) {
+      toast.info("Arhīvs jau ir tukšs");
+      return;
+    }
+    if (!confirm(`Vai tiešām dzēst VISUS ${ids.length} arhivētos pasūtījumus? Šī darbība ir neatgriezeniska un izdzēs arī ar tiem saistītos rēķinus un preces.`)) return;
+    setBulkLoading(true);
+    try {
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} arhivētie pasūtījumi`);
+      setExpandedOrder(null);
+      setSelectedIds(new Set());
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda tīrot arhīvu: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // Re-render every existing invoice with the latest PDF template so old
+  // documents look identical to newly issued ones.
+  const regenerateAllInvoices = async () => {
+    const { data: invoiceRows, error: listErr } = await supabase
+      .from("invoices")
+      .select("order_id")
+      .eq("is_current", true);
+    if (listErr) {
+      toast.error("Neizdevās ielādēt rēķinu sarakstu: " + listErr.message);
+      return;
+    }
+    const orderIds = Array.from(new Set((invoiceRows ?? []).map((r: any) => r.order_id)));
+    if (orderIds.length === 0) {
+      toast.info("Nav rēķinu, ko pārģenerēt");
+      return;
+    }
+    if (!confirm(`Pārģenerēt ${orderIds.length} rēķinus ar jaunāko veidni? Vecās versijas tiks saglabātas vēsturē.`)) return;
+    setBulkLoading(true);
+    let ok = 0;
+    let fail = 0;
+    for (const oid of orderIds) {
+      try {
+        const { error } = await supabase.functions.invoke("generate-invoice", {
+          body: { order_id: oid, force_new_version: true },
+        });
+        if (error) throw error;
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setBulkLoading(false);
+    if (fail === 0) toast.success(`Pārģenerēti ${ok} rēķini`);
+    else toast.warning(`Pārģenerēti ${ok}, neizdevās ${fail}`);
+    onRefresh();
+  };
+
   const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const currentOrders = showArchive ? archivedOrders : activeOrders;
@@ -334,6 +397,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           </Button>
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1.5 text-xs">
             <Archive className="w-3.5 h-3.5" /> Arhīvs <Badge variant="secondary" className="ml-1 text-[10px] px-1.5">{archivedOrders.length}</Badge>
+          </Button>
+          {showArchive && archivedOrders.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearArchive}
+              disabled={bulkLoading}
+              className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Iztīrīt arhīvu
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={regenerateAllInvoices}
+            disabled={bulkLoading}
+            className="gap-1.5 text-xs"
+            title="Pārģenerēt visus rēķinus ar jaunāko veidni"
+          >
+            {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+            Atjaunot rēķinus
           </Button>
         </div>
         <span className="text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
