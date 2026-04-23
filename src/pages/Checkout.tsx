@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2, Store } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
@@ -21,7 +21,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 
-type ShippingMethod = "omniva" | "courier";
+type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
 type PaymentMethod = "card" | "bank_transfer" | "montonio";
 
@@ -109,7 +109,8 @@ const Checkout = () => {
 
   const appOriginUrl = new URL(import.meta.env.BASE_URL, window.location.origin).toString().replace(/\/$/, "");
 
-  const baseShippingCost = shippingMethod === "omniva" ? 2.99 : 4.99;
+  const baseShippingCost =
+    shippingMethod === "pickup" ? 0 : shippingMethod === "omniva" ? 2.99 : 4.99;
   const isFreeShipping = promo?.discount_type === "free_shipping";
   const shippingCost = isFreeShipping ? 0 : baseShippingCost;
   const productDiscount = promo && promo.discount_type !== "free_shipping" ? promo.discount_amount : 0;
@@ -169,9 +170,10 @@ const Checkout = () => {
     let schema: any = baseSchema;
     if (shippingMethod === "omniva") {
       schema = schema.merge(omnivaFields);
-    } else {
+    } else if (shippingMethod === "courier") {
       schema = schema.merge(courierFields);
     }
+    // pickup: no extra fields needed
 
     if (isBusiness) {
       schema = schema.merge(businessFields);
@@ -229,7 +231,9 @@ const Checkout = () => {
         omniva_pickup_point:
           shippingMethod === "omniva"
             ? selectedOmniva
-            : null,
+            : shippingMethod === "pickup"
+              ? "BIROJS: Braslas iela 29, Ieeja D, Rīga"
+              : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
         payment_method: paymentMethod,
@@ -494,7 +498,7 @@ const Checkout = () => {
               {/* Shipping */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.shippingMethod")}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button onClick={() => { setShippingMethod("omniva"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "omniva" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <MapPin className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "omniva" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.omniva")}</p><p className="text-xs text-muted-foreground font-body">2,99 €</p></div>
@@ -502,6 +506,13 @@ const Checkout = () => {
                   <button onClick={() => { setShippingMethod("courier"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "courier" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
                     <Truck className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "courier" ? "hsl(var(--primary))" : undefined }} />
                     <div><p className="font-body font-semibold text-sm">{t("checkout.courier")}</p><p className="text-xs text-muted-foreground font-body">4,99 €</p></div>
+                  </button>
+                  <button onClick={() => { setShippingMethod("pickup"); setErrors({}); }} className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all text-left ${shippingMethod === "pickup" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}>
+                    <Store className="w-5 h-5 flex-shrink-0" style={{ color: shippingMethod === "pickup" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.pickupOffice", "Saņemt birojā")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.free", "Bezmaksas")}</p>
+                    </div>
                   </button>
                 </div>
 
@@ -537,6 +548,21 @@ const Checkout = () => {
                       <Label htmlFor="zip" className="font-body text-sm">{t("checkout.zip")}</Label>
                       <Input id="zip" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
                       <FieldError field="zip" />
+                    </div>
+                  </div>
+                )}
+
+                {shippingMethod === "pickup" && (
+                  <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                    <div className="flex items-start gap-3">
+                      <Store className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                      <div className="font-body text-sm">
+                        <p className="font-semibold mb-1">{t("checkout.pickupTitle", "Saņemšana birojā")}</p>
+                        <p className="text-muted-foreground">Braslas iela 29, Ieeja D, Rīga, LV-1084</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {t("checkout.pickupHint", "Pēc pasūtījuma saņemšanas sazināsimies, lai vienotos par ērtu saņemšanas laiku.")}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 )}
