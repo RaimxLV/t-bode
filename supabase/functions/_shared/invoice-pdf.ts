@@ -530,8 +530,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     drawText(page, "Piegāde", xName + 4, y - 4, font, 9, colorText);
     drawRight(page, "1", xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipGross, 3), xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(shipGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipNet, 2), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipNet, 2), xEnd - 4, y - 4, font, 9, colorText);
     y -= rowH;
   }
   if (data.discount_gross && data.discount_gross > 0) {
