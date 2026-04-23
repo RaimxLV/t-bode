@@ -13,6 +13,8 @@ export interface InvoiceBuyer {
   email?: string | null;
   phone?: string | null;
   shipping_address?: string | null;
+  ip_address?: string | null;
+  ip_country?: string | null;
 }
 
 export interface InvoiceSeller {
