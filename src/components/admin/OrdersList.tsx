@@ -507,16 +507,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="text-xs gap-1.5 h-8"
-                            onClick={() => createOmnivaShipment(order.id)}
-                            disabled={omnivaLoading[order.id] === "create"}
-                          >
-                            {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
-                            {t("admin.omnivaCreateShipment")}
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="text-xs gap-1.5 h-8"
+                              onClick={() => createOmnivaShipment(order.id)}
+                              disabled={omnivaLoading[order.id] === "create"}
+                            >
+                              {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
+                              {t("admin.omnivaCreateShipment")}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs gap-1.5 h-8"
+                              onClick={() => runOmnivaTest(order)}
+                              title="Test režīms — pārbauda datus bez reāla sūtījuma"
+                            >
+                              <FlaskConical className="w-3.5 h-3.5" />
+                              Test režīms
+                            </Button>
+                          </div>
                         )}
                       </div>
 
