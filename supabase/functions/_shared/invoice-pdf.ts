@@ -313,9 +313,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   } else {
     drawText(page, seller.company_name.toUpperCase(), marginX, y - 22, bold, 24, colorAccent);
   }
-  // Tagline below logo
-  const tagline = seller.tagline ?? "PROMO APĢĒRBS UN APDRUKAS SERVISS";
-  drawText(page, tagline, marginX, y - 50, font, 7, colorMuted);
+  // Tagline removed — logo already includes the slogan.
 
   // Right side: PAVADZĪME title + Uzskaites Nr + date + lpp
   drawRight(page, "PAVADZĪME", width - marginX, y, bold, 18, colorText);
