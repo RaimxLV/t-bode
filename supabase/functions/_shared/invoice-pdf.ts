@@ -480,20 +480,25 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     let desc = it.name;
     const extras = [it.size, it.color].filter(Boolean).join(", ");
     if (extras) desc += `, ${extras}`;
-    const nameLines = wrapText(desc, font, 9, cName - 8);
-    const linesUsed = Math.max(1, Math.min(nameLines.length, 2));
+    const nameLines = wrapText(desc, font, 9, cName - 8).slice(0, 3);
+    // Truncate SKU to fit the code column to avoid overflow into name column.
+    const skuLines = wrapText(it.sku ?? "", font, 8.5, cKods - 6).slice(0, 2);
+    const linesUsed = Math.max(nameLines.length, skuLines.length, 1);
+    const rowHeight = linesUsed * 11 + 4;
 
-    drawText(page, it.sku ?? "", xKods + 4, y - 4, font, 9, colorText);
-    for (let i = 0; i < linesUsed; i++) {
+    for (let i = 0; i < skuLines.length; i++) {
+      drawText(page, skuLines[i], xKods + 4, y - 4 - i * 11, font, 8.5, colorText);
+    }
+    for (let i = 0; i < nameLines.length; i++) {
       drawText(page, nameLines[i], xName + 4, y - 4 - i * 11, font, 9, colorText);
     }
     drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
     drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, fmtNum(it.unit_price_gross, 3), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(it.unit_price_gross, 2), xSum - 4, y - 4, font, 9, colorText);
     drawRight(page, fmtNum(lineGross, 2), xEnd - 4, y - 4, font, 9, colorText);
-    y -= rowH + (linesUsed - 1) * 11;
+    y -= rowHeight;
 
-    if (y < 230) break; // safety; one-page layout per requirement
+    if (y < 240) break; // safety; one-page layout per requirement
   }
 
   // Optional shipping line
