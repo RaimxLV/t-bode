@@ -1,6 +1,8 @@
-// Shared PDF invoice generator using pdf-lib (via npm:). Latvian-compliant tax invoice.
+// Shared PDF invoice generator (PAVADZĪME) using pdf-lib + fontkit + Noto Sans
+// for full Unicode (LV diacritic) support. Matches ERVITEX SIA paper layout.
 // Prices are VAT-inclusive (B2C standard). Net = gross / 1.21, VAT = gross - net.
-import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
+import { PDFDocument, PDFFont, PDFPage, rgb } from "npm:pdf-lib@1.17.1";
+import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
 
 export interface InvoiceBuyer {
   is_business: boolean;
@@ -31,6 +33,8 @@ export interface InvoiceItem {
   unit_price_gross: number; // VAT inclusive
   size?: string | null;
   color?: string | null;
+  sku?: string | null;     // Product code (e.g. STTU169_BLK_XL)
+  unit?: string | null;    // Measurement unit (gab, m, kpl, ...)
 }
 
 export interface InvoiceData {
@@ -69,25 +73,70 @@ export function computeTotals(data: InvoiceData): InvoiceTotals {
   return { net, vat, gross, vat_rate: rate };
 }
 
-// Latin-1 safe text (pdf-lib standard fonts don't support Unicode by default).
-// Fold common LV diacritics to ASCII, drop anything else outside Latin-1.
-function sanitize(s: string | null | undefined): string {
-  if (!s) return "";
-  const map: Record<string, string> = {
-    "ā": "a", "Ā": "A", "č": "c", "Č": "C", "ē": "e", "Ē": "E",
-    "ģ": "g", "Ģ": "G", "ī": "i", "Ī": "I", "ķ": "k", "Ķ": "K",
-    "ļ": "l", "Ļ": "L", "ņ": "n", "Ņ": "N", "š": "s", "Š": "S",
-    "ū": "u", "Ū": "U", "ž": "z", "Ž": "Z",
-    "€": "EUR",
-  };
-  let out = "";
-  for (const ch of s) {
-    if (map[ch]) { out += map[ch]; continue; }
-    const code = ch.charCodeAt(0);
-    if (code <= 0xff) out += ch;
-    else out += "?";
+// With Noto Sans (Unicode) we no longer need Latin-1 folding.
+// Just normalise nullish values.
+function s(v: string | number | null | undefined): string {
+  if (v === null || v === undefined) return "";
+  return String(v);
+}
+
+// === Latvian number-to-words (for "Summa vārdiem") ===
+const LV_ONES = [
+  "nulle", "viens", "divi", "trīs", "četri", "pieci",
+  "seši", "septiņi", "astoņi", "deviņi", "desmit",
+  "vienpadsmit", "divpadsmit", "trīspadsmit", "četrpadsmit", "piecpadsmit",
+  "sešpadsmit", "septiņpadsmit", "astoņpadsmit", "deviņpadsmit",
+];
+const LV_TENS = ["", "", "divdesmit", "trīsdesmit", "četrdesmit", "piecdesmit", "sešdesmit", "septiņdesmit", "astoņdesmit", "deviņdesmit"];
+
+function lvHundreds(n: number): string {
+  // 0..999
+  if (n === 0) return "";
+  const parts: string[] = [];
+  const h = Math.floor(n / 100);
+  const r = n % 100;
+  if (h > 0) {
+    parts.push(h === 1 ? "viens simts" : `${LV_ONES[h]} simti`);
   }
-  return out;
+  if (r > 0) {
+    if (r < 20) parts.push(LV_ONES[r]);
+    else {
+      const t = Math.floor(r / 10);
+      const o = r % 10;
+      if (o === 0) parts.push(LV_TENS[t]);
+      else parts.push(`${LV_TENS[t]} ${LV_ONES[o]}`);
+    }
+  }
+  return parts.join(" ");
+}
+
+function lvIntegerWords(n: number): string {
+  if (n === 0) return "nulle";
+  const parts: string[] = [];
+  const millions = Math.floor(n / 1_000_000);
+  const thousands = Math.floor((n % 1_000_000) / 1000);
+  const rest = n % 1000;
+  if (millions > 0) {
+    parts.push(`${lvHundreds(millions)} ${millions === 1 ? "miljons" : "miljoni"}`);
+  }
+  if (thousands > 0) {
+    parts.push(`${lvHundreds(thousands)} ${thousands === 1 ? "tūkstotis" : "tūkstoši"}`);
+  }
+  if (rest > 0) parts.push(lvHundreds(rest));
+  return parts.join(" ").replace(/\s+/g, " ").trim();
+}
+
+export function amountToLatvianWords(amount: number): string {
+  const rounded = Math.round(amount * 100);
+  const euros = Math.floor(rounded / 100);
+  const cents = rounded % 100;
+  const eurWord = euros === 1 ? "euro" : "euro";
+  const centWord = cents === 1 ? "cents" : "centi";
+  const eurosText = lvIntegerWords(euros);
+  const centsText = cents === 0 ? "nulle" : lvIntegerWords(cents);
+  // Capitalise first letter
+  const first = (eurosText.charAt(0).toUpperCase() + eurosText.slice(1));
+  return `${first} ${eurWord} un ${centsText} ${centWord}`;
 }
 
 async function tryEmbedImage(pdf: PDFDocument, url?: string | null) {
@@ -105,210 +154,443 @@ async function tryEmbedImage(pdf: PDFDocument, url?: string | null) {
   }
 }
 
+// Cache fonts across invocations within the same isolate.
+let _cachedRegular: ArrayBuffer | null = null;
+let _cachedBold: ArrayBuffer | null = null;
+
+async function loadFont(url: string): Promise<ArrayBuffer> {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Font fetch failed: ${url} ${r.status}`);
+  return await r.arrayBuffer();
+}
+
+async function getNotoFonts(): Promise<{ regular: ArrayBuffer; bold: ArrayBuffer }> {
+  if (!_cachedRegular) {
+    _cachedRegular = await loadFont(
+      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-400-normal.ttf",
+    );
+  }
+  if (!_cachedBold) {
+    _cachedBold = await loadFont(
+      "https://cdn.jsdelivr.net/fontsource/fonts/noto-sans@latest/latin-ext-700-normal.ttf",
+    );
+  }
+  return { regular: _cachedRegular!, bold: _cachedBold! };
+}
+
+// ===== Drawing helpers =====
+function fmtNum(n: number, decimals = 2): string {
+  return n.toFixed(decimals);
+}
+
+function drawText(
+  page: PDFPage,
+  text: string,
+  x: number,
+  y: number,
+  font: PDFFont,
+  size: number,
+  color = rgb(0, 0, 0),
+) {
+  page.drawText(s(text), { x, y, size, font, color });
+}
+
+function drawRight(
+  page: PDFPage,
+  text: string,
+  rightX: number,
+  y: number,
+  font: PDFFont,
+  size: number,
+  color = rgb(0, 0, 0),
+) {
+  const w = font.widthOfTextAtSize(s(text), size);
+  page.drawText(s(text), { x: rightX - w, y, size, font, color });
+}
+
+function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+  const words = s(text).split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (const w of words) {
+    const candidate = current ? `${current} ${w}` : w;
+    if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      // Long word fallback: hard break
+      if (font.widthOfTextAtSize(w, size) > maxWidth) {
+        let chunk = "";
+        for (const ch of w) {
+          if (font.widthOfTextAtSize(chunk + ch, size) > maxWidth) {
+            lines.push(chunk);
+            chunk = ch;
+          } else chunk += ch;
+        }
+        current = chunk;
+      } else current = w;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function paymentMethodLv(method?: string | null): string {
+  const m = (method ?? "").toLowerCase();
+  if (m.includes("bank") || m.includes("transfer") || m.includes("parsk")) return "Pārskaitījums";
+  if (m.includes("stripe") || m.includes("card")) return "Stripe (karte)";
+  if (m.includes("montonio")) return "Montonio";
+  return method || "Pārskaitījums";
+}
+
 export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Uint8Array; totals: InvoiceTotals }> {
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([595.28, 841.89]); // A4
+  pdf.registerFontkit(fontkit);
+  const page = pdf.addPage([595.28, 841.89]); // A4 portrait
   const { width, height } = page.getSize();
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
+  // Embed Unicode-capable font (Noto Sans) for full LV diacritic support.
+  let font: PDFFont;
+  let bold: PDFFont;
+  try {
+    const { regular, bold: boldBuf } = await getNotoFonts();
+    font = await pdf.embedFont(regular, { subset: true });
+    bold = await pdf.embedFont(boldBuf, { subset: true });
+  } catch (e) {
+    // Fallback: should never trigger but keep PDF generation resilient.
+    console.error("Noto Sans embed failed, falling back to Helvetica:", e);
+    const { StandardFonts } = await import("npm:pdf-lib@1.17.1");
+    font = await pdf.embedFont(StandardFonts.Helvetica);
+    bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  }
+
+  // === Layout constants ===
   const marginX = 40;
-  const colorText = rgb(0.1, 0.1, 0.12);
-  const colorMuted = rgb(0.45, 0.45, 0.5);
-  const colorAccent = rgb(0.86, 0.15, 0.15); // brand red
-  const colorLine = rgb(0.85, 0.85, 0.88);
+  const contentW = width - marginX * 2;
+  const colorText = rgb(0.05, 0.05, 0.05);
+  const colorMuted = rgb(0.35, 0.35, 0.4);
+  const colorAccent = rgb(0.78, 0.12, 0.12); // brand red (ERVITEX)
+  const colorLine = rgb(0, 0, 0);
+  const colorLineSoft = rgb(0.7, 0.7, 0.72);
 
   const totals = computeTotals(data);
-
-  // === Header ===
-  const logo = await tryEmbedImage(pdf, data.seller.logo_url);
-  let y = height - 50;
-  if (logo) {
-    const logoH = 40;
-    const logoW = (logo.width / logo.height) * logoH;
-    page.drawImage(logo, { x: marginX, y: y - logoH + 8, width: logoW, height: logoH });
-  } else {
-    page.drawText(sanitize(data.seller.company_name), {
-      x: marginX, y, size: 16, font: bold, color: colorText,
-    });
-  }
-
-  // Invoice title box (right side)
-  page.drawText("RECINS / INVOICE", {
-    x: width - marginX - 180, y, size: 16, font: bold, color: colorAccent,
-  });
-  page.drawText(`Nr. ${sanitize(data.invoice_number)}`, {
-    x: width - marginX - 180, y: y - 20, size: 11, font: bold, color: colorText,
-  });
-  const issue = new Date(data.issue_date);
-  page.drawText(`Datums: ${issue.toLocaleDateString("lv-LV")}`, {
-    x: width - marginX - 180, y: y - 36, size: 9, font, color: colorMuted,
-  });
-  if (data.order_number != null) {
-    page.drawText(`Pasutijuma Nr.: #${String(data.order_number).padStart(4, "0")}`, {
-      x: width - marginX - 180, y: y - 50, size: 9, font, color: colorMuted,
-    });
-  }
-  if ((data.version ?? 1) > 1) {
-    page.drawText(`Versija: v${data.version}`, {
-      x: width - marginX - 180, y: y - 64, size: 9, font, color: colorMuted,
-    });
-  }
-
-  y -= 80;
-  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.5, color: colorLine });
-  y -= 16;
-
-  // === Parties ===
-  const colW = (width - marginX * 2 - 20) / 2;
-  const leftX = marginX;
-  const rightX = marginX + colW + 20;
-
-  page.drawText("PARDEVEJS", { x: leftX, y, size: 8, font: bold, color: colorMuted });
-  page.drawText("PIRCEJS", { x: rightX, y, size: 8, font: bold, color: colorMuted });
-  y -= 14;
-
   const seller = data.seller;
-  const sellerLines = [
-    seller.company_name,
-    seller.company_reg_number ? `Reg. Nr.: ${seller.company_reg_number}` : null,
-    seller.company_vat_number ? `PVN Nr.: ${seller.company_vat_number}` : null,
-    seller.company_address,
-  ].filter(Boolean) as string[];
-
   const buyer = data.buyer;
-  const buyerLines = [
-    buyer.name,
-    buyer.is_business && buyer.reg_number ? `Reg. Nr.: ${buyer.reg_number}` : null,
-    buyer.is_business && buyer.vat_number ? `PVN Nr.: ${buyer.vat_number}` : null,
-    buyer.address,
-    buyer.email,
-    buyer.phone,
-  ].filter(Boolean) as string[];
 
-  const maxLines = Math.max(sellerLines.length, buyerLines.length);
-  for (let i = 0; i < maxLines; i++) {
-    const s = sellerLines[i];
-    const b = buyerLines[i];
-    if (s) page.drawText(sanitize(s), { x: leftX, y, size: 9.5, font: i === 0 ? bold : font, color: colorText });
-    if (b) page.drawText(sanitize(b), { x: rightX, y, size: 9.5, font: i === 0 ? bold : font, color: colorText });
-    y -= 13;
+  // ============================================================
+  // 1. TOP STRIP — date | "Uzskaites Nr. ERV NNNNNNNN" | "1 lpp."
+  // ============================================================
+  const issue = new Date(data.issue_date);
+  const issueDateLv = `${issue.getFullYear()}. gada ${issue.getDate()}. ${
+    ["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"][issue.getMonth()]
+  }`;
+
+  let y = height - 40;
+  drawText(page, issueDateLv, marginX + 200, y, font, 10, colorText);
+  drawText(page, "Uzskaites Nr.", marginX + 350, y, font, 10, colorText);
+  drawText(page, data.invoice_number, marginX + 420, y, bold, 10, colorText);
+  drawRight(page, "1 lpp.", width - marginX, y, font, 10, colorText);
+
+  // ============================================================
+  // 2. LOGO + "PAVADZĪME" title block
+  // ============================================================
+  y -= 14;
+  const logo = await tryEmbedImage(pdf, seller.logo_url);
+  if (logo) {
+    const logoH = 38;
+    const logoW = Math.min(180, (logo.width / logo.height) * logoH);
+    page.drawImage(logo, { x: marginX, y: y - logoH, width: logoW, height: logoH });
+  } else {
+    drawText(page, seller.company_name.toUpperCase(), marginX, y - 22, bold, 22, colorText);
   }
+
+  // PAVADZĪME left + Uzskaites Nr right
+  y -= 50;
+  drawText(page, "PAVADZĪME", marginX, y, bold, 14, colorText);
+  drawText(page, "Uzskaites Nr.", width - marginX - 170, y, font, 10, colorText);
+  drawText(page, data.invoice_number, width - marginX - 90, y, bold, 11, colorText);
 
   y -= 12;
-  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.5, color: colorLine });
-  y -= 18;
+  drawText(page, issueDateLv, marginX, y, font, 9, colorText);
 
-  // === Items table ===
+  y -= 14;
+  // ============================================================
+  // 3. SELLER (Preču nosūtītājs)
+  // ============================================================
+  const labelX = marginX;
+  const valueX = marginX + 130;
+  const lineH = 12;
+
+  const sellerRows: Array<[string, string]> = [
+    ["Preču nosūtītājs", seller.company_name ?? ""],
+    ["Juridiskā adrese", seller.company_address ?? ""],
+    ["Izsniegšanas adrese", seller.company_address ?? ""],
+  ];
+  for (const [k, v] of sellerRows) {
+    drawText(page, k, labelX, y, font, 9, colorText);
+    drawText(page, v, valueX, y, bold, 9, colorText);
+    y -= lineH;
+  }
+
+  // PVN kods (right column, aligned with first seller line area)
+  const pvnLabelX = width - marginX - 200;
+  const pvnValueX = width - marginX - 130;
+  drawText(page, "PVN kods", pvnLabelX, y + lineH * 3, font, 9, colorText);
+  drawText(page, seller.company_vat_number ?? "", pvnValueX, y + lineH * 3, bold, 9, colorText);
+
+  // Banking
+  drawText(page, "Norēķinu rekvizīti", labelX, y, font, 9, colorText);
+  if (seller.bank_name) {
+    drawText(page, seller.bank_name, valueX, y, bold, 9, colorText);
+    drawText(page, "SWIFT", valueX + 130, y, font, 9, colorText);
+    drawText(page, seller.bank_swift ?? "", valueX + 165, y, bold, 9, colorText);
+    drawText(page, "Konts", valueX + 240, y, font, 9, colorText);
+    drawText(page, `${seller.bank_iban ?? ""} (EUR)`, valueX + 275, y, bold, 9, colorText);
+  }
+  y -= lineH;
+
+  // Horizontal divider
+  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.7, color: colorLine });
+  y -= 14;
+
+  // ============================================================
+  // 4. BUYER (Preču saņēmējs)
+  // ============================================================
+  const buyerRows: Array<[string, string]> = [
+    ["Preču saņēmējs", buyer.name ?? ""],
+    ["Reģ. Nr.", buyer.is_business ? (buyer.reg_number ?? "") : ""],
+    ["Adrese", buyer.address ?? ""],
+    ["Piegādes adrese", buyer.address ?? ""],
+  ];
+  for (const [k, v] of buyerRows) {
+    drawText(page, k, labelX, y, font, 9, colorText);
+    drawText(page, v, valueX, y, v === buyer.name ? bold : font, 9, colorText);
+    y -= lineH;
+  }
+
+  // PVN Kods + SWIFT/Konts (buyer side, optional)
+  drawText(page, "PVN Kods", pvnLabelX, y + lineH * 3, font, 9, colorText);
+  drawText(page, buyer.is_business ? (buyer.vat_number ?? "") : "", pvnValueX, y + lineH * 3, bold, 9, colorText);
+
+  drawText(page, "Norēķinu rekvizīti", labelX, y, font, 9, colorText);
+  drawText(page, "SWIFT", valueX + 130, y, font, 9, colorText);
+  drawText(page, "Konts", valueX + 240, y, font, 9, colorText);
+  y -= lineH;
+
+  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.7, color: colorLine });
+  y -= 14;
+
+  // ============================================================
+  // 5. TRANSACTION META — transports / samaksāt līdz / veids
+  // ============================================================
+  // Due date = issue + 14 days unless explicitly provided
+  const dueDate = data.due_date ? new Date(data.due_date) : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
+  const dueDateLv = `${String(dueDate.getDate()).padStart(2, "0")}.${String(dueDate.getMonth() + 1).padStart(2, "0")}.${dueDate.getFullYear()}.`;
+  const payMethodLv = paymentMethodLv(data.payment_method);
+
+  const meta: Array<[string, string]> = [
+    ["Transporta līdzeklis", ""],
+    ["Samaksāt līdz", dueDateLv],
+    ["Samaksas veids", payMethodLv],
+    ["Speciālās atzīmes", ""],
+    ["Darījuma apraksts", "Piegāde (pārdošana)"],
+  ];
+  for (const [k, v] of meta) {
+    drawText(page, k, labelX, y, font, 9, colorText);
+    drawText(page, v, valueX, y, v ? bold : font, 9, colorText);
+    y -= lineH;
+  }
+  // Right side: "Transporta līdzekļa vadītājs" + "Piegādes datums"
+  drawText(page, "Transporta līdzekļa vadītājs", pvnLabelX, y + lineH * 5, font, 9, colorText);
+  drawText(page, "Piegādes datums", pvnLabelX, y + lineH * 4, font, 9, colorText);
+
+  y -= 4;
+
+  // ============================================================
+  // 6. ITEMS TABLE
+  // ============================================================
+  // Columns: Kods | Nosaukums | Daudz. | Mērv. | Cena | Summa
   const tableX = marginX;
-  const tableW = width - marginX * 2;
-  const colDescW = tableW - 60 - 70 - 80 - 80;
-  const colQtyX = tableX + colDescW;
-  const colPriceX = tableX + colDescW + 60;
-  const colNetX = tableX + colDescW + 60 + 80;
-  const colTotalX = tableX + colDescW + 60 + 80 + 80;
+  const tableW = contentW;
+  const cKods = 70;
+  const cName = tableW - cKods - 60 - 50 - 70 - 70; // flexible name column
+  const cQty = 60;
+  const cUnit = 50;
+  const cPrice = 70;
+  const cSum = 70;
 
-  page.drawRectangle({ x: tableX, y: y - 4, width: tableW, height: 18, color: rgb(0.96, 0.96, 0.97) });
-  page.drawText("Apraksts", { x: tableX + 4, y, size: 9, font: bold, color: colorText });
-  page.drawText("Skaits", { x: colQtyX, y, size: 9, font: bold, color: colorText });
-  page.drawText("Cena (ar PVN)", { x: colPriceX, y, size: 9, font: bold, color: colorText });
-  page.drawText("Neto", { x: colNetX, y, size: 9, font: bold, color: colorText });
-  page.drawText("Summa", { x: colTotalX, y, size: 9, font: bold, color: colorText });
-  y -= 18;
+  const xKods = tableX;
+  const xName = xKods + cKods;
+  const xQty = xName + cName;
+  const xUnit = xQty + cQty;
+  const xPrice = xUnit + cUnit;
+  const xSum = xPrice + cPrice;
+  const xEnd = xSum + cSum;
+
+  // Header row with light background
+  const headerH = 18;
+  page.drawRectangle({ x: tableX, y: y - headerH + 4, width: tableW, height: headerH, color: rgb(0.93, 0.93, 0.94) });
+  page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
+  page.drawLine({ start: { x: tableX, y: y - headerH + 4 }, end: { x: xEnd, y: y - headerH + 4 }, thickness: 0.7, color: colorLine });
+
+  const headerY = y - 8;
+  drawText(page, "Kods", xKods + 4, headerY, bold, 9, colorText);
+  drawText(page, "Nosaukums", xName + 4, headerY, bold, 9, colorText);
+  drawRight(page, "Daudz.", xUnit - 4, headerY, bold, 9, colorText);
+  drawText(page, "Mērv.", xUnit + 4, headerY, bold, 9, colorText);
+  drawRight(page, "Cena", xSum - 4, headerY, bold, 9, colorText);
+  drawRight(page, "Summa", xEnd - 4, headerY, bold, 9, colorText);
+  y -= headerH;
 
   const rate = totals.vat_rate;
+  const rowH = 14;
+
+  let totalQty = 0;
+  let netSum = 0;
+
   for (const it of data.items) {
     const lineGross = round2(it.unit_price_gross * it.quantity);
     const lineNet = round2(lineGross / (1 + rate / 100));
+    netSum += lineNet;
+    totalQty += Number(it.quantity);
+
+    // Description (name + variants)
     let desc = it.name;
-    const extras = [it.size, it.color].filter(Boolean).join(" / ");
-    if (extras) desc += ` (${extras})`;
-    const descSan = sanitize(desc);
-    // Truncate if too long
-    const maxChars = 48;
-    const descShort = descSan.length > maxChars ? descSan.slice(0, maxChars - 1) + "..." : descSan;
-    page.drawText(descShort, { x: tableX + 4, y, size: 9, font, color: colorText });
-    page.drawText(String(it.quantity), { x: colQtyX, y, size: 9, font, color: colorText });
-    page.drawText(it.unit_price_gross.toFixed(2), { x: colPriceX, y, size: 9, font, color: colorText });
-    page.drawText(lineNet.toFixed(2), { x: colNetX, y, size: 9, font, color: colorText });
-    page.drawText(lineGross.toFixed(2), { x: colTotalX, y, size: 9, font, color: colorText });
-    y -= 14;
-    if (y < 200) break; // safety; multi-page not required for typical orders
+    const extras = [it.size, it.color].filter(Boolean).join(", ");
+    if (extras) desc += `, ${extras}`;
+    const nameLines = wrapText(desc, font, 9, cName - 8);
+    const linesUsed = Math.max(1, Math.min(nameLines.length, 2));
+
+    drawText(page, it.sku ?? "", xKods + 4, y - 4, font, 9, colorText);
+    for (let i = 0; i < linesUsed; i++) {
+      drawText(page, nameLines[i], xName + 4, y - 4 - i * 11, font, 9, colorText);
+    }
+    drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
+    drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(it.unit_price_gross, 3), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(lineGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    y -= rowH + (linesUsed - 1) * 11;
+
+    if (y < 230) break; // safety; one-page layout per requirement
   }
 
+  // Optional shipping line
   if (data.shipping_gross && data.shipping_gross > 0) {
-    const s = round2(data.shipping_gross);
-    page.drawText("Piegade", { x: tableX + 4, y, size: 9, font, color: colorText });
-    page.drawText("1", { x: colQtyX, y, size: 9, font, color: colorText });
-    page.drawText(s.toFixed(2), { x: colPriceX, y, size: 9, font, color: colorText });
-    page.drawText(round2(s / (1 + rate / 100)).toFixed(2), { x: colNetX, y, size: 9, font, color: colorText });
-    page.drawText(s.toFixed(2), { x: colTotalX, y, size: 9, font, color: colorText });
-    y -= 14;
+    const shipGross = round2(data.shipping_gross);
+    const shipNet = round2(shipGross / (1 + rate / 100));
+    netSum += shipNet;
+    totalQty += 1;
+    drawText(page, "PIEG", xKods + 4, y - 4, font, 9, colorText);
+    drawText(page, "Piegāde", xName + 4, y - 4, font, 9, colorText);
+    drawRight(page, "1", xUnit - 4, y - 4, font, 9, colorText);
+    drawText(page, "gab", xUnit + 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipGross, 3), xSum - 4, y - 4, font, 9, colorText);
+    drawRight(page, fmtNum(shipGross, 2), xEnd - 4, y - 4, font, 9, colorText);
+    y -= rowH;
   }
   if (data.discount_gross && data.discount_gross > 0) {
     const d = round2(data.discount_gross);
-    page.drawText("Atlaide", { x: tableX + 4, y, size: 9, font, color: colorAccent });
-    page.drawText(`-${d.toFixed(2)}`, { x: colTotalX, y, size: 9, font, color: colorAccent });
-    y -= 14;
+    drawText(page, "ATL", xKods + 4, y - 4, font, 9, colorAccent);
+    drawText(page, "Atlaide", xName + 4, y - 4, font, 9, colorAccent);
+    drawRight(page, `-${fmtNum(d, 2)}`, xEnd - 4, y - 4, font, 9, colorAccent);
+    y -= rowH;
   }
 
-  y -= 6;
-  page.drawLine({ start: { x: marginX, y }, end: { x: width - marginX, y }, thickness: 0.5, color: colorLine });
-  y -= 20;
+  // Bottom border of items table
+  page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
+  y -= 4;
 
-  // === Totals summary (right aligned block) ===
-  const sumX = width - marginX - 200;
-  const sumValX = width - marginX - 60;
-  page.drawText(`Summa bez PVN (neto):`, { x: sumX, y, size: 10, font, color: colorText });
-  page.drawText(`${totals.net.toFixed(2)} EUR`, { x: sumValX, y, size: 10, font, color: colorText });
+  // ============================================================
+  // 7. TOTALS BLOCK (right-aligned)
+  // ============================================================
+  // KOPĀ row (qty)
+  drawText(page, "KOPĀ", xName + 4, y - 4, bold, 9, colorText);
+  drawRight(page, fmtNum(totalQty, totalQty % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, bold, 9, colorText);
+  drawRight(page, fmtNum(totals.gross, 2), xEnd - 4, y - 4, bold, 9, colorText);
   y -= 14;
-  page.drawText(`PVN ${rate}%:`, { x: sumX, y, size: 10, font, color: colorText });
-  page.drawText(`${totals.vat.toFixed(2)} EUR`, { x: sumValX, y, size: 10, font, color: colorText });
-  y -= 14;
-  page.drawRectangle({ x: sumX - 6, y: y - 4, width: 260, height: 20, color: rgb(0.96, 0.96, 0.97) });
-  page.drawText(`APMAKSAI (bruto):`, { x: sumX, y, size: 11, font: bold, color: colorText });
-  page.drawText(`${totals.gross.toFixed(2)} EUR`, { x: sumValX, y, size: 11, font: bold, color: colorAccent });
-  y -= 28;
 
-  // === Payment details ===
-  if (seller.bank_iban) {
-    page.drawText("APMAKSAS REKVIZITI", { x: marginX, y, size: 8, font: bold, color: colorMuted });
-    y -= 12;
-    const rows = [
-      seller.bank_beneficiary ? `Sanemejs: ${seller.bank_beneficiary}` : null,
-      seller.bank_name ? `Banka: ${seller.bank_name}` : null,
-      seller.bank_iban ? `IBAN: ${seller.bank_iban}` : null,
-      seller.bank_swift ? `SWIFT: ${seller.bank_swift}` : null,
-      `Maksajuma merkis: ${data.invoice_number}`,
-    ].filter(Boolean) as string[];
-    for (const r of rows) {
-      page.drawText(sanitize(r), { x: marginX, y, size: 9, font, color: colorText });
-      y -= 12;
-    }
-    y -= 6;
+  // PVN row
+  drawText(page, `PVN ${rate}% no`, xName + 4, y - 4, font, 9, colorText);
+  drawRight(page, fmtNum(totals.net, 2), xPrice - 4, y - 4, font, 9, colorText);
+  drawRight(page, fmtNum(totals.vat, 2), xEnd - 4, y - 4, font, 9, colorText);
+  y -= 14;
+
+  // Pavisam apmaksai
+  page.drawRectangle({ x: xName, y: y - 4, width: xEnd - xName, height: 16, color: rgb(0.95, 0.95, 0.96) });
+  drawText(page, "Pavisam apmaksai:", xName + 4, y, bold, 10, colorText);
+  drawRight(page, "EUR", xSum - 4, y, bold, 10, colorText);
+  drawRight(page, fmtNum(totals.gross, 2), xEnd - 4, y, bold, 11, colorAccent);
+  y -= 22;
+
+  // ============================================================
+  // 8. SUMMA VĀRDIEM
+  // ============================================================
+  drawText(page, "Summa vārdiem:", marginX, y, font, 9, colorText);
+  const wordsLines = wrapText(amountToLatvianWords(totals.gross), bold, 9, contentW - 110);
+  for (let i = 0; i < Math.min(wordsLines.length, 2); i++) {
+    drawText(page, wordsLines[i], marginX + 100, y - i * 11, bold, 9, colorText);
   }
+  y -= 12 + (Math.min(wordsLines.length, 2) - 1) * 11;
 
-  // === Notes ===
+  // Notes (compact)
   if (data.notes && data.notes.trim()) {
-    page.drawText("PIEZIMES", { x: marginX, y, size: 8, font: bold, color: colorMuted });
+    y -= 8;
+    drawText(page, "Piezīmes:", marginX, y, bold, 9, colorMuted);
     y -= 12;
-    const noteLines = sanitize(data.notes).match(/.{1,90}(\s|$)/g) ?? [data.notes];
-    for (const line of noteLines.slice(0, 6)) {
-      page.drawText(line.trim(), { x: marginX, y, size: 9, font, color: colorText });
-      y -= 12;
+    const noteLines = wrapText(data.notes, font, 9, contentW);
+    for (const line of noteLines.slice(0, 3)) {
+      drawText(page, line, marginX, y, font, 9, colorText);
+      y -= 11;
     }
-    y -= 6;
   }
 
-  // === Footer ===
-  page.drawLine({ start: { x: marginX, y: 48 }, end: { x: width - marginX, y: 48 }, thickness: 0.5, color: colorLine });
-  page.drawText(
-    sanitize(`${seller.company_name}${seller.company_reg_number ? ` · Reg. ${seller.company_reg_number}` : ""}${seller.company_vat_number ? ` · PVN ${seller.company_vat_number}` : ""}`),
-    { x: marginX, y: 36, size: 8, font, color: colorMuted }
-  );
-  page.drawText(sanitize("Dokuments sagatavots elektroniski un ir derīgs bez paraksta."), {
-    x: marginX, y: 24, size: 7.5, font, color: colorMuted,
+  // ============================================================
+  // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma
+  // ============================================================
+  const sigY = 130;
+  const colMid = marginX + contentW / 2;
+
+  page.drawLine({
+    start: { x: marginX, y: sigY + 70 }, end: { x: width - marginX, y: sigY + 70 },
+    thickness: 0.5, color: colorLineSoft,
   });
+
+  // Optional stamp/signature image
+  const stamp = await tryEmbedImage(pdf, seller.stamp_url);
+  if (stamp) {
+    const stH = 60;
+    const stW = (stamp.width / stamp.height) * stH;
+    page.drawImage(stamp, { x: marginX + 60, y: sigY + 5, width: stW, height: stH, opacity: 0.85 });
+  }
+
+  // Left: Izsniedza
+  drawText(page, "Izsniedza:", marginX, sigY + 55, font, 9, colorText);
+  drawText(page, "Vārds, uzvārds", marginX, sigY + 40, font, 9, colorMuted);
+  drawText(page, `${issue.getFullYear()}. gada ${issue.getDate()}. ${["janvārī","februārī","martā","aprīlī","maijā","jūnijā","jūlijā","augustā","septembrī","oktobrī","novembrī","decembrī"][issue.getMonth()]}`, marginX, sigY + 25, font, 9, colorText);
+  page.drawLine({ start: { x: marginX + 60, y: sigY + 8 }, end: { x: marginX + 200, y: sigY + 8 }, thickness: 0.5, color: colorLineSoft });
+  drawText(page, "Paraksts", marginX, sigY + 8, font, 9, colorMuted);
+  drawText(page, "Z.v.", marginX, sigY - 8, font, 9, colorMuted);
+
+  // Right: Pieņēma
+  drawText(page, "Pieņēma:", colMid, sigY + 55, font, 9, colorText);
+  drawText(page, "Vārds, uzvārds", colMid, sigY + 40, font, 9, colorMuted);
+  drawText(page, buyer.name ?? "", colMid + 80, sigY + 40, font, 9, colorText);
+  page.drawLine({ start: { x: colMid + 80, y: sigY + 25 }, end: { x: width - marginX, y: sigY + 25 }, thickness: 0.5, color: colorLineSoft });
+  drawText(page, "Paraksts", colMid, sigY + 8, font, 9, colorMuted);
+  page.drawLine({ start: { x: colMid + 60, y: sigY + 8 }, end: { x: width - marginX, y: sigY + 8 }, thickness: 0.5, color: colorLineSoft });
+  drawText(page, "Z.v.", colMid, sigY - 8, font, 9, colorMuted);
+
+  // ============================================================
+  // 10. DOCUMENT FOOTER (compact)
+  // ============================================================
+  drawText(
+    page,
+    `${seller.company_name}${seller.company_reg_number ? ` · Reģ. ${seller.company_reg_number}` : ""}${seller.company_vat_number ? ` · PVN ${seller.company_vat_number}` : ""}`,
+    marginX, 30, font, 7.5, colorMuted,
+  );
+  if ((data.version ?? 1) > 1) {
+    drawRight(page, `versija v${data.version}`, width - marginX, 30, font, 7.5, colorMuted);
+  }
 
   const bytes = await pdf.save();
   return { bytes, totals };
