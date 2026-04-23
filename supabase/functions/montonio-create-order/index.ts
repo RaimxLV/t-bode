@@ -118,6 +118,15 @@ Deno.serve(async (req) => {
         montonio_shipping_method_code: shipping?.method ?? null,
         montonio_pickup_point_id: shipping?.pickupPointId ?? null,
         montonio_pickup_point_name: shipping?.pickupPointName ?? null,
+        ...(((req.headers.get("cf-ipcountry") ||
+              req.headers.get("x-vercel-ip-country") ||
+              req.headers.get("x-country") ||
+              "").toUpperCase().slice(0, 2))
+          ? { buyer_country: (req.headers.get("cf-ipcountry") ||
+                              req.headers.get("x-vercel-ip-country") ||
+                              req.headers.get("x-country") ||
+                              "").toUpperCase().slice(0, 2) }
+          : {}),
       })
       .eq("id", order_id);
 
