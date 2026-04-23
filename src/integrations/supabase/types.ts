@@ -323,6 +323,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          buyer_country: string | null
           cancellation_email_sent_at: string | null
           company_address: string | null
           company_name: string | null
@@ -369,6 +370,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          buyer_country?: string | null
           cancellation_email_sent_at?: string | null
           company_address?: string | null
           company_name?: string | null
@@ -415,6 +417,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          buyer_country?: string | null
           cancellation_email_sent_at?: string | null
           company_address?: string | null
           company_name?: string | null
