@@ -593,93 +593,11 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   }
 
   // ============================================================
-  // 9. SIGNATURE BLOCK (footer) — Izsniedza | Pieņēma (boxed)
-  // ============================================================
-  const sigBoxH = 100;
-  const sigBoxY = 78; // bottom Y of box — leaves room for notice + footer above 15mm margin
-  const sigTop = sigBoxY + sigBoxH;
-  const colMid = marginX + contentW / 2;
-
-  // Outer box + vertical separator
-  page.drawRectangle({
-    x: marginX, y: sigBoxY, width: contentW, height: sigBoxH,
-    borderColor: colorLine, borderWidth: 0.7, color: rgb(1, 1, 1),
-  });
-  page.drawLine({
-    start: { x: colMid, y: sigBoxY }, end: { x: colMid, y: sigTop },
-    thickness: 0.5, color: colorLine,
-  });
-
-  // Optional stamp/signature image (left side, behind text)
-  const stamp = await tryEmbedImage(pdf, seller.stamp_url);
-  if (stamp) {
-    const stH = 60;
-    const stW = (stamp.width / stamp.height) * stH;
-    page.drawImage(stamp, { x: marginX + 70, y: sigBoxY + 8, width: stW, height: stH, opacity: 0.85 });
-  }
-
-  const issuedBy = seller.issued_by_name ?? "Evita Nesterova";
-  const issuedDateLong = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLvLoc[issue.getMonth()]}`;
-
-  // Helper: render one signature column. Truncates name to fit so it never
-  // bleeds across the column separator or off the page.
-  const renderSigColumn = (
-    leftX: number,
-    rightX: number,
-    title: string,
-    nameValue: string,
-    extraLabel: string,
-    extraValue: string,
-  ) => {
-    const innerLeft = leftX + 10;
-    const innerRight = rightX - 10;
-    const innerW = innerRight - innerLeft;
-    drawText(page, title, innerLeft, sigTop - 16, bold, 9.5, colorText);
-
-    // Name row: "Vārds, uzvārds"  <name>
-    drawText(page, "Vārds, uzvārds:", innerLeft, sigTop - 34, font, 8.5, colorMuted);
-    const nameLabelW = font.widthOfTextAtSize("Vārds, uzvārds:", 8.5);
-    const nameValX = innerLeft + nameLabelW + 8;
-    const nameMaxW = innerRight - nameValX;
-    let displayName = nameValue || "";
-    while (displayName.length > 1 && bold.widthOfTextAtSize(displayName, 9) > nameMaxW) {
-      displayName = displayName.slice(0, -1);
-    }
-    if (displayName !== nameValue && displayName.length > 1) {
-      displayName = displayName.slice(0, -1) + "…";
-    }
-    drawText(page, displayName, nameValX, sigTop - 34, bold, 9, colorText);
-
-    // Date / extra info row
-    drawText(page, extraLabel, innerLeft, sigTop - 52, font, 8.5, colorMuted);
-    const extraLabelW = font.widthOfTextAtSize(extraLabel, 8.5);
-    drawText(page, extraValue, innerLeft + extraLabelW + 8, sigTop - 52, font, 8.5, colorText);
-    page.drawLine({
-      start: { x: innerLeft + extraLabelW + 8, y: sigTop - 54 },
-      end: { x: innerRight, y: sigTop - 54 },
-      thickness: 0.3, color: colorLineSoft,
-    });
-
-    // Paraksts row
-    drawText(page, "Paraksts:", innerLeft, sigTop - 76, font, 8.5, colorMuted);
-    page.drawLine({
-      start: { x: innerLeft + 50, y: sigTop - 78 },
-      end: { x: innerRight, y: sigTop - 78 },
-      thickness: 0.3, color: colorLineSoft,
-    });
-
-    drawText(page, "Z.v.", innerLeft, sigTop - 92, font, 8.5, colorMuted);
-  };
-
-  renderSigColumn(marginX, colMid, "Izsniedza:", issuedBy, "Datums:", issuedDateLong);
-  renderSigColumn(colMid, width - marginX, "Pieņēma:", buyer.name ?? "", "Datums:", "");
-
-  // ============================================================
-  // 10. DOCUMENT FOOTER — electronic doc notice
+  // 9. DOCUMENT FOOTER — electronic doc notice
   // ============================================================
   const electronicNotice = "Dokuments sagatavots elektroniski un ir derīgs bez paraksta";
   const noticeW = bold.widthOfTextAtSize(electronicNotice, 8);
-  drawText(page, electronicNotice, (width - noticeW) / 2, sigBoxY - 16, bold, 8, colorMuted);
+  drawText(page, electronicNotice, (width - noticeW) / 2, 70, bold, 9, colorMuted);
 
   drawText(
     page,
