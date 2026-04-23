@@ -25,6 +25,14 @@ export interface InvoiceSeller {
   bank_beneficiary?: string | null;
   logo_url?: string | null;
   stamp_url?: string | null;
+  // Optional second bank account (e.g. Swedbank). Falls back to fixed defaults if absent.
+  bank2_name?: string | null;
+  bank2_iban?: string | null;
+  bank2_swift?: string | null;
+  // Issued by (signatory) name shown in footer
+  issued_by_name?: string | null;
+  // Tagline shown next to the logo (e.g. "PROMO APĢĒRBS UN APDRUKAS SERVISS")
+  tagline?: string | null;
 }
 
 export interface InvoiceItem {
