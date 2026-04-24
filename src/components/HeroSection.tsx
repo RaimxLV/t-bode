@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
-import heroImage from "@/assets/hero.jpg";
+import heroJpg from "@/assets/hero-1920.jpg";
+import heroWebp1920 from "@/assets/hero-1920.webp";
+import heroWebp1280 from "@/assets/hero-1280.webp";
+import heroWebp768 from "@/assets/hero-768.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
-import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -20,27 +22,30 @@ export const HeroSection = () => {
 
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-  // Hero is a bundled asset (not Supabase) — helpers no-op on non-Supabase URLs.
-  const heroSrc = isSupabaseImage(heroImage) ? getOptimizedSrc(heroImage, 1600, 80) : heroImage;
-  const heroSrcSet = buildSrcSet(heroImage, [640, 960, 1280, 1600, 1920], 80) || undefined;
+  const webpSrcSet = `${heroWebp768} 768w, ${heroWebp1280} 1280w, ${heroWebp1920} 1920w`;
 
   return (
     <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
-      {/* Preloaded hero image with fade-in */}
-      <motion.img
-        src={heroSrc}
-        srcSet={heroSrcSet}
-        sizes={heroSrcSet ? "100vw" : undefined}
-        alt="T-Bode hero"
-        className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
+      {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
+      <motion.div
+        className="absolute inset-0 w-full h-full"
         style={{ y: imgY }}
         initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        onLoad={() => setImageLoaded(true)}
-        fetchPriority="high"
-        decoding="async"
-      />
+      >
+        <picture>
+          <source type="image/webp" srcSet={webpSrcSet} sizes="100vw" />
+          <img
+            src={heroJpg}
+            alt="T-Bode hero"
+            className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
+            onLoad={() => setImageLoaded(true)}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
+      </motion.div>
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
