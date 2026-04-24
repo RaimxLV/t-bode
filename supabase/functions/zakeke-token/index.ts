@@ -1,6 +1,6 @@
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req) => {
@@ -20,17 +20,29 @@ Deno.serve(async (req) => {
     }
 
     let visitorCode = "";
+    let customerCode = "";
+    let accessType = "C2S";
     try {
       const reqBody = await req.json();
       visitorCode = reqBody?.visitorCode || "";
+      customerCode = reqBody?.customerCode || "";
+      accessType = reqBody?.accessType === "S2S" ? "S2S" : "C2S";
     } catch {
       // no body
     }
 
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const bodyParts = ["grant_type=client_credentials", "access_type=S2S"];
+    const bodyParts = [
+      "grant_type=client_credentials",
+      `client_id=${encodeURIComponent(clientId)}`,
+      `client_secret=${encodeURIComponent(clientSecret)}`,
+      `access_type=${encodeURIComponent(accessType)}`,
+    ];
     if (visitorCode) {
       bodyParts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
+    }
+    if (customerCode) {
+      bodyParts.push(`customercode=${encodeURIComponent(customerCode)}`);
     }
     const rawBody = bodyParts.join("&");
 
@@ -39,14 +51,7 @@ Deno.serve(async (req) => {
     headers.set("Accept", "application/json");
     headers.set("Content-Type", "application/x-www-form-urlencoded");
     headers.set("Authorization", `Basic ${basicAuth}`);
-    // Fix: Zakeke rejects Accept-Language: * which Deno runtime adds by default
     headers.set("Accept-Language", "en-US,en;q=0.9");
-    headers.set("Origin", "https://t-bode.lovable.app");
-    headers.set("Referer", "https://t-bode.lovable.app/");
-    // Fix: Set explicit Accept-Encoding to prevent runtime adding gzip,br
-    headers.set("Accept-Encoding", "identity");
-    // Override User-Agent to avoid Deno/Supabase identification issues
-    headers.set("User-Agent", "T-Bode/1.0");
 
     console.log("=== ZAKEKE TOKEN REQUEST ===");
     console.log("URL: https://api.zakeke.com/token");
