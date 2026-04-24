@@ -27,23 +27,25 @@ export const HeroSection = () => {
   return (
     <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
       {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
-      <motion.picture
+      <motion.div
         className="absolute inset-0 w-full h-full"
-        style={{ y: imgY, opacity: imageLoaded ? 1 : 0 }}
-        initial={false}
+        style={{ y: imgY }}
+        initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <source type="image/webp" srcSet={webpSrcSet} sizes="100vw" />
-        <img
-          src={heroJpg}
-          alt="T-Bode hero"
-          className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
-          onLoad={() => setImageLoaded(true)}
-          fetchPriority="high"
-          decoding="async"
-        />
-      </motion.picture>
+        <picture>
+          <source type="image/webp" srcSet={webpSrcSet} sizes="100vw" />
+          <img
+            src={heroJpg}
+            alt="T-Bode hero"
+            className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
+            onLoad={() => setImageLoaded(true)}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
+      </motion.div>
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
