@@ -581,16 +581,17 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // PVN row
   drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
   drawRight(page, `${fmtNum(totals.vat, 2)} EUR`, totalsValueRight, y, font, 9, colorText);
-  y -= 22;
+  y -= 14;
 
-  // Separator line ABOVE the totals row (well clear of any text)
+  // Separator line BETWEEN PVN row and "Pavisam apmaksai"
+  // Sits in the gap, clear of both the PVN text above and the totals text below
   page.drawLine({
-    start: { x: totalsBlockLeft, y: y + 6 },
-    end: { x: totalsValueRight, y: y + 6 },
+    start: { x: totalsBlockLeft, y: y },
+    end: { x: totalsValueRight, y: y },
     thickness: 0.7,
     color: colorLine,
   });
-  y -= 6;
+  y -= 16;
 
   // Pavisam apmaksai — text + value on the same baseline, both right-aligned
   drawRight(page, "Pavisam apmaksai:", totalsLabelRight, y, bold, 11, colorText);
