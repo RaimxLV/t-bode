@@ -32,7 +32,12 @@ Deno.serve(async (req) => {
     }
 
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
-    const bodyParts = ["grant_type=client_credentials", `access_type=${encodeURIComponent(accessType)}`];
+    const bodyParts = [
+      "grant_type=client_credentials",
+      `client_id=${encodeURIComponent(clientId)}`,
+      `client_secret=${encodeURIComponent(clientSecret)}`,
+      `access_type=${encodeURIComponent(accessType)}`,
+    ];
     if (visitorCode) {
       bodyParts.push(`visitorcode=${encodeURIComponent(visitorCode)}`);
     }
