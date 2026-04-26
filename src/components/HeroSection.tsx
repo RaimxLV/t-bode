@@ -10,6 +10,8 @@ import heroWebp1920 from "@/assets/hero-1920.webp";
 import heroWebp1280 from "@/assets/hero-1280.webp";
 import heroWebp768 from "@/assets/hero-768.webp";
 import heroWebp480 from "@/assets/hero-480.webp";
+import grainWebp from "@/assets/hero-grain-tile.webp";
+import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 
 export const HeroSection = () => {
@@ -59,6 +61,16 @@ export const HeroSection = () => {
       <div
         className="absolute inset-0"
         style={{ background: "var(--hero-overlay)" }}
+      />
+      {/* Tileable film-grain overlay (WebP with JPG fallback via image-set) */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none opacity-[0.18] mix-blend-overlay"
+        style={{
+          backgroundImage: `image-set(url(${grainWebp}) type("image/webp"), url(${grainJpg}) type("image/jpeg"))`,
+          backgroundRepeat: "repeat",
+          backgroundSize: "256px 256px",
+        }}
       />
 
       <div className="relative z-10 flex items-center justify-center h-full container mx-auto px-4 pt-32 md:pt-40">
