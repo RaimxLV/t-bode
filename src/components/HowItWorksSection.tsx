@@ -51,7 +51,7 @@ export const HowItWorksSection = () => {
               className="relative flex flex-col items-center text-center group"
             >
               {/* Illustration */}
-              <div className="relative z-10 w-40 h-40 md:w-48 md:h-48 mb-6 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative z-10 w-64 h-64 sm:w-72 sm:h-72 md:w-48 md:h-48 mb-6 transition-transform duration-300 group-hover:scale-105">
                 <img
                   src={images[i]}
                   alt={t(step.titleKey)}
