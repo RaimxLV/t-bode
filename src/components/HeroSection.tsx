@@ -3,10 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
-import heroJpg from "@/assets/hero-1920.jpg";
+import heroJpg from "@/assets/hero-1280.jpg";
+import heroJpgLarge from "@/assets/hero-1920.jpg";
+import heroJpgSmall from "@/assets/hero-480.jpg";
 import heroWebp1920 from "@/assets/hero-1920.webp";
 import heroWebp1280 from "@/assets/hero-1280.webp";
 import heroWebp768 from "@/assets/hero-768.webp";
+import heroWebp480 from "@/assets/hero-480.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 
 export const HeroSection = () => {
@@ -22,7 +25,9 @@ export const HeroSection = () => {
 
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-  const webpSrcSet = `${heroWebp768} 768w, ${heroWebp1280} 1280w, ${heroWebp1920} 1920w`;
+  const webpSrcSet = `${heroWebp480} 480w, ${heroWebp768} 768w, ${heroWebp1280} 1280w, ${heroWebp1920} 1920w`;
+  const jpgSrcSet = `${heroJpgSmall} 480w, ${heroJpg} 1280w, ${heroJpgLarge} 1920w`;
+  const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
 
   return (
     <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
@@ -35,14 +40,19 @@ export const HeroSection = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
         <picture>
-          <source type="image/webp" srcSet={webpSrcSet} sizes="100vw" />
+          <source type="image/webp" srcSet={webpSrcSet} sizes={sizesAttr} />
           <img
             src={heroJpg}
+            srcSet={jpgSrcSet}
+            sizes={sizesAttr}
             alt="T-Bode hero"
+            width={1920}
+            height={1080}
             className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
             onLoad={() => setImageLoaded(true)}
             fetchPriority="high"
             decoding="async"
+            loading="eager"
           />
         </picture>
       </motion.div>
