@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
@@ -20,7 +20,7 @@ const steps = [
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
-  const { canInstall, isIOS, isStandalone, promptInstall } = useInstallPrompt();
+  const { canInstall, isStandalone, promptInstall } = useInstallPrompt();
   const navigate = useNavigate();
   const [installing, setInstalling] = useState(false);
   const [justInstalled, setJustInstalled] = useState(false);
