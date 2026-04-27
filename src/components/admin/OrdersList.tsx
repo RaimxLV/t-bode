@@ -519,7 +519,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Meklēt pēc Nr., vārda, telefona..."
+            placeholder="Meklēt pēc Nr., vārda, e-pasta, telefona..."
             className="w-full pl-8 pr-3 py-2 rounded-lg border border-border bg-card text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
