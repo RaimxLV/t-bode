@@ -149,7 +149,14 @@ export const ReportsManager = () => {
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       const blobUrl = URL.createObjectURL(blob);
-      const filename = `invoice-${inv.invoice_number}${inv.version > 1 ? `_v${inv.version}` : ""}.pdf`;
+      // Sanitize invoice number: keep only safe filename chars (alphanumerics, dash, underscore, dot)
+      const rawNumber = String(inv.invoice_number ?? "").trim();
+      const safeNumber = rawNumber.replace(/[^A-Za-z0-9._-]/g, "_").replace(/_+/g, "_").replace(/^[._-]+|[._-]+$/g, "").slice(0, 80);
+      // Sanitize version: must be a positive integer
+      const versionNum = Number.parseInt(String(inv.version ?? ""), 10);
+      const safeVersion = Number.isFinite(versionNum) && versionNum > 1 ? `_v${versionNum}` : "";
+      const baseName = safeNumber || `order-${orderId.slice(0, 8)}`;
+      const filename = `invoice-${baseName}${safeVersion}.pdf`;
       const link = document.createElement("a");
       link.href = blobUrl;
       link.download = filename;
