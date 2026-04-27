@@ -142,11 +142,7 @@ export const ReportsManager = () => {
     }
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?invoice_id=${inv.id ?? ""}`;
-      // The invoices query above didn't select id — fetch by order_id instead
-      const fetchUrl = inv.id
-        ? url
-        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?order_id=${orderId}`;
+      const fetchUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?order_id=${orderId}`;
       const resp = await fetch(fetchUrl, {
         headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
       });
@@ -420,15 +416,29 @@ export const ReportsManager = () => {
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="text-sm font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 gap-1"
-                          onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span className="text-[10px]">PDF</span>
-                        </Button>
+                        <div className="flex gap-1">
+                          {invoicesByOrder[o.id] && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 gap-1"
+                              onClick={() => openInvoicePdf(o.id)}
+                              title="Atvērt rēķina PDF"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span className="text-[10px]">Rēķins</span>
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 gap-1"
+                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                            title="Skatīt / labot pavadzīmi"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     {its.length > 0 && (
@@ -504,15 +514,29 @@ export const ReportsManager = () => {
                         </TableCell>
                         <TableCell>{statusBadge(o)}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
-                            title="Skatīt pavadzīmi"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            {invoicesByOrder[o.id] && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 gap-1"
+                                onClick={() => openInvoicePdf(o.id)}
+                                title="Atvērt rēķina PDF jaunā cilnē"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span className="text-[10px] hidden lg:inline">Rēķins</span>
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                              title="Skatīt / labot pavadzīmi"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
