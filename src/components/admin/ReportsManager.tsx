@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon } from "lucide-react";
+import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -133,6 +133,32 @@ export const ReportsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, invoicesByOrder]
   );
+
+  const openInvoicePdf = async (orderId: string) => {
+    const inv = invoicesByOrder[orderId];
+    if (!inv) {
+      toast.error("Šim pasūtījumam nav izrakstīta rēķina");
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?invoice_id=${inv.id ?? ""}`;
+      // The invoices query above didn't select id — fetch by order_id instead
+      const fetchUrl = inv.id
+        ? url
+        : `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?order_id=${orderId}`;
+      const resp = await fetch(fetchUrl, {
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (e: any) {
+      toast.error(`PDF kļūda: ${e.message}`);
+    }
+  };
 
   const exportXlsx = async () => {
     const ExcelJS = (await import("exceljs")).default;
