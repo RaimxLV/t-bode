@@ -55,9 +55,6 @@ export const Footer = () => {
                 <Facebook className="w-4 h-4" />
               </a>
             </div>
-            <div className="mt-6">
-              <NewsletterSignup />
-            </div>
           </div>
 
           <div>
