@@ -385,14 +385,10 @@
     "securePayments": "Secure payments powered by",
     "share": "Share",
     "shareText": "Check out T-Bode — personalized apparel store!",
-    "newsletterTitle": "NEWSLETTER",
-    "newsletterDesc": "Subscribe to get exclusive discounts and updates by email.",
-    "newsletterPlaceholder": "Your email address",
-    "newsletterSubmit": "Subscribe",
-    "newsletterSuccess": "Thanks! You're subscribed.",
-    "newsletterAlready": "This email is already subscribed.",
-    "newsletterInvalid": "Please enter a valid email.",
-    "newsletterError": "Something went wrong. Try again later."
+    "trustDelivery": "Delivery to Omniva parcel lockers across Latvia",
+    "trustPayments": "Secure payments: card, Apple Pay, Google Pay",
+    "officeAddress": "Office: Braslas iela 29, entrance D, Riga, LV-1084",
+    "regNumber": "SIA Ervitex • Reg. No. 40103456789"
   },
   "notFound": {
     "title": "404",
