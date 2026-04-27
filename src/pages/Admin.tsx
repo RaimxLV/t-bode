@@ -16,6 +16,7 @@ import logo from "@/assets/logo.svg";
 import type { DBProduct } from "@/hooks/useProducts";
 import { useCategories, getTopLevel, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 import { EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
+import { AdminMfaGate } from "@/components/security/AdminMfaGate";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
