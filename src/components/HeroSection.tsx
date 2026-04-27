@@ -13,7 +13,6 @@ import heroWebp480 from "@/assets/hero-480.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
-import { HeroInstallBlock } from "./HeroInstallBlock";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
