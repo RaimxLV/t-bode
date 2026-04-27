@@ -149,8 +149,14 @@ export const ReportsManager = () => {
       if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
       const blob = await resp.blob();
       const blobUrl = URL.createObjectURL(blob);
-      window.open(blobUrl, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      const filename = `invoice-${inv.invoice_number}${inv.version > 1 ? `_v${inv.version}` : ""}.pdf`;
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10_000);
     } catch (e: any) {
       toast.error(`PDF kļūda: ${e.message}`);
     }
