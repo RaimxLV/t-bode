@@ -440,11 +440,6 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     ["Piegādes adrese", (buyer.shipping_address && buyer.shipping_address.trim()) ? buyer.shipping_address : (buyer.address ?? "—"), false],
     ["E-pasts / Tālrunis", `${buyer.email ?? ""}${buyer.phone ? "  ·  " + buyer.phone : ""}`, false],
   ];
-  if (buyer.ip_country || buyer.ip_address) {
-    const country = buyer.ip_country ? countryCodeToLv(buyer.ip_country) : "—";
-    const ip = buyer.ip_address ?? "—";
-    buyerRows.push(["Valsts / IP", `${country}  ·  ${ip}`, false]);
-  }
   drawBoxedSection("Preču saņēmējs", buyerRows);
 
   // ============================================================
