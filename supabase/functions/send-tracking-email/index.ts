@@ -9,8 +9,6 @@ const corsHeaders = {
 
 const TRACKING_URL = (barcode: string) => `https://www.omniva.lv/private/track-and-trace?barcode=${barcode}`;
 const FROM_ADDRESS = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
-// Test mode: route all outgoing emails to this verified Resend address
-const TEST_OVERRIDE_EMAIL = "ofsetadruka@gmail.com";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -49,8 +47,6 @@ Deno.serve(async (req) => {
       recipientEmail = userResp?.user?.email || null;
     }
     if (!recipientEmail) throw new Error("No recipient email");
-    const originalRecipient = recipientEmail;
-    recipientEmail = TEST_OVERRIDE_EMAIL;
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -94,9 +90,9 @@ Deno.serve(async (req) => {
     await logEmailAttempt(supabase, {
       message_id: messageId,
       template_name: "tracking",
-      recipient_email: originalRecipient,
+      recipient_email: recipientEmail,
       status: "pending",
-      metadata: { order_id, order_number: order.order_number, barcode: order.omniva_barcode, test_to: recipientEmail },
+      metadata: { order_id, order_number: order.order_number, barcode: order.omniva_barcode },
     });
 
     const resendResp = await fetch("https://api.resend.com/emails", {
@@ -108,7 +104,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_ADDRESS,
         to: [recipientEmail],
-        subject: `[TEST → ${originalRecipient}] Tavs T-Bode pasūtījums #${orderNum} ir ceļā 📦`,
+        subject: `Tavs T-Bode pasūtījums #${orderNum} ir ceļā 📦`,
         html,
       }),
     });
@@ -119,7 +115,7 @@ Deno.serve(async (req) => {
       await logEmailAttempt(supabase, {
         message_id: messageId,
         template_name: "tracking",
-        recipient_email: originalRecipient,
+        recipient_email: recipientEmail,
         status: "failed",
         error_message: JSON.stringify(respJson),
         metadata: { order_id, http_status: resendResp.status },
@@ -135,7 +131,7 @@ Deno.serve(async (req) => {
     await logEmailAttempt(supabase, {
       message_id: messageId,
       template_name: "tracking",
-      recipient_email: originalRecipient,
+      recipient_email: recipientEmail,
       status: "sent",
       metadata: { order_id, order_number: order.order_number, resend_id: respJson.id },
     });

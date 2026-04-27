@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
-const TEST_OVERRIDE_EMAIL = "ofsetadruka@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
@@ -88,8 +87,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const originalRecipient = submission.email;
-    const toEmail = TEST_OVERRIDE_EMAIL;
+    const toEmail = submission.email;
 
     const html = renderHtml(submission, language);
     const subject = t(language).subject;
@@ -98,9 +96,9 @@ Deno.serve(async (req) => {
     await logEmailAttempt(service, {
       message_id: messageId,
       template_name: "contact-reply",
-      recipient_email: originalRecipient,
+      recipient_email: toEmail,
       status: "pending",
-      metadata: { submission_id, lang: language, test_to: toEmail },
+      metadata: { submission_id, lang: language },
     });
 
     const resp = await fetch("https://api.resend.com/emails", {
@@ -112,7 +110,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [toEmail],
-        subject: `[TEST → ${originalRecipient}] ${subject}`,
+        subject,
         html,
       }),
     });
@@ -123,7 +121,7 @@ Deno.serve(async (req) => {
       await logEmailAttempt(service, {
         message_id: messageId,
         template_name: "contact-reply",
-        recipient_email: originalRecipient,
+        recipient_email: toEmail,
         status: "failed",
         error_message: text,
         metadata: { submission_id, http_status: resp.status },
@@ -137,7 +135,7 @@ Deno.serve(async (req) => {
     await logEmailAttempt(service, {
       message_id: messageId,
       template_name: "contact-reply",
-      recipient_email: originalRecipient,
+      recipient_email: toEmail,
       status: "sent",
       metadata: { submission_id, lang: language },
     });
