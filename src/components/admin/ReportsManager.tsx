@@ -32,12 +32,9 @@ function monthStartISO() {
   return d.toISOString().slice(0, 10);
 }
 
-type DateField = "order" | "invoice" | "paid";
-
 export const ReportsManager = () => {
   const [from, setFrom] = useState(monthStartISO());
   const [to, setTo] = useState(todayISO(0));
-  const [dateField, setDateField] = useState<DateField>("order");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -121,19 +118,11 @@ export const ReportsManager = () => {
       const isPaid = PAID_STATUSES.has(o.status) || !!o.manually_paid_at;
       if (!isPaid && !inv) return false;
 
-      // Date filter
-      let ts: number | null = null;
-      if (dateField === "order") ts = new Date(o.created_at).getTime();
-      else if (dateField === "invoice") ts = inv?.created_at ? new Date(inv.created_at).getTime() : null;
-      else if (dateField === "paid") {
-        ts = o.manually_paid_at
-          ? new Date(o.manually_paid_at).getTime()
-          : (PAID_STATUSES.has(o.status) ? new Date(o.created_at).getTime() : null);
-      }
-      if (ts == null) return false;
+      // Date filter — always by order created_at (filtering by other fields available in Excel export)
+      const ts = new Date(o.created_at).getTime();
       return ts >= fromMs && ts <= toMs;
     });
-  }, [orders, invoicesByOrder, from, to, dateField]);
+  }, [orders, invoicesByOrder, from, to]);
 
   const summary = useMemo(() => {
     let gross = 0;
@@ -420,30 +409,18 @@ export const ReportsManager = () => {
             </div>
           </div>
 
-          {/* Filter + refresh */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3">
-            <div className="flex-1 min-w-0">
-              <Label className="text-xs text-muted-foreground">Filtrēt pēc</Label>
-              <Select value={dateField} onValueChange={(v) => setDateField(v as DateField)}>
-                <SelectTrigger className="w-full sm:w-[180px] mt-1 h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="order" className="text-xs">Pasūtījuma datuma</SelectItem>
-                  <SelectItem value="invoice" className="text-xs">Rēķina datuma</SelectItem>
-                  <SelectItem value="paid" className="text-xs">Apmaksas datuma</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* Refresh + Export */}
+          <div className="flex flex-col sm:flex-row gap-2">
             <Button size="sm" onClick={load} disabled={loading} className="w-full sm:w-auto">
               {loading ? "Ielādē..." : "Atsvaidzināt"}
             </Button>
+            <Button variant="outline" size="sm" className="w-full sm:w-auto gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
+            </Button>
           </div>
-
-          {/* Export — full width on mobile */}
-          <Button variant="outline" size="sm" className="w-full sm:w-auto sm:ml-auto sm:flex gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
-            <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
-          </Button>
+          <p className="text-[11px] text-muted-foreground">
+            Filtrē pēc pasūtījuma datuma. Excel eksportā pieejami papildu filtri (rēķina nr., klients, statuss, summa).
+          </p>
         </CardContent>
       </Card>
 
@@ -508,9 +485,83 @@ export const ReportsManager = () => {
         </Card>
       </div>
 
-      <p className="text-[11px] text-muted-foreground text-center">
-        Detalizēts pasūtījumu saraksts pieejams Excel eksportā ({filteredOrders.length} pasūt.)
-      </p>
+      <Card>
+        <CardContent className="p-3 sm:p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <FileText className="w-4 h-4" /> Pasūtījumi ({filteredOrders.length})
+            </h3>
+          </div>
+          {filteredOrders.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
+          ) : (
+            <div className="overflow-x-auto -mx-3 sm:-mx-4">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[11px] whitespace-nowrap">Datums</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Pas. Nr.</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Rēķins</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Klients</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Tips</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Maksājums</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap">Statuss</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap text-right">Bruto</TableHead>
+                    <TableHead className="text-[11px] whitespace-nowrap text-right">PVN</TableHead>
+                    <TableHead className="text-[11px]"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((o) => {
+                    const inv = invoicesByOrder[o.id];
+                    const gross = round2(Number(o.total));
+                    const net = round2(gross / (1 + VAT_RATE / 100));
+                    const vat = round2(gross - net);
+                    const warning = invoiceWarning(o);
+                    return (
+                      <TableRow key={o.id}>
+                        <TableCell className="text-[11px] whitespace-nowrap">{format(new Date(o.created_at), "dd.MM.yy HH:mm")}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap font-mono">#{String(o.order_number).padStart(4, "0")}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">
+                          {inv ? (
+                            <span className="font-mono">{inv.invoice_number}{inv.version > 1 ? ` v${inv.version}` : ""}</span>
+                          ) : (
+                            <span className="text-destructive">— nav —</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-[11px] max-w-[140px] truncate">
+                          {o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? o.guest_email ?? "")}
+                        </TableCell>
+                        <TableCell className="text-[11px]">
+                          <Badge variant="outline" className="text-[10px]">{o.is_business ? "B2B" : "B2C"}</Badge>
+                        </TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">{paymentLabel(o)}</TableCell>
+                        <TableCell className="text-[11px]">{statusBadge(o)}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap text-right font-semibold">{gross.toFixed(2)} €</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap text-right text-muted-foreground">{vat.toFixed(2)} €</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            {warning && (
+                              <span title={warning}>
+                                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                              </span>
+                            )}
+                            {inv && (
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openInvoicePdf(o.id)} title="Lejupielādēt rēķinu">
+                                <FileText className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Suspense fallback={null}>
         <InvoiceModal
