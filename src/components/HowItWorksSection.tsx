@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Download, CheckCircle2, Smartphone } from "lucide-react";
+import { ChevronRight, Smartphone, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
@@ -90,35 +90,48 @@ export const HowItWorksSection = () => {
       </div>
 
       {/* Install app CTA — sits at the end of the steps */}
-      <div className="container mx-auto px-4 mt-16 md:mt-20 flex justify-center">
+      <div className="container mx-auto px-4 mt-14 md:mt-16 flex justify-center">
         {isStandalone ? (
-          <div
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold border-2"
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body"
             style={{
-              background: "hsl(142 70% 45% / 0.15)",
-              borderColor: "hsl(142 70% 55%)",
-              color: "hsl(142 80% 75%)",
+              background: "hsl(150 30% 18% / 0.5)",
+              border: "1px solid hsl(150 35% 35%)",
+              color: "hsl(150 35% 75%)",
             }}
           >
-            <CheckCircle2 className="w-5 h-5" />
-            {t("install.alreadyInstalled", "Lietotne ir instalēta ✅")}
-          </div>
-        ) : canInstall ? (
-          <button
-            onClick={() => promptInstall()}
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold text-white border-2 border-white/30 backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/10"
-          >
-            <Download className="w-5 h-5" />
-            {t("install.heroCta", "Instalēt T-Bode lietotni (Datorā vai Telefonā)")}
-          </button>
+            <Check className="w-4 h-4" strokeWidth={2.5} />
+            {t("install.alreadyInstalled", "Lietotne instalēta")}
+          </motion.div>
         ) : (
-          <Link
-            to="/install"
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold text-white border-2 border-white/30 backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/10"
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
-            {isIOS ? <Smartphone className="w-5 h-5" /> : <Download className="w-5 h-5" />}
-            {t("install.heroCta", "Instalēt T-Bode lietotni (Datorā vai Telefonā)")}
-          </Link>
+            {canInstall ? (
+              <button
+                onClick={() => promptInstall()}
+                className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
+              >
+                <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
+                <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
+              </button>
+            ) : (
+              <Link
+                to="/install"
+                className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
+              >
+                <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
+                <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
+              </Link>
+            )}
+          </motion.div>
         )}
       </div>
     </section>
