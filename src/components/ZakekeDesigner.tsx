@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { sanitizeZakekeCodePart } from "@/lib/zakeke";
 
 interface ZakekeDesignerProps {
   productId: string;
@@ -16,6 +17,8 @@ interface ZakekeDesignerProps {
   selectedColor: string;
   selectedColorHex?: string;
   selectedSize: string;
+  availableColors?: string[];
+  availableSizes?: string[];
   /** Pre-built variant codes that match what the `zakeke-products` edge function exposes. */
   variantCodes?: { color?: string; size?: string };
   quantity: number;
@@ -41,6 +44,8 @@ export const ZakekeDesigner = ({
   selectedColor,
   selectedColorHex,
   selectedSize,
+  availableColors = [],
+  availableSizes = [],
   variantCodes,
   quantity,
   onClose,
@@ -100,6 +105,43 @@ export const ZakekeDesigner = ({
 
         const colorVariantCode = variantCodes?.color;
         const sizeVariantCode = variantCodes?.size;
+        const colorAttributeCode = `${zakekeModelCode}-color`;
+        const sizeAttributeCode = `${zakekeModelCode}-size`;
+        const colorValues = availableColors.map((color) => ({
+          code: `${colorAttributeCode}-${sanitizeZakekeCodePart(color)}`,
+          label: color,
+        }));
+        const sizeValues = availableSizes.map((size) => ({
+          code: `${sizeAttributeCode}-${sanitizeZakekeCodePart(size)}`,
+          label: size,
+        }));
+        const selectedAttributes = {
+          ...(colorVariantCode ? { [colorAttributeCode]: colorVariantCode } : {}),
+          ...(sizeVariantCode ? { [sizeAttributeCode]: sizeVariantCode } : {}),
+        };
+        const attributeDefinitions = [
+          ...(colorValues.length
+            ? [{ code: colorAttributeCode, label: "Color", values: colorValues }]
+            : []),
+          ...(sizeValues.length
+            ? [{ code: sizeAttributeCode, label: "Size", values: sizeValues }]
+            : []),
+        ];
+        const variantSelections =
+          colorValues.length && sizeValues.length
+            ? colorValues.flatMap((color) =>
+                sizeValues.map((size) => [
+                  { code: colorAttributeCode, value: { code: color.code } },
+                  { code: sizeAttributeCode, value: { code: size.code } },
+                ])
+              )
+            : colorValues.length
+              ? colorValues.map((color) => [
+                  { code: colorAttributeCode, value: { code: color.code } },
+                ])
+              : sizeValues.map((size) => [
+                  { code: sizeAttributeCode, value: { code: size.code } },
+                ]);
         // The Zakeke v2 SDK reads `firstVariantId` to pre-select a variant and skip
         // the "Choose a variant" picker. The id must match a value code that the
         // `zakeke-products` /options endpoint returned.
@@ -120,11 +162,7 @@ export const ZakekeDesigner = ({
           isClientPreviews: true,
           hideVariants: true,
           cartButtonText: t("productDetail.addToCart"),
-          selectedAttributes: {
-            ...(selectedColor ? { Color: selectedColor, Colour: selectedColor } : {}),
-            ...(selectedColorHex ? { ColorHex: selectedColorHex } : {}),
-            ...(selectedSize ? { Size: selectedSize } : {}),
-          },
+          selectedAttributes,
           // Pre-select the variant so Zakeke skips its built-in variant picker.
           // `firstVariantId` is the actual SDK field (see customizer.js v2).
           ...(firstVariantId ? { firstVariantId } : {}),
@@ -139,7 +177,11 @@ export const ZakekeDesigner = ({
             isOutOfStock: false,
           }),
 
-          getProductAttribute: () => ({}),
+          getProductAttribute: () => ({
+            attributes: attributeDefinitions,
+            variants: variantSelections,
+            ...(selectedColorHex ? { colorHex: selectedColorHex } : {}),
+          }),
 
           addToCart: (zakekeData: any) => {
             console.log("[Zakeke] addToCart payload:", zakekeData);
@@ -220,7 +262,7 @@ export const ZakekeDesigner = ({
         // Cleanup silently
       }
     };
-  }, [getToken, productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex]);
+  }, [getToken, productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex, availableColors, availableSizes]);
 
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">

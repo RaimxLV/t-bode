@@ -380,6 +380,8 @@ const ProductDetail = () => {
           selectedColor={selectedColor}
           selectedColorHex={selectedColorHex}
           selectedSize={selectedSize}
+          availableColors={colors.map((color) => color.name)}
+          availableSizes={sizes}
           variantCodes={zakekeVariantCodes}
           quantity={quantity}
           onClose={() => setDesignerOpen(false)}
