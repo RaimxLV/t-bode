@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.svg";
-import { NewsletterSignup } from "./NewsletterSignup";
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -55,9 +54,6 @@ export const Footer = () => {
               <a href="https://www.facebook.com/tbode.lv" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-colors">
                 <Facebook className="w-4 h-4" />
               </a>
-            </div>
-            <div className="mt-6">
-              <NewsletterSignup />
             </div>
           </div>
 

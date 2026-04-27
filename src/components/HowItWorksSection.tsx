@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Download, CheckCircle2, Smartphone } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
 import stepDesign from "@/assets/step-design.png";
 import stepPayment from "@/assets/step-payment.png";
@@ -17,6 +19,7 @@ const steps = [
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
+  const { canInstall, isIOS, isStandalone, promptInstall } = useInstallPrompt();
 
   return (
     <section className="relative py-24 md:py-32 overflow-hidden" style={{ background: "#000" }}>
@@ -84,6 +87,39 @@ export const HowItWorksSection = () => {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* Install app CTA — sits at the end of the steps */}
+      <div className="container mx-auto px-4 mt-16 md:mt-20 flex justify-center">
+        {isStandalone ? (
+          <div
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold border-2"
+            style={{
+              background: "hsl(142 70% 45% / 0.15)",
+              borderColor: "hsl(142 70% 55%)",
+              color: "hsl(142 80% 75%)",
+            }}
+          >
+            <CheckCircle2 className="w-5 h-5" />
+            {t("install.alreadyInstalled", "Lietotne ir instalēta ✅")}
+          </div>
+        ) : canInstall ? (
+          <button
+            onClick={() => promptInstall()}
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold text-white border-2 border-white/30 backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/10"
+          >
+            <Download className="w-5 h-5" />
+            {t("install.heroCta", "Instalēt T-Bode lietotni (Datorā vai Telefonā)")}
+          </button>
+        ) : (
+          <Link
+            to="/install"
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-md font-body font-semibold text-white border-2 border-white/30 backdrop-blur-sm transition-all hover:scale-105 hover:bg-white/10"
+          >
+            {isIOS ? <Smartphone className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+            {t("install.heroCta", "Instalēt T-Bode lietotni (Datorā vai Telefonā)")}
+          </Link>
+        )}
       </div>
     </section>
   );
