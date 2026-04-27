@@ -30,13 +30,13 @@ export const HowItWorksSection = () => {
     try {
       const outcome = await promptInstall();
       if (outcome === "accepted") {
-        // Show success state immediately; isStandalone will also flip via appinstalled
+        // Keep installing animation visible longer for tactile feel
         setTimeout(() => {
           setInstalling(false);
           setJustInstalled(true);
-        }, 800);
+        }, 1800);
       } else {
-        setTimeout(() => setInstalling(false), 400);
+        setTimeout(() => setInstalling(false), 800);
       }
     } catch {
       setInstalling(false);
@@ -46,11 +46,11 @@ export const HowItWorksSection = () => {
   const handleManualInstall = (e: React.MouseEvent) => {
     e.preventDefault();
     setInstalling(true);
-    // Brief animation, then navigate to manual instructions
+    // Longer animation, then navigate to manual instructions
     setTimeout(() => {
       setInstalling(false);
       navigate("/install");
-    }, 1100);
+    }, 2200);
   };
 
   return (
