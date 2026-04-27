@@ -124,31 +124,7 @@ export const HowItWorksSection = () => {
       {/* Install app CTA — sits at the end of the steps */}
       <div className="container mx-auto px-4 mt-14 md:mt-16 flex justify-center">
         <AnimatePresence mode="wait">
-          {isStandalone ? (
-            <motion.div
-              key="installed"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body"
-              style={{
-                background: "hsl(150 30% 18% / 0.5)",
-                border: "1px solid hsl(150 35% 35%)",
-                color: "hsl(150 35% 75%)",
-              }}
-            >
-              <motion.span
-                initial={{ scale: 0, rotate: -90 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 15 }}
-                className="inline-flex"
-              >
-                <Check className="w-4 h-4" strokeWidth={2.5} />
-              </motion.span>
-              {t("install.alreadyInstalled", "Lietotne instalēta")}
-            </motion.div>
-          ) : installing ? (
+          {installing ? (
             <motion.div
               key="installing"
               initial={{ opacity: 0, y: 4 }}
@@ -210,7 +186,6 @@ export const HowItWorksSection = () => {
                 </button>
               ) : (
                 <a
-                  to="/install"
                   href="/install"
                   onClick={handleManualInstall}
                   className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
