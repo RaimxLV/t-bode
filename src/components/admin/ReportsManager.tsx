@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon } from "lucide-react";
 import { toast } from "sonner";
+import { AlertTriangle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,6 +31,7 @@ export const ReportsManager = () => {
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [invoicesByOrder, setInvoicesByOrder] = useState<Record<string, any>>({});
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
 
@@ -46,12 +48,20 @@ export const ReportsManager = () => {
     if (ordErr) { toast.error(ordErr.message); setLoading(false); return; }
     const ids = (ordersData ?? []).map((o) => o.id);
     let itemsData: any[] = [];
+    let invMap: Record<string, any> = {};
     if (ids.length) {
       const { data } = await supabase.from("order_items").select("*").in("order_id", ids);
       itemsData = data ?? [];
+      const { data: invs } = await supabase
+        .from("invoices")
+        .select("order_id, invoice_number, version, gross_amount, net_amount, vat_amount, is_current")
+        .in("order_id", ids)
+        .eq("is_current", true);
+      for (const inv of invs ?? []) invMap[inv.order_id] = inv;
     }
     setOrders(ordersData ?? []);
     setItems(itemsData);
+    setInvoicesByOrder(invMap);
     setLoading(false);
   };
 
@@ -153,10 +163,11 @@ export const ReportsManager = () => {
       const gross = round2(Number(o.total));
       const net = round2(gross / (1 + VAT_RATE / 100));
       const vat = round2(gross - net);
+      const inv = invoicesByOrder[o.id];
       ws.addRow({
         date: new Date(o.created_at),
         order_no: `#${String(o.order_number).padStart(4, "0")}`,
-        invoice_no: "",
+        invoice_no: inv ? `${inv.invoice_number}${inv.version > 1 ? ` v${inv.version}` : ""}` : "— nav —",
         client: o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? ""),
         type: o.is_business ? "B2B" : "B2C",
         reg_no: o.company_reg_number ?? "",
