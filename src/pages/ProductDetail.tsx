@@ -15,6 +15,7 @@ import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
+import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -78,6 +79,20 @@ const ProductDetail = () => {
     if (!selectedColor) return "";
     return colors.find((c) => c.name === selectedColor)?.hex || "";
   }, [selectedColor, colors]);
+
+  const zakekeProductCode = useMemo(
+    () => (product ? getZakekeProductCode(product) : ""),
+    [product]
+  );
+
+  const zakekeVariantCodes = useMemo(
+    () =>
+      buildZakekeVariantCodes(zakekeProductCode, {
+        color: selectedColor,
+        size: selectedSize,
+      }),
+    [zakekeProductCode, selectedColor, selectedSize]
+  );
 
   const handleAddToCart = () => {
     if (!product || !selectedSize || !selectedColor) return;
@@ -357,7 +372,7 @@ const ProductDetail = () => {
       {designerOpen && product.customizable && (
         <ZakekeDesigner
           productId={product.id}
-          zakekeModelCode={product.zakeke_model_code || product.slug}
+          zakekeModelCode={zakekeProductCode || product.slug}
           productName={displayName}
           productPrice={product.price}
           productSlug={product.slug}
@@ -365,6 +380,7 @@ const ProductDetail = () => {
           selectedColor={selectedColor}
           selectedColorHex={selectedColorHex}
           selectedSize={selectedSize}
+          variantCodes={zakekeVariantCodes}
           quantity={quantity}
           onClose={() => setDesignerOpen(false)}
         />

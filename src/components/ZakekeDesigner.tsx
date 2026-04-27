@@ -16,6 +16,8 @@ interface ZakekeDesignerProps {
   selectedColor: string;
   selectedColorHex?: string;
   selectedSize: string;
+  /** Pre-built variant codes that match what the `zakeke-products` edge function exposes. */
+  variantCodes?: { color?: string; size?: string };
   quantity: number;
   onClose: () => void;
 }
@@ -39,6 +41,7 @@ export const ZakekeDesigner = ({
   selectedColor,
   selectedColorHex,
   selectedSize,
+  variantCodes,
   quantity,
   onClose,
 }: ZakekeDesignerProps) => {
@@ -95,10 +98,18 @@ export const ZakekeDesigner = ({
         const customizer = new window.ZakekeDesigner();
         customizerInstance = customizer;
 
+        const colorVariantCode = variantCodes?.color;
+        const sizeVariantCode = variantCodes?.size;
+        // Zakeke accepts an array of value codes that match the codes returned by /options
+        const variantsCodes = [colorVariantCode, sizeVariantCode].filter(
+          (v): v is string => Boolean(v)
+        );
+
         const config: Record<string, unknown> = {
           containerId: "zakeke-container",
           tokenOauth: token,
           productId: zakekeModelCode,
+          productCode: zakekeModelCode,
           productName,
           quantity,
           currency: "EUR",
@@ -114,6 +125,10 @@ export const ZakekeDesigner = ({
             ...(selectedColorHex ? { ColorHex: selectedColorHex } : {}),
             ...(selectedSize ? { Size: selectedSize } : {}),
           },
+          // Pass the canonical variant codes so Zakeke skips its variant picker
+          // and opens directly with the right color/size selected.
+          ...(colorVariantCode ? { variantCode: colorVariantCode } : {}),
+          ...(variantsCodes.length ? { variantsCodes, variantCodes: variantsCodes } : {}),
           variant: [
             ...(selectedColor ? [`Color:${selectedColor}`] : []),
             ...(selectedSize ? [`Size:${selectedSize}`] : []),
@@ -210,7 +225,7 @@ export const ZakekeDesigner = ({
         // Cleanup silently
       }
     };
-  }, [getToken, productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language]);
+  }, [getToken, productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex]);
 
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">
