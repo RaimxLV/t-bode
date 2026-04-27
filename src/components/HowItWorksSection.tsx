@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
@@ -21,16 +21,36 @@ const steps = [
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
   const { canInstall, isIOS, isStandalone, promptInstall } = useInstallPrompt();
+  const navigate = useNavigate();
   const [installing, setInstalling] = useState(false);
+  const [justInstalled, setJustInstalled] = useState(false);
 
-  const handleInstall = async () => {
+  const handleNativeInstall = async () => {
     setInstalling(true);
     try {
-      await promptInstall();
-    } finally {
-      // appinstalled event will flip isStandalone; keep spinner briefly otherwise
-      setTimeout(() => setInstalling(false), 600);
+      const outcome = await promptInstall();
+      if (outcome === "accepted") {
+        // Show success state immediately; isStandalone will also flip via appinstalled
+        setTimeout(() => {
+          setInstalling(false);
+          setJustInstalled(true);
+        }, 800);
+      } else {
+        setTimeout(() => setInstalling(false), 400);
+      }
+    } catch {
+      setInstalling(false);
     }
+  };
+
+  const handleManualInstall = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setInstalling(true);
+    // Brief animation, then navigate to manual instructions
+    setTimeout(() => {
+      setInstalling(false);
+      navigate("/install");
+    }, 1100);
   };
 
   return (
@@ -148,6 +168,30 @@ export const HowItWorksSection = () => {
               <Loader2 className="w-4 h-4 animate-spin relative z-10" />
               <span className="relative z-10">{t("install.installing", "Instalē...")}</span>
             </motion.div>
+          ) : (isStandalone || justInstalled) ? (
+            <motion.div
+              key="installed"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body"
+              style={{
+                background: "hsl(150 30% 18% / 0.5)",
+                border: "1px solid hsl(150 35% 35%)",
+                color: "hsl(150 35% 75%)",
+              }}
+            >
+              <motion.span
+                initial={{ scale: 0, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 15 }}
+                className="inline-flex"
+              >
+                <Check className="w-4 h-4" strokeWidth={2.5} />
+              </motion.span>
+              {t("install.alreadyInstalled", "Lietotne instalēta")}
+            </motion.div>
           ) : (
             <motion.div
               key="cta"
@@ -158,20 +202,22 @@ export const HowItWorksSection = () => {
             >
               {canInstall ? (
                 <button
-                  onClick={handleInstall}
+                  onClick={handleNativeInstall}
                   className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
                 >
                   <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
                   <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
                 </button>
               ) : (
-                <Link
+                <a
                   to="/install"
+                  href="/install"
+                  onClick={handleManualInstall}
                   className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
                 >
                   <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
                   <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
-                </Link>
+                </a>
               )}
             </motion.div>
           )}
