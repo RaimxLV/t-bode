@@ -474,6 +474,7 @@
     "installed": "Lietotne veiksmīgi instalēta!",
     "dismissed": "Instalācija atcelta",
     "alreadyInstalled": "Jau instalēts ✓",
+    "heroCta": "Instalēt T-Bode lietotni (Datorā vai Telefonā)",
     "alreadyInstalledDesc": "Tu jau lieto T-Bode kā instalētu lietotni.",
     "iosTitle": "Kā instalēt iPhone vai iPad ierīcē",
     "iosStep1": "Atver Safari kopīgošanas izvēlni",
