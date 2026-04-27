@@ -481,6 +481,7 @@
     "dismissed": "Installation dismissed",
     "alreadyInstalled": "Already installed ✓",
     "heroCta": "Install T-Bode app (Desktop or Mobile)",
+    "simpleCta": "Install app",
     "alreadyInstalledDesc": "You're already using T-Bode as an installed app.",
     "iosTitle": "How to install on iPhone or iPad",
     "iosStep1": "Open Safari Share menu",
