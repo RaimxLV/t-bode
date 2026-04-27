@@ -510,7 +510,107 @@ export const ReportsManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredOrders.map((o) => {
+                  {(() => {
+                    // Day-grouping helpers
+                    const startOfDay = (d: Date) => {
+                      const x = new Date(d);
+                      x.setHours(0, 0, 0, 0);
+                      return x.getTime();
+                    };
+                    const todayMs = startOfDay(new Date());
+                    const dayDiff = (ts: number) => Math.round((todayMs - startOfDay(new Date(ts))) / 86400000);
+                    const dayLabel = (ts: number) => {
+                      const diff = dayDiff(ts);
+                      const dateStr = format(new Date(ts), "EEEE, dd.MM.yyyy");
+                      if (diff === 0) return `Šodien · ${dateStr}`;
+                      if (diff === 1) return `Vakar · ${dateStr}`;
+                      return dateStr;
+                    };
+                    // Tint by recency: today = strongest, older = lighter
+                    const rowTint = (ts: number) => {
+                      const diff = dayDiff(ts);
+                      if (diff <= 0) return "bg-foreground/[0.06]"; // today — darkest
+                      if (diff === 1) return "bg-foreground/[0.035]"; // yesterday
+                      if (diff <= 6) return "bg-foreground/[0.015]"; // this week
+                      return ""; // older — plain
+                    };
+                    const headerTint = (ts: number) => {
+                      const diff = dayDiff(ts);
+                      if (diff <= 0) return "bg-foreground/10 text-foreground";
+                      if (diff === 1) return "bg-foreground/[0.06] text-foreground";
+                      if (diff <= 6) return "bg-muted text-foreground";
+                      return "bg-muted/60 text-muted-foreground";
+                    };
+                    let lastDayKey: string | null = null;
+                    const rows: JSX.Element[] = [];
+                    filteredOrders.forEach((o) => {
+                    const inv = invoicesByOrder[o.id];
+                    const gross = round2(Number(o.total));
+                    const net = round2(gross / (1 + VAT_RATE / 100));
+                    const vat = round2(gross - net);
+                    const warning = invoiceWarning(o);
+                    const ts = new Date(o.created_at).getTime();
+                    const dayKey = format(new Date(ts), "yyyy-MM-dd");
+                    if (dayKey !== lastDayKey) {
+                      lastDayKey = dayKey;
+                      // Sum gross for that day in current filter
+                      const dayTotal = filteredOrders
+                        .filter((x) => format(new Date(x.created_at), "yyyy-MM-dd") === dayKey)
+                        .reduce((s, x) => s + Number(x.total), 0);
+                      const dayCount = filteredOrders.filter((x) => format(new Date(x.created_at), "yyyy-MM-dd") === dayKey).length;
+                      rows.push(
+                        <TableRow key={`day-${dayKey}`} className={cn("hover:bg-transparent border-b-0", headerTint(ts))}>
+                          <TableCell colSpan={10} className="py-1.5 px-2 sm:px-4">
+                            <div className="flex items-center justify-between gap-2 text-[11px] font-semibold uppercase tracking-wide">
+                              <span className="truncate">{dayLabel(ts)}</span>
+                              <span className="shrink-0 text-muted-foreground normal-case font-normal">{dayCount} pas. · {round2(dayTotal).toFixed(2)} €</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+                    rows.push(
+                      <TableRow key={o.id} className={rowTint(ts)}>
+                        <TableCell className="text-[11px] whitespace-nowrap">{format(new Date(o.created_at), "dd.MM.yy HH:mm")}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap font-mono">#{String(o.order_number).padStart(4, "0")}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">
+                          {inv ? (
+                            <span className="font-mono">{inv.invoice_number}{inv.version > 1 ? ` v${inv.version}` : ""}</span>
+                          ) : (
+                            <span className="text-destructive">— nav —</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-[11px] max-w-[140px] truncate">
+                          {o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? o.guest_email ?? "")}
+                        </TableCell>
+                        <TableCell className="text-[11px]">
+                          <Badge variant="outline" className="text-[10px]">{o.is_business ? "B2B" : "B2C"}</Badge>
+                        </TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">{paymentLabel(o)}</TableCell>
+                        <TableCell className="text-[11px]">{statusBadge(o)}</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap text-right font-semibold">{gross.toFixed(2)} €</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap text-right text-muted-foreground">{vat.toFixed(2)} €</TableCell>
+                        <TableCell className="text-[11px] whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            {warning && (
+                              <span title={warning}>
+                                <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                              </span>
+                            )}
+                            {inv && (
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openInvoicePdf(o.id)} title="Lejupielādēt rēķinu">
+                                <FileText className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  });
+                  return rows;
+                  })()}
+                  {/* legacy map removed below */}
+                  {false && filteredOrders.map((o) => {
                     const inv = invoicesByOrder[o.id];
                     const gross = round2(Number(o.total));
                     const net = round2(gross / (1 + VAT_RATE / 100));
