@@ -264,6 +264,36 @@ export type Database = {
           },
         ]
       }
+      newsletter_subscribers: {
+        Row: {
+          confirmed_at: string | null
+          created_at: string
+          email: string
+          id: string
+          language: string
+          source: string | null
+          unsubscribed_at: string | null
+        }
+        Insert: {
+          confirmed_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          language?: string
+          source?: string | null
+          unsubscribed_at?: string | null
+        }
+        Update: {
+          confirmed_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          language?: string
+          source?: string | null
+          unsubscribed_at?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           color: string | null
