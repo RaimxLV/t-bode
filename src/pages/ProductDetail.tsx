@@ -16,6 +16,7 @@ import { RelatedProducts } from "@/components/RelatedProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
 import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
+import { prefetchZakeke } from "@/lib/zakeke-loader";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -48,6 +49,15 @@ const ProductDetail = () => {
       setSelectedColor(productColors[0].name);
     }
   }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Warm up the Zakeke script + token in the background as soon as we know
+  // the product is customizable. Both have their own caches, so this is a no-op
+  // on subsequent visits within the same tab.
+  useEffect(() => {
+    if (product?.customizable) {
+      prefetchZakeke();
+    }
+  }, [product?.customizable]);
 
   const galleryImages = useMemo(() => {
     if (!product) return [];
@@ -335,6 +345,8 @@ const ProductDetail = () => {
                   type="button"
                   disabled={!selectedSize || !selectedColor}
                   onClick={() => setDesignerOpen(true)}
+                  onMouseEnter={prefetchZakeke}
+                  onTouchStart={prefetchZakeke}
                   className="group relative mb-4 w-full overflow-hidden rounded-lg px-8 py-5 text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-personalize-pulse"
                   style={{ background: "var(--gradient-brand)" }}
                   aria-label={t("productDetail.customizeDesign", "Personalizēt dizainu")}

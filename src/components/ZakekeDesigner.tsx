@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { X, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { sanitizeZakekeCodePart } from "@/lib/zakeke";
+import {
+  getZakekeToken,
+  loadZakekeScript,
+  clearZakekeTokenCache,
+} from "@/lib/zakeke-loader";
 
 interface ZakekeDesignerProps {
   productId: string;
@@ -51,51 +55,31 @@ export const ZakekeDesigner = ({
   onClose,
 }: ZakekeDesignerProps) => {
   const [loading, setLoading] = useState(true);
+  const [loadingStep, setLoadingStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const customizerRef = useRef<ReturnType<typeof window.ZakekeDesigner.prototype.createIframe> | null>(null);
+  const [retryNonce, setRetryNonce] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { addItem, setIsOpen } = useCart();
   const { t, i18n } = useTranslation();
-
-  const getToken = useCallback(async () => {
-    let visitorCode = localStorage.getItem("zakeke-visitor");
-    if (!visitorCode) {
-      visitorCode = crypto.randomUUID();
-      localStorage.setItem("zakeke-visitor", visitorCode);
-    }
-
-    const { data, error } = await supabase.functions.invoke("zakeke-token", {
-      body: { visitorCode },
-    });
-
-    if (error || !data?.access_token) {
-      throw new Error(error?.message || "Failed to get token");
-    }
-
-    return data.access_token as string;
-  }, []);
 
   useEffect(() => {
     let mounted = true;
     let customizerInstance: { removeIframe: () => void } | null = null;
 
-    const loadScript = () =>
-      new Promise<void>((resolve, reject) => {
-        if (window.ZakekeDesigner) {
-          resolve();
-          return;
-        }
-        const script = document.createElement("script");
-        script.src = "https://portal.zakeke.com/scripts/integration/apiV2/customizer.js";
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Failed to load Zakeke script"));
-        document.head.appendChild(script);
-      });
-
     const init = async () => {
       try {
-        const [token] = await Promise.all([getToken(), loadScript()]);
+        setError(null);
+        setLoading(true);
+        setLoadingStep(t("productDetail.zakekeLoadingScript", "Sagatavojam dizaineri…"));
+        // Kick off both in parallel — both have their own caches so this
+        // is essentially free if the user (or the product page) already
+        // warmed them up.
+        const tokenP = getZakekeToken();
+        const scriptP = loadZakekeScript();
+
+        const [token] = await Promise.all([tokenP, scriptP]);
         if (!mounted) return;
+        setLoadingStep(t("productDetail.zakekeLoadingDesigner", "Iel\u0101d\u0113jam dizaineri…"));
 
         const culture = i18n.language === "lv" ? "lv-LV" : "en-US";
         const isMobile = window.innerWidth < 768;
@@ -247,7 +231,13 @@ export const ZakekeDesigner = ({
       } catch (err) {
         if (!mounted) return;
         console.error("Zakeke init error:", err);
-        setError(err instanceof Error ? err.message : "Failed to initialize designer");
+        // If this looks like an auth error, drop the cached token so the
+        // next attempt fetches a fresh one.
+        const msg = err instanceof Error ? err.message : String(err);
+        if (/401|403|token/i.test(msg)) {
+          clearZakekeTokenCache();
+        }
+        setError(msg || "Failed to initialize designer");
         setLoading(false);
       }
     };
@@ -262,7 +252,7 @@ export const ZakekeDesigner = ({
         // Cleanup silently
       }
     };
-  }, [getToken, productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex, availableColors, availableSizes]);
+  }, [productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex, availableColors, availableSizes, retryNonce]);
 
   return (
     <div className="fixed inset-0 z-[100] bg-background flex flex-col">
@@ -282,18 +272,41 @@ export const ZakekeDesigner = ({
         className="flex-1 relative min-h-0"
         style={{ maxHeight: '85vh', overflow: 'hidden' }}
       >
-        {loading && (
+        {loading && !error && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <div className="flex flex-col items-center gap-3 text-center px-6">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              <p className="text-sm font-body text-muted-foreground">
+                {loadingStep || t("productDetail.zakekeLoadingScript", "Sagatavojam dizaineri…")}
+              </p>
+            </div>
           </div>
         )}
         {error && (
           <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
-            <div className="text-center p-6">
-              <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={onClose} variant="outline">
-                {t("productDetail.backToProducts")}
-              </Button>
+            <div className="text-center p-6 max-w-sm">
+              <AlertTriangle className="w-10 h-10 text-destructive mx-auto mb-3" />
+              <p className="font-body font-semibold mb-2">
+                {t("productDetail.zakekeErrorTitle", "Neizdev\u0101s atv\u0113rt dizaineri")}
+              </p>
+              <p className="text-sm text-muted-foreground mb-4 break-words">
+                {error}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button
+                  onClick={() => {
+                    clearZakekeTokenCache();
+                    setRetryNonce((n) => n + 1);
+                  }}
+                  className="gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  {t("productDetail.tryAgain", "M\u0113\u0123in\u0101t v\u0113lreiz")}
+                </Button>
+                <Button onClick={onClose} variant="outline">
+                  {t("productDetail.backToProducts")}
+                </Button>
+              </div>
             </div>
           </div>
         )}
