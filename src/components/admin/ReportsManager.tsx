@@ -119,6 +119,21 @@ export const ReportsManager = () => {
     );
   };
 
+  const invoiceWarning = (o: any): string | null => {
+    const inv = invoicesByOrder[o.id];
+    if (!inv) return "Nav izrakstīts rēķins";
+    if (Math.abs(Number(inv.gross_amount) - Number(o.total)) > 0.02) {
+      return `Rēķina summa (${Number(inv.gross_amount).toFixed(2)} €) atšķiras no pasūtījuma (${Number(o.total).toFixed(2)} €)`;
+    }
+    return null;
+  };
+
+  const issuesCount = useMemo(
+    () => orders.filter((o) => invoiceWarning(o)).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orders, invoicesByOrder]
+  );
+
   const exportXlsx = async () => {
     const ExcelJS = (await import("exceljs")).default;
     const wb = new ExcelJS.Workbook();
@@ -286,6 +301,16 @@ export const ReportsManager = () => {
         <Card><CardContent className="p-4"><div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><TrendingUp className="w-3.5 h-3.5" /> Bruto</div><p className="text-2xl font-display text-primary">{summary.gross.toFixed(2)} €</p></CardContent></Card>
       </div>
 
+      {issuesCount > 0 && (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-semibold text-destructive">Uzmanību: {issuesCount} pasūtījumi ar rēķina problēmām</p>
+            <p className="text-muted-foreground mt-0.5">Daži pasūtījumi nav rēķini izrakstīti vai rēķina summa atšķiras no pasūtījuma summas. Atver pavadzīmes (PDF) un ģenerē jaunu versiju.</p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         <Card>
           <CardContent className="p-4 space-y-2">
@@ -361,6 +386,11 @@ export const ReportsManager = () => {
                           {" · "}
                           {paymentLabel(o)}
                         </p>
+                        {invoiceWarning(o) && (
+                          <p className="text-[10px] text-destructive flex items-center gap-1 mt-1">
+                            <AlertTriangle className="w-3 h-3" /> {invoiceWarning(o)}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="text-sm font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</span>
@@ -421,6 +451,11 @@ export const ReportsManager = () => {
                           <div className="flex flex-col">
                             <span className="font-medium truncate max-w-[180px]">{customer}</span>
                             {o.is_business && <Badge variant="outline" className="text-[9px] w-fit mt-0.5">B2B</Badge>}
+                            {invoiceWarning(o) && (
+                              <span className="text-[10px] text-destructive flex items-center gap-1 mt-0.5">
+                                <AlertTriangle className="w-3 h-3" /> {invoiceWarning(o)}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-xs">
