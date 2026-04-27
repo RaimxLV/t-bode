@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon } from "lucide-react";
+import { Euro, Receipt, TrendingUp, CreditCard, Package, FileSpreadsheet, Eye, CalendarIcon, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { AlertTriangle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -133,6 +133,28 @@ export const ReportsManager = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [orders, invoicesByOrder]
   );
+
+  const openInvoicePdf = async (orderId: string) => {
+    const inv = invoicesByOrder[orderId];
+    if (!inv) {
+      toast.error("Šim pasūtījumam nav izrakstīta rēķina");
+      return;
+    }
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const fetchUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/invoice-pdf?order_id=${orderId}`;
+      const resp = await fetch(fetchUrl, {
+        headers: { Authorization: `Bearer ${session?.access_token ?? ""}` },
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (e: any) {
+      toast.error(`PDF kļūda: ${e.message}`);
+    }
+  };
 
   const exportXlsx = async () => {
     const ExcelJS = (await import("exceljs")).default;
@@ -394,15 +416,29 @@ export const ReportsManager = () => {
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
                         <span className="text-sm font-semibold whitespace-nowrap">{Number(o.total).toFixed(2)} €</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-2 gap-1"
-                          onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span className="text-[10px]">PDF</span>
-                        </Button>
+                        <div className="flex gap-1">
+                          {invoicesByOrder[o.id] && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 gap-1"
+                              onClick={() => openInvoicePdf(o.id)}
+                              title="Atvērt rēķina PDF"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span className="text-[10px]">Rēķins</span>
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 gap-1"
+                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                            title="Skatīt / labot pavadzīmi"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                     {its.length > 0 && (
@@ -478,15 +514,29 @@ export const ReportsManager = () => {
                         </TableCell>
                         <TableCell>{statusBadge(o)}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
-                            title="Skatīt pavadzīmi"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            {invoicesByOrder[o.id] && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 gap-1"
+                                onClick={() => openInvoicePdf(o.id)}
+                                title="Atvērt rēķina PDF jaunā cilnē"
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span className="text-[10px] hidden lg:inline">Rēķins</span>
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2"
+                              onClick={() => { setInvoiceOrder(o); setInvoiceOpen(true); }}
+                              title="Skatīt / labot pavadzīmi"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
