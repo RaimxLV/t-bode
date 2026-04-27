@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check } from "lucide-react";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check, Shield } from "lucide-react";
+import { TwoFactorSetup } from "@/components/security/TwoFactorSetup";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -159,7 +160,7 @@ const Profile = () => {
           <h1 className="text-3xl md:text-4xl mb-6">{t("profile.title", "Mans profils")}</h1>
 
           <Tabs defaultValue="profile">
-            <TabsList className="mb-6 w-full grid grid-cols-3 h-auto">
+            <TabsList className="mb-6 w-full grid grid-cols-4 h-auto">
               <TabsTrigger value="profile" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
                 <User className="w-4 h-4 shrink-0" />
                 <span className="truncate">{t("profile.profileTab", "Profils")}</span>
@@ -174,6 +175,10 @@ const Profile = () => {
                 <span className="truncate hidden sm:inline">{t("profile.wishlistTab", "Vēlmju saraksts")}</span>
                 <span className="truncate sm:hidden">{t("profile.wishlistTabShort", "Vēlmes")}</span>
                 {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-0.5 text-[10px] px-1.5 h-4">{wishlistIds.size}</Badge>}
+              </TabsTrigger>
+              <TabsTrigger value="security" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
+                <Shield className="w-4 h-4 shrink-0" />
+                <span className="truncate">{t("profile.securityTab", "Drošība")}</span>
               </TabsTrigger>
             </TabsList>
 
@@ -348,6 +353,9 @@ const Profile = () => {
                   ))}
                 </div>
               )}
+            </TabsContent>
+            <TabsContent value="security">
+              <TwoFactorSetup />
             </TabsContent>
           </Tabs>
         </div>
