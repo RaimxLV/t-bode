@@ -1,4 +1,4 @@
-import { MapPin, Instagram, Facebook, Mail, Phone, Share2, Link2, Check } from "lucide-react";
+import { MapPin, Instagram, Facebook, Mail, Phone, Share2, Link2, Check, Truck, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -9,7 +9,7 @@ export const Footer = () => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
-  const shareUrl = "https://RaimxLV.github.io/t-bode/";
+  const shareUrl = "https://t-bode.lv/";
   const shareText = t("footer.shareText");
 
   const handleNativeShare = async () => {
@@ -44,10 +44,11 @@ export const Footer = () => {
     <footer className="bg-[#000000] text-white">
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+          {/* Brand */}
           <div>
             <img src={logo} alt="T-Bode" className="h-12 mb-4 brightness-0 invert" />
             <p className="text-gray-400 text-sm font-body leading-relaxed mb-6">{t("footer.brandDesc")}</p>
-            <div className="flex gap-3">
+            <div className="flex gap-3 mb-6">
               <a href="https://www.instagram.com/t_bode_lv/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-colors">
                 <Instagram className="w-4 h-4" />
               </a>
@@ -55,18 +56,33 @@ export const Footer = () => {
                 <Facebook className="w-4 h-4" />
               </a>
             </div>
+
+            {/* Trust badges */}
+            <div className="space-y-2 text-xs font-body text-gray-500">
+              <div className="flex items-center gap-2">
+                <Truck className="w-3.5 h-3.5 text-gray-400" />
+                <span>{t("footer.trustDelivery", "Piegāde Omniva pakomātos visā Latvijā")}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
+                <span>{t("footer.trustPayments", "Drošie maksājumi: karte, Apple Pay, Google Pay")}</span>
+              </div>
+            </div>
           </div>
 
+          {/* Shop */}
           <div>
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.shop")}</h4>
             <ul className="space-y-3 text-sm font-body">
               <li><Link to="/design" className="text-gray-400 hover:text-white transition-colors">{t("footer.designYourOwn")}</Link></li>
               <li><Link to="/collection" className="text-gray-400 hover:text-white transition-colors">{t("footer.ourCollection")}</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">{t("footer.news")}</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">{t("footer.giftCards")}</a></li>
+              <li><Link to="/#about" className="text-gray-400 hover:text-white transition-colors">{t("nav.ourStory", "Mūsu stāsts")}</Link></li>
+              <li><Link to="/#stores" className="text-gray-400 hover:text-white transition-colors">{t("nav.findStore", "Mūsu veikali")}</Link></li>
+              <li><Link to="/#faq" className="text-gray-400 hover:text-white transition-colors">{t("nav.faq", "BUJ")}</Link></li>
             </ul>
           </div>
 
+          {/* Physical stores */}
           <div>
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.stores")}</h4>
             <ul className="space-y-3 text-sm font-body">
@@ -80,19 +96,22 @@ export const Footer = () => {
                   <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-300 font-medium">{store.name}</span>
-                    <p className="text-gray-500 text-xs">{store.detail}</p>
+                    <a href={`mailto:${store.detail}`} className="text-gray-500 text-xs hover:text-white transition-colors">
+                      {store.detail}
+                    </a>
                   </div>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* Help / Contact */}
           <div>
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.help")}</h4>
-            <ul className="space-y-3 text-sm font-body">
+            <ul className="space-y-3 text-sm font-body mb-6">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <span className="text-gray-400">Braslas iela 29-2, Rīga, LV-1084</span>
+                <span className="text-gray-400">{t("footer.officeAddress", "Birojs: Braslas iela 29, ieeja D, Rīga, LV-1084")}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
@@ -104,7 +123,14 @@ export const Footer = () => {
               </li>
             </ul>
 
-            <div className="mt-6">
+            {/* Quick legal links */}
+            <ul className="space-y-2 text-sm font-body mb-6">
+              <li><Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">{t("footer.privacy")}</Link></li>
+              <li><Link to="/terms" className="text-gray-400 hover:text-white transition-colors">{t("footer.terms")}</Link></li>
+              <li><Link to="/install" className="text-gray-400 hover:text-white transition-colors">{t("install.shortLabel", "Instalēt lietotni")}</Link></li>
+            </ul>
+
+            <div>
               <h5 className="text-xs font-body font-semibold tracking-wider text-gray-500 uppercase mb-3">{t("footer.share")}</h5>
               <div className="flex flex-wrap gap-2">
                 <button onClick={handleNativeShare} aria-label="Share" className="w-9 h-9 rounded-full border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:border-white transition-colors">
