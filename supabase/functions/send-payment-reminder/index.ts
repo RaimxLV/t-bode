@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
-const TEST_OVERRIDE_EMAIL = "ofsetadruka@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
@@ -106,8 +105,7 @@ Deno.serve(async (req) => {
       }
       if (!recipientEmail) return { skipped: true, reason: "no email" };
 
-      const originalRecipient = recipientEmail;
-      const toEmail = TEST_OVERRIDE_EMAIL;
+      const toEmail = recipientEmail;
 
       const html = renderHtml(order, settings, language);
       const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
@@ -116,9 +114,9 @@ Deno.serve(async (req) => {
       await logEmailAttempt(service, {
         message_id: messageId,
         template_name: "payment-reminder",
-        recipient_email: originalRecipient,
+        recipient_email: toEmail,
         status: "pending",
-        metadata: { order_id: orderId, order_number: order.order_number, lang: language, test_to: toEmail },
+        metadata: { order_id: orderId, order_number: order.order_number, lang: language },
       });
 
       const resp = await fetch("https://api.resend.com/emails", {
@@ -130,7 +128,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: FROM_EMAIL,
           to: [toEmail],
-          subject: `[TEST → ${originalRecipient}] ${subject}`,
+          subject,
           html,
         }),
       });
@@ -140,7 +138,7 @@ Deno.serve(async (req) => {
         await logEmailAttempt(service, {
           message_id: messageId,
           template_name: "payment-reminder",
-          recipient_email: originalRecipient,
+          recipient_email: toEmail,
           status: "failed",
           error_message: detail,
           metadata: { order_id: orderId, http_status: resp.status },
@@ -154,7 +152,7 @@ Deno.serve(async (req) => {
       await logEmailAttempt(service, {
         message_id: messageId,
         template_name: "payment-reminder",
-        recipient_email: originalRecipient,
+        recipient_email: toEmail,
         status: "sent",
         metadata: { order_id: orderId, order_number: order.order_number, lang: language },
       });
