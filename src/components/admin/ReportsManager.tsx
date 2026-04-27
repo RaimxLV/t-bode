@@ -353,6 +353,26 @@ export const ReportsManager = () => {
     setTo(todayISO(0));
   };
 
+  const setThisMonth = () => {
+    setFrom(monthStartISO());
+    setTo(todayISO(0));
+  };
+
+  const setLastMonth = () => {
+    const d = new Date();
+    const firstThis = new Date(d.getFullYear(), d.getMonth(), 1);
+    const firstPrev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    const lastPrev = new Date(firstThis.getTime() - 24 * 3600 * 1000);
+    setFrom(firstPrev.toISOString().slice(0, 10));
+    setTo(lastPrev.toISOString().slice(0, 10));
+  };
+
+  const setThisYear = () => {
+    const d = new Date();
+    setFrom(`${d.getFullYear()}-01-01`);
+    setTo(todayISO(0));
+  };
+
   return (
     <div className="space-y-4">
       <Card className="border border-border">
@@ -387,12 +407,27 @@ export const ReportsManager = () => {
           </div>
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(1); }}>Šodien</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(7); }}>7 dienas</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(30); }}>30 dienas</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(7); }}>7 d.</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setThisMonth}>Šis mēnesis</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setLastMonth}>Iepr. mēnesis</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setThisYear}>Šis gads</Button>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Filtrēt pēc</Label>
+            <Select value={dateField} onValueChange={(v) => setDateField(v as DateField)}>
+              <SelectTrigger className="w-[170px] mt-1 h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="order" className="text-xs">Pasūtījuma datuma</SelectItem>
+                <SelectItem value="invoice" className="text-xs">Rēķina datuma</SelectItem>
+                <SelectItem value="paid" className="text-xs">Apmaksas datuma</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button size="sm" onClick={load} disabled={loading}>{loading ? "Ielādē..." : "Atsvaidzināt"}</Button>
           <div className="ml-auto">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!orders.length}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
               <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
             </Button>
           </div>
@@ -463,15 +498,15 @@ export const ReportsManager = () => {
       <Card>
         <CardContent className="p-4 space-y-3">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Package className="w-4 h-4" /> Pasūtījumi ({orders.length})
+            <Package className="w-4 h-4" /> Pasūtījumi ({filteredOrders.length})
           </h3>
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
           ) : (
             <>
             {/* Mobile: card list */}
             <div className="md:hidden space-y-2">
-              {orders.map((o) => {
+              {filteredOrders.map((o) => {
                 const its = itemsByOrder.get(o.id) ?? [];
                 const customer = o.is_business
                   ? (o.company_name ?? o.shipping_name ?? "—")
@@ -555,7 +590,7 @@ export const ReportsManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((o) => {
+                  {filteredOrders.map((o) => {
                     const its = itemsByOrder.get(o.id) ?? [];
                     const customer = o.is_business
                       ? (o.company_name ?? o.shipping_name ?? "—")
