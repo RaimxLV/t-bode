@@ -43,9 +43,9 @@ export const Footer = () => {
   return (
     <footer className="bg-[#000000] text-white">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 text-center sm:text-left">
           {/* Brand */}
-          <div>
+          <div className="flex flex-col items-center sm:items-start">
             <img src={logo} alt="T-Bode" className="h-12 mb-4 brightness-0 invert" />
             <p className="text-gray-400 text-sm font-body leading-relaxed mb-6">{t("footer.brandDesc")}</p>
             <div className="flex gap-3 mb-6">
@@ -58,7 +58,7 @@ export const Footer = () => {
             </div>
 
             {/* Trust badges */}
-            <div className="space-y-2 text-xs font-body text-gray-500">
+            <div className="space-y-2 text-xs font-body text-gray-500 text-left">
               <div className="flex items-center gap-2">
                 <Truck className="w-3.5 h-3.5 text-gray-400" />
                 <span>{t("footer.trustDelivery", "Piegāde Omniva pakomātos visā Latvijā")}</span>
@@ -96,7 +96,7 @@ export const Footer = () => {
                   <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-300 font-medium">{store.name}</span>
-                    <a href={`mailto:${store.detail}`} className="text-gray-500 text-xs hover:text-white transition-colors">
+                    <a href={`mailto:${store.detail}`} className="block text-gray-500 text-xs hover:text-white transition-colors break-all">
                       {store.detail}
                     </a>
                   </div>
@@ -106,7 +106,7 @@ export const Footer = () => {
           </div>
 
           {/* Help / Contact */}
-          <div>
+          <div className="flex flex-col items-center sm:items-start text-left">
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.help")}</h4>
             <ul className="space-y-3 text-sm font-body mb-6">
               <li className="flex items-start gap-2">
