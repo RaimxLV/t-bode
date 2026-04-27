@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then((m) => ({ default: m.InvoiceModal })));
 
@@ -25,9 +26,18 @@ function todayISO(offsetDays = 0) {
   return d.toISOString().slice(0, 10);
 }
 
+function monthStartISO() {
+  const d = new Date();
+  d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
+type DateField = "order" | "invoice" | "paid";
+
 export const ReportsManager = () => {
-  const [from, setFrom] = useState(todayISO(0));
+  const [from, setFrom] = useState(monthStartISO());
   const [to, setTo] = useState(todayISO(0));
+  const [dateField, setDateField] = useState<DateField>("order");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
@@ -39,38 +49,96 @@ export const ReportsManager = () => {
     setLoading(true);
     const fromISO = new Date(from + "T00:00:00").toISOString();
     const toDate = new Date(to + "T23:59:59.999").toISOString();
-    // Only count paid/confirmed+ orders, exclude pending and cancelled
-    const { data: ordersData, error: ordErr } = await supabase
-      .from("orders").select("*")
-      .gte("created_at", fromISO).lte("created_at", toDate)
-      .in("status", ["confirmed", "processing", "shipped", "delivered"])
-      .order("created_at", { ascending: false });
-    if (ordErr) { toast.error(ordErr.message); setLoading(false); return; }
-    const ids = (ordersData ?? []).map((o) => o.id);
-    let itemsData: any[] = [];
-    let invMap: Record<string, any> = {};
-    if (ids.length) {
-      const { data } = await supabase.from("order_items").select("*").in("order_id", ids);
-      itemsData = data ?? [];
-      const { data: invs } = await supabase
+    // Strategy: load orders + invoices broadly, then filter client-side by chosen date field.
+    // We always include orders with confirmed/processing/shipped/delivered/manually-paid.
+    // Pending / cancelled are EXCLUDED unless an invoice was issued (B2B credit-note scenarios).
+    try {
+      // 1) Pull current invoices in the period (covers cancelled-with-invoice cases too).
+      const { data: invsInRange } = await supabase
         .from("invoices")
-        .select("order_id, invoice_number, version, gross_amount, net_amount, vat_amount, is_current")
-        .in("order_id", ids)
-        .eq("is_current", true);
-      for (const inv of invs ?? []) invMap[inv.order_id] = inv;
+        .select("order_id, invoice_number, version, gross_amount, net_amount, vat_amount, is_current, created_at")
+        .eq("is_current", true)
+        .gte("created_at", fromISO).lte("created_at", toDate);
+
+      // 2) Pull orders in the period (by created_at OR manually_paid_at).
+      // We use OR to capture both order-date and paid-date matches in one query.
+      const orFilter = `and(created_at.gte.${fromISO},created_at.lte.${toDate}),and(manually_paid_at.gte.${fromISO},manually_paid_at.lte.${toDate})`;
+      const { data: ordersInRange, error: ordErr } = await supabase
+        .from("orders").select("*")
+        .or(orFilter)
+        .order("created_at", { ascending: false });
+      if (ordErr) throw ordErr;
+
+      // 3) Merge: union of order IDs from invoices + orders in range, then fetch any missing orders.
+      const orderIdSet = new Set<string>((ordersInRange ?? []).map((o: any) => o.id));
+      const missingFromInvoices = (invsInRange ?? [])
+        .map((i: any) => i.order_id)
+        .filter((id: string) => !orderIdSet.has(id));
+      let extraOrders: any[] = [];
+      if (missingFromInvoices.length) {
+        const { data: extra } = await supabase.from("orders").select("*").in("id", missingFromInvoices);
+        extraOrders = extra ?? [];
+      }
+      const allOrders = [...(ordersInRange ?? []), ...extraOrders];
+
+      // 4) Build invoice map for ALL these orders (need data for warnings, even if invoice is outside range).
+      const allOrderIds = allOrders.map((o) => o.id);
+      let invMap: Record<string, any> = {};
+      let itemsData: any[] = [];
+      if (allOrderIds.length) {
+        const [{ data: invs }, { data: its }] = await Promise.all([
+          supabase
+            .from("invoices")
+            .select("order_id, invoice_number, version, gross_amount, net_amount, vat_amount, is_current, created_at")
+            .in("order_id", allOrderIds)
+            .eq("is_current", true),
+          supabase.from("order_items").select("*").in("order_id", allOrderIds),
+        ]);
+        for (const inv of invs ?? []) invMap[inv.order_id] = inv;
+        itemsData = its ?? [];
+      }
+
+      setOrders(allOrders);
+      setItems(itemsData);
+      setInvoicesByOrder(invMap);
+    } catch (e: any) {
+      toast.error(e.message ?? "Kļūda ielādējot datus");
+    } finally {
+      setLoading(false);
     }
-    setOrders(ordersData ?? []);
-    setItems(itemsData);
-    setInvoicesByOrder(invMap);
-    setLoading(false);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
+  // Filter loaded data by chosen date field + inclusion rules.
+  const filteredOrders = useMemo(() => {
+    const fromMs = new Date(from + "T00:00:00").getTime();
+    const toMs = new Date(to + "T23:59:59.999").getTime();
+    const PAID_STATUSES = new Set(["confirmed", "processing", "shipped", "delivered"]);
+    return orders.filter((o) => {
+      const inv = invoicesByOrder[o.id];
+      // Inclusion: paid status OR has invoice (covers cancelled-with-invoice). Exclude pending+cancelled w/o invoice.
+      const isPaid = PAID_STATUSES.has(o.status) || !!o.manually_paid_at;
+      if (!isPaid && !inv) return false;
+
+      // Date filter
+      let ts: number | null = null;
+      if (dateField === "order") ts = new Date(o.created_at).getTime();
+      else if (dateField === "invoice") ts = inv?.created_at ? new Date(inv.created_at).getTime() : null;
+      else if (dateField === "paid") {
+        ts = o.manually_paid_at
+          ? new Date(o.manually_paid_at).getTime()
+          : (PAID_STATUSES.has(o.status) ? new Date(o.created_at).getTime() : null);
+      }
+      if (ts == null) return false;
+      return ts >= fromMs && ts <= toMs;
+    });
+  }, [orders, invoicesByOrder, from, to, dateField]);
+
   const summary = useMemo(() => {
     let gross = 0;
     const paymentSplit: Record<string, { count: number; gross: number }> = {};
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       const g = Number(o.total);
       gross += g;
       const key = o.payment_method || o.provider || "other";
@@ -81,7 +149,9 @@ export const ReportsManager = () => {
     const net = round2(gross / (1 + VAT_RATE / 100));
     const vat = round2(gross - net);
     const productMap = new Map<string, { name: string; qty: number; gross: number }>();
+    const filteredOrderIds = new Set(filteredOrders.map((o) => o.id));
     for (const it of items) {
+      if (!filteredOrderIds.has(it.order_id)) continue;
       const key = it.product_id || it.product_name;
       const prev = productMap.get(key) ?? { name: it.product_name, qty: 0, gross: 0 };
       prev.qty += Number(it.quantity);
@@ -89,8 +159,8 @@ export const ReportsManager = () => {
       productMap.set(key, prev);
     }
     const products = Array.from(productMap.values()).sort((a, b) => b.qty - a.qty);
-    return { gross: round2(gross), net, vat, paymentSplit, products, orderCount: orders.length };
-  }, [orders, items]);
+    return { gross: round2(gross), net, vat, paymentSplit, products, orderCount: filteredOrders.length };
+  }, [filteredOrders, items]);
 
   const itemsByOrder = useMemo(() => {
     const m = new Map<string, any[]>();
@@ -129,9 +199,9 @@ export const ReportsManager = () => {
   };
 
   const issuesCount = useMemo(
-    () => orders.filter((o) => invoiceWarning(o)).length,
+    () => filteredOrders.filter((o) => invoiceWarning(o)).length,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [orders, invoicesByOrder]
+    [filteredOrders, invoicesByOrder]
   );
 
   const openInvoicePdf = async (orderId: string) => {
@@ -209,7 +279,7 @@ export const ReportsManager = () => {
       };
     });
 
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       const gross = round2(Number(o.total));
       const net = round2(gross / (1 + VAT_RATE / 100));
       const vat = round2(gross - net);
@@ -283,6 +353,26 @@ export const ReportsManager = () => {
     setTo(todayISO(0));
   };
 
+  const setThisMonth = () => {
+    setFrom(monthStartISO());
+    setTo(todayISO(0));
+  };
+
+  const setLastMonth = () => {
+    const d = new Date();
+    const firstThis = new Date(d.getFullYear(), d.getMonth(), 1);
+    const firstPrev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    const lastPrev = new Date(firstThis.getTime() - 24 * 3600 * 1000);
+    setFrom(firstPrev.toISOString().slice(0, 10));
+    setTo(lastPrev.toISOString().slice(0, 10));
+  };
+
+  const setThisYear = () => {
+    const d = new Date();
+    setFrom(`${d.getFullYear()}-01-01`);
+    setTo(todayISO(0));
+  };
+
   return (
     <div className="space-y-4">
       <Card className="border border-border">
@@ -317,12 +407,27 @@ export const ReportsManager = () => {
           </div>
           <div className="flex gap-1.5">
             <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(1); }}>Šodien</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(7); }}>7 dienas</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(30); }}>30 dienas</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(7); }}>7 d.</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setThisMonth}>Šis mēnesis</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setLastMonth}>Iepr. mēnesis</Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={setThisYear}>Šis gads</Button>
+          </div>
+          <div>
+            <Label className="text-xs text-muted-foreground">Filtrēt pēc</Label>
+            <Select value={dateField} onValueChange={(v) => setDateField(v as DateField)}>
+              <SelectTrigger className="w-[170px] mt-1 h-9 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="order" className="text-xs">Pasūtījuma datuma</SelectItem>
+                <SelectItem value="invoice" className="text-xs">Rēķina datuma</SelectItem>
+                <SelectItem value="paid" className="text-xs">Apmaksas datuma</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button size="sm" onClick={load} disabled={loading}>{loading ? "Ielādē..." : "Atsvaidzināt"}</Button>
           <div className="ml-auto">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!orders.length}>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
               <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
             </Button>
           </div>
@@ -393,15 +498,15 @@ export const ReportsManager = () => {
       <Card>
         <CardContent className="p-4 space-y-3">
           <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Package className="w-4 h-4" /> Pasūtījumi ({orders.length})
+            <Package className="w-4 h-4" /> Pasūtījumi ({filteredOrders.length})
           </h3>
-          {orders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <p className="text-xs text-muted-foreground py-6 text-center">Nav pasūtījumu izvēlētajā periodā</p>
           ) : (
             <>
             {/* Mobile: card list */}
             <div className="md:hidden space-y-2">
-              {orders.map((o) => {
+              {filteredOrders.map((o) => {
                 const its = itemsByOrder.get(o.id) ?? [];
                 const customer = o.is_business
                   ? (o.company_name ?? o.shipping_name ?? "—")
@@ -485,7 +590,7 @@ export const ReportsManager = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {orders.map((o) => {
+                  {filteredOrders.map((o) => {
                     const its = itemsByOrder.get(o.id) ?? [];
                     const customer = o.is_business
                       ? (o.company_name ?? o.shipping_name ?? "—")
