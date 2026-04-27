@@ -376,61 +376,74 @@ export const ReportsManager = () => {
   return (
     <div className="space-y-4">
       <Card className="border border-border">
-        <CardContent className="p-4 flex flex-wrap items-end gap-3">
-          <div>
-            <Label className="text-xs text-muted-foreground">No</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !from && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {from ? format(new Date(from), "dd.MM.yyyy") : "Izvēlies"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={from ? new Date(from) : undefined} onSelect={(d) => d && setFrom(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
+        <CardContent className="p-3 sm:p-4 space-y-3">
+          {/* Date range */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="min-w-0">
+              <Label className="text-xs text-muted-foreground">No</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("w-full mt-1 justify-start text-left font-normal text-xs", !from && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{from ? format(new Date(from), "dd.MM.yyyy") : "Izvēlies"}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={from ? new Date(from) : undefined} onSelect={(d) => d && setFrom(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="min-w-0">
+              <Label className="text-xs text-muted-foreground">Līdz</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={cn("w-full mt-1 justify-start text-left font-normal text-xs", !to && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{to ? format(new Date(to), "dd.MM.yyyy") : "Izvēlies"}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={to ? new Date(to) : undefined} onSelect={(d) => d && setTo(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Līdz</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className={cn("w-[150px] mt-1 justify-start text-left font-normal text-xs", !to && "text-muted-foreground")}>
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {to ? format(new Date(to), "dd.MM.yyyy") : "Izvēlies"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={to ? new Date(to) : undefined} onSelect={(d) => d && setTo(d.toISOString().slice(0, 10))} initialFocus className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
+
+          {/* Presets — horizontal scroll on mobile */}
+          <div className="-mx-1 overflow-x-auto">
+            <div className="flex gap-1.5 px-1 min-w-max">
+              <Button variant="outline" size="sm" className="text-xs whitespace-nowrap" onClick={() => { setPreset(1); }}>Šodien</Button>
+              <Button variant="outline" size="sm" className="text-xs whitespace-nowrap" onClick={() => { setPreset(7); }}>7 d.</Button>
+              <Button variant="outline" size="sm" className="text-xs whitespace-nowrap" onClick={setThisMonth}>Šis mēnesis</Button>
+              <Button variant="outline" size="sm" className="text-xs whitespace-nowrap" onClick={setLastMonth}>Iepr. mēnesis</Button>
+              <Button variant="outline" size="sm" className="text-xs whitespace-nowrap" onClick={setThisYear}>Šis gads</Button>
+            </div>
           </div>
-          <div className="flex gap-1.5">
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(1); }}>Šodien</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => { setPreset(7); }}>7 d.</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={setThisMonth}>Šis mēnesis</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={setLastMonth}>Iepr. mēnesis</Button>
-            <Button variant="outline" size="sm" className="text-xs" onClick={setThisYear}>Šis gads</Button>
-          </div>
-          <div>
-            <Label className="text-xs text-muted-foreground">Filtrēt pēc</Label>
-            <Select value={dateField} onValueChange={(v) => setDateField(v as DateField)}>
-              <SelectTrigger className="w-[170px] mt-1 h-9 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="order" className="text-xs">Pasūtījuma datuma</SelectItem>
-                <SelectItem value="invoice" className="text-xs">Rēķina datuma</SelectItem>
-                <SelectItem value="paid" className="text-xs">Apmaksas datuma</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button size="sm" onClick={load} disabled={loading}>{loading ? "Ielādē..." : "Atsvaidzināt"}</Button>
-          <div className="ml-auto">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
-              <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
+
+          {/* Filter + refresh */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3">
+            <div className="flex-1 min-w-0">
+              <Label className="text-xs text-muted-foreground">Filtrēt pēc</Label>
+              <Select value={dateField} onValueChange={(v) => setDateField(v as DateField)}>
+                <SelectTrigger className="w-full sm:w-[180px] mt-1 h-9 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="order" className="text-xs">Pasūtījuma datuma</SelectItem>
+                  <SelectItem value="invoice" className="text-xs">Rēķina datuma</SelectItem>
+                  <SelectItem value="paid" className="text-xs">Apmaksas datuma</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button size="sm" onClick={load} disabled={loading} className="w-full sm:w-auto">
+              {loading ? "Ielādē..." : "Atsvaidzināt"}
             </Button>
           </div>
+
+          {/* Export — full width on mobile */}
+          <Button variant="outline" size="sm" className="w-full sm:w-auto sm:ml-auto sm:flex gap-1.5" onClick={exportXlsx} disabled={!filteredOrders.length}>
+            <FileSpreadsheet className="w-3.5 h-3.5" /> Eksportēt grāmatvedībai (Excel)
+          </Button>
         </CardContent>
       </Card>
 
