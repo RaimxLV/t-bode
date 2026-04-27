@@ -59,9 +59,9 @@ function writeCachedToken(token: string, visitor: string, expiresInSec: number) 
 /** Load the Zakeke customizer script once. Reuses an in-flight promise. */
 export function loadZakekeScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  // Already loaded
-  // @ts-expect-error - global injected by Zakeke
-  if (window.ZakekeDesigner) return Promise.resolve();
+  if ((window as unknown as { ZakekeDesigner?: unknown }).ZakekeDesigner) {
+    return Promise.resolve();
+  }
 
   if (scriptPromise) return scriptPromise;
 
