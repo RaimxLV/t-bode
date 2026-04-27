@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
@@ -20,17 +20,37 @@ const steps = [
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
-  const { canInstall, isIOS, isStandalone, promptInstall } = useInstallPrompt();
+  const { canInstall, isStandalone, promptInstall } = useInstallPrompt();
+  const navigate = useNavigate();
   const [installing, setInstalling] = useState(false);
+  const [justInstalled, setJustInstalled] = useState(false);
 
-  const handleInstall = async () => {
+  const handleNativeInstall = async () => {
     setInstalling(true);
     try {
-      await promptInstall();
-    } finally {
-      // appinstalled event will flip isStandalone; keep spinner briefly otherwise
-      setTimeout(() => setInstalling(false), 600);
+      const outcome = await promptInstall();
+      if (outcome === "accepted") {
+        // Show success state immediately; isStandalone will also flip via appinstalled
+        setTimeout(() => {
+          setInstalling(false);
+          setJustInstalled(true);
+        }, 800);
+      } else {
+        setTimeout(() => setInstalling(false), 400);
+      }
+    } catch {
+      setInstalling(false);
     }
+  };
+
+  const handleManualInstall = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setInstalling(true);
+    // Brief animation, then navigate to manual instructions
+    setTimeout(() => {
+      setInstalling(false);
+      navigate("/install");
+    }, 1100);
   };
 
   return (
@@ -104,7 +124,27 @@ export const HowItWorksSection = () => {
       {/* Install app CTA — sits at the end of the steps */}
       <div className="container mx-auto px-4 mt-14 md:mt-16 flex justify-center">
         <AnimatePresence mode="wait">
-          {isStandalone ? (
+          {installing ? (
+            <motion.div
+              key="installing"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              className="relative inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/25 bg-white/[0.06] overflow-hidden"
+            >
+              {/* Sweeping progress shimmer */}
+              <motion.span
+                aria-hidden
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+              />
+              <Loader2 className="w-4 h-4 animate-spin relative z-10" />
+              <span className="relative z-10">{t("install.installing", "Instalē...")}</span>
+            </motion.div>
+          ) : (isStandalone || justInstalled) ? (
             <motion.div
               key="installed"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -128,26 +168,6 @@ export const HowItWorksSection = () => {
               </motion.span>
               {t("install.alreadyInstalled", "Lietotne instalēta")}
             </motion.div>
-          ) : installing ? (
-            <motion.div
-              key="installing"
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.25 }}
-              className="relative inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/25 bg-white/[0.06] overflow-hidden"
-            >
-              {/* Sweeping progress shimmer */}
-              <motion.span
-                aria-hidden
-                initial={{ x: "-100%" }}
-                animate={{ x: "100%" }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent"
-              />
-              <Loader2 className="w-4 h-4 animate-spin relative z-10" />
-              <span className="relative z-10">{t("install.installing", "Instalē...")}</span>
-            </motion.div>
           ) : (
             <motion.div
               key="cta"
@@ -158,20 +178,21 @@ export const HowItWorksSection = () => {
             >
               {canInstall ? (
                 <button
-                  onClick={handleInstall}
+                  onClick={handleNativeInstall}
                   className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
                 >
                   <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
                   <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
                 </button>
               ) : (
-                <Link
-                  to="/install"
+                <a
+                  href="/install"
+                  onClick={handleManualInstall}
                   className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
                 >
                   <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
                   <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
-                </Link>
+                </a>
               )}
             </motion.div>
           )}
