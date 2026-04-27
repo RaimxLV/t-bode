@@ -8,8 +8,6 @@ const corsHeaders = {
 };
 
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
-// Test mode: route all outgoing emails to this verified Resend address
-const TEST_OVERRIDE_EMAIL = "ofsetadruka@gmail.com";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
@@ -130,16 +128,14 @@ Deno.serve(async (req) => {
 
     const html = renderHtml(order, items ?? [], language);
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
-    const originalRecipient = toEmail;
-    toEmail = TEST_OVERRIDE_EMAIL;
 
     const messageId = makeMessageId("order-confirmation");
     await logEmailAttempt(service, {
       message_id: messageId,
       template_name: "order-confirmation",
-      recipient_email: originalRecipient,
+      recipient_email: toEmail,
       status: "pending",
-      metadata: { order_id, order_number: order.order_number, lang: language, test_to: toEmail },
+      metadata: { order_id, order_number: order.order_number, lang: language },
     });
 
     // For B2B orders, attach current invoice PDF when available
@@ -177,7 +173,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [toEmail],
-        subject: `[TEST → ${originalRecipient}] ${subject}`,
+        subject,
         html,
         ...(attachments.length ? { attachments } : {}),
       }),
@@ -189,7 +185,7 @@ Deno.serve(async (req) => {
       await logEmailAttempt(service, {
         message_id: messageId,
         template_name: "order-confirmation",
-        recipient_email: originalRecipient,
+        recipient_email: toEmail,
         status: "failed",
         error_message: text,
         metadata: { order_id, http_status: resp.status },
@@ -203,7 +199,7 @@ Deno.serve(async (req) => {
     await logEmailAttempt(service, {
       message_id: messageId,
       template_name: "order-confirmation",
-      recipient_email: originalRecipient,
+      recipient_email: toEmail,
       status: "sent",
       metadata: { order_id, order_number: order.order_number, lang: language },
     });
