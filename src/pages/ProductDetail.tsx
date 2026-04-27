@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2 } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -331,20 +331,54 @@ const ProductDetail = () => {
               </div>
 
               {product.customizable && (
-                <Button
-                  variant="secondary"
-                  className="mb-4 w-full gap-2 font-body"
+                <button
+                  type="button"
                   disabled={!selectedSize || !selectedColor}
                   onClick={() => setDesignerOpen(true)}
+                  className="group relative mb-4 w-full overflow-hidden rounded-lg px-8 py-5 text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-personalize-pulse"
+                  style={{ background: "var(--gradient-brand)" }}
+                  aria-label={t("productDetail.customizeDesign", "Personalizēt dizainu")}
                 >
-                  <Paintbrush className="w-4 h-4" />
-                  {t("productDetail.customizeDesign", "Personalizēt dizainu")}
-                </Button>
+                  {/* Shimmer sweep */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 -inset-x-1 block animate-shimmer-slide"
+                    style={{
+                      background:
+                        "linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.45) 50%, transparent 70%)",
+                    }}
+                  />
+                  {/* Sparkle accents */}
+                  <Sparkles
+                    aria-hidden
+                    className="absolute left-3 top-2 w-3 h-3 text-white/80 animate-sparkle-spin"
+                  />
+                  <Sparkles
+                    aria-hidden
+                    className="absolute right-4 bottom-2 w-3.5 h-3.5 text-white/70 animate-sparkle-spin"
+                    style={{ animationDelay: "0.6s" }}
+                  />
+                  <span className="relative flex items-center justify-center gap-3">
+                    <Wand2 className="w-5 h-5 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
+                    <span className="tracking-wide">
+                      {t("productDetail.customizeDesign", "Personalizēt dizainu")}
+                    </span>
+                    <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12 group-hover:scale-110" />
+                  </span>
+                </button>
               )}
 
               <button
-                className="w-full flex items-center justify-center gap-3 px-8 py-4 rounded-lg text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ background: "var(--gradient-brand)" }}
+                className={`w-full flex items-center justify-center gap-3 px-8 py-3.5 rounded-lg font-body font-semibold transition-all hover:bg-secondary active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
+                  product.customizable
+                    ? "text-base border-2 border-border bg-background text-foreground"
+                    : "text-lg text-primary-foreground hover:scale-[1.02]"
+                }`}
+                style={
+                  product.customizable
+                    ? undefined
+                    : { background: "var(--gradient-brand)" }
+                }
                 disabled={!selectedSize || !selectedColor}
                 onClick={handleAddToCart}
               >
