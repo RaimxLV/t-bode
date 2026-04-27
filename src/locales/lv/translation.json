@@ -473,7 +473,7 @@
     "readyDesc": "Tava ierīce ir gatava — klikšķini zemāk, lai pievienotu T-Bode sākumlapai.",
     "installed": "Lietotne veiksmīgi instalēta!",
     "dismissed": "Instalācija atcelta",
-    "alreadyInstalled": "Jau instalēts ✓",
+    "alreadyInstalled": "Lietotne instalēta",
     "alreadyInstalledDesc": "Tu jau lieto T-Bode kā instalētu lietotni.",
     "iosTitle": "Kā instalēt iPhone vai iPad ierīcē",
     "iosStep1": "Atver Safari kopīgošanas izvēlni",
