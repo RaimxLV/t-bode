@@ -37,7 +37,8 @@ const TRACKING_STATUS_COLORS: Record<string, string> = {
 const OMNIVA_TRACK_URL = "https://www.omniva.lv/private/track_and_trace?barcode=";
 
 const Profile = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin, isWhitelisted } = useAuth();
+  const canSeeSecurity = isAdmin || isWhitelisted;
   const { productIds: wishlistIds, toggleWishlist } = useWishlist();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -161,8 +162,8 @@ const Profile = () => {
 
           <h1 className="text-3xl md:text-4xl mb-6">{t("profile.title", "Mans profils")}</h1>
 
-          <Tabs defaultValue={initialTab}>
-            <TabsList className="mb-6 w-full grid grid-cols-4 h-auto">
+          <Tabs defaultValue={initialTab === "security" && !canSeeSecurity ? "profile" : initialTab}>
+            <TabsList className={`mb-6 w-full grid ${canSeeSecurity ? "grid-cols-4" : "grid-cols-3"} h-auto`}>
               <TabsTrigger value="profile" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
                 <User className="w-4 h-4 shrink-0" />
                 <span className="truncate">{t("profile.profileTab", "Profils")}</span>
@@ -178,10 +179,12 @@ const Profile = () => {
                 <span className="truncate sm:hidden">{t("profile.wishlistTabShort", "Vēlmes")}</span>
                 {wishlistIds.size > 0 && <Badge variant="secondary" className="ml-0.5 text-[10px] px-1.5 h-4">{wishlistIds.size}</Badge>}
               </TabsTrigger>
-              <TabsTrigger value="security" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
-                <Shield className="w-4 h-4 shrink-0" />
-                <span className="truncate">{t("profile.securityTab", "Drošība")}</span>
-              </TabsTrigger>
+              {canSeeSecurity && (
+                <TabsTrigger value="security" className="gap-1 sm:gap-2 px-2 py-2 text-xs sm:text-sm">
+                  <Shield className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{t("profile.securityTab", "Drošība")}</span>
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="profile">
@@ -356,9 +359,11 @@ const Profile = () => {
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="security">
-              <TwoFactorSetup />
-            </TabsContent>
+            {canSeeSecurity && (
+              <TabsContent value="security">
+                <TwoFactorSetup />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </main>
