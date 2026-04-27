@@ -279,7 +279,7 @@ export const ReportsManager = () => {
       };
     });
 
-    for (const o of orders) {
+    for (const o of filteredOrders) {
       const gross = round2(Number(o.total));
       const net = round2(gross / (1 + VAT_RATE / 100));
       const vat = round2(gross - net);
