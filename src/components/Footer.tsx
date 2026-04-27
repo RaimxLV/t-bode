@@ -1,4 +1,4 @@
-import { MapPin, Instagram, Facebook, Mail, Phone, Share2, Link2, Check, Truck, ShieldCheck } from "lucide-react";
+import { MapPin, Instagram, Facebook, Mail, Phone, Share2, Link2, Check, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -62,10 +62,6 @@ export const Footer = () => {
               <div className="flex items-center gap-2">
                 <Truck className="w-3.5 h-3.5 text-gray-400" />
                 <span>{t("footer.trustDelivery", "Piegāde Omniva pakomātos visā Latvijā")}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-gray-400" />
-                <span>{t("footer.trustPayments", "Drošie maksājumi: karte, Apple Pay, Google Pay")}</span>
               </div>
             </div>
           </div>
@@ -158,19 +154,8 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-gray-800">
-        <div className="container mx-auto px-4 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-center md:text-left">
-          <div className="flex flex-col gap-1 text-xs text-gray-500 font-body order-2 md:order-1">
-            <p>{t("footer.copyright")}</p>
-            <p>{t("footer.regNumber", "Reģ. Nr. 40103456789, PVN: LV40103456789")}</p>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 order-1 md:order-2">
-            <span className="text-[10px] text-gray-500 font-body uppercase tracking-wider">{t("footer.securePayments")}</span>
-            <div className="flex items-center justify-center flex-wrap gap-1.5">
-              <span className="px-2 py-1 rounded bg-white/5 border border-gray-700 text-[10px] text-gray-300 font-body font-semibold tracking-wide">VISA</span>
-              <span className="px-2 py-1 rounded bg-white/5 border border-gray-700 text-[10px] text-gray-300 font-body font-semibold tracking-wide">Mastercard</span>
-              <span className="px-2 py-1 rounded bg-white/5 border border-gray-700 text-[10px] text-gray-300 font-body font-semibold tracking-wide">Montonio</span>
-            </div>
-          </div>
+        <div className="container mx-auto px-4 py-5 flex flex-col items-center gap-1 text-center text-xs text-gray-500 font-body">
+          <p>{t("footer.copyright")}</p>
         </div>
       </div>
     </footer>
