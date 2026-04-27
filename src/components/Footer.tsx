@@ -43,9 +43,9 @@ export const Footer = () => {
   return (
     <footer className="bg-[#000000] text-white">
       <div className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 text-left">
           {/* Brand */}
-          <div className="flex flex-col items-center sm:items-start">
+          <div>
             <img src={logo} alt="T-Bode" className="h-12 mb-4 brightness-0 invert" />
             <p className="text-gray-400 text-sm font-body leading-relaxed mb-6">{t("footer.brandDesc")}</p>
             <div className="flex gap-3 mb-6">
@@ -102,7 +102,7 @@ export const Footer = () => {
           </div>
 
           {/* Help / Contact */}
-          <div className="flex flex-col items-center sm:items-start text-left">
+          <div>
             <h4 className="font-display text-lg tracking-wider mb-5">{t("footer.help")}</h4>
             <ul className="space-y-3 text-sm font-body mb-6">
               <li className="flex items-start gap-2">
