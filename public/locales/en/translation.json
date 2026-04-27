@@ -384,7 +384,15 @@
     "terms": "Terms & Conditions",
     "securePayments": "Secure payments powered by",
     "share": "Share",
-    "shareText": "Check out T-Bode — personalized apparel store!"
+    "shareText": "Check out T-Bode — personalized apparel store!",
+    "newsletterTitle": "NEWSLETTER",
+    "newsletterDesc": "Subscribe to get exclusive discounts and updates by email.",
+    "newsletterPlaceholder": "Your email address",
+    "newsletterSubmit": "Subscribe",
+    "newsletterSuccess": "Thanks! You're subscribed.",
+    "newsletterAlready": "This email is already subscribed.",
+    "newsletterInvalid": "Please enter a valid email.",
+    "newsletterError": "Something went wrong. Try again later."
   },
   "notFound": {
     "title": "404",

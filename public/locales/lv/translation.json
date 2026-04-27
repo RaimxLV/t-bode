@@ -382,7 +382,15 @@
     "terms": "Noteikumi",
     "securePayments": "Drošie maksājumi nodrošina",
     "share": "Dalies",
-    "shareText": "Apskati T-Bode — personalizēta apģērba veikals!"
+    "shareText": "Apskati T-Bode — personalizēta apģērba veikals!",
+    "newsletterTitle": "JAUNUMI",
+    "newsletterDesc": "Pievienojies un saņem ekskluzīvas atlaides un jaunumus uz e-pastu.",
+    "newsletterPlaceholder": "Tava e-pasta adrese",
+    "newsletterSubmit": "Pieteikties",
+    "newsletterSuccess": "Paldies! Esi veiksmīgi pieteicies jaunumiem.",
+    "newsletterAlready": "Šis e-pasts jau ir pieteikts.",
+    "newsletterInvalid": "Lūdzu, ievadi derīgu e-pastu.",
+    "newsletterError": "Kļūda. Mēģini vēlāk."
   },
   "notFound": {
     "title": "404",
