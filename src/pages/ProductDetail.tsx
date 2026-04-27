@@ -369,16 +369,7 @@ const ProductDetail = () => {
               )}
 
               <button
-                className={`w-full flex items-center justify-center gap-3 px-8 py-3.5 rounded-lg font-body font-semibold transition-all hover:bg-secondary active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
-                  product.customizable
-                    ? "text-base border-2 border-border bg-background text-foreground"
-                    : "text-lg text-primary-foreground hover:scale-[1.02]"
-                }`}
-                style={
-                  product.customizable
-                    ? undefined
-                    : { background: "var(--gradient-brand)" }
-                }
+                className="w-full flex items-center justify-center gap-3 px-8 py-5 rounded-lg text-lg font-semibold font-body bg-black text-white border border-black transition-all hover:scale-[1.02] hover:bg-neutral-900 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!selectedSize || !selectedColor}
                 onClick={handleAddToCart}
               >
