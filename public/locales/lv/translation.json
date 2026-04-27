@@ -383,14 +383,10 @@
     "securePayments": "Drošie maksājumi nodrošina",
     "share": "Dalies",
     "shareText": "Apskati T-Bode — personalizēta apģērba veikals!",
-    "newsletterTitle": "JAUNUMI",
-    "newsletterDesc": "Pievienojies un saņem ekskluzīvas atlaides un jaunumus uz e-pastu.",
-    "newsletterPlaceholder": "Tava e-pasta adrese",
-    "newsletterSubmit": "Pieteikties",
-    "newsletterSuccess": "Paldies! Esi veiksmīgi pieteicies jaunumiem.",
-    "newsletterAlready": "Šis e-pasts jau ir pieteikts.",
-    "newsletterInvalid": "Lūdzu, ievadi derīgu e-pastu.",
-    "newsletterError": "Kļūda. Mēģini vēlāk."
+    "trustDelivery": "Piegāde Omniva pakomātos visā Latvijā",
+    "trustPayments": "Drošie maksājumi: karte, Apple Pay, Google Pay",
+    "officeAddress": "Birojs: Braslas iela 29, ieeja D, Rīga, LV-1084",
+    "regNumber": "SIA Ervitex • Reģ. Nr. 40103456789"
   },
   "notFound": {
     "title": "404",
