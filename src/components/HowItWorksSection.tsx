@@ -1,7 +1,8 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Smartphone, Check } from "lucide-react";
+import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import stepChoose from "@/assets/step-choose.png";
 import stepDesign from "@/assets/step-design.png";
@@ -20,6 +21,17 @@ const steps = [
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
   const { canInstall, isIOS, isStandalone, promptInstall } = useInstallPrompt();
+  const [installing, setInstalling] = useState(false);
+
+  const handleInstall = async () => {
+    setInstalling(true);
+    try {
+      await promptInstall();
+    } finally {
+      // appinstalled event will flip isStandalone; keep spinner briefly otherwise
+      setTimeout(() => setInstalling(false), 600);
+    }
+  };
 
   return (
     <section className="relative py-24 md:py-32 overflow-hidden" style={{ background: "#000" }}>
@@ -91,48 +103,79 @@ export const HowItWorksSection = () => {
 
       {/* Install app CTA — sits at the end of the steps */}
       <div className="container mx-auto px-4 mt-14 md:mt-16 flex justify-center">
-        {isStandalone ? (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body"
-            style={{
-              background: "hsl(150 30% 18% / 0.5)",
-              border: "1px solid hsl(150 35% 35%)",
-              color: "hsl(150 35% 75%)",
-            }}
-          >
-            <Check className="w-4 h-4" strokeWidth={2.5} />
-            {t("install.alreadyInstalled", "Lietotne instalēta")}
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            {canInstall ? (
-              <button
-                onClick={() => promptInstall()}
-                className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
+        <AnimatePresence mode="wait">
+          {isStandalone ? (
+            <motion.div
+              key="installed"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-body"
+              style={{
+                background: "hsl(150 30% 18% / 0.5)",
+                border: "1px solid hsl(150 35% 35%)",
+                color: "hsl(150 35% 75%)",
+              }}
+            >
+              <motion.span
+                initial={{ scale: 0, rotate: -90 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 15 }}
+                className="inline-flex"
               >
-                <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
-                <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
-              </button>
-            ) : (
-              <Link
-                to="/install"
-                className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
-              >
-                <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
-                <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
-              </Link>
-            )}
-          </motion.div>
-        )}
+                <Check className="w-4 h-4" strokeWidth={2.5} />
+              </motion.span>
+              {t("install.alreadyInstalled", "Lietotne instalēta")}
+            </motion.div>
+          ) : installing ? (
+            <motion.div
+              key="installing"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.25 }}
+              className="relative inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/25 bg-white/[0.06] overflow-hidden"
+            >
+              {/* Sweeping progress shimmer */}
+              <motion.span
+                aria-hidden
+                initial={{ x: "-100%" }}
+                animate={{ x: "100%" }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent"
+              />
+              <Loader2 className="w-4 h-4 animate-spin relative z-10" />
+              <span className="relative z-10">{t("install.installing", "Instalē...")}</span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="cta"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.4 }}
+            >
+              {canInstall ? (
+                <button
+                  onClick={handleInstall}
+                  className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
+                >
+                  <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
+                  <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
+                </button>
+              ) : (
+                <Link
+                  to="/install"
+                  className="group inline-flex items-center gap-2.5 px-5 py-2.5 rounded-full text-sm font-body font-medium text-white/90 border border-white/15 bg-white/[0.03] hover:bg-white/[0.08] hover:border-white/25 transition-all duration-300"
+                >
+                  <Smartphone className="w-4 h-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:rotate-[-6deg]" />
+                  <span>{t("install.simpleCta", "Instalēt lietotni")}</span>
+                </Link>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </section>
   );
