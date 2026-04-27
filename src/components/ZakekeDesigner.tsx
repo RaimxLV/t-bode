@@ -100,16 +100,16 @@ export const ZakekeDesigner = ({
 
         const colorVariantCode = variantCodes?.color;
         const sizeVariantCode = variantCodes?.size;
-        // Zakeke accepts an array of value codes that match the codes returned by /options
-        const variantsCodes = [colorVariantCode, sizeVariantCode].filter(
-          (v): v is string => Boolean(v)
-        );
+        // The Zakeke v2 SDK reads `firstVariantId` to pre-select a variant and skip
+        // the "Choose a variant" picker. The id must match a value code that the
+        // `zakeke-products` /options endpoint returned.
+        // Color is the dominant variant (mug Gold/Silver), so we prefer it.
+        const firstVariantId = colorVariantCode || sizeVariantCode;
 
         const config: Record<string, unknown> = {
           containerId: "zakeke-container",
           tokenOauth: token,
           productId: zakekeModelCode,
-          productCode: zakekeModelCode,
           productName,
           quantity,
           currency: "EUR",
@@ -125,14 +125,9 @@ export const ZakekeDesigner = ({
             ...(selectedColorHex ? { ColorHex: selectedColorHex } : {}),
             ...(selectedSize ? { Size: selectedSize } : {}),
           },
-          // Pass the canonical variant codes so Zakeke skips its variant picker
-          // and opens directly with the right color/size selected.
-          ...(colorVariantCode ? { variantCode: colorVariantCode } : {}),
-          ...(variantsCodes.length ? { variantsCodes, variantCodes: variantsCodes } : {}),
-          variant: [
-            ...(selectedColor ? [`Color:${selectedColor}`] : []),
-            ...(selectedSize ? [`Size:${selectedSize}`] : []),
-          ].join(",") || undefined,
+          // Pre-select the variant so Zakeke skips its built-in variant picker.
+          // `firstVariantId` is the actual SDK field (see customizer.js v2).
+          ...(firstVariantId ? { firstVariantId } : {}),
 
           getProductInfo: () => ({
             price: productPrice,
