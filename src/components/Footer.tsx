@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.svg";
-import { NewsletterSignup } from "./NewsletterSignup";
 
 export const Footer = () => {
   const { t } = useTranslation();

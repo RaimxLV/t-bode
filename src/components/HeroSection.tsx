@@ -115,7 +115,6 @@ export const HeroSection = () => {
               {t("hero.ctaCollection")}
             </button>
           </motion.div>
-          <HeroInstallBlock />
         </div>
       </div>
     </section>
