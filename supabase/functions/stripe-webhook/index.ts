@@ -113,6 +113,15 @@ Deno.serve(async (req) => {
           } catch (e) {
             console.error("Failed to auto-generate invoice:", (e as Error).message);
           }
+          // Create Zakeke order(s) for any customised items so admin can
+          // deep-link to the design and download print files.
+          try {
+            await supabase.functions.invoke("zakeke-create-order", {
+              body: { order_id: orderId },
+            });
+          } catch (e) {
+            console.error("Failed to create Zakeke order:", (e as Error).message);
+          }
           await supabase.functions.invoke("send-order-confirmation", {
             body: { order_id: orderId, lang: "lv" },
           });

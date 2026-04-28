@@ -120,6 +120,14 @@ Deno.serve(async (req) => {
         } catch (e) {
           console.error("Failed to auto-generate invoice:", (e as Error).message);
         }
+        // Create Zakeke order(s) for customised items
+        try {
+          await service.functions.invoke("zakeke-create-order", {
+            body: { order_id: orderId },
+          });
+        } catch (e) {
+          console.error("Failed to create Zakeke order:", (e as Error).message);
+        }
         await service.functions.invoke("send-order-confirmation", {
           body: { order_id: orderId, lang: "lv" },
         });
