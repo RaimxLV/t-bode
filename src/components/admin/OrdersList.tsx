@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Palette, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
