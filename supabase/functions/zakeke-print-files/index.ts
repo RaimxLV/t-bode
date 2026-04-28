@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { getZakekeOrderPrintFilesUrl } from "../_shared/zakeke.ts";
+import { getZakekeOrderOutputFiles } from "../_shared/zakeke.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,11 +81,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const url = await getZakekeOrderPrintFilesUrl(zakekeOrderId);
-    return new Response(JSON.stringify({ url }), {
+    const files = await getZakekeOrderOutputFiles(zakekeOrderId);
+    // Backwards compat: also return `url` pointing at the first file so
+    // existing UI that opens a single download keeps working.
+    return new Response(
+      JSON.stringify({ files, url: files[0]?.url ?? null }),
+      {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      }
+    );
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("zakeke-print-files error:", msg);

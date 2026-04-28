@@ -96,9 +96,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         { body: { zakeke_order_id: zakekeOrderId } }
       );
       if (error) throw error;
-      const url = (data as any)?.url;
-      if (!url) throw new Error("Zakeke neatgrieza ZIP saiti");
-      window.open(url, "_blank", "noopener,noreferrer");
+      const files = ((data as any)?.files ?? []) as Array<{ name: string; url: string }>;
+      if (!files.length) {
+        throw new Error(
+          "Zakeke vēl nav sagatavojusi drukas failus šim pasūtījumam. Mēģini vēlreiz pēc dažām minūtēm."
+        );
+      }
+      // Open every print-ready output file in a new tab so admin gets the
+      // real high-resolution print files, not the preview thumbnail.
+      for (const f of files) {
+        window.open(f.url, "_blank", "noopener,noreferrer");
+      }
+      toast.success(`Atvērti ${files.length} drukas faili`);
     } catch (e: any) {
       toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
     } finally {
@@ -941,7 +950,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                               ) : (
                                                 <FileArchive className="w-3 h-3" />
                                               )}
-                                              Lejupielādēt drukas failu (ZIP)
+                                              Lejupielādēt drukas failu (HiRes)
                                             </button>
                                           )}
                                           {!item.zakeke_order_id && item.zakeke_design_id && (
