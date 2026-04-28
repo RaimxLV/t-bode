@@ -85,6 +85,26 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [bulkLoading, setBulkLoading] = useState(false);
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
+  // Per-item loading state for the "download print files ZIP" button.
+  const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
+
+  const downloadZakekePrintFiles = async (zakekeOrderId: string, itemId: string) => {
+    setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "zakeke-print-files",
+        { body: { zakeke_order_id: zakekeOrderId } }
+      );
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("Zakeke neatgrieza ZIP saiti");
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
+    } finally {
+      setZakekeZipLoading((p) => ({ ...p, [itemId]: false }));
+    }
+  };
 
   const toggleOverride = (id: string) => {
     setStatusOverride((prev) => {
@@ -896,42 +916,59 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
-                                          {item.zakeke_design_id && (
+                                          {item.zakeke_order_id && (
+                                            <a
+                                              href={`https://portal.zakeke.com/Order/Details/${item.zakeke_order_id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
+                                              title={`Zakeke order ID: ${item.zakeke_order_id}`}
+                                            >
+                                              <Palette className="w-3 h-3" />
+                                              Atvērt pasūtījumu Zakeke
+                                              <ExternalLink className="w-2.5 h-2.5" />
+                                            </a>
+                                          )}
+                                          {item.zakeke_order_id && (
+                                            <button
+                                              type="button"
+                                              onClick={() => downloadZakekePrintFiles(item.zakeke_order_id, item.id)}
+                                              disabled={!!zakekeZipLoading[item.id]}
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit disabled:opacity-50"
+                                            >
+                                              {zakekeZipLoading[item.id] ? (
+                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                              ) : (
+                                                <FileArchive className="w-3 h-3" />
+                                              )}
+                                              Lejupielādēt drukas failu (ZIP)
+                                            </button>
+                                          )}
+                                          {!item.zakeke_order_id && item.zakeke_design_id && (
                                             <a
                                               href={`https://portal.zakeke.com/admin/designs/${item.zakeke_design_id}`}
                                               target="_blank"
                                               rel="noopener noreferrer"
                                               className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
-                                              title={`Zakeke design ID: ${item.zakeke_design_id}`}
+                                              title={`Zakeke design ID: ${item.zakeke_design_id} — pasūtījuma ID vēl nav izveidots`}
                                             >
                                               <Palette className="w-3 h-3" />
                                               Atvērt dizainu Zakeke
                                               <ExternalLink className="w-2.5 h-2.5" />
                                             </a>
                                           )}
-                                          {!item.zakeke_design_id && item.zakeke_thumbnail_url && (
-                                            <>
-                                              <a
-                                                href={item.zakeke_thumbnail_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
-                                                title="Atvērt drukas faila priekšskatījumu"
-                                              >
-                                                <Palette className="w-3 h-3" />
-                                                Atvērt drukas failu
-                                                <ExternalLink className="w-2.5 h-2.5" />
-                                              </a>
-                                              <a
-                                                href="https://portal.zakeke.com/admin/orders"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:underline w-fit"
-                                              >
-                                                <ExternalLink className="w-2.5 h-2.5" />
-                                                Zakeke Back-Office
-                                              </a>
-                                            </>
+                                          {!item.zakeke_order_id && !item.zakeke_design_id && item.zakeke_thumbnail_url && (
+                                            <a
+                                              href={item.zakeke_thumbnail_url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
+                                              title="Atvērt drukas faila priekšskatījumu"
+                                            >
+                                              <Palette className="w-3 h-3" />
+                                              Atvērt priekšskatījumu
+                                              <ExternalLink className="w-2.5 h-2.5" />
+                                            </a>
                                           )}
                                         </div>
                                       </div>

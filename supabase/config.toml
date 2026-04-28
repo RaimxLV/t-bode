@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.omniva-bulk-labels]
 verify_jwt = false
+
+[functions.zakeke-create-order]
+verify_jwt = false
