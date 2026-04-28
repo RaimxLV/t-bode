@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Palette, ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -894,7 +894,22 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         ) : (
                                           <div className="w-10 h-10 bg-muted rounded border border-border shrink-0" />
                                         )}
-                                        <span className="truncate">{item.product_name}</span>
+                                        <div className="flex flex-col min-w-0 gap-1">
+                                          <span className="truncate">{item.product_name}</span>
+                                          {item.zakeke_design_id && (
+                                            <a
+                                              href={`https://portal.zakeke.com/admin/designs/${item.zakeke_design_id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
+                                              title={`Zakeke design ID: ${item.zakeke_design_id}`}
+                                            >
+                                              <Palette className="w-3 h-3" />
+                                              Atvērt dizainu Zakeke
+                                              <ExternalLink className="w-2.5 h-2.5" />
+                                            </a>
+                                          )}
+                                        </div>
                                       </div>
                                     </TableCell>
                                     <TableCell className="text-xs">{item.size || "—"}</TableCell>
