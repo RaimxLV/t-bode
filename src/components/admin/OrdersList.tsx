@@ -909,6 +909,30 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                               <ExternalLink className="w-2.5 h-2.5" />
                                             </a>
                                           )}
+                                          {!item.zakeke_design_id && item.zakeke_thumbnail_url && (
+                                            <>
+                                              <a
+                                                href={item.zakeke_thumbnail_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
+                                                title="Atvērt drukas faila priekšskatījumu"
+                                              >
+                                                <Palette className="w-3 h-3" />
+                                                Atvērt drukas failu
+                                                <ExternalLink className="w-2.5 h-2.5" />
+                                              </a>
+                                              <a
+                                                href="https://portal.zakeke.com/admin/orders"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:underline w-fit"
+                                              >
+                                                <ExternalLink className="w-2.5 h-2.5" />
+                                                Zakeke Back-Office
+                                              </a>
+                                            </>
+                                          )}
                                         </div>
                                       </div>
                                     </TableCell>
