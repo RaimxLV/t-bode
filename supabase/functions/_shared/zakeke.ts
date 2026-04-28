@@ -115,19 +115,35 @@ export async function createZakekeOrder(opts: {
 }
 
 /**
- * Request the print-files archive for a Zakeke order. Some plans return a
- * direct download URL; others return a job that must be polled. We try the
- * direct endpoint first and fall back to the alternate path.
+ * Fetch the high-resolution PRINT OUTPUT files for a Zakeke order.
+ *
+ * Zakeke distinguishes between:
+ *   - preview / mockup images (low-res visualisation)
+ *   - output files (high-res print-ready PDFs/PNGs that the producer uses)
+ *
+ * The official S2S endpoint is `GET /v1/orders/{code}` which returns the
+ * order with each design's `outputFiles[]` (each item has `name` + `url`).
+ * We first resolve the Zakeke order by our external code, then return the
+ * first output file URL. If no output file is available yet (Zakeke is
+ * still rendering), we surface a clear error so the admin UI can retry.
  */
-export async function getZakekeOrderPrintFilesUrl(
+export interface ZakekeOutputFile {
+  name: string;
+  url: string;
+  side?: string | null;
+  designId?: string | null;
+}
+
+export async function getZakekeOrderOutputFiles(
   zakekeOrderId: string
-): Promise<string> {
+): Promise<ZakekeOutputFile[]> {
   const token = await getZakekeS2SToken();
 
+  // Try both V1 and V2 endpoints — Zakeke accounts may differ.
   const candidates = [
-    `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(zakekeOrderId)}/print-files`,
-    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}/print-files`,
-    `${ZAKEKE_BASE}/v1/order/${encodeURIComponent(zakekeOrderId)}/printfiles`,
+    `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(zakekeOrderId)}`,
+    `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(zakekeOrderId)}`,
+    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}`,
   ];
 
   let lastError = "";
@@ -144,16 +160,32 @@ export async function getZakekeOrderPrintFilesUrl(
       lastError = `${res.status} @ ${url}: ${text.slice(0, 200)}`;
       continue;
     }
-    try {
-      const data = JSON.parse(text);
-      const directUrl =
-        data?.url ?? data?.downloadUrl ?? data?.zipUrl ?? data?.archiveUrl ?? null;
-      if (directUrl) return String(directUrl);
-    } catch {
-      // If response is not JSON but the request succeeded, treat the body as URL
-      if (text.startsWith("http")) return text.trim();
+    let data: any;
+    try { data = JSON.parse(text); } catch {
+      lastError = `non-JSON @ ${url}`;
+      continue;
     }
-    lastError = `OK but no URL in response @ ${url}: ${text.slice(0, 200)}`;
+
+    const out: ZakekeOutputFile[] = [];
+    const designs: any[] =
+      data?.designs ?? data?.items ?? data?.order?.designs ?? [];
+    for (const d of designs) {
+      const designId = d?.designId ?? d?.id ?? null;
+      const files: any[] =
+        d?.outputFiles ?? d?.printFiles ?? d?.files ?? [];
+      for (const f of files) {
+        const fileUrl = f?.url ?? f?.fileUrl ?? f?.downloadUrl;
+        if (!fileUrl) continue;
+        out.push({
+          name: f?.name ?? f?.fileName ?? "print-file",
+          url: String(fileUrl),
+          side: f?.side ?? f?.sideName ?? null,
+          designId: designId ? String(designId) : null,
+        });
+      }
+    }
+    if (out.length > 0) return out;
+    lastError = `No outputFiles ready yet @ ${url}`;
   }
-  throw new Error(`Zakeke print-files: ${lastError || "all endpoints failed"}`);
+  throw new Error(`Zakeke output-files: ${lastError || "no files"}`);
 }
