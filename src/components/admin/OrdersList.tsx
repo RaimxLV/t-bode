@@ -85,6 +85,26 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [bulkLoading, setBulkLoading] = useState(false);
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
+  // Per-item loading state for the "download print files ZIP" button.
+  const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
+
+  const downloadZakekePrintFiles = async (zakekeOrderId: string, itemId: string) => {
+    setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "zakeke-print-files",
+        { body: { zakeke_order_id: zakekeOrderId } }
+      );
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("Zakeke neatgrieza ZIP saiti");
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
+    } finally {
+      setZakekeZipLoading((p) => ({ ...p, [itemId]: false }));
+    }
+  };
 
   const toggleOverride = (id: string) => {
     setStatusOverride((prev) => {
