@@ -958,17 +958,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                             </a>
                                           )}
                                           {!item.zakeke_order_id && !item.zakeke_design_id && item.zakeke_thumbnail_url && (
-                                            <a
-                                              href={item.zakeke_thumbnail_url}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
-                                              title="Atvērt drukas faila priekšskatījumu"
-                                            >
-                                              <Palette className="w-3 h-3" />
-                                              Atvērt priekšskatījumu
-                                              <ExternalLink className="w-2.5 h-2.5" />
-                                            </a>
+                                            <div className="flex flex-col gap-1 w-full">
+                                              <a
+                                                href={item.zakeke_thumbnail_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                download
+                                                className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit"
+                                                title="Lejupielādēt klienta dizaina priekšskatījumu (PNG)"
+                                              >
+                                                <Download className="w-3.5 h-3.5" />
+                                                Lejupielādēt drukas failu
+                                                <ExternalLink className="w-3 h-3" />
+                                              </a>
+                                              <a
+                                                href={item.zakeke_thumbnail_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary hover:underline w-fit"
+                                              >
+                                                <Palette className="w-3 h-3" />
+                                                Atvērt priekšskatījumu jaunā cilnē
+                                              </a>
+                                            </div>
                                           )}
                                         </div>
                                       </div>
