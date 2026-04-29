@@ -188,6 +188,12 @@ export const ZakekeDesigner = ({
 
         const customizer = new window.ZakekeDesigner();
         customizerInstance = customizer;
+        customizerRef.current = customizer;
+
+        // Reset to base-only while we wait for the first price signal so the
+        // header never shows a stale value from a previous session.
+        customizationPriceRef.current = 0;
+        setCustomizationPrice(0);
 
         const colorVariantCode = variantCodes?.color;
         const sizeVariantCode = variantCodes?.size;
@@ -276,6 +282,12 @@ export const ZakekeDesigner = ({
               setCustomizationPrice(n);
             }
           },
+
+          // Fired by the SDK once the customizer iframe finishes loading the
+          // initial design — best moment to read the starting price.
+          onIframeLoaded: () => requestCurrentPrice(),
+          onDesignerLoaded: () => requestCurrentPrice(),
+          onDesignLoaded: () => requestCurrentPrice(),
 
           getProductAttribute: () => ({
             attributes: attributeDefinitions,
