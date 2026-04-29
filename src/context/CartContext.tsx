@@ -11,6 +11,10 @@ export interface CartItem {
   slug: string;
   designId?: string;
   designThumbnail?: string;
+  /** Extra per-unit price added by Zakeke customization (already included in `price`). */
+  customizationPrice?: number;
+  /** Original product base price (before customization), kept for reference/admin display. */
+  basePrice?: number;
 }
 
 interface CartContextType {
