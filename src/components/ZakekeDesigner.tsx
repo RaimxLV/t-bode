@@ -347,9 +347,39 @@ export const ZakekeDesigner = ({
         <h2 className="text-lg font-display">
           {t("productDetail.customizeDesign")}
         </h2>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="w-5 h-5" />
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end leading-tight">
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              {t("productDetail.totalPrice", "Kop\u0101")}
+            </span>
+            <span className="text-base font-display font-semibold text-primary">
+              €{totalUnitPrice.toFixed(2)}
+            </span>
+            {customizationPrice > 0 && (
+              <span className="text-[10px] text-muted-foreground">
+                €{productPrice.toFixed(2)} + €{customizationPrice.toFixed(2)}
+              </span>
+            )}
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile price bar */}
+      <div className="sm:hidden flex items-center justify-between px-4 py-2 border-b border-border bg-card/60 shrink-0 text-xs">
+        <span className="text-muted-foreground uppercase tracking-wide">
+          {t("productDetail.totalPrice", "Kop\u0101")}
+        </span>
+        <span className="font-display font-semibold text-primary text-sm">
+          €{totalUnitPrice.toFixed(2)}
+          {customizationPrice > 0 && (
+            <span className="ml-2 text-[10px] text-muted-foreground font-body">
+              (€{productPrice.toFixed(2)} + €{customizationPrice.toFixed(2)})
+            </span>
+          )}
+        </span>
       </div>
 
       {/* Content - capped at 80vh so buttons stay visible on large/TV screens */}
