@@ -34,6 +34,8 @@ declare global {
     ZakekeDesigner: new () => {
       createIframe: (config: Record<string, unknown>) => void;
       removeIframe: () => void;
+      getCurrentPrice?: () => any;
+      getPrice?: () => any;
     };
   }
 }
@@ -62,48 +64,100 @@ export const ZakekeDesigner = ({
   const [customizationPrice, setCustomizationPrice] = useState(0);
   const customizationPriceRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const customizerRef = useRef<any>(null);
   const { addItem, setIsOpen } = useCart();
   const { t, i18n } = useTranslation();
 
   const totalUnitPrice = productPrice + customizationPrice;
 
+  // Pull a numeric price out of any Zakeke payload shape we've seen.
+  const extractPrice = (data: any): number | null => {
+    if (!data || typeof data !== "object") return null;
+    const candidates = [
+      data.customizationPrice,
+      data.extraPrice,
+      data.additionalPrice,
+      data.price,
+      data?.payload?.customizationPrice,
+      data?.payload?.price,
+      data?.detail?.customizationPrice,
+      data?.detail?.price,
+      data?.data?.customizationPrice,
+      data?.data?.price,
+    ];
+    for (const c of candidates) {
+      const n = typeof c === "string" ? parseFloat(c) : c;
+      if (typeof n === "number" && !isNaN(n)) return n;
+    }
+    return null;
+  };
+
+  const applyCustomizationPrice = (n: number) => {
+    if (typeof n !== "number" || isNaN(n)) return;
+    customizationPriceRef.current = n;
+    setCustomizationPrice(n);
+  };
+
+  // Ask Zakeke (SDK + iframe) for the current price right now.
+  const requestCurrentPrice = () => {
+    const sdk = customizerRef.current;
+    if (sdk) {
+      try {
+        const fn =
+          (typeof sdk.getCurrentPrice === "function" && sdk.getCurrentPrice) ||
+          (typeof sdk.getPrice === "function" && sdk.getPrice) ||
+          null;
+        if (fn) {
+          const result = fn.call(sdk);
+          if (result && typeof (result as any).then === "function") {
+            (result as Promise<any>)
+              .then((r) => {
+                const n = typeof r === "number" ? r : extractPrice(r);
+                if (typeof n === "number" && !isNaN(n)) applyCustomizationPrice(n);
+              })
+              .catch(() => {});
+          } else {
+            const n = typeof result === "number" ? result : extractPrice(result);
+            if (typeof n === "number" && !isNaN(n)) applyCustomizationPrice(n);
+          }
+        }
+      } catch {
+        /* SDK accessor not available — postMessage fallback below */
+      }
+    }
+    const iframe = containerRef.current?.querySelector("iframe") as HTMLIFrameElement | null;
+    if (iframe?.contentWindow) {
+      try {
+        iframe.contentWindow.postMessage({ event: "get_price" }, "*");
+        iframe.contentWindow.postMessage({ type: "getCurrentPrice" }, "*");
+      } catch {
+        /* cross-origin postMessage rarely throws, ignore */
+      }
+    }
+  };
+
   // Listen for postMessage events from the Zakeke iframe. Different SDK
   // versions emit slightly different event names — we match defensively
   // and pull any numeric "price"/"customizationPrice"/"extraPrice" field.
   useEffect(() => {
-    const extractPrice = (data: any): number | null => {
-      if (!data || typeof data !== "object") return null;
-      const candidates = [
-        data.customizationPrice,
-        data.extraPrice,
-        data.additionalPrice,
-        data.price,
-        data?.payload?.customizationPrice,
-        data?.payload?.price,
-        data?.detail?.customizationPrice,
-        data?.detail?.price,
-      ];
-      for (const c of candidates) {
-        const n = typeof c === "string" ? parseFloat(c) : c;
-        if (typeof n === "number" && !isNaN(n)) return n;
-      }
-      return null;
-    };
-
     const onMessage = (e: MessageEvent) => {
       const data = e.data;
       if (!data) return;
       const eventName: string =
         (typeof data === "object" && (data.event || data.type || data.name)) || "";
+      // Designer signalled it's ready — re-request the current price.
+      if (
+        typeof eventName === "string" &&
+        /designer[_-]?ready|design[_-]?loaded|iframe[_-]?ready|^ready$/i.test(eventName)
+      ) {
+        requestCurrentPrice();
+      }
       if (
         typeof eventName === "string" &&
         /price[_-]?change|customizationprice|priceupdate|updateprice/i.test(eventName)
       ) {
         const p = extractPrice(data);
-        if (p !== null) {
-          customizationPriceRef.current = p;
-          setCustomizationPrice(p);
-        }
+        if (p !== null) applyCustomizationPrice(p);
       }
     };
     window.addEventListener("message", onMessage);
