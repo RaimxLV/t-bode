@@ -58,9 +58,57 @@ export const ZakekeDesigner = ({
   const [loadingStep, setLoadingStep] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
+  // Customization price comes from Zakeke (per unit). Total = base + customization.
+  const [customizationPrice, setCustomizationPrice] = useState(0);
+  const customizationPriceRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const { addItem, setIsOpen } = useCart();
   const { t, i18n } = useTranslation();
+
+  const totalUnitPrice = productPrice + customizationPrice;
+
+  // Listen for postMessage events from the Zakeke iframe. Different SDK
+  // versions emit slightly different event names — we match defensively
+  // and pull any numeric "price"/"customizationPrice"/"extraPrice" field.
+  useEffect(() => {
+    const extractPrice = (data: any): number | null => {
+      if (!data || typeof data !== "object") return null;
+      const candidates = [
+        data.customizationPrice,
+        data.extraPrice,
+        data.additionalPrice,
+        data.price,
+        data?.payload?.customizationPrice,
+        data?.payload?.price,
+        data?.detail?.customizationPrice,
+        data?.detail?.price,
+      ];
+      for (const c of candidates) {
+        const n = typeof c === "string" ? parseFloat(c) : c;
+        if (typeof n === "number" && !isNaN(n)) return n;
+      }
+      return null;
+    };
+
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data;
+      if (!data) return;
+      const eventName: string =
+        (typeof data === "object" && (data.event || data.type || data.name)) || "";
+      if (
+        typeof eventName === "string" &&
+        /price[_-]?change|customizationprice|priceupdate|updateprice/i.test(eventName)
+      ) {
+        const p = extractPrice(data);
+        if (p !== null) {
+          customizationPriceRef.current = p;
+          setCustomizationPrice(p);
+        }
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -161,6 +209,20 @@ export const ZakekeDesigner = ({
             isOutOfStock: false,
           }),
 
+          // Real-time price callback from the Zakeke SDK (when supported).
+          onPriceChange: (data: any) => {
+            const raw =
+              data?.customizationPrice ??
+              data?.extraPrice ??
+              data?.price ??
+              (typeof data === "number" ? data : null);
+            const n = typeof raw === "string" ? parseFloat(raw) : raw;
+            if (typeof n === "number" && !isNaN(n)) {
+              customizationPriceRef.current = n;
+              setCustomizationPrice(n);
+            }
+          },
+
           getProductAttribute: () => ({
             attributes: attributeDefinitions,
             variants: variantSelections,
@@ -177,10 +239,22 @@ export const ZakekeDesigner = ({
               zakekeData?.design?.designId ||
               zakekeData?.id ||
               null;
+            const zakekeExtra =
+              (typeof zakekeData?.customizationPrice === "number"
+                ? zakekeData.customizationPrice
+                : null) ??
+              (typeof zakekeData?.extraPrice === "number"
+                ? zakekeData.extraPrice
+                : null) ??
+              customizationPriceRef.current ??
+              0;
+            const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
               name: productName,
-              price: productPrice,
+              price: finalUnitPrice,
+              basePrice: productPrice,
+              customizationPrice: zakekeExtra || 0,
               image: thumbnail,
               size: selectedSize,
               color: selectedColor,
@@ -204,10 +278,22 @@ export const ZakekeDesigner = ({
               zakekeData?.design?.designId ||
               zakekeData?.id ||
               null;
+            const zakekeExtra =
+              (typeof zakekeData?.customizationPrice === "number"
+                ? zakekeData.customizationPrice
+                : null) ??
+              (typeof zakekeData?.extraPrice === "number"
+                ? zakekeData.extraPrice
+                : null) ??
+              customizationPriceRef.current ??
+              0;
+            const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
               name: productName,
-              price: productPrice,
+              price: finalUnitPrice,
+              basePrice: productPrice,
+              customizationPrice: zakekeExtra || 0,
               image: thumbnail,
               size: selectedSize,
               color: selectedColor,
