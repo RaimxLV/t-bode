@@ -380,6 +380,30 @@ export const ZakekeDesigner = ({
 
         customizer.createIframe(config);
         setLoading(false);
+
+        // Belt-and-braces: listen for the iframe's native load event AND poll
+        // for an initial price for up to ~6s. We stop early as soon as Zakeke
+        // reports a real value or the component unmounts.
+        const initialIframe = containerRef.current?.querySelector(
+          "iframe"
+        ) as HTMLIFrameElement | null;
+        const onIframeLoad = () => requestCurrentPrice();
+        initialIframe?.addEventListener("load", onIframeLoad);
+
+        let attempts = 0;
+        const pollId = window.setInterval(() => {
+          attempts += 1;
+          if (!mounted || attempts > 12 || customizationPriceRef.current > 0) {
+            window.clearInterval(pollId);
+            return;
+          }
+          requestCurrentPrice();
+        }, 500);
+
+        (customizerInstance as any).__cleanupPricePolling = () => {
+          window.clearInterval(pollId);
+          initialIframe?.removeEventListener("load", onIframeLoad);
+        };
       } catch (err) {
         if (!mounted) return;
         console.error("Zakeke init error:", err);
@@ -399,10 +423,12 @@ export const ZakekeDesigner = ({
     return () => {
       mounted = false;
       try {
+        (customizerInstance as any)?.__cleanupPricePolling?.();
         customizerInstance?.removeIframe();
       } catch {
         // Cleanup silently
       }
+      customizerRef.current = null;
     };
   }, [productId, productName, productPrice, productSlug, productImage, selectedColor, selectedSize, quantity, onClose, addItem, setIsOpen, t, i18n.language, variantCodes?.color, variantCodes?.size, zakekeModelCode, selectedColorHex, availableColors, availableSizes, retryNonce]);
 
