@@ -24,8 +24,11 @@ const NotFound = () => {
           <div className="font-display text-[8rem] leading-none text-primary mb-4">
             404
           </div>
-          <h1 className="font-display text-3xl mb-3">{t("notFound.title")}</h1>
-          <p className="text-muted-foreground mb-8">{t("notFound.message")}</p>
+          <h1 className="font-display text-3xl mb-3 sr-only">{t("notFound.title")}</h1>
+          <p className="text-xl text-foreground mb-2">{t("notFound.message")}</p>
+          <p className="text-muted-foreground mb-8 text-sm">
+            {t("notFound.backHome")}
+          </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="gap-2">
               <Link to="/">
@@ -36,7 +39,7 @@ const NotFound = () => {
             <Button asChild variant="outline" size="lg" className="gap-2">
               <Link to="/collection">
                 <Search className="w-4 h-4" />
-                {t("nav.collection")}
+                {t("nav.ourCollection")}
               </Link>
             </Button>
           </div>
