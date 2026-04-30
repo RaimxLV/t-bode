@@ -21,14 +21,11 @@ const NotFound = () => {
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
-          <div className="font-display text-[8rem] leading-none text-primary mb-4">
+          <div className="font-display text-[7rem] sm:text-[9rem] leading-none text-primary mb-4">
             404
           </div>
-          <h1 className="font-display text-3xl mb-3 sr-only">{t("notFound.title")}</h1>
-          <p className="text-xl text-foreground mb-2">{t("notFound.message")}</p>
-          <p className="text-muted-foreground mb-8 text-sm">
-            {t("notFound.backHome")}
-          </p>
+          <h1 className="sr-only">{t("notFound.title")}</h1>
+          <p className="text-xl text-foreground mb-8">{t("notFound.message")}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild size="lg" className="gap-2">
               <Link to="/">
