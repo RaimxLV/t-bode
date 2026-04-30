@@ -245,6 +245,7 @@ export const ReportsManager = () => {
       { header: "PVN Nr.", key: "vat_no", width: 16 },
       { header: "Maksājums", key: "payment", width: 16 },
       { header: "Statuss", key: "status", width: 14 },
+      { header: "Preces", key: "products", width: 50 },
       { header: "Bruto EUR", key: "gross", width: 14 },
       { header: "Neto EUR", key: "net", width: 14 },
       { header: "PVN EUR", key: "vat", width: 14 },
@@ -271,6 +272,14 @@ export const ReportsManager = () => {
       const net = round2(gross / (1 + VAT_RATE / 100));
       const vat = round2(gross - net);
       const inv = invoicesByOrder[o.id];
+      const orderItems = itemsByOrder.get(o.id) ?? [];
+      const productsStr = orderItems
+        .map((it: any) => {
+          const qty = Number(it.quantity) || 0;
+          const name = it.product_name ?? "—";
+          return qty > 1 ? `${name} ×${qty}` : name;
+        })
+        .join("; ");
       ws.addRow({
         date: new Date(o.created_at),
         order_no: `#${String(o.order_number).padStart(4, "0")}`,
@@ -281,6 +290,7 @@ export const ReportsManager = () => {
         vat_no: o.company_vat_number ?? "",
         payment: paymentLabel(o),
         status: o.status,
+        products: productsStr,
         gross,
         net,
         vat,
@@ -290,6 +300,7 @@ export const ReportsManager = () => {
 
     // Number / date formats
     ws.getColumn("date").numFmt = "dd.mm.yyyy hh:mm";
+    ws.getColumn("products").alignment = { wrapText: true, vertical: "top" };
     ws.getColumn("gross").numFmt = '#,##0.00 "€"';
     ws.getColumn("net").numFmt = '#,##0.00 "€"';
     ws.getColumn("vat").numFmt = '#,##0.00 "€"';
@@ -308,9 +319,10 @@ export const ReportsManager = () => {
         vat_no: "",
         payment: "",
         status: "",
-        gross: { formula: `SUM(J2:J${lastDataRow})` },
-        net: { formula: `SUM(K2:K${lastDataRow})` },
-        vat: { formula: `SUM(L2:L${lastDataRow})` },
+        products: "",
+        gross: { formula: `SUM(K2:K${lastDataRow})` },
+        net: { formula: `SUM(L2:L${lastDataRow})` },
+        vat: { formula: `SUM(M2:M${lastDataRow})` },
         vat_rate: "",
       });
       totalsRow.font = { bold: true };
