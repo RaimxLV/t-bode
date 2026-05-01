@@ -5,7 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/t-bode/' : '/',
+  // Lovable hosting (and the Lovable preview) serve from the site root,
+  // so we always use "/". The `/t-bode/` base was for a GitHub Pages
+  // deploy and breaks asset URLs on t-bode.lovable.app (404 → blank page).
+  base: '/',
   server: {
     host: "::",
     port: 8080,
