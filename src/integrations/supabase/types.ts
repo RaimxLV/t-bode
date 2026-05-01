@@ -307,6 +307,8 @@ export type Database = {
           unit_price: number
           zakeke_design_id: string | null
           zakeke_order_id: string | null
+          zakeke_order_item_id: string | null
+          zakeke_print_files: Json | null
           zakeke_thumbnail_url: string | null
         }
         Insert: {
@@ -321,6 +323,8 @@ export type Database = {
           unit_price: number
           zakeke_design_id?: string | null
           zakeke_order_id?: string | null
+          zakeke_order_item_id?: string | null
+          zakeke_print_files?: Json | null
           zakeke_thumbnail_url?: string | null
         }
         Update: {
@@ -335,6 +339,8 @@ export type Database = {
           unit_price?: number
           zakeke_design_id?: string | null
           zakeke_order_id?: string | null
+          zakeke_order_item_id?: string | null
+          zakeke_print_files?: Json | null
           zakeke_thumbnail_url?: string | null
         }
         Relationships: [
