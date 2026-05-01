@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     // Create one Zakeke order per item so that print-files map 1:1 with the row.
     for (const it of customisedItems) {
       try {
-        const { zakekeOrderId } = await createZakekeOrder({
+        const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
           externalOrderId: `${orderId}:${it.id}`,
           items: [
             {
@@ -80,7 +80,10 @@ Deno.serve(async (req) => {
 
         const { error: upErr } = await supabase
           .from("order_items")
-          .update({ zakeke_order_id: zakekeOrderId })
+          .update({
+            zakeke_order_id: zakekeOrderId,
+            zakeke_order_item_id: orderItemIds[0] ?? null,
+          })
           .eq("id", it.id);
         if (upErr) throw upErr;
         processed += 1;

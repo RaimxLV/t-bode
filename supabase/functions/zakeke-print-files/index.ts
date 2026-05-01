@@ -1,5 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { getZakekeOrderOutputFiles } from "../_shared/zakeke.ts";
+import {
+  getZakekeOrderItemFiles,
+  getZakekeOrderOutputFiles,
+} from "../_shared/zakeke.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,11 +11,15 @@ const corsHeaders = {
 };
 
 /**
- * Admin-only endpoint. Given a zakeke_order_id, returns a one-time download
- * URL for the print-files ZIP archive.
+ * Admin-only endpoint. Returns the high-resolution PRODUCTION files for
+ * a single order_item from Zakeke (the print-ready PDFs/PNGs, customer's
+ * original uploads, mockups, and work-order PDF).
  *
- * GET  /functions/v1/zakeke-print-files?zakeke_order_id=...   -> { url }
- * POST /functions/v1/zakeke-print-files { zakeke_order_id }   -> { url }
+ * Body / query (any one is sufficient):
+ *   - order_item_id: our internal order_items.id (preferred)
+ *   - zakeke_order_id: legacy fallback
+ *
+ * Response: { files: Array<{ name, url, side?, designId? }>, url?: string }
  *
  * Auth: requires a logged-in admin (validated against user_roles + whitelist).
  */
@@ -66,29 +73,78 @@ Deno.serve(async (req) => {
       });
     }
 
+    let orderItemId: string | null = null;
     let zakekeOrderId: string | null = null;
     if (req.method === "GET") {
-      zakekeOrderId = new URL(req.url).searchParams.get("zakeke_order_id");
+      const u = new URL(req.url);
+      orderItemId = u.searchParams.get("order_item_id");
+      zakekeOrderId = u.searchParams.get("zakeke_order_id");
     } else {
       const body = await req.json().catch(() => ({}));
+      orderItemId = body?.order_item_id ?? null;
       zakekeOrderId = body?.zakeke_order_id ?? null;
     }
 
-    if (!zakekeOrderId || typeof zakekeOrderId !== "string") {
+    if (!orderItemId && !zakekeOrderId) {
       return new Response(
-        JSON.stringify({ error: "zakeke_order_id is required" }),
+        JSON.stringify({ error: "order_item_id or zakeke_order_id required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const files = await getZakekeOrderOutputFiles(zakekeOrderId);
-    // Backwards compat: also return `url` pointing at the first file so
-    // existing UI that opens a single download keeps working.
+    let files: Awaited<ReturnType<typeof getZakekeOrderItemFiles>> = [];
+
+    if (orderItemId) {
+      // Look up the row to find the cached files OR Zakeke ids.
+      const { data: row, error: rowErr } = await service
+        .from("order_items")
+        .select(
+          "id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files"
+        )
+        .eq("id", orderItemId)
+        .maybeSingle();
+      if (rowErr) throw rowErr;
+      if (!row) {
+        return new Response(
+          JSON.stringify({ error: "order_item not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // 1) Use cached files if Zakeke webhook already filled them in.
+      if (Array.isArray(row.zakeke_print_files) && row.zakeke_print_files.length > 0) {
+        files = row.zakeke_print_files as any;
+      }
+      // 2) Otherwise call Zakeke directly via the order-item id.
+      else if (row.zakeke_order_item_id) {
+        files = await getZakekeOrderItemFiles(row.zakeke_order_item_id);
+      }
+      // 3) Last resort: resolve via legacy order endpoint.
+      else if (row.zakeke_order_id) {
+        files = await getZakekeOrderOutputFiles(row.zakeke_order_id);
+      } else {
+        return new Response(
+          JSON.stringify({ error: "no Zakeke ids on this order_item" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Persist freshly-fetched files so subsequent clicks are instant.
+      if (files.length > 0) {
+        await service
+          .from("order_items")
+          .update({ zakeke_print_files: files })
+          .eq("id", orderItemId);
+      }
+    } else if (zakekeOrderId) {
+      files = await getZakekeOrderOutputFiles(zakekeOrderId);
+    }
+
     return new Response(
       JSON.stringify({ files, url: files[0]?.url ?? null }),
       {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (e) {
