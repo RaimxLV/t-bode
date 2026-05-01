@@ -163,6 +163,30 @@ export const ZakekeDesigner = ({
           // `firstVariantId` is the actual SDK field (see customizer.js v2).
           ...(firstVariantId ? { firstVariantId } : {}),
 
+          // Zakeke v2 SDK requires `getProductPrice` — it's called with the
+          // current customization context and must return the FINAL per-unit
+          // price (base + customization) and stock state. Without this the
+          // customizer aborts with "Missing required field: getProductPrice".
+          getProductPrice: (info: any) => {
+            const rawCustom =
+              info?.customizationPrice ??
+              info?.extraPrice ??
+              info?.additionalPrice ??
+              0;
+            const custom =
+              typeof rawCustom === "string" ? parseFloat(rawCustom) : rawCustom;
+            const safeCustom =
+              typeof custom === "number" && !isNaN(custom) ? custom : 0;
+            if (safeCustom !== customizationPriceRef.current) {
+              customizationPriceRef.current = safeCustom;
+              setCustomizationPrice(safeCustom);
+            }
+            return {
+              price: productPrice + safeCustom,
+              isOutOfStock: false,
+            };
+          },
+
           // Per Zakeke docs (customizer-UI-API #4.1), `getProductInfo` is
           // invoked by Zakeke at startup AND on every user action. Zakeke
           // passes us `{ customizationPrice, quantity, attributes, ... }`
