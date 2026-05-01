@@ -220,15 +220,24 @@ export const ZakekeDesigner = ({
           }),
 
           addToCart: (zakekeData: any) => {
-            console.log("[Zakeke] addToCart payload:", zakekeData);
+            console.log("[Zakeke] addToCart payload (full):", JSON.stringify(zakekeData, null, 2));
+            console.log("[Zakeke] addToCart payload keys:", Object.keys(zakekeData || {}));
             const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
             const designId =
               zakekeData?.designId ||
               zakekeData?.designID ||
               zakekeData?.design?.id ||
               zakekeData?.design?.designId ||
+              zakekeData?.design?.designID ||
+              zakekeData?.tempDesignID ||
+              zakekeData?.tempDesignId ||
+              zakekeData?.designid ||
               zakekeData?.id ||
               null;
+            console.log("[Zakeke] extracted designId:", designId);
+            if (!designId) {
+              console.error("[Zakeke] ⚠️ NO designId found in payload — print files will NOT be available!");
+            }
             const zakekeExtra =
               (typeof zakekeData?.customizationPrice === "number"
                 ? zakekeData.customizationPrice
@@ -259,15 +268,21 @@ export const ZakekeDesigner = ({
           },
 
           editAddToCart: (zakekeData: any) => {
-            console.log("[Zakeke] editAddToCart payload:", zakekeData);
+            console.log("[Zakeke] editAddToCart payload (full):", JSON.stringify(zakekeData, null, 2));
+            console.log("[Zakeke] editAddToCart payload keys:", Object.keys(zakekeData || {}));
             const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
             const designId =
               zakekeData?.designId ||
               zakekeData?.designID ||
               zakekeData?.design?.id ||
               zakekeData?.design?.designId ||
+              zakekeData?.design?.designID ||
+              zakekeData?.tempDesignID ||
+              zakekeData?.tempDesignId ||
+              zakekeData?.designid ||
               zakekeData?.id ||
               null;
+            console.log("[Zakeke] extracted designId:", designId);
             const zakekeExtra =
               (typeof zakekeData?.customizationPrice === "number"
                 ? zakekeData.customizationPrice
