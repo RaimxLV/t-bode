@@ -88,12 +88,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
 
-  const downloadZakekePrintFiles = async (zakekeOrderId: string, itemId: string) => {
+  const downloadZakekePrintFiles = async (_zakekeOrderId: string, itemId: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
     try {
       const { data, error } = await supabase.functions.invoke(
         "zakeke-print-files",
-        { body: { zakeke_order_id: zakekeOrderId } }
+        { body: { order_item_id: itemId } }
       );
       if (error) throw error;
       const files = ((data as any)?.files ?? []) as Array<{ name: string; url: string }>;
@@ -102,12 +102,19 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           "Zakeke vēl nav sagatavojusi drukas failus šim pasūtījumam. Mēģini vēlreiz pēc dažām minūtēm."
         );
       }
-      // Open every print-ready output file in a new tab so admin gets the
-      // real high-resolution print files, not the preview thumbnail.
+      // Trigger a real download for each file (no popup blocker hits) and
+      // give the admin a single ZIP-feel via individual `download` attrs.
       for (const f of files) {
-        window.open(f.url, "_blank", "noopener,noreferrer");
+        const a = document.createElement("a");
+        a.href = f.url;
+        a.download = f.name || "print-file";
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
       }
-      toast.success(`Atvērti ${files.length} drukas faili`);
+      toast.success(`Lejupielādēti ${files.length} drukas faili`);
     } catch (e: any) {
       toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
     } finally {
