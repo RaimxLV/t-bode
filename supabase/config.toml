@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.zakeke-create-order]
 verify_jwt = false
+
+[functions.zakeke-webhook]
+verify_jwt = false
