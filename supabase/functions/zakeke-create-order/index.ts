@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: items, error } = await supabase
       .from("order_items")
-      .select("id, quantity, zakeke_design_id, zakeke_order_id")
+      .select("id, quantity, unit_price, zakeke_design_id, zakeke_order_id, zakeke_visitor_code")
       .eq("order_id", orderId);
 
     if (error) throw error;
@@ -69,10 +69,12 @@ Deno.serve(async (req) => {
       try {
         const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
           externalOrderId: `${orderId}:${it.id}`,
+          visitorCode: (it as any).zakeke_visitor_code ?? null,
           items: [
             {
               designId: it.zakeke_design_id as string,
               quantity: it.quantity ?? 1,
+              unitPrice: Number((it as any).unit_price ?? 0),
               reference: it.id,
             },
           ],
