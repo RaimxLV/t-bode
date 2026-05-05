@@ -7,19 +7,10 @@
 
 const ZAKEKE_BASE = "https://api.zakeke.com";
 
-const tokenCache = new Map<string, { token: string; expiresAt: number }>();
-
 export async function getZakekeS2SToken(opts?: {
   customerCode?: string;
   visitorCode?: string;
 }): Promise<string> {
-  const now = Date.now();
-  const cacheKey = `${opts?.customerCode ?? ""}::${opts?.visitorCode ?? ""}`;
-  const cachedToken = tokenCache.get(cacheKey);
-  if (cachedToken && cachedToken.expiresAt > now + 30_000) {
-    return cachedToken.token;
-  }
-
   const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
   const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
   if (!clientId || !clientSecret) {
@@ -67,8 +58,6 @@ export async function getZakekeS2SToken(opts?: {
   if (!token) {
     throw new Error(`Zakeke token missing access_token: ${text}`);
   }
-  const ttlSec = Number(data?.expires_in ?? 3600);
-  tokenCache.set(cacheKey, { token, expiresAt: now + ttlSec * 1000 });
   return token;
 }
 
@@ -229,6 +218,7 @@ export async function createZakekeOrder(opts: {
   let text = "";
   let lastErr = "";
   for (const { url, body } of endpoints) {
+    console.log(`Sūtu pieprasījumu uz Marketplace ID: ${payloadV2.marketplaceID}`);
     console.log(
       `\n========== [zakeke-create-order] DEBUG PAYLOAD ==========\n` +
         `Endpoint : ${url}\n` +
