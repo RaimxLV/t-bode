@@ -88,11 +88,16 @@ export interface ZakekeOutputFile {
 export async function createZakekeOrder(opts: {
   externalOrderId: string;
   items: ZakekeOrderItemInput[];
+  customerCode?: string;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
   const token = await getZakekeS2SToken();
 
+  // Zakeke requires a customerCode (or visitorCode) on the order. Fall back
+  // to the externalOrderId so it's always present.
+  const customerCode = opts.customerCode || opts.externalOrderId;
   const payload = {
     code: opts.externalOrderId,
+    customerCode,
     designs: opts.items.map((it) => ({
       designId: it.designId,
       quantity: it.quantity,
