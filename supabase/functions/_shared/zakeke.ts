@@ -83,6 +83,15 @@ export interface ZakekeOrderItemInput {
   sku?: string | null;
 }
 
+export interface ZakekeShippingAddress {
+  name: string;
+  address1: string;
+  city: string;
+  zip: string;
+  country: string;
+  phone?: string | null;
+}
+
 export interface ZakekeOutputFile {
   name: string;
   url: string;
@@ -168,6 +177,8 @@ export async function createZakekeOrder(opts: {
   totalAmount?: number;
   /** Optional ISO date string; defaults to now(). */
   orderDate?: string;
+  /** Shipping address for the Zakeke order. */
+  shippingAddress?: ZakekeShippingAddress | null;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
@@ -190,6 +201,7 @@ export async function createZakekeOrder(opts: {
   // catalog-style integrations and rejects visitor-bound designs.
   const payloadV2 = {
     orderCode: opts.externalOrderId,
+    marketplaceID: 332750,
     orderDate,
     currency,
     customerEmail: opts.customerEmail ?? null,
@@ -198,6 +210,7 @@ export async function createZakekeOrder(opts: {
     shippingCost: Number((opts.shippingCost ?? 0).toFixed(2)),
     taxAmount: Number((opts.taxAmount ?? 0).toFixed(2)),
     total: Number((opts.totalAmount ?? computedSubtotal).toFixed(2)),
+    shippingAddress: opts.shippingAddress ?? null,
     details: opts.items.map((it) => ({
       designID: it.designId,
       sku: it.sku ?? null,
