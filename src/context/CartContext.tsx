@@ -51,8 +51,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const addItem = useCallback((item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
     const qty = item.quantity ?? 1;
     setItems((prev) => {
+      // Customized items (with a designId) are always treated as a unique cart line
+      // so multiple distinct designs of the same product/size/color don't get merged
+      // and lose their designId / thumbnail.
+      if (item.designId) {
+        return [...prev, { ...item, quantity: qty }];
+      }
       const idx = prev.findIndex(
-        (i) => i.productId === item.productId && i.size === item.size && i.color === item.color
+        (i) =>
+          i.productId === item.productId &&
+          i.size === item.size &&
+          i.color === item.color &&
+          !i.designId
       );
       if (idx >= 0) {
         const updated = [...prev];
