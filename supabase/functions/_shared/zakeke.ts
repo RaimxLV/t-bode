@@ -219,16 +219,17 @@ export async function createZakekeOrder(opts: {
   try { data = JSON.parse(text); } catch { /* keep empty */ }
 
   const zakekeOrderId =
-    data?.id ?? data?.orderId ?? data?.orderID ?? data?.order?.id ?? null;
-  if (!zakekeOrderId) {
-    throw new Error(`Zakeke create order: no id in response — ${text}`);
-  }
+    data?.id ?? data?.orderId ?? data?.orderID ??
+    data?.orderCode ?? data?.OrderCode ??
+    data?.order?.id ?? opts.externalOrderId;
 
   // Pull Zakeke-side order-item ids from whichever shape the API returned.
   const itemsList: any[] =
-    data?.orderItems ?? data?.items ?? data?.designs ?? data?.order?.orderItems ?? [];
+    data?.orderItems ?? data?.items ?? data?.designs ??
+    data?.details ?? data?.compositionDetails ??
+    data?.order?.orderItems ?? [];
   const orderItemIds = itemsList
-    .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? null)
+    .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? it?.detailID ?? it?.detailId ?? null)
     .filter((x: unknown) => x !== null && x !== undefined)
     .map(String);
 
