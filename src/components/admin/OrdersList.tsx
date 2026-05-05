@@ -87,58 +87,42 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
-  const [zakekeCreateLoading, setZakekeCreateLoading] = useState<Record<string, boolean>>({});
 
-  const createZakekeOrderForItem = async (orderId: string, itemId: string) => {
-    setZakekeCreateLoading((p) => ({ ...p, [itemId]: true }));
-    try {
-      const { data, error } = await supabase.functions.invoke(
-        "zakeke-create-order",
-        { body: { order_id: orderId } }
-      );
-      if (error) throw error;
-      const errs = (data as any)?.errors;
-      if (Array.isArray(errs) && errs.length > 0) {
-        throw new Error(errs.map((e: any) => e.error).join("; "));
-      }
-      toast.success("Zakeke pasūtījums izveidots");
-      onRefresh();
-    } catch (e: any) {
-      toast.error(e?.message || "Neizdevās izveidot Zakeke pasūtījumu");
-    } finally {
-      setZakekeCreateLoading((p) => ({ ...p, [itemId]: false }));
-    }
-  };
-
-  const downloadZakekePrintFiles = async (_zakekeOrderId: string, itemId: string) => {
+  const downloadZakekePrintFiles = async (itemId: string, productName?: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "zakeke-print-files",
-        { body: { order_item_id: itemId } }
-      );
-      if (error) throw error;
-      const files = ((data as any)?.files ?? []) as Array<{ name: string; url: string }>;
-      if (!files.length) {
-        throw new Error(
-          "Zakeke vēl nav sagatavojusi drukas failus šim pasūtījumam. Mēģini vēlreiz pēc dažām minūtēm."
-        );
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zakeke-print-files`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ order_item_id: itemId, zip: true }),
+      });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const j = await res.json();
+          msg = j?.error || msg;
+        } catch { /* ignore */ }
+        throw new Error(msg);
       }
-      // Trigger a real download for each file (no popup blocker hits) and
-      // give the admin a single ZIP-feel via individual `download` attrs.
-      for (const f of files) {
-        const a = document.createElement("a");
-        a.href = f.url;
-        a.download = f.name || "print-file";
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-      toast.success(`Lejupielādēti ${files.length} drukas faili`);
+      const blob = await res.blob();
+      const safe = (productName || "item").replace(/[^a-z0-9]+/gi, "-");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `print-files-${safe}-${itemId.slice(0, 8)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+      toast.success("ZIP lejupielādēts");
     } catch (e: any) {
-      toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
+      toast.error(e?.message || "Neizdevās lejupielādēt ZIP");
     } finally {
       setZakekeZipLoading((p) => ({ ...p, [itemId]: false }));
     }
@@ -967,87 +951,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                               <ExternalLink className="w-2.5 h-2.5" />
                                             </a>
                                           )}
-                                          {item.zakeke_order_id && (
+                                          {(item.zakeke_design_id || item.zakeke_order_id) && (
                                             <button
                                               type="button"
-                                              onClick={() => downloadZakekePrintFiles(item.zakeke_order_id, item.id)}
+                                              onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
                                               disabled={!!zakekeZipLoading[item.id]}
-                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit disabled:opacity-50"
+                                              className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit disabled:opacity-50"
+                                              title="Lejupielādēt visus drukas failus kā ZIP"
                                             >
                                               {zakekeZipLoading[item.id] ? (
-                                                <Loader2 className="w-3 h-3 animate-spin" />
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                               ) : (
-                                                <FileArchive className="w-3 h-3" />
+                                                <FileArchive className="w-3.5 h-3.5" />
                                               )}
-                                              Lejupielādēt drukas failu (HiRes)
+                                              Lejupielādēt ZIP (drukas faili)
                                             </button>
-                                          )}
-                                          {!item.zakeke_order_id && item.zakeke_design_id && (
-                                            <div className="flex flex-col gap-1 w-full">
-                                              <a
-                                                href={`https://portal.zakeke.com/admin/designs/${item.zakeke_design_id}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
-                                                title={`Zakeke design ID: ${item.zakeke_design_id}`}
-                                              >
-                                                <Palette className="w-3 h-3" />
-                                                Atvērt dizainu Zakeke
-                                                <ExternalLink className="w-2.5 h-2.5" />
-                                              </a>
-                                              {item.zakeke_thumbnail_url && (
-                                                <a
-                                                  href={item.zakeke_thumbnail_url}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  download
-                                                  className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit"
-                                                  title="Lejupielādēt dizaina priekšskatījumu (PNG)"
-                                                >
-                                                  <Download className="w-3.5 h-3.5" />
-                                                  Lejupielādēt priekšskatījumu
-                                                </a>
-                                              )}
-                                              <button
-                                                type="button"
-                                                onClick={() => createZakekeOrderForItem(order.id, item.id)}
-                                                disabled={!!zakekeCreateLoading[item.id]}
-                                                className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold border border-primary text-primary hover:bg-primary/10 px-2.5 py-1.5 rounded w-full sm:w-fit disabled:opacity-50"
-                                                title="Izveidot Zakeke pasūtījumu, lai iegūtu HiRes drukas failus"
-                                              >
-                                                {zakekeCreateLoading[item.id] ? (
-                                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                ) : (
-                                                  <FileArchive className="w-3.5 h-3.5" />
-                                                )}
-                                                Izveidot HiRes drukas failu
-                                              </button>
-                                            </div>
-                                          )}
-                                          {!item.zakeke_order_id && !item.zakeke_design_id && item.zakeke_thumbnail_url && (
-                                            <div className="flex flex-col gap-1 w-full">
-                                              <a
-                                                href={item.zakeke_thumbnail_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                download
-                                                className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit"
-                                                title="Lejupielādēt klienta dizaina priekšskatījumu (PNG)"
-                                              >
-                                                <Download className="w-3.5 h-3.5" />
-                                                Lejupielādēt drukas failu
-                                                <ExternalLink className="w-3 h-3" />
-                                              </a>
-                                              <a
-                                                href={item.zakeke_thumbnail_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary hover:underline w-fit"
-                                              >
-                                                <Palette className="w-3 h-3" />
-                                                Atvērt priekšskatījumu jaunā cilnē
-                                              </a>
-                                            </div>
                                           )}
                                         </div>
                                       </div>
