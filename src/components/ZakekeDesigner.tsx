@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { sanitizeZakekeCodePart } from "@/lib/zakeke";
 import {
   getZakekeToken,
+  getVisitorCode,
   loadZakekeScript,
   clearZakekeTokenCache,
 } from "@/lib/zakeke-loader";
