@@ -110,35 +110,41 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
-  const downloadZakekePrintFiles = async (_zakekeOrderId: string, itemId: string) => {
+  const downloadZakekePrintFiles = async (itemId: string, productName?: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "zakeke-print-files",
-        { body: { order_item_id: itemId } }
-      );
-      if (error) throw error;
-      const files = ((data as any)?.files ?? []) as Array<{ name: string; url: string }>;
-      if (!files.length) {
-        throw new Error(
-          "Zakeke vēl nav sagatavojusi drukas failus šim pasūtījumam. Mēģini vēlreiz pēc dažām minūtēm."
-        );
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zakeke-print-files`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ order_item_id: itemId, zip: true }),
+      });
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const j = await res.json();
+          msg = j?.error || msg;
+        } catch { /* ignore */ }
+        throw new Error(msg);
       }
-      // Trigger a real download for each file (no popup blocker hits) and
-      // give the admin a single ZIP-feel via individual `download` attrs.
-      for (const f of files) {
-        const a = document.createElement("a");
-        a.href = f.url;
-        a.download = f.name || "print-file";
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
-      toast.success(`Lejupielādēti ${files.length} drukas faili`);
+      const blob = await res.blob();
+      const safe = (productName || "item").replace(/[^a-z0-9]+/gi, "-");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `print-files-${safe}-${itemId.slice(0, 8)}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+      toast.success("ZIP lejupielādēts");
     } catch (e: any) {
-      toast.error(e?.message || "Neizdevās lejupielādēt drukas failus");
+      toast.error(e?.message || "Neizdevās lejupielādēt ZIP");
     } finally {
       setZakekeZipLoading((p) => ({ ...p, [itemId]: false }));
     }
