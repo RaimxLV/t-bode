@@ -15,7 +15,7 @@ interface CachedToken {
   visitor: string;
 }
 
-function getVisitorCode(): string {
+export function getVisitorCode(): string {
   let code = localStorage.getItem(VISITOR_KEY);
   if (!code) {
     code = crypto.randomUUID();
