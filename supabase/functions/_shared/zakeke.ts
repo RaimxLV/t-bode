@@ -159,24 +159,32 @@ export async function createZakekeOrder(opts: {
     customerCode,
     visitorCode: customerCode,
   });
+  // Per Zakeke docs: https://docs.zakeke.com/docs/API/REST-API/Orders/create-order
+  // The documented payload uses `orderID`, `orderDate`, and `orderItems`
+  // with `designID`, `quantity`, `unitPrice`.
+  const orderDate = new Date().toISOString();
   const payloadV1 = {
-    code: opts.externalOrderId,
+    orderID: opts.externalOrderId,
+    orderDate,
     customerCode,
     visitorCode: customerCode,
-    designs: opts.items.map((it) => ({
-      designId: it.designId,
+    orderItems: opts.items.map((it) => ({
+      designID: it.designId,
       quantity: it.quantity,
+      unitPrice: 0,
       reference: it.reference ?? null,
     })),
   };
   // Legacy v2 endpoint uses PascalCase fields.
   const payloadV2 = {
-    Code: opts.externalOrderId,
+    OrderID: opts.externalOrderId,
+    OrderDate: orderDate,
     CustomerCode: customerCode,
     VisitorCode: customerCode,
-    Designs: opts.items.map((it) => ({
-      DesignId: it.designId,
+    OrderItems: opts.items.map((it) => ({
+      DesignID: it.designId,
       Quantity: it.quantity,
+      UnitPrice: 0,
       Reference: it.reference ?? null,
     })),
   };
@@ -211,16 +219,17 @@ export async function createZakekeOrder(opts: {
   try { data = JSON.parse(text); } catch { /* keep empty */ }
 
   const zakekeOrderId =
-    data?.id ?? data?.orderId ?? data?.orderID ?? data?.order?.id ?? null;
-  if (!zakekeOrderId) {
-    throw new Error(`Zakeke create order: no id in response — ${text}`);
-  }
+    data?.id ?? data?.orderId ?? data?.orderID ??
+    data?.orderCode ?? data?.OrderCode ??
+    data?.order?.id ?? opts.externalOrderId;
 
   // Pull Zakeke-side order-item ids from whichever shape the API returned.
   const itemsList: any[] =
-    data?.orderItems ?? data?.items ?? data?.designs ?? data?.order?.orderItems ?? [];
+    data?.orderItems ?? data?.items ?? data?.designs ??
+    data?.details ?? data?.compositionDetails ??
+    data?.order?.orderItems ?? [];
   const orderItemIds = itemsList
-    .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? null)
+    .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? it?.detailID ?? it?.detailId ?? null)
     .filter((x: unknown) => x !== null && x !== undefined)
     .map(String);
 
