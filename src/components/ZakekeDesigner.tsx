@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { sanitizeZakekeCodePart } from "@/lib/zakeke";
 import {
   getZakekeToken,
+  getVisitorCode,
   loadZakekeScript,
   clearZakekeTokenCache,
 } from "@/lib/zakeke-loader";
@@ -261,6 +262,7 @@ export const ZakekeDesigner = ({
               slug: productSlug,
               designId: designId,
               designThumbnail: thumbnail,
+              zakekeVisitorCode: getVisitorCode(),
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
             onClose();
@@ -306,6 +308,7 @@ export const ZakekeDesigner = ({
               slug: productSlug,
               designId: designId,
               designThumbnail: thumbnail,
+              zakekeVisitorCode: getVisitorCode(),
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
             onClose();

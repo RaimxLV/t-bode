@@ -75,6 +75,8 @@ export async function getZakekeS2SToken(opts?: {
 export interface ZakekeOrderItemInput {
   designId: string;
   quantity: number;
+  /** Per-unit price the customer paid (model + design extras). */
+  unitPrice?: number;
   /** Optional reference back to our internal order_item.id */
   reference?: string;
 }
@@ -151,46 +153,33 @@ export async function createZakekeOrder(opts: {
   externalOrderId: string;
   items: ZakekeOrderItemInput[];
   customerCode?: string;
+  visitorCode?: string | null;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
-  // Zakeke requires a customerCode (or visitorCode) on the order. Fall back
-  // to the externalOrderId so it's always present.
-  const customerCode = opts.customerCode || opts.externalOrderId;
+  // Zakeke binds designs to the visitor session that created them. We MUST
+  // pass the same visitorcode that was used while the customer designed in
+  // the browser; otherwise the order won't show up under the design.
+  const visitorCode = opts.visitorCode || opts.customerCode || opts.externalOrderId;
+  const customerCode = opts.customerCode || visitorCode;
   const token = await getZakekeS2SToken({
     customerCode,
-    visitorCode: customerCode,
+    visitorCode,
   });
-  // Per Zakeke docs: https://docs.zakeke.com/docs/API/REST-API/Orders/create-order
-  // The documented payload uses `orderID`, `orderDate`, and `orderItems`
-  // with `designID`, `quantity`, `unitPrice`.
-  const orderDate = new Date().toISOString();
-  const payloadV1 = {
-    orderID: opts.externalOrderId,
-    orderDate,
-    customerCode,
-    visitorCode: customerCode,
-    orderItems: opts.items.map((it) => ({
+
+  // Customizer (V2) endpoint expects `orderCode` + `details` with
+  // `modelUnitPrice` + `designUnitPrice`. The /v1/orders endpoint is for
+  // catalog-style integrations and rejects visitor-bound designs.
+  const payloadV2 = {
+    orderCode: opts.externalOrderId,
+    details: opts.items.map((it) => ({
       designID: it.designId,
       quantity: it.quantity,
-      unitPrice: 0,
+      modelUnitPrice: Number(it.unitPrice ?? 0),
+      designUnitPrice: 0,
       reference: it.reference ?? null,
-    })),
-  };
-  // Legacy v2 endpoint uses PascalCase fields.
-  const payloadV2 = {
-    OrderID: opts.externalOrderId,
-    OrderDate: orderDate,
-    CustomerCode: customerCode,
-    VisitorCode: customerCode,
-    OrderItems: opts.items.map((it) => ({
-      DesignID: it.designId,
-      Quantity: it.quantity,
-      UnitPrice: 0,
-      Reference: it.reference ?? null,
     })),
   };
 
   const endpoints: Array<{ url: string; body: unknown }> = [
-    { url: `${ZAKEKE_BASE}/v1/orders`, body: payloadV1 },
     { url: `${ZAKEKE_BASE}/v2/order`, body: payloadV2 },
   ];
 
