@@ -89,6 +89,55 @@ export interface ZakekeOutputFile {
   orderItemId?: string | null;
 }
 
+export async function getZakekeDesignZipFile(
+  designId: string,
+  modificationId?: string | null,
+): Promise<ZakekeOutputFile | null> {
+  const token = await getZakekeS2SToken();
+  const suffix = modificationId ? `/zip/${encodeURIComponent(modificationId)}` : "/outputfiles/zip";
+  const url = `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}${modificationId ? suffix : "/outputfiles/zip"}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+  if (res.ok && !contentType.includes("application/json")) {
+    return {
+      name: `design-${designId}.zip`,
+      url,
+      side: "production-zip",
+      designId,
+      orderItemId: null,
+    };
+  }
+
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Zakeke design zip failed ${res.status}: ${text.slice(0, 300)}`);
+  }
+
+  let data: any = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+
+  const zipUrl = data?.url ?? data?.fileUrl ?? data?.downloadUrl ?? data?.printingFilesZip ?? null;
+  if (!zipUrl) return null;
+  return {
+    name: `design-${designId}.zip`,
+    url: String(zipUrl),
+    side: "production-zip",
+    designId,
+    orderItemId: null,
+  };
+}
+
 /**
  * Create a Zakeke order tied to one of our paid orders. Returns the
  * Zakeke-side order id and the per-design order-item ids we use later
