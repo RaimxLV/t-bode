@@ -7,10 +7,15 @@
 
 const ZAKEKE_BASE = "https://api.zakeke.com";
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
-export async function getZakekeS2SToken(): Promise<string> {
+export async function getZakekeS2SToken(opts?: {
+  customerCode?: string;
+  visitorCode?: string;
+}): Promise<string> {
   const now = Date.now();
+  const cacheKey = `${opts?.customerCode ?? ""}::${opts?.visitorCode ?? ""}`;
+  const cachedToken = tokenCache.get(cacheKey);
   if (cachedToken && cachedToken.expiresAt > now + 30_000) {
     return cachedToken.token;
   }
@@ -28,6 +33,13 @@ export async function getZakekeS2SToken(): Promise<string> {
     `client_secret=${encodeURIComponent(clientSecret)}`,
     "access_type=S2S",
   ].join("&");
+  const tokenParams = [body];
+  if (opts?.visitorCode) {
+    tokenParams.push(`visitorcode=${encodeURIComponent(opts.visitorCode)}`);
+  }
+  if (opts?.customerCode) {
+    tokenParams.push(`customercode=${encodeURIComponent(opts.customerCode)}`);
+  }
 
   const res = await fetch(`${ZAKEKE_BASE}/token`, {
     method: "POST",
@@ -36,7 +48,7 @@ export async function getZakekeS2SToken(): Promise<string> {
       "Content-Type": "application/x-www-form-urlencoded",
       "Authorization": `Basic ${basicAuth}`,
     },
-    body,
+    body: tokenParams.join("&"),
   });
 
   const text = await res.text();
@@ -56,7 +68,7 @@ export async function getZakekeS2SToken(): Promise<string> {
     throw new Error(`Zakeke token missing access_token: ${text}`);
   }
   const ttlSec = Number(data?.expires_in ?? 3600);
-  cachedToken = { token, expiresAt: now + ttlSec * 1000 };
+  tokenCache.set(cacheKey, { token, expiresAt: now + ttlSec * 1000 });
   return token;
 }
 
@@ -77,6 +89,56 @@ export interface ZakekeOutputFile {
   orderItemId?: string | null;
 }
 
+export async function getZakekeDesignZipFile(
+  designId: string,
+  modificationId?: string | null,
+): Promise<ZakekeOutputFile | null> {
+  const token = await getZakekeS2SToken();
+  const url = modificationId
+    ? `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}/outputfiles/zip/${encodeURIComponent(modificationId)}`
+    : `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}/outputfiles/zip`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+  if (res.ok && !contentType.includes("application/json")) {
+    return {
+      name: `design-${designId}.zip`,
+      url,
+      side: "production-zip",
+      designId,
+      orderItemId: null,
+    };
+  }
+
+  const text = await res.text();
+  if (!res.ok) {
+    throw new Error(`Zakeke design zip failed ${res.status}: ${text.slice(0, 300)}`);
+  }
+
+  let data: any = null;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+
+  const zipUrl = data?.url ?? data?.fileUrl ?? data?.downloadUrl ?? data?.printingFilesZip ?? null;
+  if (!zipUrl) return null;
+  return {
+    name: `design-${designId}.zip`,
+    url: String(zipUrl),
+    side: "production-zip",
+    designId,
+    orderItemId: null,
+  };
+}
+
 /**
  * Create a Zakeke order tied to one of our paid orders. Returns the
  * Zakeke-side order id and the per-design order-item ids we use later
@@ -90,11 +152,13 @@ export async function createZakekeOrder(opts: {
   items: ZakekeOrderItemInput[];
   customerCode?: string;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
-  const token = await getZakekeS2SToken();
-
   // Zakeke requires a customerCode (or visitorCode) on the order. Fall back
   // to the externalOrderId so it's always present.
   const customerCode = opts.customerCode || opts.externalOrderId;
+  const token = await getZakekeS2SToken({
+    customerCode,
+    visitorCode: customerCode,
+  });
   const payloadV1 = {
     code: opts.externalOrderId,
     customerCode,

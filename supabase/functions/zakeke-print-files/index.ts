@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
   createZakekeOrder,
+  getZakekeDesignZipFile,
   getZakekeOrderItemFiles,
   getZakekeOrderOutputFiles,
 } from "../_shared/zakeke.ts";
@@ -132,28 +133,34 @@ Deno.serve(async (req) => {
       }
       // 4) No Zakeke order yet but we have a designId — create one on the fly.
       else if (row.zakeke_design_id) {
-        const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
-          externalOrderId: `${row.order_id}:${row.id}`,
-          customerCode: String(row.order_id),
-          items: [
-            {
-              designId: String(row.zakeke_design_id),
-              quantity: row.quantity ?? 1,
-              reference: row.id,
-            },
-          ],
-        });
-        await service
-          .from("order_items")
-          .update({
-            zakeke_order_id: newOrderId,
-            zakeke_order_item_id: orderItemIds[0] ?? null,
-          })
-          .eq("id", orderItemId);
-        if (orderItemIds[0]) {
-          files = await getZakekeOrderItemFiles(orderItemIds[0]);
-        } else {
-          files = await getZakekeOrderOutputFiles(newOrderId);
+        try {
+          const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
+            externalOrderId: `${row.order_id}:${row.id}`,
+            customerCode: String(row.order_id),
+            items: [
+              {
+                designId: String(row.zakeke_design_id),
+                quantity: row.quantity ?? 1,
+                reference: row.id,
+              },
+            ],
+          });
+          await service
+            .from("order_items")
+            .update({
+              zakeke_order_id: newOrderId,
+              zakeke_order_item_id: orderItemIds[0] ?? null,
+            })
+            .eq("id", orderItemId);
+          if (orderItemIds[0]) {
+            files = await getZakekeOrderItemFiles(orderItemIds[0]);
+          } else {
+            files = await getZakekeOrderOutputFiles(newOrderId);
+          }
+        } catch (orderErr) {
+          console.error("zakeke-print-files order creation fallback to design zip:", orderErr);
+          const designZip = await getZakekeDesignZipFile(String(row.zakeke_design_id));
+          files = designZip ? [designZip] : [];
         }
       } else {
         return new Response(
