@@ -79,6 +79,8 @@ export interface ZakekeOrderItemInput {
   unitPrice?: number;
   /** Optional reference back to our internal order_item.id */
   reference?: string;
+  /** SKU of the underlying product variant (optional, helps Zakeke matching). */
+  sku?: string | null;
 }
 
 export interface ZakekeOutputFile {
@@ -154,6 +156,18 @@ export async function createZakekeOrder(opts: {
   items: ZakekeOrderItemInput[];
   customerCode?: string;
   visitorCode?: string | null;
+  /** ISO 4217 currency code, e.g. "EUR" */
+  currency?: string;
+  /** Customer email — required by Zakeke V1 orders endpoint. */
+  customerEmail?: string;
+  customerName?: string | null;
+  /** Order subtotal (sum of item totals before shipping/tax). */
+  subtotal?: number;
+  shippingCost?: number;
+  taxAmount?: number;
+  totalAmount?: number;
+  /** Optional ISO date string; defaults to now(). */
+  orderDate?: string;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
@@ -165,13 +179,28 @@ export async function createZakekeOrder(opts: {
     visitorCode,
   });
 
+  const orderDate = opts.orderDate ?? new Date().toISOString();
+  const currency = (opts.currency ?? "EUR").toUpperCase();
+  const computedSubtotal =
+    opts.subtotal ??
+    opts.items.reduce((s, it) => s + Number(it.unitPrice ?? 0) * (it.quantity ?? 1), 0);
+
   // Customizer (V2) endpoint expects `orderCode` + `details` with
   // `modelUnitPrice` + `designUnitPrice`. The /v1/orders endpoint is for
   // catalog-style integrations and rejects visitor-bound designs.
   const payloadV2 = {
     orderCode: opts.externalOrderId,
+    orderDate,
+    currency,
+    customerEmail: opts.customerEmail ?? null,
+    customerName: opts.customerName ?? null,
+    subtotal: Number(computedSubtotal.toFixed(2)),
+    shippingCost: Number((opts.shippingCost ?? 0).toFixed(2)),
+    taxAmount: Number((opts.taxAmount ?? 0).toFixed(2)),
+    total: Number((opts.totalAmount ?? computedSubtotal).toFixed(2)),
     details: opts.items.map((it) => ({
       designID: it.designId,
+      sku: it.sku ?? null,
       quantity: it.quantity,
       modelUnitPrice: Number(it.unitPrice ?? 0),
       designUnitPrice: 0,
@@ -187,8 +216,14 @@ export async function createZakekeOrder(opts: {
   let text = "";
   let lastErr = "";
   for (const { url, body } of endpoints) {
-    console.log(`[zakeke-create-order] POST ${url}`);
-    console.log(`[zakeke-create-order] payload:`, JSON.stringify(body));
+    console.log(
+      `\n========== [zakeke-create-order] DEBUG PAYLOAD ==========\n` +
+        `Endpoint : ${url}\n` +
+        `VisitorCode : ${visitorCode}\n` +
+        `CustomerCode: ${customerCode}\n` +
+        `JSON Body   :\n${JSON.stringify(body, null, 2)}\n` +
+        `=========================================================\n`,
+    );
     res = await fetch(url, {
       method: "POST",
       headers: {
@@ -199,7 +234,9 @@ export async function createZakekeOrder(opts: {
       body: JSON.stringify(body),
     });
     text = await res.text();
-    console.log(`[zakeke-create-order] response ${res.status} from ${url}:`, text.slice(0, 1000));
+    console.log(
+      `[zakeke-create-order] response ${res.status} from ${url}:\n${text.slice(0, 2000)}`,
+    );
     if (res.ok) break;
     lastErr = `${res.status} @ ${url}: ${text.slice(0, 200)}`;
   }
