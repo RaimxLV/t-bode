@@ -198,6 +198,8 @@ export async function createZakekeOrder(opts: {
   let text = "";
   let lastErr = "";
   for (const { url, body } of endpoints) {
+    console.log(`[zakeke-create-order] POST ${url}`);
+    console.log(`[zakeke-create-order] payload:`, JSON.stringify(body));
     res = await fetch(url, {
       method: "POST",
       headers: {
@@ -208,6 +210,7 @@ export async function createZakekeOrder(opts: {
       body: JSON.stringify(body),
     });
     text = await res.text();
+    console.log(`[zakeke-create-order] response ${res.status} from ${url}:`, text.slice(0, 1000));
     if (res.ok) break;
     lastErr = `${res.status} @ ${url}: ${text.slice(0, 200)}`;
   }
@@ -217,6 +220,7 @@ export async function createZakekeOrder(opts: {
 
   let data: any = {};
   try { data = JSON.parse(text); } catch { /* keep empty */ }
+  console.log(`[zakeke-create-order] parsed data keys:`, Object.keys(data ?? {}));
 
   const zakekeOrderId =
     data?.id ?? data?.orderId ?? data?.orderID ??
