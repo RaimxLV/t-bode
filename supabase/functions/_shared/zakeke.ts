@@ -11,12 +11,27 @@ function maskSecretPrefix(value: string): string {
   return value ? `${value.slice(0, 4)}…` : "(empty)";
 }
 
+function getZakekeCredentials() {
+  const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
+  const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
+
+  if (!clientId || !clientSecret) {
+    throw new Error("Zakeke credentials not configured");
+  }
+
+  const marketplaceID = Number(clientId);
+  if (!Number.isFinite(marketplaceID)) {
+    throw new Error(`Zakeke client id is not numeric: ${maskSecretPrefix(clientId)}`);
+  }
+
+  return { clientId, clientSecret, marketplaceID };
+}
+
 export async function getZakekeS2SToken(opts?: {
   customerCode?: string;
   visitorCode?: string;
 }): Promise<string> {
-  const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
-  const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
+  const { clientId, clientSecret } = getZakekeCredentials();
   console.log(`[zakeke-auth] endpoint=${ZAKEKE_BASE}/token`);
   console.log(
     `[zakeke-auth] ZAKEKE_API_KEY prefix=${maskSecretPrefix(clientId)}`,
@@ -24,9 +39,6 @@ export async function getZakekeS2SToken(opts?: {
   console.log(
     `[zakeke-auth] ZAKEKE_CLIENT_SECRET prefix=${maskSecretPrefix(clientSecret)}`,
   );
-  if (!clientId || !clientSecret) {
-    throw new Error("Zakeke credentials not configured");
-  }
 
   const basicAuth = btoa(`${clientId}:${clientSecret}`);
   const body = [
@@ -187,6 +199,7 @@ export async function createZakekeOrder(opts: {
   /** Shipping address for the Zakeke order. */
   shippingAddress?: ZakekeShippingAddress | null;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
+  const { marketplaceID } = getZakekeCredentials();
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
   // the browser; otherwise the order won't show up under the design.
@@ -212,7 +225,7 @@ export async function createZakekeOrder(opts: {
   // catalog-style integrations and rejects visitor-bound designs.
   const payloadV2 = {
     orderCode: opts.externalOrderId,
-    marketplaceID: 332750,
+    marketplaceID,
     orderDate,
     currency,
     customerEmail: opts.customerEmail ?? null,
