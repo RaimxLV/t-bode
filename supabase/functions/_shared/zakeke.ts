@@ -18,8 +18,12 @@ export async function getZakekeS2SToken(opts?: {
   const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
   const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
   console.log(`[zakeke-auth] endpoint=${ZAKEKE_BASE}/token`);
-  console.log(`[zakeke-auth] ZAKEKE_API_KEY prefix=${maskSecretPrefix(clientId)}`);
-  console.log(`[zakeke-auth] ZAKEKE_CLIENT_SECRET prefix=${maskSecretPrefix(clientSecret)}`);
+  console.log(
+    `[zakeke-auth] ZAKEKE_API_KEY prefix=${maskSecretPrefix(clientId)}`,
+  );
+  console.log(
+    `[zakeke-auth] ZAKEKE_CLIENT_SECRET prefix=${maskSecretPrefix(clientSecret)}`,
+  );
   if (!clientId || !clientSecret) {
     throw new Error("Zakeke credentials not configured");
   }
@@ -42,9 +46,9 @@ export async function getZakekeS2SToken(opts?: {
   const res = await fetch(`${ZAKEKE_BASE}/token`, {
     method: "POST",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
-      "Authorization": `Basic ${basicAuth}`,
+      Authorization: `Basic ${basicAuth}`,
     },
     body: tokenParams.join("&"),
   });
@@ -109,8 +113,8 @@ export async function getZakekeDesignZipFile(
   const res = await fetch(url, {
     method: "GET",
     headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -127,7 +131,9 @@ export async function getZakekeDesignZipFile(
 
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(`Zakeke design zip failed ${res.status}: ${text.slice(0, 300)}`);
+    throw new Error(
+      `Zakeke design zip failed ${res.status}: ${text.slice(0, 300)}`,
+    );
   }
 
   let data: any = null;
@@ -137,7 +143,12 @@ export async function getZakekeDesignZipFile(
     return null;
   }
 
-  const zipUrl = data?.url ?? data?.fileUrl ?? data?.downloadUrl ?? data?.printingFilesZip ?? null;
+  const zipUrl =
+    data?.url ??
+    data?.fileUrl ??
+    data?.downloadUrl ??
+    data?.printingFilesZip ??
+    null;
   if (!zipUrl) return null;
   return {
     name: `design-${designId}.zip`,
@@ -179,7 +190,8 @@ export async function createZakekeOrder(opts: {
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
   // the browser; otherwise the order won't show up under the design.
-  const visitorCode = opts.visitorCode || opts.customerCode || opts.externalOrderId;
+  const visitorCode =
+    opts.visitorCode || opts.customerCode || opts.externalOrderId;
   const customerCode = opts.customerCode || visitorCode;
   const token = await getZakekeS2SToken({
     customerCode,
@@ -190,7 +202,10 @@ export async function createZakekeOrder(opts: {
   const currency = (opts.currency ?? "EUR").toUpperCase();
   const computedSubtotal =
     opts.subtotal ??
-    opts.items.reduce((s, it) => s + Number(it.unitPrice ?? 0) * (it.quantity ?? 1), 0);
+    opts.items.reduce(
+      (s, it) => s + Number(it.unitPrice ?? 0) * (it.quantity ?? 1),
+      0,
+    );
 
   // Customizer (V2) endpoint expects `orderCode` + `details` with
   // `modelUnitPrice` + `designUnitPrice`. The /v1/orders endpoint is for
@@ -226,8 +241,12 @@ export async function createZakekeOrder(opts: {
   let lastErr = "";
   for (const { url, body } of endpoints) {
     console.log(`[zakeke-create-order] live base=${ZAKEKE_BASE}`);
-    console.log(`Sūtu pieprasījumu uz Marketplace ID: ${payloadV2.marketplaceID}`);
-    console.log(`[zakeke-create-order] marketplaceID type=${typeof payloadV2.marketplaceID}`);
+    console.log(
+      `Sūtu pieprasījumu uz Marketplace ID: ${payloadV2.marketplaceID}`,
+    );
+    console.log(
+      `[zakeke-create-order] marketplaceID type=${typeof payloadV2.marketplaceID}`,
+    );
     console.log(
       `\n========== [zakeke-create-order] DEBUG PAYLOAD ==========\n` +
         `Endpoint : ${url}\n` +
@@ -239,9 +258,9 @@ export async function createZakekeOrder(opts: {
     res = await fetch(url, {
       method: "POST",
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(body),
     });
@@ -257,21 +276,44 @@ export async function createZakekeOrder(opts: {
   }
 
   let data: any = {};
-  try { data = JSON.parse(text); } catch { /* keep empty */ }
-  console.log(`[zakeke-create-order] parsed data keys:`, Object.keys(data ?? {}));
+  try {
+    data = JSON.parse(text);
+  } catch {
+    /* keep empty */
+  }
+  console.log(
+    `[zakeke-create-order] parsed data keys:`,
+    Object.keys(data ?? {}),
+  );
 
   const zakekeOrderId =
-    data?.id ?? data?.orderId ?? data?.orderID ??
-    data?.orderCode ?? data?.OrderCode ??
-    data?.order?.id ?? opts.externalOrderId;
+    data?.id ??
+    data?.orderId ??
+    data?.orderID ??
+    data?.orderCode ??
+    data?.OrderCode ??
+    data?.order?.id ??
+    opts.externalOrderId;
 
   // Pull Zakeke-side order-item ids from whichever shape the API returned.
   const itemsList: any[] =
-    data?.orderItems ?? data?.items ?? data?.designs ??
-    data?.details ?? data?.compositionDetails ??
-    data?.order?.orderItems ?? [];
+    data?.orderItems ??
+    data?.items ??
+    data?.designs ??
+    data?.details ??
+    data?.compositionDetails ??
+    data?.order?.orderItems ??
+    [];
   const orderItemIds = itemsList
-    .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? it?.detailID ?? it?.detailId ?? null)
+    .map(
+      (it) =>
+        it?.orderItemId ??
+        it?.orderItemID ??
+        it?.id ??
+        it?.detailID ??
+        it?.detailId ??
+        null,
+    )
     .filter((x: unknown) => x !== null && x !== undefined)
     .map(String);
 
@@ -288,29 +330,33 @@ export async function createZakekeOrder(opts: {
  * and work-order PDF — the same bundle WooCommerce delivers as a ZIP.
  */
 export async function getZakekeOrderItemFiles(
-  orderItemId: string
+  orderItemId: string,
 ): Promise<ZakekeOutputFile[]> {
   const token = await getZakekeS2SToken();
   const url = `${ZAKEKE_BASE}/v1/order-items/${encodeURIComponent(orderItemId)}/files`;
   const res = await fetch(url, {
     method: "GET",
     headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
   const text = await res.text();
   if (!res.ok) {
     throw new Error(
-      `Zakeke order-item files failed ${res.status}: ${text.slice(0, 300)}`
+      `Zakeke order-item files failed ${res.status}: ${text.slice(0, 300)}`,
     );
   }
   let data: any;
-  try { data = JSON.parse(text); } catch {
+  try {
+    data = JSON.parse(text);
+  } catch {
     throw new Error("Zakeke order-item files: non-JSON response");
   }
 
-  const list: any[] = Array.isArray(data) ? data : (data?.files ?? data?.items ?? []);
+  const list: any[] = Array.isArray(data)
+    ? data
+    : (data?.files ?? data?.items ?? []);
   const out: ZakekeOutputFile[] = [];
   for (const f of list) {
     const fileUrl = f?.url ?? f?.fileUrl ?? f?.downloadUrl ?? f?.link;
@@ -334,7 +380,7 @@ export async function getZakekeOrderItemFiles(
  */
 export async function getZakekeOrderOutputFiles(
   zakekeOrderId: string,
-  orderItemIds?: string[]
+  orderItemIds?: string[],
 ): Promise<ZakekeOutputFile[]> {
   const out: ZakekeOutputFile[] = [];
 
@@ -363,8 +409,8 @@ export async function getZakekeOrderOutputFiles(
     const res = await fetch(url, {
       method: "GET",
       headers: {
-        "Accept": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
       },
     });
     const text = await res.text();
@@ -373,12 +419,18 @@ export async function getZakekeOrderOutputFiles(
       continue;
     }
     let data: any;
-    try { data = JSON.parse(text); } catch {
+    try {
+      data = JSON.parse(text);
+    } catch {
       lastError = `non-JSON @ ${url}`;
       continue;
     }
     const itemsList: any[] =
-      data?.orderItems ?? data?.items ?? data?.designs ?? data?.order?.orderItems ?? [];
+      data?.orderItems ??
+      data?.items ??
+      data?.designs ??
+      data?.order?.orderItems ??
+      [];
     const ids = itemsList
       .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? null)
       .filter((x: unknown) => !!x)
