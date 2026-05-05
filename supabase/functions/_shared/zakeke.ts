@@ -7,10 +7,15 @@
 
 const ZAKEKE_BASE = "https://api.zakeke.com";
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
-export async function getZakekeS2SToken(): Promise<string> {
+export async function getZakekeS2SToken(opts?: {
+  customerCode?: string;
+  visitorCode?: string;
+}): Promise<string> {
   const now = Date.now();
+  const cacheKey = `${opts?.customerCode ?? ""}::${opts?.visitorCode ?? ""}`;
+  const cachedToken = tokenCache.get(cacheKey);
   if (cachedToken && cachedToken.expiresAt > now + 30_000) {
     return cachedToken.token;
   }
@@ -28,6 +33,13 @@ export async function getZakekeS2SToken(): Promise<string> {
     `client_secret=${encodeURIComponent(clientSecret)}`,
     "access_type=S2S",
   ].join("&");
+  const tokenParams = [body];
+  if (opts?.visitorCode) {
+    tokenParams.push(`visitorcode=${encodeURIComponent(opts.visitorCode)}`);
+  }
+  if (opts?.customerCode) {
+    tokenParams.push(`customercode=${encodeURIComponent(opts.customerCode)}`);
+  }
 
   const res = await fetch(`${ZAKEKE_BASE}/token`, {
     method: "POST",
@@ -36,7 +48,7 @@ export async function getZakekeS2SToken(): Promise<string> {
       "Content-Type": "application/x-www-form-urlencoded",
       "Authorization": `Basic ${basicAuth}`,
     },
-    body,
+    body: tokenParams.join("&"),
   });
 
   const text = await res.text();
@@ -56,7 +68,7 @@ export async function getZakekeS2SToken(): Promise<string> {
     throw new Error(`Zakeke token missing access_token: ${text}`);
   }
   const ttlSec = Number(data?.expires_in ?? 3600);
-  cachedToken = { token, expiresAt: now + ttlSec * 1000 };
+  tokenCache.set(cacheKey, { token, expiresAt: now + ttlSec * 1000 });
   return token;
 }
 
@@ -90,11 +102,13 @@ export async function createZakekeOrder(opts: {
   items: ZakekeOrderItemInput[];
   customerCode?: string;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
-  const token = await getZakekeS2SToken();
-
   // Zakeke requires a customerCode (or visitorCode) on the order. Fall back
   // to the externalOrderId so it's always present.
   const customerCode = opts.customerCode || opts.externalOrderId;
+  const token = await getZakekeS2SToken({
+    customerCode,
+    visitorCode: customerCode,
+  });
   const payloadV1 = {
     code: opts.externalOrderId,
     customerCode,
