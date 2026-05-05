@@ -159,24 +159,32 @@ export async function createZakekeOrder(opts: {
     customerCode,
     visitorCode: customerCode,
   });
+  // Per Zakeke docs: https://docs.zakeke.com/docs/API/REST-API/Orders/create-order
+  // The documented payload uses `orderID`, `orderDate`, and `orderItems`
+  // with `designID`, `quantity`, `unitPrice`.
+  const orderDate = new Date().toISOString();
   const payloadV1 = {
-    code: opts.externalOrderId,
+    orderID: opts.externalOrderId,
+    orderDate,
     customerCode,
     visitorCode: customerCode,
-    designs: opts.items.map((it) => ({
-      designId: it.designId,
+    orderItems: opts.items.map((it) => ({
+      designID: it.designId,
       quantity: it.quantity,
+      unitPrice: 0,
       reference: it.reference ?? null,
     })),
   };
   // Legacy v2 endpoint uses PascalCase fields.
   const payloadV2 = {
-    Code: opts.externalOrderId,
+    OrderID: opts.externalOrderId,
+    OrderDate: orderDate,
     CustomerCode: customerCode,
     VisitorCode: customerCode,
-    Designs: opts.items.map((it) => ({
-      DesignId: it.designId,
+    OrderItems: opts.items.map((it) => ({
+      DesignID: it.designId,
       Quantity: it.quantity,
+      UnitPrice: 0,
       Reference: it.reference ?? null,
     })),
   };
