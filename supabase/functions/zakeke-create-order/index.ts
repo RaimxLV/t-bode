@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     // Pull order header for customer email + currency + totals (debug-friendly).
     const { data: orderRow } = await supabase
       .from("orders")
-      .select("guest_email, user_id, total, shipping_name, created_at")
+      .select("guest_email, user_id, total, shipping_name, shipping_address, shipping_city, shipping_zip, shipping_phone, created_at")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -56,6 +56,17 @@ Deno.serve(async (req) => {
       const { data: prof } = await supabase.auth.admin.getUserById(orderRow.user_id);
       customerEmail = prof?.user?.email ?? null;
     }
+
+    const shippingAddress = orderRow?.shipping_address
+      ? {
+          name: orderRow.shipping_name ?? "",
+          address1: orderRow.shipping_address ?? "",
+          city: orderRow.shipping_city ?? "",
+          zip: orderRow.shipping_zip ?? "",
+          country: "LV",
+          phone: orderRow.shipping_phone ?? "",
+        }
+      : null;
 
     if (!items || items.length === 0) {
       return new Response(JSON.stringify({ ok: true, processed: 0 }), {
@@ -90,6 +101,7 @@ Deno.serve(async (req) => {
           orderDate: orderRow?.created_at ?? undefined,
           subtotal: Number((it as any).unit_price ?? 0) * (it.quantity ?? 1),
           totalAmount: Number((it as any).unit_price ?? 0) * (it.quantity ?? 1),
+          shippingAddress,
           items: [
             {
               designId: it.zakeke_design_id as string,
