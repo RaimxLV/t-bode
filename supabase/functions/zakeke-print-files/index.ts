@@ -1,8 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
+  createZakekeOrder,
   getZakekeOrderItemFiles,
   getZakekeOrderOutputFiles,
 } from "../_shared/zakeke.ts";
+import JSZip from "https://esm.sh/jszip@3.10.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -75,14 +77,17 @@ Deno.serve(async (req) => {
 
     let orderItemId: string | null = null;
     let zakekeOrderId: string | null = null;
+    let wantZip = false;
     if (req.method === "GET") {
       const u = new URL(req.url);
       orderItemId = u.searchParams.get("order_item_id");
       zakekeOrderId = u.searchParams.get("zakeke_order_id");
+      wantZip = u.searchParams.get("zip") === "1";
     } else {
       const body = await req.json().catch(() => ({}));
       orderItemId = body?.order_item_id ?? null;
       zakekeOrderId = body?.zakeke_order_id ?? null;
+      wantZip = body?.zip === true || body?.zip === "1";
     }
 
     if (!orderItemId && !zakekeOrderId) {
@@ -93,13 +98,14 @@ Deno.serve(async (req) => {
     }
 
     let files: Awaited<ReturnType<typeof getZakekeOrderItemFiles>> = [];
+    let zipFilename = "print-files.zip";
 
     if (orderItemId) {
       // Look up the row to find the cached files OR Zakeke ids.
       const { data: row, error: rowErr } = await service
         .from("order_items")
         .select(
-          "id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files"
+          "id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, product_name"
         )
         .eq("id", orderItemId)
         .maybeSingle();
@@ -110,6 +116,7 @@ Deno.serve(async (req) => {
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      zipFilename = `print-files-${(row.product_name || "item").replace(/[^a-z0-9]+/gi, "-")}-${orderItemId.slice(0, 8)}.zip`;
 
       // 1) Use cached files if Zakeke webhook already filled them in.
       if (Array.isArray(row.zakeke_print_files) && row.zakeke_print_files.length > 0) {
@@ -122,9 +129,35 @@ Deno.serve(async (req) => {
       // 3) Last resort: resolve via legacy order endpoint.
       else if (row.zakeke_order_id) {
         files = await getZakekeOrderOutputFiles(row.zakeke_order_id);
+      }
+      // 4) No Zakeke order yet but we have a designId — create one on the fly.
+      else if (row.zakeke_design_id) {
+        const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
+          externalOrderId: `${row.order_id}:${row.id}`,
+          customerCode: String(row.order_id),
+          items: [
+            {
+              designId: String(row.zakeke_design_id),
+              quantity: row.quantity ?? 1,
+              reference: row.id,
+            },
+          ],
+        });
+        await service
+          .from("order_items")
+          .update({
+            zakeke_order_id: newOrderId,
+            zakeke_order_item_id: orderItemIds[0] ?? null,
+          })
+          .eq("id", orderItemId);
+        if (orderItemIds[0]) {
+          files = await getZakekeOrderItemFiles(orderItemIds[0]);
+        } else {
+          files = await getZakekeOrderOutputFiles(newOrderId);
+        }
       } else {
         return new Response(
-          JSON.stringify({ error: "no Zakeke ids on this order_item" }),
+          JSON.stringify({ error: "no Zakeke design on this order_item" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -138,6 +171,58 @@ Deno.serve(async (req) => {
       }
     } else if (zakekeOrderId) {
       files = await getZakekeOrderOutputFiles(zakekeOrderId);
+    }
+
+    if (wantZip) {
+      if (!files.length) {
+        return new Response(
+          JSON.stringify({ error: "Zakeke vēl nav sagatavojusi drukas failus. Mēģini vēlreiz pēc dažām minūtēm." }),
+          { status: 425, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const zip = new JSZip();
+      const used = new Set<string>();
+      await Promise.all(files.map(async (f, idx) => {
+        try {
+          const r = await fetch(f.url);
+          if (!r.ok) {
+            zip.file(`_failed_${idx}.txt`, `Failed to download ${f.url}: ${r.status}`);
+            return;
+          }
+          const buf = new Uint8Array(await r.arrayBuffer());
+          let name = f.name || `file-${idx}`;
+          // Add extension from URL if missing
+          if (!/\.[a-z0-9]{2,5}$/i.test(name)) {
+            const m = f.url.match(/\.([a-z0-9]{2,5})(?:\?|$)/i);
+            if (m) name += `.${m[1]}`;
+          }
+          // Prefix with side if available
+          if (f.side && !name.toLowerCase().includes(String(f.side).toLowerCase())) {
+            name = `${f.side}_${name}`;
+          }
+          // Dedup
+          let final = name;
+          let n = 1;
+          while (used.has(final)) {
+            const dot = name.lastIndexOf(".");
+            final = dot > 0 ? `${name.slice(0, dot)}_${n}${name.slice(dot)}` : `${name}_${n}`;
+            n++;
+          }
+          used.add(final);
+          zip.file(final, buf);
+        } catch (e) {
+          zip.file(`_failed_${idx}.txt`, `Error: ${(e as Error).message}`);
+        }
+      }));
+      const zipBuf = await zip.generateAsync({ type: "uint8array" });
+      return new Response(zipBuf, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="${zipFilename}"`,
+        },
+      });
     }
 
     return new Response(
