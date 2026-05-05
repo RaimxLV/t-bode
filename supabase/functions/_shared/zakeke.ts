@@ -7,12 +7,19 @@
 
 const ZAKEKE_BASE = "https://api.zakeke.com";
 
+function maskSecretPrefix(value: string): string {
+  return value ? `${value.slice(0, 4)}…` : "(empty)";
+}
+
 export async function getZakekeS2SToken(opts?: {
   customerCode?: string;
   visitorCode?: string;
 }): Promise<string> {
   const clientId = (Deno.env.get("ZAKEKE_API_KEY") ?? "").trim();
   const clientSecret = (Deno.env.get("ZAKEKE_CLIENT_SECRET") ?? "").trim();
+  console.log(`[zakeke-auth] endpoint=${ZAKEKE_BASE}/token`);
+  console.log(`[zakeke-auth] ZAKEKE_API_KEY prefix=${maskSecretPrefix(clientId)}`);
+  console.log(`[zakeke-auth] ZAKEKE_CLIENT_SECRET prefix=${maskSecretPrefix(clientSecret)}`);
   if (!clientId || !clientSecret) {
     throw new Error("Zakeke credentials not configured");
   }
@@ -218,7 +225,9 @@ export async function createZakekeOrder(opts: {
   let text = "";
   let lastErr = "";
   for (const { url, body } of endpoints) {
+    console.log(`[zakeke-create-order] live base=${ZAKEKE_BASE}`);
     console.log(`Sūtu pieprasījumu uz Marketplace ID: ${payloadV2.marketplaceID}`);
+    console.log(`[zakeke-create-order] marketplaceID type=${typeof payloadV2.marketplaceID}`);
     console.log(
       `\n========== [zakeke-create-order] DEBUG PAYLOAD ==========\n` +
         `Endpoint : ${url}\n` +
