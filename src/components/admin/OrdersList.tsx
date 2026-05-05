@@ -87,6 +87,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
+  const [zakekeCreateLoading, setZakekeCreateLoading] = useState<Record<string, boolean>>({});
+
+  const createZakekeOrderForItem = async (orderId: string, itemId: string) => {
+    setZakekeCreateLoading((p) => ({ ...p, [itemId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "zakeke-create-order",
+        { body: { order_id: orderId } }
+      );
+      if (error) throw error;
+      const errs = (data as any)?.errors;
+      if (Array.isArray(errs) && errs.length > 0) {
+        throw new Error(errs.map((e: any) => e.error).join("; "));
+      }
+      toast.success("Zakeke pasūtījums izveidots");
+      onRefresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās izveidot Zakeke pasūtījumu");
+    } finally {
+      setZakekeCreateLoading((p) => ({ ...p, [itemId]: false }));
+    }
+  };
 
   const downloadZakekePrintFiles = async (_zakekeOrderId: string, itemId: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
@@ -961,17 +983,46 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                             </button>
                                           )}
                                           {!item.zakeke_order_id && item.zakeke_design_id && (
-                                            <a
-                                              href={`https://portal.zakeke.com/admin/designs/${item.zakeke_design_id}`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
-                                              title={`Zakeke design ID: ${item.zakeke_design_id} — pasūtījuma ID vēl nav izveidots`}
-                                            >
-                                              <Palette className="w-3 h-3" />
-                                              Atvērt dizainu Zakeke
-                                              <ExternalLink className="w-2.5 h-2.5" />
-                                            </a>
+                                            <div className="flex flex-col gap-1 w-full">
+                                              <a
+                                                href={`https://portal.zakeke.com/admin/designs/${item.zakeke_design_id}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline w-fit"
+                                                title={`Zakeke design ID: ${item.zakeke_design_id}`}
+                                              >
+                                                <Palette className="w-3 h-3" />
+                                                Atvērt dizainu Zakeke
+                                                <ExternalLink className="w-2.5 h-2.5" />
+                                              </a>
+                                              {item.zakeke_thumbnail_url && (
+                                                <a
+                                                  href={item.zakeke_thumbnail_url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  download
+                                                  className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit"
+                                                  title="Lejupielādēt dizaina priekšskatījumu (PNG)"
+                                                >
+                                                  <Download className="w-3.5 h-3.5" />
+                                                  Lejupielādēt priekšskatījumu
+                                                </a>
+                                              )}
+                                              <button
+                                                type="button"
+                                                onClick={() => createZakekeOrderForItem(order.id, item.id)}
+                                                disabled={!!zakekeCreateLoading[item.id]}
+                                                className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold border border-primary text-primary hover:bg-primary/10 px-2.5 py-1.5 rounded w-full sm:w-fit disabled:opacity-50"
+                                                title="Izveidot Zakeke pasūtījumu, lai iegūtu HiRes drukas failus"
+                                              >
+                                                {zakekeCreateLoading[item.id] ? (
+                                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                  <FileArchive className="w-3.5 h-3.5" />
+                                                )}
+                                                Izveidot HiRes drukas failu
+                                              </button>
+                                            </div>
                                           )}
                                           {!item.zakeke_order_id && !item.zakeke_design_id && item.zakeke_thumbnail_url && (
                                             <div className="flex flex-col gap-1 w-full">
