@@ -95,25 +95,37 @@ export async function createZakekeOrder(opts: {
   // Zakeke requires a customerCode (or visitorCode) on the order. Fall back
   // to the externalOrderId so it's always present.
   const customerCode = opts.customerCode || opts.externalOrderId;
-  const payload = {
+  const payloadV1 = {
     code: opts.externalOrderId,
     customerCode,
+    visitorCode: customerCode,
     designs: opts.items.map((it) => ({
       designId: it.designId,
       quantity: it.quantity,
       reference: it.reference ?? null,
     })),
   };
+  // Legacy v2 endpoint uses PascalCase fields.
+  const payloadV2 = {
+    Code: opts.externalOrderId,
+    CustomerCode: customerCode,
+    VisitorCode: customerCode,
+    Designs: opts.items.map((it) => ({
+      DesignId: it.designId,
+      Quantity: it.quantity,
+      Reference: it.reference ?? null,
+    })),
+  };
 
-  const endpoints = [
-    `${ZAKEKE_BASE}/v1/orders`,
-    `${ZAKEKE_BASE}/v2/order`,
+  const endpoints: Array<{ url: string; body: unknown }> = [
+    { url: `${ZAKEKE_BASE}/v1/orders`, body: payloadV1 },
+    { url: `${ZAKEKE_BASE}/v2/order`, body: payloadV2 },
   ];
 
   let res: Response | null = null;
   let text = "";
   let lastErr = "";
-  for (const url of endpoints) {
+  for (const { url, body } of endpoints) {
     res = await fetch(url, {
       method: "POST",
       headers: {
@@ -121,7 +133,7 @@ export async function createZakekeOrder(opts: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
     text = await res.text();
     if (res.ok) break;
