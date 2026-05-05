@@ -94,8 +94,9 @@ export async function getZakekeDesignZipFile(
   modificationId?: string | null,
 ): Promise<ZakekeOutputFile | null> {
   const token = await getZakekeS2SToken();
-  const suffix = modificationId ? `/zip/${encodeURIComponent(modificationId)}` : "/outputfiles/zip";
-  const url = `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}${modificationId ? suffix : "/outputfiles/zip"}`;
+  const url = modificationId
+    ? `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}/outputfiles/zip/${encodeURIComponent(modificationId)}`
+    : `${ZAKEKE_BASE}/v1/designs/${encodeURIComponent(designId)}/outputfiles/zip`;
   const res = await fetch(url, {
     method: "GET",
     headers: {
