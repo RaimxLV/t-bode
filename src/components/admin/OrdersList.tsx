@@ -87,6 +87,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
+  const [zakekeCreateLoading, setZakekeCreateLoading] = useState<Record<string, boolean>>({});
+
+  const createZakekeOrderForItem = async (orderId: string, itemId: string) => {
+    setZakekeCreateLoading((p) => ({ ...p, [itemId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "zakeke-create-order",
+        { body: { order_id: orderId } }
+      );
+      if (error) throw error;
+      const errs = (data as any)?.errors;
+      if (Array.isArray(errs) && errs.length > 0) {
+        throw new Error(errs.map((e: any) => e.error).join("; "));
+      }
+      toast.success("Zakeke pasūtījums izveidots");
+      onRefresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās izveidot Zakeke pasūtījumu");
+    } finally {
+      setZakekeCreateLoading((p) => ({ ...p, [itemId]: false }));
+    }
+  };
 
   const downloadZakekePrintFiles = async (_zakekeOrderId: string, itemId: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
