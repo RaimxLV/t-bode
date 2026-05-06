@@ -436,6 +436,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  // Bulk-delete the currently selected orders (works in any tab, including
+  // archive). Cascades order_items / invoices via FKs configured in DB.
+  const deleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Vai tiešām dzēst ${ids.length} atlasīto pasūtījumu? Šī darbība ir neatgriezeniska.`)) return;
+    setBulkLoading(true);
+    try {
+      // Delete order_items first to be safe even if FK cascade is missing.
+      await supabase.from("order_items").delete().in("order_id", ids);
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} pasūtījumi`);
+      setSelectedIds(new Set());
+      setExpandedOrder(null);
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda dzēšot: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   // Re-render every existing invoice with the latest PDF template so old
   // documents look identical to newly issued ones.
   const regenerateAllInvoices = async () => {
