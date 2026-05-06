@@ -725,18 +725,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                       )}
                     </div>
                     {previewThumbs.length > 0 && (
-                      <div className="hidden sm:flex items-center -space-x-2 shrink-0">
+                      <div className="flex items-center -space-x-1.5 sm:-space-x-2 shrink-0">
                         {previewThumbs.map((src, idx) => (
                           <img
                             key={idx}
                             src={src}
                             alt=""
                             loading="lazy"
-                            className="w-10 h-10 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                            className="w-7 h-7 sm:w-10 sm:h-10 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
                           />
                         ))}
                         {extraCount > 0 && (
-                          <div className="w-10 h-10 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[9px] sm:text-[10px] font-semibold text-muted-foreground">
                             +{extraCount}
                           </div>
                         )}
