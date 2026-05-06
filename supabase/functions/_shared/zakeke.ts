@@ -19,12 +19,7 @@ function getZakekeCredentials() {
     throw new Error("Zakeke credentials not configured");
   }
 
-  const marketplaceID = Number(clientId);
-  if (!Number.isFinite(marketplaceID)) {
-    throw new Error(`Zakeke client id is not numeric: ${maskSecretPrefix(clientId)}`);
-  }
-
-  return { clientId, clientSecret, marketplaceID };
+  return { clientId, clientSecret };
 }
 
 export async function getZakekeS2SToken(opts?: {
@@ -199,7 +194,6 @@ export async function createZakekeOrder(opts: {
   /** Shipping address for the Zakeke order. */
   shippingAddress?: ZakekeShippingAddress | null;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
-  const { marketplaceID } = getZakekeCredentials();
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
   // the browser; otherwise the order won't show up under the design.
@@ -220,28 +214,23 @@ export async function createZakekeOrder(opts: {
       0,
     );
 
-  // Customizer (V2) endpoint expects `orderCode` + `details` with
-  // `modelUnitPrice` + `designUnitPrice`. The /v1/orders endpoint is for
-  // catalog-style integrations and rejects visitor-bound designs.
+  // Per Zakeke's Visual Customizer order-registration docs, /v2/order expects
+  // orderCode + sessionID + details[].orderDetailCode/designID/modelUnitPrice/
+  // designUnitPrice/quantity. We keep the payload close to the documented
+  // shape instead of inferring undocumented fields from the client id.
   const payloadV2 = {
     orderCode: opts.externalOrderId,
-    marketplaceID,
     orderDate,
-    currency,
-    customerEmail: opts.customerEmail ?? null,
-    customerName: opts.customerName ?? null,
-    subtotal: Number(computedSubtotal.toFixed(2)),
-    shippingCost: Number((opts.shippingCost ?? 0).toFixed(2)),
-    taxAmount: Number((opts.taxAmount ?? 0).toFixed(2)),
+    sessionID: visitorCode,
     total: Number((opts.totalAmount ?? computedSubtotal).toFixed(2)),
-    shippingAddress: opts.shippingAddress ?? null,
+    currency,
     details: opts.items.map((it) => ({
+      orderDetailCode: it.reference ?? it.designId,
       designID: it.designId,
       sku: it.sku ?? null,
       quantity: it.quantity,
       modelUnitPrice: Number(it.unitPrice ?? 0),
       designUnitPrice: 0,
-      reference: it.reference ?? null,
     })),
   };
 
@@ -254,12 +243,6 @@ export async function createZakekeOrder(opts: {
   let lastErr = "";
   for (const { url, body } of endpoints) {
     console.log(`[zakeke-create-order] live base=${ZAKEKE_BASE}`);
-    console.log(
-      `Sūtu pieprasījumu uz Marketplace ID: ${payloadV2.marketplaceID}`,
-    );
-    console.log(
-      `[zakeke-create-order] marketplaceID type=${typeof payloadV2.marketplaceID}`,
-    );
     console.log(
       `\n========== [zakeke-create-order] DEBUG PAYLOAD ==========\n` +
         `Endpoint : ${url}\n` +
@@ -298,31 +281,6 @@ export async function createZakekeOrder(opts: {
     `[zakeke-create-order] parsed data keys:`,
     Object.keys(data ?? {}),
   );
-
-  // Explicit Store ID mismatch guard. If Zakeke echoes a marketplaceID that
-  // differs from the one we sent (i.e. the credentials belong to a different
-  // marketplace than the frontend used to create the design), the design will
-  // never be linked to this order and `compositionDetails` comes back empty.
-  const responseMarketplaceId = Number(
-    data?.marketplaceID ?? data?.marketplaceId ?? NaN,
-  );
-  if (
-    Number.isFinite(responseMarketplaceId) &&
-    responseMarketplaceId !== marketplaceID
-  ) {
-    console.error(
-      `[zakeke-create-order] Store ID mismatch: sent marketplaceID=${marketplaceID}, ` +
-        `Zakeke responded marketplaceID=${responseMarketplaceId}. ` +
-        `The ZAKEKE_API_KEY / ZAKEKE_CLIENT_SECRET in Lovable Cloud belong to ` +
-        `marketplace ${responseMarketplaceId}, not ${marketplaceID}. ` +
-        `Generate fresh S2S credentials inside the ${marketplaceID} Zakeke account.`,
-    );
-    throw new Error(
-      `Frontend/Backend Store ID mismatch — credentials belong to marketplace ` +
-        `${responseMarketplaceId}, but frontend uses ${marketplaceID}. ` +
-        `Regenerate S2S keys from the correct Zakeke account.`,
-    );
-  }
 
   // IMPORTANT: Zakeke V2 returns its own internal order id which is what
   // /v2/orders/{id}/output-files expects. We must NEVER fall back to our
