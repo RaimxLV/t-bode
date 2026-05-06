@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
@@ -22,7 +21,7 @@ const SITE_URL = "https://t-bode.lovable.app";
  * Centralized SEO component. Renders <title>, meta description,
  * Open Graph / Twitter tags, canonical URL, html lang, and optional JSON-LD.
  */
-export const Seo = forwardRef<HTMLElement, SeoProps>(function Seo({
+export const Seo = ({
   title,
   description,
   image = DEFAULT_IMAGE,
@@ -30,7 +29,7 @@ export const Seo = forwardRef<HTMLElement, SeoProps>(function Seo({
   canonical,
   jsonLd,
   locale,
-}, _ref) {
+}: SeoProps) => {
   const { i18n } = useTranslation();
   const lang = locale || i18n.language || "lv";
   const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
@@ -65,4 +64,4 @@ export const Seo = forwardRef<HTMLElement, SeoProps>(function Seo({
       )}
     </Helmet>
   );
-});
+};
