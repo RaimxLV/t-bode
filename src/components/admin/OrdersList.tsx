@@ -712,6 +712,22 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         </div>
       ) : (
         <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Checkbox
+              checked={filteredOrders.length > 0 && filteredOrders.every((o) => selectedIds.has(o.id))}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setSelectedIds(new Set(filteredOrders.map((o) => o.id)));
+                } else {
+                  setSelectedIds(new Set());
+                }
+              }}
+              aria-label="Atzīmēt visus"
+            />
+            <span className="text-[11px] text-muted-foreground font-body">
+              Atzīmēt visus ({filteredOrders.length})
+            </span>
+          </div>
           {filteredOrders.map((order) => {
             const statusInfo = getStatusInfo(order.status);
             const items = orderItems[order.id] || [];
