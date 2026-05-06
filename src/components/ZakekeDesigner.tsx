@@ -69,6 +69,30 @@ export const ZakekeDesigner = ({
 
   const totalUnitPrice = productPrice + customizationPrice;
 
+  // Compute the final per-unit price using Zakeke's documented formula.
+  // Zakeke gives us `price` (per-unit markup from Price Rules, setup fees,
+  // color charges, etc.) and `percentPrice` (% uplift on the base unit price).
+  // We also keep the customizationPrice in a ref/state so the header total
+  // stays in sync in real time.
+  const computeZakekePrice = (info: any) => {
+    const toNum = (v: unknown) => {
+      const n = typeof v === "string" ? parseFloat(v) : (v as number);
+      return typeof n === "number" && !isNaN(n) ? n : 0;
+    };
+    const markup = toNum(info?.price);
+    const percent = toNum(info?.percentPrice ?? info?.percentagePrice);
+    const customization = markup + (productPrice * percent) / 100;
+    const rounded = Math.round(customization * 100) / 100;
+    if (rounded !== customizationPriceRef.current) {
+      customizationPriceRef.current = rounded;
+      setCustomizationPrice(rounded);
+    }
+    return {
+      price: Math.round((productPrice + customization) * 100) / 100,
+      isOutOfStock: false,
+    };
+  };
+
   useEffect(() => {
     let mounted = true;
     let customizerInstance: { removeIframe: () => void } | null = null;
