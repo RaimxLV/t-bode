@@ -1,0 +1,1 @@
+UPDATE public.order_items SET zakeke_order_id = NULL, zakeke_order_item_id = NULL, zakeke_print_files = NULL WHERE zakeke_order_id LIKE '%:%';

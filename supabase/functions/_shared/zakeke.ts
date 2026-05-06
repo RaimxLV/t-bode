@@ -299,14 +299,32 @@ export async function createZakekeOrder(opts: {
     Object.keys(data ?? {}),
   );
 
+  // IMPORTANT: Zakeke V2 returns its own internal order id which is what
+  // /v2/orders/{id}/output-files expects. We must NEVER fall back to our
+  // externalOrderId — using our UUID against output-files yields HTTP 400.
   const zakekeOrderId =
     data?.id ??
     data?.orderId ??
     data?.orderID ??
-    data?.orderCode ??
-    data?.OrderCode ??
+    data?.zakekeOrderId ??
+    data?.zakekeOrderID ??
     data?.order?.id ??
-    opts.externalOrderId;
+    data?.order?.orderId ??
+    data?.order?.orderID ??
+    data?.data?.id ??
+    data?.data?.orderId ??
+    data?.result?.id ??
+    null;
+  if (!zakekeOrderId) {
+    console.error(
+      `[zakeke-create-order] Could NOT extract Zakeke order id from response. ` +
+        `Top-level keys: ${Object.keys(data ?? {}).join(", ")}. Full body:\n${text.slice(0, 4000)}`,
+    );
+    throw new Error(
+      `Zakeke create order: response missing order id (keys: ${Object.keys(data ?? {}).join(",")})`,
+    );
+  }
+  console.log(`[zakeke-create-order] extracted zakekeOrderId=${zakekeOrderId}`);
 
   // Pull Zakeke-side order-item ids from whichever shape the API returned.
   const itemsList: any[] =
@@ -330,6 +348,9 @@ export async function createZakekeOrder(opts: {
     .filter((x: unknown) => x !== null && x !== undefined)
     .map(String);
 
+  console.log(
+    `[zakeke-create-order] extracted orderItemIds=${JSON.stringify(orderItemIds)}`,
+  );
   return { zakekeOrderId: String(zakekeOrderId), orderItemIds, raw: data };
 }
 
@@ -410,8 +431,43 @@ export async function getZakekeOrderOutputFiles(
     if (out.length > 0) return out;
   }
 
-  // Fallback: resolve the order to discover its order-item ids.
+  // Preferred V2 endpoint that returns ALL output files for an order at once.
+  // NOTE: zakekeOrderId here MUST be Zakeke's own order id (NOT our UUID).
   const token = await getZakekeS2SToken();
+  try {
+    const url = `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}/output-files`;
+    console.log(`[zakeke-output-files] GET ${url}`);
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+    });
+    const text = await res.text();
+    if (res.ok) {
+      let data: any;
+      try { data = JSON.parse(text); } catch { data = null; }
+      const list: any[] = Array.isArray(data)
+        ? data
+        : (data?.files ?? data?.outputFiles ?? data?.items ?? []);
+      for (const f of list) {
+        const fileUrl = f?.url ?? f?.fileUrl ?? f?.downloadUrl ?? f?.link;
+        if (!fileUrl) continue;
+        out.push({
+          name: f?.name ?? f?.fileName ?? f?.type ?? "print-file",
+          url: String(fileUrl),
+          side: f?.side ?? f?.sideName ?? f?.type ?? f?.kind ?? null,
+          designId: f?.designId ? String(f.designId) : null,
+          orderItemId: f?.orderItemId ?? f?.orderItemID ?? null,
+        });
+      }
+      if (out.length > 0) return out;
+    } else {
+      console.error(`[zakeke-output-files] ${res.status}: ${text.slice(0, 300)}`);
+    }
+  } catch (e) {
+    console.error("[zakeke-output-files] error:", e);
+  }
+
+  // Fallback: resolve the order to discover its order-item ids.
   const candidates = [
     `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(zakekeOrderId)}`,
     `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(zakekeOrderId)}`,
