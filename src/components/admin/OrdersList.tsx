@@ -76,6 +76,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [showArchive, setShowArchive] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 100;
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -536,6 +538,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const availableStatuses = showArchive
     ? ORDER_STATUSES.filter(s => ARCHIVED_STATUSES.includes(s.value))
     : ORDER_STATUSES.filter(s => !ARCHIVED_STATUSES.includes(s.value));
+
+  // Reset to page 1 whenever filters / tab change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="space-y-4">
