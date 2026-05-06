@@ -365,6 +365,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          admin_opened_at: string | null
           buyer_country: string | null
           buyer_ip: string | null
           cancellation_email_sent_at: string | null
@@ -413,6 +414,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          admin_opened_at?: string | null
           buyer_country?: string | null
           buyer_ip?: string | null
           cancellation_email_sent_at?: string | null
@@ -461,6 +463,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          admin_opened_at?: string | null
           buyer_country?: string | null
           buyer_ip?: string | null
           cancellation_email_sent_at?: string | null
