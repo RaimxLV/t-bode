@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { forwardRef, lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -47,52 +47,53 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
-  <ErrorBoundary>
-    <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter basename={import.meta.env.BASE_URL}>
-              <DynamicLang />
-              <ScrollToTop />
-              <CartSidebar />
-              <CookieConsent />
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/design" element={<DesignYourOwn />} />
-                  <Route path="/collection" element={<OurCollection />} />
-                  <Route path="/product/:slug" element={<ProductDetail />} />
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/install" element={<Install />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/admin" element={<Admin />} />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/privatuma-politika" element={<PrivacyPolicy />} />
-                  <Route path="/terms" element={<Terms />} />
-                  <Route path="/terms-and-conditions" element={<Terms />} />
-                  <Route path="/noteikumi" element={<Terms />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-              </BrowserRouter>
-            </CartProvider>
-          </WishlistProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-    </HelmetProvider>
-  </ErrorBoundary>
-);
+const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
+  return (
+    <ErrorBoundary>
+      <HelmetProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <AuthProvider>
+              <WishlistProvider>
+                <CartProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter basename={import.meta.env.BASE_URL}>
+                    <DynamicLang />
+                    <ScrollToTop />
+                    <CartSidebar />
+                    <CookieConsent />
+                    <Suspense fallback={<PageLoader />}>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/design" element={<DesignYourOwn />} />
+                        <Route path="/collection" element={<OurCollection />} />
+                        <Route path="/product/:slug" element={<ProductDetail />} />
+                        <Route path="/auth" element={<Auth />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/install" element={<Install />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/admin" element={<Admin />} />
+                        <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/privacy" element={<PrivacyPolicy />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/privatuma-politika" element={<PrivacyPolicy />} />
+                        <Route path="/terms" element={<Terms />} />
+                        <Route path="/terms-and-conditions" element={<Terms />} />
+                        <Route path="/noteikumi" element={<Terms />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
+                  </BrowserRouter>
+                </CartProvider>
+              </WishlistProvider>
+            </AuthProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
+  );
+});
 
 export default App;
