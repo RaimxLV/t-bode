@@ -1,4 +1,4 @@
-import { forwardRef, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -47,7 +47,7 @@ const PageLoader = () => (
   </div>
 );
 
-const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
+const App = () => {
   return (
     <ErrorBoundary>
       <HelmetProvider>
@@ -94,6 +94,6 @@ const App = forwardRef<HTMLDivElement>(function App(_props, _ref) {
       </HelmetProvider>
     </ErrorBoundary>
   );
-});
+};
 
 export default App;
