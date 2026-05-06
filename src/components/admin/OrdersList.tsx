@@ -85,6 +85,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [showArchive, setShowArchive] = useState(false);
+  // Workflow tab: which bucket of active orders is shown.
+  // "manual" = needs human work (designs, B2B invoices, bank transfer)
+  // "ready"  = paid + standard products, just needs Omniva label
+  const [workTab, setWorkTab] = useState<"manual" | "ready" | "shipped">("manual");
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
@@ -471,7 +475,27 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
-  const currentOrders = showArchive ? archivedOrders : activeOrders;
+
+  const bucketed = useMemo(() => {
+    const manual: any[] = [];
+    const ready: any[] = [];
+    const shipped: any[] = [];
+    for (const o of activeOrders) {
+      const b = getWorkBucket(o, orderItems[o.id] || []);
+      if (b === "manual") manual.push(o);
+      else if (b === "ready") ready.push(o);
+      else shipped.push(o);
+    }
+    return { manual, ready, shipped };
+  }, [activeOrders, orderItems]);
+
+  const currentOrders = showArchive
+    ? archivedOrders
+    : workTab === "manual"
+      ? bucketed.manual
+      : workTab === "ready"
+        ? bucketed.ready
+        : bucketed.shipped;
 
   const stats = useMemo(() => {
     const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
