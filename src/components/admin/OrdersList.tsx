@@ -1087,6 +1087,37 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         </div>
       )}
 
+      {filteredOrders.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+          <span className="text-[11px] text-muted-foreground font-body">
+            Rāda {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} no {filteredOrders.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              ← Iepriekšējā
+            </Button>
+            <span className="text-xs font-body px-2">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Nākamā →
+            </Button>
+          </div>
+        </div>
+      )}
+
       {invoiceOrder && (
         <Suspense fallback={null}>
           <InvoiceModal
