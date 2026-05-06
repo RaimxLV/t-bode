@@ -75,31 +75,22 @@ export const ZakekeDesigner = ({
   // We also keep the customizationPrice in a ref/state so the header total
   // stays in sync in real time.
   const computeZakekePrice = (info: any) => {
+    // Zakeke SDK passes the payload as a JSON STRING (see customizer.js
+    // internalProductPrice/internalProductInfo). Parse it before reading.
+    let parsed: any = info;
+    if (typeof info === "string") {
+      try { parsed = JSON.parse(info); } catch { parsed = {}; }
+    }
     const toNum = (v: unknown) => {
       const n = typeof v === "string" ? parseFloat(v) : (v as number);
       return typeof n === "number" && !isNaN(n) ? n : 0;
     };
-    // Zakeke sends keys in mixed casing depending on SDK version. Cover all.
-    const markup = toNum(
-      info?.price ??
-        info?.Price ??
-        info?.extraPrice ??
-        info?.customizationPrice ??
-        info?.designUnitPrice,
-    );
-    const percent = toNum(
-      info?.percentPrice ??
-        info?.percentprice ??
-        info?.percentagePrice ??
-        info?.percentageprice ??
-        info?.PercentPrice,
-    );
-    console.log("[Zakeke] price callback payload:", {
-      keys: Object.keys(info ?? {}),
-      price: info?.price,
-      percentPrice: info?.percentPrice,
-      percentagePrice: info?.percentagePrice,
-      raw: info,
+    const markup = toNum(parsed?.price);
+    const percent = toNum(parsed?.percentPrice);
+    console.log("[Zakeke] price callback parsed:", {
+      price: parsed?.price,
+      percentPrice: parsed?.percentPrice,
+      productid: parsed?.productid,
     });
     const customization = markup + (productPrice * percent) / 100;
     const rounded = Math.round(customization * 100) / 100;
