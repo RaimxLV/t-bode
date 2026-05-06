@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -24,7 +24,10 @@ const ORDER_STATUSES = [
   { value: "cancelled", key: "admin.orderStatuses.cancelled", color: "bg-red-100 text-red-800 border-red-200", icon: X },
 ];
 
-const ARCHIVED_STATUSES = ["delivered", "cancelled"];
+// Only fully completed (delivered & paid) orders go to the archive.
+// Cancelled / deleted orders never enter the archive and never affect reports.
+const ARCHIVED_STATUSES = ["delivered"];
+const HIDDEN_FROM_INBOX_STATUSES = ["cancelled"]; // shown only via explicit "cancelled" filter
 
 // Allowed forward transitions. Status flow is one-way to prevent illogical changes.
 // Admins can still override via an unlock toggle (e.g. correcting mistakes).
@@ -87,6 +90,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
+  const [showCancelled, setShowCancelled] = useState(false);
 
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
     const objectUrl = URL.createObjectURL(blob);
@@ -153,6 +157,41 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       else next.add(id);
       return next;
     });
+  };
+
+  // Mark order as opened (read) the first time admin expands it.
+  const markOrderOpened = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    if (!order || order.admin_opened_at) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({ admin_opened_at: new Date().toISOString() })
+      .eq("id", orderId);
+    if (!error) onRefresh();
+  };
+
+  const markOrderUnread = async (orderId: string) => {
+    const { error } = await supabase
+      .from("orders")
+      .update({ admin_opened_at: null })
+      .eq("id", orderId);
+    if (error) toast.error("Neizdevās atzīmēt kā nelasītu");
+    else { toast.success("Atzīmēts kā nelasīts"); onRefresh(); }
+  };
+
+  // Visual urgency: green = new/unread, red shades = stale unread, grey = handled.
+  const getOrderUrgency = (order: any): { card: string; tone: "new" | "stale1" | "stale2" | "handled" | "archived" } => {
+    if (ARCHIVED_STATUSES.includes(order.status) || order.status === "cancelled") {
+      return { card: "border-border bg-muted/30 opacity-80", tone: "archived" };
+    }
+    if (order.admin_opened_at) {
+      return { card: "border-border bg-card", tone: "handled" };
+    }
+    const ageMs = Date.now() - new Date(order.created_at).getTime();
+    const days = ageMs / (1000 * 60 * 60 * 24);
+    if (days >= 2) return { card: "border-red-400 bg-red-100/70 dark:bg-red-950/40", tone: "stale2" };
+    if (days >= 1) return { card: "border-red-300 bg-red-50/60 dark:bg-red-950/20", tone: "stale1" };
+    return { card: "border-green-400 bg-green-50/60 dark:bg-green-950/20", tone: "new" };
   };
 
   const downloadSelectedLabels = async () => {
@@ -455,9 +494,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     onRefresh();
   };
 
-  const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
+  const activeOrders = useMemo(
+    () => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status) && !HIDDEN_FROM_INBOX_STATUSES.includes(o.status)),
+    [orders]
+  );
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
-  const currentOrders = showArchive ? archivedOrders : activeOrders;
+  const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
+  const unreadCount = useMemo(
+    () => activeOrders.filter(o => !o.admin_opened_at).length,
+    [activeOrders]
+  );
+  const currentOrders = showCancelled ? cancelledOrders : showArchive ? archivedOrders : activeOrders;
 
   const stats = useMemo(() => {
     const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
@@ -500,16 +547,34 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       </div>
 
       <div className="space-y-2">
+        <div className="flex items-center gap-2 mb-1">
+          <div className={`relative inline-flex items-center justify-center w-9 h-9 rounded-lg ${unreadCount > 0 ? "bg-green-100 text-green-700 animate-pulse" : "bg-muted text-muted-foreground"}`}>
+            {unreadCount > 0 ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-green-600 text-white text-[10px] font-bold flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-body text-muted-foreground">
+            {unreadCount > 0 ? `${unreadCount} jauni pasūtījumi gaida` : "Visi pasūtījumi apskatīti"}
+          </span>
+        </div>
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-          <Button variant={!showArchive && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Ienākošie pasūtījumi</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
           </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Arhīvs</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
+          </Button>
+          <Button variant={showCancelled ? "default" : "outline"} size="sm" onClick={() => { setShowCancelled(true); setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+            <X className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Atceltie</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{cancelledOrders.length}</Badge>
           </Button>
           {showArchive && archivedOrders.length > 0 && (
             <Button
@@ -618,14 +683,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             const items = orderItems[order.id] || [];
             const isExpanded = expandedOrder === order.id;
             const StatusIcon = statusInfo.icon;
+            const urgency = getOrderUrgency(order);
+            const isUnread = !order.admin_opened_at && !ARCHIVED_STATUSES.includes(order.status) && order.status !== "cancelled";
 
             return (
-              <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/30 shadow-sm" : "border-border hover:border-primary/20"}`}>
+              <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
                 <CardContent className="p-0">
                   <div className="w-full p-3 sm:p-4 flex items-start gap-2 sm:gap-3 text-left">
                     <div
-                      onClick={(e) => { e.stopPropagation(); toggleSelect(order.id); }}
                       className="shrink-0 flex items-center pt-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       <Checkbox
                         checked={selectedIds.has(order.id)}
@@ -633,11 +700,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         aria-label="Atlasīt pasūtījumu"
                       />
                     </div>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
+                    <div className={`relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
                       <StatusIcon className="w-3.5 h-3.5" />
+                      {isUnread && (
+                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
+                      )}
                     </div>
                     <button
-                      onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                      onClick={() => {
+                        const next = isExpanded ? null : order.id;
+                        setExpandedOrder(next);
+                        if (next) markOrderOpened(order.id);
+                      }}
                       className="flex-1 min-w-0 text-left space-y-1"
                     >
                       {/* Row 1: order #, total, chevron */}
@@ -654,6 +728,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border ${statusInfo.color}`}>
                           {t(statusInfo.key)}
                         </span>
+                        {isUnread && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-bold border bg-green-600 text-white border-green-700">
+                            JAUNS
+                          </span>
+                        )}
                         {order.is_business && (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-blue-100 text-blue-800 border-blue-200">
                             B2B
