@@ -26,6 +26,20 @@ const ORDER_STATUSES = [
 
 const ARCHIVED_STATUSES = ["delivered", "cancelled"];
 
+// Decide which "work bucket" a non-archived order belongs to.
+// - "manual"  → needs human action: custom prints (Zakeke), unpaid bank transfer,
+//               business order without an invoice, or still pending payment.
+// - "ready"   → paid, no custom prints, just needs an Omniva label printed.
+// - "shipped" → label printed / status shipped.
+const getWorkBucket = (order: any, items: any[] = []): "manual" | "ready" | "shipped" => {
+  if (order.status === "shipped") return "shipped";
+  const hasCustomItems = items.some((it) => it?.zakeke_design_id || it?.zakeke_order_id);
+  const unpaidBank = order.payment_method === "bank_transfer" && !order.manually_paid_at;
+  if (order.status === "pending" || hasCustomItems || unpaidBank) return "manual";
+  // confirmed / processing without custom work → just print the label
+  return "ready";
+};
+
 // Allowed forward transitions. Status flow is one-way to prevent illogical changes.
 // Admins can still override via an unlock toggle (e.g. correcting mistakes).
 const STATUS_TRANSITIONS: Record<string, string[]> = {
