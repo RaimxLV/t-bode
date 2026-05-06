@@ -109,6 +109,33 @@ export interface ZakekeOutputFile {
   orderItemId?: string | null;
 }
 
+async function resolveZakekeOrderByCode(
+  orderCode: string,
+  token: string,
+): Promise<any | null> {
+  const url = `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(orderCode)}`;
+  const res = await fetch(url, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`[zakeke-order-lookup] ${res.status} from ${url}: ${text.slice(0, 500)}`);
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(`[zakeke-order-lookup] non-JSON response from ${url}: ${text.slice(0, 500)}`);
+    return null;
+  }
+}
+
 export async function getZakekeDesignZipFile(
   designId: string,
   modificationId?: string | null,
@@ -285,7 +312,7 @@ export async function createZakekeOrder(opts: {
   // IMPORTANT: Zakeke V2 returns its own internal order id which is what
   // /v2/orders/{id}/output-files expects. We must NEVER fall back to our
   // externalOrderId — using our UUID against output-files yields HTTP 400.
-  const zakekeOrderId =
+  let zakekeOrderId =
     data?.id ??
     data?.orderId ??
     data?.orderID ??
@@ -298,6 +325,19 @@ export async function createZakekeOrder(opts: {
     data?.data?.orderId ??
     data?.result?.id ??
     null;
+  if (!zakekeOrderId) {
+    const resolvedOrder = await resolveZakekeOrderByCode(opts.externalOrderId, token);
+    if (resolvedOrder) {
+      data = resolvedOrder;
+      zakekeOrderId =
+        resolvedOrder?.id ??
+        resolvedOrder?.orderId ??
+        resolvedOrder?.orderID ??
+        resolvedOrder?.order?.id ??
+        resolvedOrder?.data?.id ??
+        null;
+    }
+  }
   if (!zakekeOrderId) {
     console.error(
       `[zakeke-create-order] Could NOT extract Zakeke order id from response. ` +
