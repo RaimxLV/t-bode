@@ -867,6 +867,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           >
                             <FileText className="w-3.5 h-3.5" /> Pārvaldīt dokumentu
                           </Button>
+                          {order.admin_opened_at && order.status !== "delivered" && order.status !== "cancelled" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs gap-1.5 mt-1 border-green-300 text-green-700 hover:bg-green-50"
+                              onClick={() => markOrderUnread(order.id)}
+                              title="Atzīmēt kā nelasītu — kartīte atkal kļūs zaļa"
+                            >
+                              <BellOff className="w-3.5 h-3.5" /> Atzīmēt kā nelasītu
+                            </Button>
+                          )}
                         </div>
                       </div>
 
