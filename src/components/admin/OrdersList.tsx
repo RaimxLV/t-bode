@@ -1021,7 +1021,52 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
                       {items.length > 0 && (
                         <div className="border border-border rounded-lg overflow-hidden">
-                          <Table>
+                          {/* Mobile: stacked cards */}
+                          <div className="sm:hidden divide-y divide-border">
+                            {items.map((item: any) => {
+                              const product = item.products;
+                              const colorVariants = product?.color_variants as any[] | undefined;
+                              const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
+                              const thumbUrl = item.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+                              return (
+                                <div key={item.id} className="p-2.5 space-y-2 bg-card">
+                                  <div className="flex gap-2.5">
+                                    {thumbUrl ? (
+                                      <img src={thumbUrl} alt={item.product_name} className="w-14 h-14 object-cover rounded border border-border shrink-0" />
+                                    ) : (
+                                      <div className="w-14 h-14 bg-muted rounded border border-border shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0 space-y-1">
+                                      <p className="text-xs font-body font-semibold leading-tight break-words">{item.product_name}</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {item.size && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Izmērs: {item.size}</span>}
+                                        {item.color && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Krāsa: {item.color}</span>}
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">×{item.quantity}</span>
+                                      </div>
+                                      <p className="text-xs font-semibold">{item.unit_price.toFixed(2)} €</p>
+                                    </div>
+                                  </div>
+                                  {(item.zakeke_design_id || item.zakeke_order_id) && (
+                                    <button
+                                      type="button"
+                                      onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
+                                      disabled={!!zakekeZipLoading[item.id]}
+                                      className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full disabled:opacity-50"
+                                    >
+                                      {zakekeZipLoading[item.id] ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      ) : (
+                                        <FileArchive className="w-3.5 h-3.5" />
+                                      )}
+                                      Lejupielādēt ZIP (drukas faili)
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {/* Desktop: table */}
+                          <Table className="hidden sm:table">
                             <TableHeader>
                               <TableRow className="bg-muted/50">
                                 <TableHead className="text-[11px]">{t("admin.orderProduct")}</TableHead>
