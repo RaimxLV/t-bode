@@ -165,6 +165,13 @@ export async function getZakekeDesignZipFile(
 
   const text = await res.text();
   if (!res.ok) {
+    // Zakeke returns 404 "Zip file not ready yet." while the production
+    // bundle is still being built. Surface it as `null` so callers can
+    // respond with a friendly "try again in a minute" instead of a 500.
+    if (res.status === 404 && /not ready/i.test(text)) {
+      console.warn(`[zakeke-design-zip] not ready yet for design ${designId}`);
+      return null;
+    }
     throw new Error(
       `Zakeke design zip failed ${res.status}: ${text.slice(0, 300)}`,
     );
