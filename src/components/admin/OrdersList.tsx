@@ -503,21 +503,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
           <Button variant={!showArchive && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Aktīvie</span>
+            <span className="truncate">Ienākošie pasūtījumi</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
-          </Button>
-          <Button
-            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
-            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
-            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
-          >
-            <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Sagatav.</span>
-            <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">
-              {stats.processingCount}
-            </Badge>
           </Button>
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
