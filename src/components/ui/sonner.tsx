@@ -1,18 +1,13 @@
-import { forwardRef } from "react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
-const Toaster = forwardRef<HTMLDivElement, ToasterProps>(function Toaster(
-  { ...props },
-  ref
-) {
+const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
 
   return (
     <Sonner
-      ref={ref}
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       toastOptions={{
@@ -27,6 +22,6 @@ const Toaster = forwardRef<HTMLDivElement, ToasterProps>(function Toaster(
       {...props}
     />
   );
-});
+};
 
 export { Toaster, toast };
