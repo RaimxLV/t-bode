@@ -299,6 +299,31 @@ export async function createZakekeOrder(opts: {
     Object.keys(data ?? {}),
   );
 
+  // Explicit Store ID mismatch guard. If Zakeke echoes a marketplaceID that
+  // differs from the one we sent (i.e. the credentials belong to a different
+  // marketplace than the frontend used to create the design), the design will
+  // never be linked to this order and `compositionDetails` comes back empty.
+  const responseMarketplaceId = Number(
+    data?.marketplaceID ?? data?.marketplaceId ?? NaN,
+  );
+  if (
+    Number.isFinite(responseMarketplaceId) &&
+    responseMarketplaceId !== marketplaceID
+  ) {
+    console.error(
+      `[zakeke-create-order] Store ID mismatch: sent marketplaceID=${marketplaceID}, ` +
+        `Zakeke responded marketplaceID=${responseMarketplaceId}. ` +
+        `The ZAKEKE_API_KEY / ZAKEKE_CLIENT_SECRET in Lovable Cloud belong to ` +
+        `marketplace ${responseMarketplaceId}, not ${marketplaceID}. ` +
+        `Generate fresh S2S credentials inside the ${marketplaceID} Zakeke account.`,
+    );
+    throw new Error(
+      `Frontend/Backend Store ID mismatch — credentials belong to marketplace ` +
+        `${responseMarketplaceId}, but frontend uses ${marketplaceID}. ` +
+        `Regenerate S2S keys from the correct Zakeke account.`,
+    );
+  }
+
   // IMPORTANT: Zakeke V2 returns its own internal order id which is what
   // /v2/orders/{id}/output-files expects. We must NEVER fall back to our
   // externalOrderId — using our UUID against output-files yields HTTP 400.
