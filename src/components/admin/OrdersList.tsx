@@ -561,26 +561,41 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       </div>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-          <Button variant={!showArchive && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
-            <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Aktīvie</span>
-            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
+        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+          <Button
+            variant={!showArchive && workTab === "manual" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setWorkTab("manual"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${bucketed.manual.length > 0 ? "ring-2 ring-primary/40" : ""}`}
+            title="Pasūtījumi, kuriem nepieciešama manuāla apstrāde (dizaini, B2B rēķini, bankas pārskaitījumi)"
+          >
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Apstrādāt</span>
+            <Badge variant={bucketed.manual.length > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">{bucketed.manual.length}</Badge>
           </Button>
           <Button
-            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
+            variant={!showArchive && workTab === "ready" ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
-            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
-            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
+            onClick={() => { setShowArchive(false); setWorkTab("ready"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center"
+            title="Apmaksāti pasūtījumi bez dizainiem — atliek tikai izprintēt Omniva pavadzīmi"
           >
-            <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Sagatav.</span>
-            <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">
-              {stats.processingCount}
-            </Badge>
+            <Truck className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sūtīt</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{bucketed.ready.length}</Badge>
           </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button
+            variant={!showArchive && workTab === "shipped" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setWorkTab("shipped"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center"
+            title="Pasūtījumi ceļā pie klienta"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Ceļā</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{bucketed.shipped.length}</Badge>
+          </Button>
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); setSelectedIds(new Set()); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Arhīvs</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
