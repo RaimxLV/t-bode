@@ -69,6 +69,30 @@ export const ZakekeDesigner = ({
 
   const totalUnitPrice = productPrice + customizationPrice;
 
+  // Compute the final per-unit price using Zakeke's documented formula.
+  // Zakeke gives us `price` (per-unit markup from Price Rules, setup fees,
+  // color charges, etc.) and `percentPrice` (% uplift on the base unit price).
+  // We also keep the customizationPrice in a ref/state so the header total
+  // stays in sync in real time.
+  const computeZakekePrice = (info: any) => {
+    const toNum = (v: unknown) => {
+      const n = typeof v === "string" ? parseFloat(v) : (v as number);
+      return typeof n === "number" && !isNaN(n) ? n : 0;
+    };
+    const markup = toNum(info?.price);
+    const percent = toNum(info?.percentPrice ?? info?.percentagePrice);
+    const customization = markup + (productPrice * percent) / 100;
+    const rounded = Math.round(customization * 100) / 100;
+    if (rounded !== customizationPriceRef.current) {
+      customizationPriceRef.current = rounded;
+      setCustomizationPrice(rounded);
+    }
+    return {
+      price: Math.round((productPrice + customization) * 100) / 100,
+      isOutOfStock: false,
+    };
+  };
+
   useEffect(() => {
     let mounted = true;
     let customizerInstance: { removeIframe: () => void } | null = null;
@@ -164,55 +188,15 @@ export const ZakekeDesigner = ({
           // `firstVariantId` is the actual SDK field (see customizer.js v2).
           ...(firstVariantId ? { firstVariantId } : {}),
 
-          // Zakeke v2 SDK requires `getProductPrice` — it's called with the
-          // current customization context and must return the FINAL per-unit
-          // price (base + customization) and stock state. Without this the
-          // customizer aborts with "Missing required field: getProductPrice".
-          getProductPrice: (info: any) => {
-            const rawCustom =
-              info?.customizationPrice ??
-              info?.extraPrice ??
-              info?.additionalPrice ??
-              0;
-            const custom =
-              typeof rawCustom === "string" ? parseFloat(rawCustom) : rawCustom;
-            const safeCustom =
-              typeof custom === "number" && !isNaN(custom) ? custom : 0;
-            if (safeCustom !== customizationPriceRef.current) {
-              customizationPriceRef.current = safeCustom;
-              setCustomizationPrice(safeCustom);
-            }
-            return {
-              price: productPrice + safeCustom,
-              isOutOfStock: false,
-            };
-          },
-
-          // Per Zakeke docs (customizer-UI-API #4.1), `getProductInfo` is
-          // invoked by Zakeke at startup AND on every user action. Zakeke
-          // passes us `{ customizationPrice, quantity, attributes, ... }`
-          // and expects us to return `{ price, isOutOfStock }` where
-          // `price` is the FINAL per-unit price (base + customization).
-          // We use this same callback to update our header total in real time.
-          getProductInfo: (info: any) => {
-            const rawCustom =
-              info?.customizationPrice ??
-              info?.extraPrice ??
-              info?.additionalPrice ??
-              0;
-            const custom =
-              typeof rawCustom === "string" ? parseFloat(rawCustom) : rawCustom;
-            const safeCustom =
-              typeof custom === "number" && !isNaN(custom) ? custom : 0;
-            if (safeCustom !== customizationPriceRef.current) {
-              customizationPriceRef.current = safeCustom;
-              setCustomizationPrice(safeCustom);
-            }
-            return {
-              price: productPrice + safeCustom,
-              isOutOfStock: false,
-            };
-          },
+          // Per Zakeke docs (customizer-UI-API §4.1 / §4.5):
+          //   finalUnitPrice = unitPrice + price + (unitPrice * percentPrice / 100)
+          // Where `price` is the per-unit markup coming from Zakeke Price Rules
+          // (setup costs, color/area/object based rules) and `percentPrice` is
+          // an optional percentage uplift. Earlier we read non-existent
+          // `customizationPrice`/`extraPrice` keys, so Price Rules were silently
+          // dropped — the customer paid only the base product price.
+          getProductPrice: (info: any) => computeZakekePrice(info),
+          getProductInfo: (info: any) => computeZakekePrice(info),
 
           getProductAttribute: () => ({
             attributes: attributeDefinitions,
@@ -240,14 +224,7 @@ export const ZakekeDesigner = ({
               console.error("[Zakeke] ⚠️ NO designId found in payload — print files will NOT be available!");
             }
             const zakekeExtra =
-              (typeof zakekeData?.customizationPrice === "number"
-                ? zakekeData.customizationPrice
-                : null) ??
-              (typeof zakekeData?.extraPrice === "number"
-                ? zakekeData.extraPrice
-                : null) ??
-              customizationPriceRef.current ??
-              0;
+              customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
@@ -286,14 +263,7 @@ export const ZakekeDesigner = ({
               null;
             console.log("[Zakeke] extracted designId:", designId);
             const zakekeExtra =
-              (typeof zakekeData?.customizationPrice === "number"
-                ? zakekeData.customizationPrice
-                : null) ??
-              (typeof zakekeData?.extraPrice === "number"
-                ? zakekeData.extraPrice
-                : null) ??
-              customizationPriceRef.current ??
-              0;
+              customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
