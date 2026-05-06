@@ -224,14 +224,7 @@ export const ZakekeDesigner = ({
               console.error("[Zakeke] ⚠️ NO designId found in payload — print files will NOT be available!");
             }
             const zakekeExtra =
-              (typeof zakekeData?.customizationPrice === "number"
-                ? zakekeData.customizationPrice
-                : null) ??
-              (typeof zakekeData?.extraPrice === "number"
-                ? zakekeData.extraPrice
-                : null) ??
-              customizationPriceRef.current ??
-              0;
+              customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
@@ -270,14 +263,7 @@ export const ZakekeDesigner = ({
               null;
             console.log("[Zakeke] extracted designId:", designId);
             const zakekeExtra =
-              (typeof zakekeData?.customizationPrice === "number"
-                ? zakekeData.customizationPrice
-                : null) ??
-              (typeof zakekeData?.extraPrice === "number"
-                ? zakekeData.extraPrice
-                : null) ??
-              customizationPriceRef.current ??
-              0;
+              customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
             addItem({
               productId,
