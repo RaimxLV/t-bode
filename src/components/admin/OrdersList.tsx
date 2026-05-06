@@ -688,13 +688,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredOrders.map((order) => {
+          {pagedOrders.map((order) => {
             const statusInfo = getStatusInfo(order.status);
             const items = orderItems[order.id] || [];
             const isExpanded = expandedOrder === order.id;
             const StatusIcon = statusInfo.icon;
             const urgency = getOrderUrgency(order);
             const isUnread = !order.admin_opened_at && !ARCHIVED_STATUSES.includes(order.status) && order.status !== "cancelled";
+            // Build small thumbnails preview from order items (first product image of each item)
+            const previewThumbs = items.slice(0, 3).map((it: any) => {
+              const product = it.products;
+              const colorVariants = product?.color_variants as any[] | undefined;
+              const matchedVariant = it.color && colorVariants?.find((v: any) => v.name === it.color);
+              return it.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+            }).filter(Boolean) as string[];
+            const extraCount = Math.max(0, items.length - previewThumbs.length);
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -716,6 +724,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
                       )}
                     </div>
+                    {previewThumbs.length > 0 && (
+                      <div className="hidden sm:flex items-center -space-x-2 shrink-0">
+                        {previewThumbs.map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt=""
+                            loading="lazy"
+                            className="w-10 h-10 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                          />
+                        ))}
+                        {extraCount > 0 && (
+                          <div className="w-10 h-10 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                            +{extraCount}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <button
                       onClick={() => {
                         const next = isExpanded ? null : order.id;
