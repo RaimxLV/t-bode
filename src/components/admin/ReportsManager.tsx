@@ -231,11 +231,8 @@ export const ReportsManager = () => {
     const wb = new ExcelJS.Workbook();
     wb.creator = "T-Bode";
     wb.created = new Date();
-    const ws = wb.addWorksheet("Atskaite", {
-      views: [{ state: "frozen", ySplit: 1 }],
-    });
 
-    ws.columns = [
+    const COLUMNS = [
       { header: "Datums", key: "date", width: 20 },
       { header: "Pasūtījuma Nr.", key: "order_no", width: 16 },
       { header: "Rēķina Nr.", key: "invoice_no", width: 16 },
@@ -252,91 +249,109 @@ export const ReportsManager = () => {
       { header: "PVN likme %", key: "vat_rate", width: 12 },
     ];
 
-    // Header styling
-    const header = ws.getRow(1);
-    header.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
-    header.alignment = { vertical: "middle", horizontal: "left" };
-    header.height = 22;
-    header.eachCell((cell) => {
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } };
-      cell.border = {
-        top: { style: "thin", color: { argb: "FF374151" } },
-        bottom: { style: "thin", color: { argb: "FF374151" } },
-        left: { style: "thin", color: { argb: "FF374151" } },
-        right: { style: "thin", color: { argb: "FF374151" } },
-      };
-    });
+    const MONTH_NAMES_LV = [
+      "Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs",
+      "Jūlijs", "Augusts", "Septembris", "Oktobris", "Novembris", "Decembris",
+    ];
 
+    // Group orders by year-month based on created_at
+    const groups = new Map<string, any[]>();
     for (const o of filteredOrders) {
-      const gross = round2(Number(o.total));
-      const net = round2(gross / (1 + VAT_RATE / 100));
-      const vat = round2(gross - net);
-      const inv = invoicesByOrder[o.id];
-      const orderItems = itemsByOrder.get(o.id) ?? [];
-      const productsStr = orderItems
-        .map((it: any) => {
-          const qty = Number(it.quantity) || 0;
-          const name = it.product_name ?? "—";
-          return qty > 1 ? `${name} ×${qty}` : name;
-        })
-        .join("; ");
-      ws.addRow({
-        date: new Date(o.created_at),
-        order_no: `#${String(o.order_number).padStart(4, "0")}`,
-        invoice_no: inv ? `${inv.invoice_number}${inv.version > 1 ? ` v${inv.version}` : ""}` : "— nav —",
-        client: o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? ""),
-        type: o.is_business ? "B2B" : "B2C",
-        reg_no: o.company_reg_number ?? "",
-        vat_no: o.company_vat_number ?? "",
-        payment: paymentLabel(o),
-        status: o.status,
-        products: productsStr,
-        gross,
-        net,
-        vat,
-        vat_rate: VAT_RATE / 100,
-      });
+      const d = new Date(o.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const arr = groups.get(key) ?? [];
+      arr.push(o);
+      groups.set(key, arr);
     }
+    // Sort keys ascending (chronological)
+    const sortedKeys = Array.from(groups.keys()).sort();
 
-    // Number / date formats
-    ws.getColumn("date").numFmt = "dd.mm.yyyy hh:mm";
-    ws.getColumn("products").alignment = { wrapText: true, vertical: "top" };
-    ws.getColumn("gross").numFmt = '#,##0.00 "€"';
-    ws.getColumn("net").numFmt = '#,##0.00 "€"';
-    ws.getColumn("vat").numFmt = '#,##0.00 "€"';
-    ws.getColumn("vat_rate").numFmt = "0.00%";
+    const buildSheet = (name: string, ordersForSheet: any[]) => {
+      const ws = wb.addWorksheet(name, { views: [{ state: "frozen", ySplit: 1 }] });
+      ws.columns = COLUMNS;
+      const header = ws.getRow(1);
+      header.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+      header.alignment = { vertical: "middle", horizontal: "left" };
+      header.height = 22;
+      header.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F2937" } };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FF374151" } },
+          bottom: { style: "thin", color: { argb: "FF374151" } },
+          left: { style: "thin", color: { argb: "FF374151" } },
+          right: { style: "thin", color: { argb: "FF374151" } },
+        };
+      });
 
-    // Totals row
-    const lastDataRow = ws.rowCount;
-    if (lastDataRow > 1) {
-      const totalsRow = ws.addRow({
-        date: "",
-        order_no: "",
-        invoice_no: "",
-        client: "KOPĀ",
-        type: "",
-        reg_no: "",
-        vat_no: "",
-        payment: "",
-        status: "",
-        products: "",
-        gross: { formula: `SUM(K2:K${lastDataRow})` },
-        net: { formula: `SUM(L2:L${lastDataRow})` },
-        vat: { formula: `SUM(M2:M${lastDataRow})` },
-        vat_rate: "",
-      });
-      totalsRow.font = { bold: true };
-      totalsRow.eachCell((cell) => {
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } };
-        cell.border = { top: { style: "medium", color: { argb: "FF1F2937" } } };
-      });
-      totalsRow.getCell("gross").numFmt = '#,##0.00 "€"';
-      totalsRow.getCell("net").numFmt = '#,##0.00 "€"';
-      totalsRow.getCell("vat").numFmt = '#,##0.00 "€"';
+      for (const o of ordersForSheet) {
+        const gross = round2(Number(o.total));
+        const net = round2(gross / (1 + VAT_RATE / 100));
+        const vat = round2(gross - net);
+        const inv = invoicesByOrder[o.id];
+        const orderItems = itemsByOrder.get(o.id) ?? [];
+        const productsStr = orderItems
+          .map((it: any) => {
+            const qty = Number(it.quantity) || 0;
+            const nm = it.product_name ?? "—";
+            return qty > 1 ? `${nm} ×${qty}` : nm;
+          })
+          .join("; ");
+        ws.addRow({
+          date: new Date(o.created_at),
+          order_no: `#${String(o.order_number).padStart(4, "0")}`,
+          invoice_no: inv ? `${inv.invoice_number}${inv.version > 1 ? ` v${inv.version}` : ""}` : "— nav —",
+          client: o.is_business ? (o.company_name ?? "") : (o.shipping_name ?? ""),
+          type: o.is_business ? "B2B" : "B2C",
+          reg_no: o.company_reg_number ?? "",
+          vat_no: o.company_vat_number ?? "",
+          payment: paymentLabel(o),
+          status: o.status,
+          products: productsStr,
+          gross,
+          net,
+          vat,
+          vat_rate: VAT_RATE / 100,
+        });
+      }
+
+      ws.getColumn("date").numFmt = "dd.mm.yyyy hh:mm";
+      ws.getColumn("products").alignment = { wrapText: true, vertical: "top" };
+      ws.getColumn("gross").numFmt = '#,##0.00 "€"';
+      ws.getColumn("net").numFmt = '#,##0.00 "€"';
+      ws.getColumn("vat").numFmt = '#,##0.00 "€"';
+      ws.getColumn("vat_rate").numFmt = "0.00%";
+
+      const lastDataRow = ws.rowCount;
+      if (lastDataRow > 1) {
+        const totalsRow = ws.addRow({
+          date: "", order_no: "", invoice_no: "", client: "KOPĀ", type: "",
+          reg_no: "", vat_no: "", payment: "", status: "", products: "",
+          gross: { formula: `SUM(K2:K${lastDataRow})` },
+          net: { formula: `SUM(L2:L${lastDataRow})` },
+          vat: { formula: `SUM(M2:M${lastDataRow})` },
+          vat_rate: "",
+        });
+        totalsRow.font = { bold: true };
+        totalsRow.eachCell((cell) => {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F4F6" } };
+          cell.border = { top: { style: "medium", color: { argb: "FF1F2937" } } };
+        });
+        totalsRow.getCell("gross").numFmt = '#,##0.00 "€"';
+        totalsRow.getCell("net").numFmt = '#,##0.00 "€"';
+        totalsRow.getCell("vat").numFmt = '#,##0.00 "€"';
+      }
+
+      ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } };
+    };
+
+    // Always create a "Kopsavilkums" sheet first with everything
+    buildSheet("Kopsavilkums", filteredOrders);
+    // Then a sheet per month
+    for (const key of sortedKeys) {
+      const [y, m] = key.split("-");
+      const sheetName = `${MONTH_NAMES_LV[Number(m) - 1]} ${y}`.slice(0, 31);
+      buildSheet(sheetName, groups.get(key)!);
     }
-
-    // Auto filter on header
-    ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: ws.columnCount } };
 
     const buf = await wb.xlsx.writeBuffer();
     const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

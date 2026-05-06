@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [showArchive, setShowArchive] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 100;
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
   const [invoiceOrder, setInvoiceOrder] = useState<any | null>(null);
   const [diagOpen, setDiagOpen] = useState(false);
@@ -537,6 +539,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     ? ORDER_STATUSES.filter(s => ARCHIVED_STATUSES.includes(s.value))
     : ORDER_STATUSES.filter(s => !ARCHIVED_STATUSES.includes(s.value));
 
+  // Reset to page 1 whenever filters / tab change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const pagedOrders = filteredOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
@@ -678,13 +688,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredOrders.map((order) => {
+          {pagedOrders.map((order) => {
             const statusInfo = getStatusInfo(order.status);
             const items = orderItems[order.id] || [];
             const isExpanded = expandedOrder === order.id;
             const StatusIcon = statusInfo.icon;
             const urgency = getOrderUrgency(order);
             const isUnread = !order.admin_opened_at && !ARCHIVED_STATUSES.includes(order.status) && order.status !== "cancelled";
+            // Build small thumbnails preview from order items (first product image of each item)
+            const previewThumbs = items.slice(0, 3).map((it: any) => {
+              const product = it.products;
+              const colorVariants = product?.color_variants as any[] | undefined;
+              const matchedVariant = it.color && colorVariants?.find((v: any) => v.name === it.color);
+              return it.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+            }).filter(Boolean) as string[];
+            const extraCount = Math.max(0, items.length - previewThumbs.length);
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -706,6 +724,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
                       )}
                     </div>
+                    {previewThumbs.length > 0 && (
+                      <div className="hidden sm:flex items-center -space-x-2 shrink-0">
+                        {previewThumbs.map((src, idx) => (
+                          <img
+                            key={idx}
+                            src={src}
+                            alt=""
+                            loading="lazy"
+                            className="w-10 h-10 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                          />
+                        ))}
+                        {extraCount > 0 && (
+                          <div className="w-10 h-10 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                            +{extraCount}
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <button
                       onClick={() => {
                         const next = isExpanded ? null : order.id;
@@ -1048,6 +1084,37 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {filteredOrders.length > PAGE_SIZE && (
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+          <span className="text-[11px] text-muted-foreground font-body">
+            Rāda {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filteredOrders.length)} no {filteredOrders.length}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              disabled={currentPage <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            >
+              ← Iepriekšējā
+            </Button>
+            <span className="text-xs font-body px-2">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              disabled={currentPage >= totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Nākamā →
+            </Button>
+          </div>
         </div>
       )}
 
