@@ -79,8 +79,28 @@ export const ZakekeDesigner = ({
       const n = typeof v === "string" ? parseFloat(v) : (v as number);
       return typeof n === "number" && !isNaN(n) ? n : 0;
     };
-    const markup = toNum(info?.price);
-    const percent = toNum(info?.percentPrice ?? info?.percentagePrice);
+    // Zakeke sends keys in mixed casing depending on SDK version. Cover all.
+    const markup = toNum(
+      info?.price ??
+        info?.Price ??
+        info?.extraPrice ??
+        info?.customizationPrice ??
+        info?.designUnitPrice,
+    );
+    const percent = toNum(
+      info?.percentPrice ??
+        info?.percentprice ??
+        info?.percentagePrice ??
+        info?.percentageprice ??
+        info?.PercentPrice,
+    );
+    console.log("[Zakeke] price callback payload:", {
+      keys: Object.keys(info ?? {}),
+      price: info?.price,
+      percentPrice: info?.percentPrice,
+      percentagePrice: info?.percentagePrice,
+      raw: info,
+    });
     const customization = markup + (productPrice * percent) / 100;
     const rounded = Math.round(customization * 100) / 100;
     if (rounded !== customizationPriceRef.current) {
