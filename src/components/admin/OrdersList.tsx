@@ -26,6 +26,20 @@ const ORDER_STATUSES = [
 
 const ARCHIVED_STATUSES = ["delivered", "cancelled"];
 
+// Decide which "work bucket" a non-archived order belongs to.
+// - "manual"  → needs human action: custom prints (Zakeke), unpaid bank transfer,
+//               business order without an invoice, or still pending payment.
+// - "ready"   → paid, no custom prints, just needs an Omniva label printed.
+// - "shipped" → label printed / status shipped.
+const getWorkBucket = (order: any, items: any[] = []): "manual" | "ready" | "shipped" => {
+  if (order.status === "shipped") return "shipped";
+  const hasCustomItems = items.some((it) => it?.zakeke_design_id || it?.zakeke_order_id);
+  const unpaidBank = order.payment_method === "bank_transfer" && !order.manually_paid_at;
+  if (order.status === "pending" || hasCustomItems || unpaidBank) return "manual";
+  // confirmed / processing without custom work → just print the label
+  return "ready";
+};
+
 // Allowed forward transitions. Status flow is one-way to prevent illogical changes.
 // Admins can still override via an unlock toggle (e.g. correcting mistakes).
 const STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -71,6 +85,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [showArchive, setShowArchive] = useState(false);
+  // Workflow tab: which bucket of active orders is shown.
+  // "manual" = needs human work (designs, B2B invoices, bank transfer)
+  // "ready"  = paid + standard products, just needs Omniva label
+  const [workTab, setWorkTab] = useState<"manual" | "ready" | "shipped">("manual");
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [omnivaLoading, setOmnivaLoading] = useState<Record<string, "create" | "label" | null>>({});
@@ -418,6 +436,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  // Bulk-delete the currently selected orders (works in any tab, including
+  // archive). Cascades order_items / invoices via FKs configured in DB.
+  const deleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Vai tiešām dzēst ${ids.length} atlasīto pasūtījumu? Šī darbība ir neatgriezeniska.`)) return;
+    setBulkLoading(true);
+    try {
+      // Delete order_items first to be safe even if FK cascade is missing.
+      await supabase.from("order_items").delete().in("order_id", ids);
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} pasūtījumi`);
+      setSelectedIds(new Set());
+      setExpandedOrder(null);
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda dzēšot: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   // Re-render every existing invoice with the latest PDF template so old
   // documents look identical to newly issued ones.
   const regenerateAllInvoices = async () => {
@@ -457,7 +498,27 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const activeOrders = useMemo(() => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
-  const currentOrders = showArchive ? archivedOrders : activeOrders;
+
+  const bucketed = useMemo(() => {
+    const manual: any[] = [];
+    const ready: any[] = [];
+    const shipped: any[] = [];
+    for (const o of activeOrders) {
+      const b = getWorkBucket(o, orderItems[o.id] || []);
+      if (b === "manual") manual.push(o);
+      else if (b === "ready") ready.push(o);
+      else shipped.push(o);
+    }
+    return { manual, ready, shipped };
+  }, [activeOrders, orderItems]);
+
+  const currentOrders = showArchive
+    ? archivedOrders
+    : workTab === "manual"
+      ? bucketed.manual
+      : workTab === "ready"
+        ? bucketed.ready
+        : bucketed.shipped;
 
   const stats = useMemo(() => {
     const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
@@ -500,26 +561,41 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       </div>
 
       <div className="space-y-2">
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-          <Button variant={!showArchive && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
-            <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Aktīvie</span>
-            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
+        <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
+          <Button
+            variant={!showArchive && workTab === "manual" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setWorkTab("manual"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${bucketed.manual.length > 0 ? "ring-2 ring-primary/40" : ""}`}
+            title="Pasūtījumi, kuriem nepieciešama manuāla apstrāde (dizaini, B2B rēķini, bankas pārskaitījumi)"
+          >
+            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Apstrādāt</span>
+            <Badge variant={bucketed.manual.length > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">{bucketed.manual.length}</Badge>
           </Button>
           <Button
-            variant={!showArchive && filterStatus === "processing" ? "default" : "outline"}
+            variant={!showArchive && workTab === "ready" ? "default" : "outline"}
             size="sm"
-            onClick={() => { setShowArchive(false); setFilterStatus("processing"); }}
-            className={`gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center ${stats.processingCount > 0 ? "ring-2 ring-primary/40" : ""}`}
-            title="Pasūtījumi, kas ir jāsagatavo (apmaksāti, gaida etiķeti)"
+            onClick={() => { setShowArchive(false); setWorkTab("ready"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center"
+            title="Apmaksāti pasūtījumi bez dizainiem — atliek tikai izprintēt Omniva pavadzīmi"
           >
-            <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Sagatav.</span>
-            <Badge variant={stats.processingCount > 0 ? "default" : "secondary"} className="text-[10px] px-1.5 shrink-0">
-              {stats.processingCount}
-            </Badge>
+            <Truck className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Sūtīt</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{bucketed.ready.length}</Badge>
           </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button
+            variant={!showArchive && workTab === "shipped" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setShowArchive(false); setWorkTab("shipped"); setFilterStatus("all"); setSelectedIds(new Set()); }}
+            className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center"
+            title="Pasūtījumi ceļā pie klienta"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Ceļā</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{bucketed.shipped.length}</Badge>
+          </Button>
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setFilterStatus("all"); setSelectedIds(new Set()); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Arhīvs</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
@@ -608,6 +684,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               Rēķini (ZIP)
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs gap-1.5 w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              onClick={deleteSelected}
+              disabled={bulkLoading}
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Dzēst atlasītos
+            </Button>
             <Button variant="ghost" size="sm" className="text-xs hidden sm:inline-flex" onClick={() => setSelectedIds(new Set())}>
               Notīrīt atlasi
             </Button>
@@ -626,6 +712,22 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         </div>
       ) : (
         <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Checkbox
+              checked={filteredOrders.length > 0 && filteredOrders.every((o) => selectedIds.has(o.id))}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setSelectedIds(new Set(filteredOrders.map((o) => o.id)));
+                } else {
+                  setSelectedIds(new Set());
+                }
+              }}
+              aria-label="Atzīmēt visus"
+            />
+            <span className="text-[11px] text-muted-foreground font-body">
+              Atzīmēt visus ({filteredOrders.length})
+            </span>
+          </div>
           {filteredOrders.map((order) => {
             const statusInfo = getStatusInfo(order.status);
             const items = orderItems[order.id] || [];
