@@ -48,61 +48,85 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({} as any));
     console.log("zakeke-webhook payload:", JSON.stringify(body).slice(0, 1000));
 
+    // Zakeke "OrderGenerated" payload nests data under `data`
+    const data = body?.data ?? body ?? {};
     const zakekeOrderId =
-      body?.orderId ?? body?.orderID ?? body?.id ?? body?.order?.id ?? null;
-    const zakekeOrderItemId =
-      body?.orderItemId ?? body?.orderItemID ?? body?.itemId ?? null;
+      data?.orderID ?? data?.orderId ?? data?.id ?? null;
+    const orderCode: string | null = data?.orderCode ?? null;
+    // orderCode = "<externalOrderId>:<orderDetailCode>"
+    const [externalOrderIdFromCode, detailCodeFromOrderCode] =
+      typeof orderCode === "string" && orderCode.includes(":")
+        ? orderCode.split(":")
+        : [null, null];
+    const orderDetails: any[] = Array.isArray(data?.orderDetails)
+      ? data.orderDetails
+      : [];
 
     const service = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Find the matching order_item row(s).
-    const query = service
-      .from("order_items")
-      .select("id, zakeke_order_id, zakeke_order_item_id");
-
-    let rows: any[] = [];
-    if (zakekeOrderItemId) {
-      const { data } = await query.eq(
-        "zakeke_order_item_id",
-        String(zakekeOrderItemId)
-      );
-      rows = data ?? [];
+    // Build (detailCode -> details) map. Each detailOrderDetailCode is the UUID
+    // we sent as orderDetailCode (= our order_items.id) when registering the order.
+    const detailMap = new Map<string, any>();
+    for (const d of orderDetails) {
+      const code = d?.detailOrderDetailCode ?? d?.orderDetailCode;
+      if (code) detailMap.set(String(code), d);
     }
-    if (rows.length === 0 && zakekeOrderId) {
-      const { data } = await query.eq("zakeke_order_id", String(zakekeOrderId));
-      rows = data ?? [];
-    }
-
-    if (rows.length === 0) {
-      console.warn("zakeke-webhook: no matching order_item", {
-        zakekeOrderId,
-        zakekeOrderItemId,
-      });
-      // Acknowledge anyway so Zakeke doesn't retry forever.
-      return new Response(JSON.stringify({ ok: true, matched: 0 }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Single-item orderCode fallback
+    if (detailMap.size === 0 && detailCodeFromOrderCode) {
+      detailMap.set(detailCodeFromOrderCode, {
+        detailZipUrl: data?.detailZipUrl ?? data?.zipUrl ?? null,
       });
     }
 
     let updated = 0;
-    for (const row of rows) {
-      try {
-        const files = row.zakeke_order_item_id
-          ? await getZakekeOrderItemFiles(row.zakeke_order_item_id)
-          : await getZakekeOrderOutputFiles(row.zakeke_order_id);
-        if (files.length > 0) {
-          await service
-            .from("order_items")
-            .update({ zakeke_print_files: files })
-            .eq("id", row.id);
+    let matched = 0;
+
+    for (const [detailCode, detail] of detailMap.entries()) {
+      // Our orderDetailCode is the order_items.id (UUID)
+      const { data: rows } = await service
+        .from("order_items")
+        .select("id, zakeke_order_id, zakeke_print_files")
+        .eq("id", detailCode);
+
+      if (!rows || rows.length === 0) {
+        console.warn("zakeke-webhook: no order_item match for detailCode", detailCode);
+        continue;
+      }
+      matched += rows.length;
+
+      const zipUrl: string | null =
+        detail?.detailZipUrl ?? detail?.zipUrl ?? null;
+      const printFiles = zipUrl
+        ? [{ type: "zip", url: zipUrl, fileName: zipUrl.split("/").pop() }]
+        : null;
+
+      const update: Record<string, unknown> = {};
+      if (zakekeOrderId) update.zakeke_order_id = String(zakekeOrderId);
+      if (printFiles) update.zakeke_print_files = printFiles;
+
+      // If still nothing useful, try API fallback by zakeke order id
+      if (!printFiles && zakekeOrderId) {
+        try {
+          const files = await getZakekeOrderOutputFiles(String(zakekeOrderId));
+          if (files.length > 0) update.zakeke_print_files = files;
+        } catch (e) {
+          console.error("zakeke-webhook API fallback failed:", e);
+        }
+      }
+
+      if (Object.keys(update).length > 0) {
+        const { error: updErr } = await service
+          .from("order_items")
+          .update(update)
+          .eq("id", rows[0].id);
+        if (updErr) {
+          console.error("zakeke-webhook update error:", updErr);
+        } else {
           updated += 1;
         }
-      } catch (e) {
-        console.error(`zakeke-webhook fetch files for ${row.id}:`, e);
       }
     }
 
