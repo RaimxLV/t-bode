@@ -684,6 +684,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileText className="w-3.5 h-3.5" />}
               Rēķini (ZIP)
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs gap-1.5 w-full sm:w-auto text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+              onClick={deleteSelected}
+              disabled={bulkLoading}
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Dzēst atlasītos
+            </Button>
             <Button variant="ghost" size="sm" className="text-xs hidden sm:inline-flex" onClick={() => setSelectedIds(new Set())}>
               Notīrīt atlasi
             </Button>
