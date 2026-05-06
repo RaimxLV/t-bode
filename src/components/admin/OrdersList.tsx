@@ -88,6 +88,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Per-item loading state for the "download print files ZIP" button.
   const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
 
+  const triggerBlobDownload = (blob: Blob, fileName: string) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+      link.remove();
+    }, 1500);
+  };
+
   const downloadZakekePrintFiles = async (itemId: string, productName?: string) => {
     setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
     try {
@@ -113,13 +128,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       }
       const blob = await res.blob();
       const safe = (productName || "item").replace(/[^a-z0-9]+/gi, "-");
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `print-files-${safe}-${itemId.slice(0, 8)}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(a.href);
+      triggerBlobDownload(blob, `print-files-${safe}-${itemId.slice(0, 8)}.zip`);
       toast.success("ZIP lejupielādēts");
     } catch (e: any) {
       toast.error(e?.message || "Neizdevās lejupielādēt ZIP");
@@ -170,11 +179,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       const included = resp.headers.get("X-Labels-Included") ?? "?";
       const failed = resp.headers.get("X-Labels-Failed") ?? "0";
       const blob = await resp.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `omniva-labels-${new Date().toISOString().slice(0, 10)}.zip`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      triggerBlobDownload(blob, `omniva-labels-${new Date().toISOString().slice(0, 10)}.zip`);
       toast.success(`Lejupielādētas ${included} pavadzīmes${Number(failed) > 0 ? ` (${failed} neizdevās)` : ""}`);
       setSelectedIds(new Set());
     } catch (e: any) {
@@ -208,11 +213,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       const included = resp.headers.get("X-Invoices-Included") ?? "?";
       const failed = resp.headers.get("X-Invoices-Failed") ?? "0";
       const blob = await resp.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `invoices-${new Date().toISOString().slice(0, 10)}.zip`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      triggerBlobDownload(blob, `invoices-${new Date().toISOString().slice(0, 10)}.zip`);
       toast.success(`Lejupielādēti ${included} rēķini${Number(failed) > 0 ? ` (${failed} neizdevās)` : ""}`);
       setSelectedIds(new Set());
     } catch (e: any) {
@@ -301,11 +302,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         throw new Error(detail);
       }
       const blob = await resp.blob();
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `omniva-${barcode}.pdf`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      triggerBlobDownload(blob, `omniva-${barcode}.pdf`);
     } catch (err: any) {
       toast.error(`${t("admin.omnivaLabelError")}: ${err.message || err}`);
     } finally {
