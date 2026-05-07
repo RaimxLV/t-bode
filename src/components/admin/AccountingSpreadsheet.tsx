@@ -14,9 +14,10 @@ import ExcelJS from "exceljs";
 
 type Row = {
   date: string;
-  orderNumber: number;
+  orderNumber: string;
   invoiceNumber: string;
   client: string;
+  products: string;
   regNumber: string;
   vatNumber: string;
   net: number;
@@ -45,19 +46,22 @@ const monthLabel = (key: string) => {
 export const AccountingSpreadsheet = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMonth, setActiveMonth] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [ordersRes, invoicesRes] = await Promise.all([
+      const [ordersRes, invoicesRes, itemsRes] = await Promise.all([
         supabase.from("orders").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("invoice_number, order_id, net_amount, vat_amount, gross_amount, vat_rate, is_current"),
+        supabase.from("order_items").select("order_id, product_name, quantity, size, color"),
       ]);
       if (ordersRes.error) toast.error("Neizdevās ielādēt pasūtījumus");
       else setOrders(ordersRes.data || []);
       if (!invoicesRes.error) setInvoices(invoicesRes.data || []);
+      if (!itemsRes.error) setItems(itemsRes.data || []);
       setLoading(false);
     })();
   }, []);
@@ -80,6 +84,15 @@ export const AccountingSpreadsheet = () => {
     return m;
   }, [invoices]);
 
+  const itemsByOrder = useMemo(() => {
+    const m = new Map<string, any[]>();
+    items.forEach((it) => {
+      if (!m.has(it.order_id)) m.set(it.order_id, []);
+      m.get(it.order_id)!.push(it);
+    });
+    return m;
+  }, [items]);
+
   const rows: Row[] = useMemo(() => {
     const monthOrders = orders
       .filter((o) => monthKey(new Date(o.created_at)) === activeMonth)
@@ -95,23 +108,32 @@ export const AccountingSpreadsheet = () => {
     const out: Row[] = [];
     for (const [day, list] of byDay) {
       out.push({
-        date: day, orderNumber: 0, invoiceNumber: "", client: "", regNumber: "",
+        date: day, orderNumber: "", invoiceNumber: "", client: "", products: "", regNumber: "",
         vatNumber: "", net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
         isGroupHeader: true, groupLabel: day,
       });
       list.forEach((o) => {
         const inv = invoiceByOrder.get(o.id);
+        const its = itemsByOrder.get(o.id) ?? [];
+        const productsStr = its.length
+          ? its.map((it) => {
+              const variant = [it.color, it.size].filter(Boolean).join(" / ");
+              const qty = (it.quantity ?? 1) > 1 ? ` ×${it.quantity}` : "";
+              return `${it.product_name}${variant ? ` (${variant})` : ""}${qty}`;
+            }).join("; ")
+          : "—";
         const gross = Number(o.total ?? 0);
         const vatRate = Number(inv?.vat_rate ?? 21);
         const net = inv?.net_amount != null ? Number(inv.net_amount) : +(gross / (1 + vatRate / 100)).toFixed(2);
         const vat = inv?.vat_amount != null ? Number(inv.vat_amount) : +(gross - net).toFixed(2);
         out.push({
           date: new Date(o.created_at).toLocaleDateString("lv-LV"),
-          orderNumber: o.order_number,
+          orderNumber: o.order_number != null ? `TB-${String(o.order_number).padStart(5, "0")}` : "—",
           invoiceNumber: inv?.invoice_number ?? "—",
           client: o.is_business
             ? (o.company_name ?? o.shipping_name ?? "—")
             : (o.shipping_name ?? o.guest_email ?? "—"),
+          products: productsStr,
           regNumber: o.company_reg_number ?? "",
           vatNumber: o.company_vat_number ?? "",
           net,
@@ -123,7 +145,7 @@ export const AccountingSpreadsheet = () => {
       });
     }
     return out;
-  }, [orders, activeMonth, invoiceByOrder]);
+  }, [orders, activeMonth, invoiceByOrder, itemsByOrder]);
 
   const totals = useMemo(() => {
     const r = rows.filter((x) => !x.isGroupHeader && x.status === "paid");
@@ -137,9 +159,12 @@ export const AccountingSpreadsheet = () => {
 
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: "date", header: "Datums" },
-    { accessorKey: "orderNumber", header: "Pas. Nr.", cell: (i) => i.getValue() || "" },
+    { accessorKey: "orderNumber", header: "Pas. Nr." },
     { accessorKey: "invoiceNumber", header: "Rēķina Nr." },
     { accessorKey: "client", header: "Klients/Uzņēmums" },
+    { accessorKey: "products", header: "Preces", cell: (i) => (
+      <span className="block max-w-[360px] whitespace-normal text-xs">{i.getValue() as string}</span>
+    ) },
     { accessorKey: "regNumber", header: "Reģ. nr." },
     { accessorKey: "vatNumber", header: "PVN nr." },
     { accessorKey: "net", header: "Bez PVN", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
@@ -156,9 +181,10 @@ export const AccountingSpreadsheet = () => {
     const ws = wb.addWorksheet(monthLabel(activeMonth));
     ws.columns = [
       { header: "Datums", key: "date", width: 12 },
-      { header: "Pas. Nr.", key: "orderNumber", width: 10 },
+      { header: "Pas. Nr.", key: "orderNumber", width: 14 },
       { header: "Rēķina Nr.", key: "invoiceNumber", width: 16 },
       { header: "Klients", key: "client", width: 30 },
+      { header: "Preces", key: "products", width: 50 },
       { header: "Reģ. nr.", key: "regNumber", width: 14 },
       { header: "PVN nr.", key: "vatNumber", width: 14 },
       { header: "Bez PVN (€)", key: "net", width: 12 },
