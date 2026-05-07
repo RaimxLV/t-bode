@@ -29,11 +29,30 @@ type Row = {
   groupLabel?: string;
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  paid: "bg-green-50 dark:bg-green-950/30",
-  pending: "bg-yellow-50 dark:bg-yellow-950/30",
-  cancelled: "bg-red-50 dark:bg-red-950/30",
-  refunded: "bg-red-50 dark:bg-red-950/30",
+// Statuses that count as "sold" (revenue earned)
+const PAID_STATUSES = new Set(["paid", "processing", "confirmed", "shipped", "delivered", "completed"]);
+const PENDING_STATUSES = new Set(["pending", "awaiting_payment"]);
+const CANCELLED_STATUSES = new Set(["cancelled", "refunded", "failed"]);
+
+const statusBucket = (s: string): "paid" | "pending" | "cancelled" | "other" => {
+  if (PAID_STATUSES.has(s)) return "paid";
+  if (PENDING_STATUSES.has(s)) return "pending";
+  if (CANCELLED_STATUSES.has(s)) return "cancelled";
+  return "other";
+};
+
+const ROW_TINT: Record<string, string> = {
+  paid: "bg-emerald-50/70 dark:bg-emerald-950/20 border-l-4 border-l-emerald-500",
+  pending: "bg-amber-50/70 dark:bg-amber-950/20 border-l-4 border-l-amber-500",
+  cancelled: "bg-rose-50/70 dark:bg-rose-950/20 border-l-4 border-l-rose-500 line-through opacity-70",
+  other: "border-l-4 border-l-transparent",
+};
+
+const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
+  paid: { label: "Apmaksāts", cls: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" },
+  pending: { label: "Gaida", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" },
+  cancelled: { label: "Atcelts", cls: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30" },
+  other: { label: "—", cls: "bg-muted text-muted-foreground border-border" },
 };
 
 const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -148,13 +167,24 @@ export const AccountingSpreadsheet = () => {
   }, [orders, activeMonth, invoiceByOrder, itemsByOrder]);
 
   const totals = useMemo(() => {
-    const r = rows.filter((x) => !x.isGroupHeader && x.status === "paid");
+    const r = rows.filter((x) => !x.isGroupHeader && statusBucket(x.status) === "paid");
     return {
       net: r.reduce((s, x) => s + x.net, 0),
       vat: r.reduce((s, x) => s + x.vat, 0),
       gross: r.reduce((s, x) => s + x.gross, 0),
       count: r.length,
     };
+  }, [rows]);
+
+  // Daily totals (paid bucket) for the group header rows
+  const dayTotals = useMemo(() => {
+    const m = new Map<string, { net: number; vat: number; gross: number; count: number }>();
+    rows.filter((r) => !r.isGroupHeader && statusBucket(r.status) === "paid").forEach((r) => {
+      const t = m.get(r.date) ?? { net: 0, vat: 0, gross: 0, count: 0 };
+      t.net += r.net; t.vat += r.vat; t.gross += r.gross; t.count += 1;
+      m.set(r.date, t);
+    });
+    return m;
   }, [rows]);
 
   const columns: ColumnDef<Row>[] = useMemo(() => [
@@ -171,7 +201,15 @@ export const AccountingSpreadsheet = () => {
     { accessorKey: "vat", header: "PVN 21%", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
     { accessorKey: "gross", header: "Kopsumma", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
     { accessorKey: "paymentMethod", header: "Maks. veids" },
-    { accessorKey: "status", header: "Statuss" },
+    { accessorKey: "status", header: "Statuss", cell: (i) => {
+      const b = statusBucket(i.getValue() as string);
+      const badge = STATUS_BADGE[b];
+      return (
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-wide ${badge.cls}`}>
+          {badge.label}
+        </span>
+      );
+    } },
   ], []);
 
   const table = useReactTable({ data: rows, columns, getCoreRowModel: getCoreRowModel() });
@@ -196,11 +234,8 @@ export const AccountingSpreadsheet = () => {
     ws.getRow(1).font = { bold: true };
     rows.filter((r) => !r.isGroupHeader).forEach((r) => {
       const row = ws.addRow(r);
-      const fill =
-        r.status === "paid" ? "FFD1FAE5"
-        : r.status === "pending" ? "FFFEF3C7"
-        : (r.status === "cancelled" || r.status === "refunded") ? "FFFEE2E2"
-        : null;
+      const b = statusBucket(r.status);
+      const fill = b === "paid" ? "FFD1FAE5" : b === "pending" ? "FFFEF3C7" : b === "cancelled" ? "FFFEE2E2" : null;
       if (fill) row.eachCell((c) => { c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } }; });
     });
     ws.addRow({});
@@ -266,16 +301,31 @@ export const AccountingSpreadsheet = () => {
             {table.getRowModel().rows.map((row) => {
               const r = row.original;
               if (r.isGroupHeader) {
+                const dt = dayTotals.get(r.groupLabel ?? r.date);
                 return (
-                  <tr key={row.id} className="bg-muted/60">
-                    <td colSpan={columns.length} className="px-2 py-1.5 font-display text-foreground/80 text-xs uppercase tracking-wide">
-                      {r.groupLabel}
+                  <tr key={row.id} className="bg-primary/10 border-y-2 border-primary/30">
+                    <td colSpan={columns.length} className="px-3 py-2 font-display text-foreground text-xs uppercase tracking-widest">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span className="flex items-center gap-2">
+                          <span className="inline-block w-2 h-2 rounded-full bg-primary" />
+                          {r.groupLabel}
+                        </span>
+                        {dt && (
+                          <span className="flex flex-wrap items-center gap-3 normal-case tracking-normal text-[11px] font-body text-muted-foreground">
+                            <span>{dt.count} pas.</span>
+                            <span>Bez PVN: <b className="text-foreground">{dt.net.toFixed(2)} €</b></span>
+                            <span>PVN: <b className="text-foreground">{dt.vat.toFixed(2)} €</b></span>
+                            <span>Kopā: <b className="text-primary">{dt.gross.toFixed(2)} €</b></span>
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
               }
+              const tint = ROW_TINT[statusBucket(r.status)];
               return (
-                <tr key={row.id} className={`${STATUS_COLOR[r.status] ?? ""} hover:bg-muted/40`}>
+                <tr key={row.id} className={`${tint} hover:bg-muted/40 transition-colors`}>
                   {row.getVisibleCells().map((c) => (
                     <td key={c.id} className="px-2 py-1.5 border-b border-border/40 whitespace-nowrap">
                       {flexRender(c.column.columnDef.cell, c.getContext()) as any}
