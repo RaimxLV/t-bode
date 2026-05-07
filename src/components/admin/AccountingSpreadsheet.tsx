@@ -252,7 +252,7 @@ export const AccountingSpreadsheet = () => {
                 <tr key={row.id} className={`${STATUS_COLOR[r.status] ?? ""} hover:bg-muted/40`}>
                   {row.getVisibleCells().map((c) => (
                     <td key={c.id} className="px-2 py-1.5 border-b border-border/40 whitespace-nowrap">
-                      {flexRender(c.column.columnDef.cell ?? c.column.columnDef.header, c.getContext()) as any}
+                      {flexRender(c.column.columnDef.cell, c.getContext()) as any}
                     </td>
                   ))}
                 </tr>
