@@ -39,15 +39,16 @@ Deno.serve(async (req) => {
 
     const { data: items, error } = await supabase
       .from("order_items")
-      .select("id, quantity, unit_price, zakeke_design_id, zakeke_order_id, zakeke_visitor_code")
-      .eq("order_id", orderId);
+      .select("id, quantity, unit_price, zakeke_design_id, zakeke_order_id, zakeke_visitor_code, created_at")
+      .eq("order_id", orderId)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
     // Pull order header for customer email + currency + totals (debug-friendly).
     const { data: orderRow } = await supabase
       .from("orders")
-      .select("guest_email, user_id, total, shipping_name, shipping_address, shipping_city, shipping_zip, shipping_phone, created_at")
+      .select("guest_email, user_id, total, order_number, shipping_name, shipping_address, shipping_city, shipping_zip, shipping_phone, created_at")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -89,11 +90,25 @@ Deno.serve(async (req) => {
     let processed = 0;
     const errors: Array<{ item_id: string; error: string }> = [];
 
+    // Build a short, human-friendly external order code so it's easy to
+    // cross-reference in Zakeke's admin UI ("Number" column) and on
+    // invoices/labels. Falls back to the UUID prefix when order_number
+    // hasn't been assigned yet.
+    const shortOrderCode = orderRow?.order_number != null
+      ? String(orderRow.order_number).padStart(4, "0")
+      : orderId.slice(0, 8).toUpperCase();
+
     // Create one Zakeke order per item so that print-files map 1:1 with the row.
-    for (const it of customisedItems) {
+    for (let idx = 0; idx < customisedItems.length; idx++) {
+      const it = customisedItems[idx];
+      // Find this item's overall index across the order so the suffix
+      // matches the row position the warehouse sees.
+      const itemIndex = items.findIndex((x) => x.id === it.id);
+      const suffix = items.length > 1 ? `-${(itemIndex >= 0 ? itemIndex : idx) + 1}` : "";
+      const externalCode = `${shortOrderCode}${suffix}`;
       try {
         const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
-          externalOrderId: `${orderId}:${it.id}`,
+          externalOrderId: externalCode,
           visitorCode: (it as any).zakeke_visitor_code ?? null,
           customerEmail: customerEmail ?? undefined,
           customerName: orderRow?.shipping_name ?? undefined,
