@@ -397,6 +397,7 @@ export type Database = {
           omniva_tracking_status: string | null
           order_number: number
           payment_method: string
+          payment_reminder_count: number
           promo_code: string | null
           provider: string
           shipping_address: string | null
@@ -446,6 +447,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          payment_reminder_count?: number
           promo_code?: string | null
           provider?: string
           shipping_address?: string | null
@@ -495,6 +497,7 @@ export type Database = {
           omniva_tracking_status?: string | null
           order_number?: number
           payment_method?: string
+          payment_reminder_count?: number
           promo_code?: string | null
           provider?: string
           shipping_address?: string | null
