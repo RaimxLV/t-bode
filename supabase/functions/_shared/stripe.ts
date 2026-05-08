@@ -167,5 +167,17 @@ export function createStripeClient() {
           stripeRequest<{ id: string; url: string | null }>("checkout/sessions", { body }),
       },
     },
+    refunds: {
+      create: (body: Record<string, StripeValue>) =>
+        stripeRequest<{ id: string; status: string; amount: number; payment_intent?: string }>("refunds", { body }),
+    },
+    paymentIntents: {
+      retrieve: (id: string) =>
+        stripeRequest<{ id: string; status: string; latest_charge?: string }>(`payment_intents/${id}`, { method: "GET" }),
+    },
+    sessions: {
+      retrieve: (id: string) =>
+        stripeRequest<{ id: string; payment_intent?: string }>(`checkout/sessions/${id}`, { method: "GET" }),
+    },
   };
 }
