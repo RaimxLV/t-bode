@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check, Shield } from "lucide-react";
+import { ArrowLeft, User, Package, Save, Heart, Trash2, FileText, Truck, ExternalLink, Copy, Check, Shield, CreditCard, Factory, CheckCircle2 } from "lucide-react";
 import { TwoFactorSetup } from "@/components/security/TwoFactorSetup";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -35,6 +35,71 @@ const TRACKING_STATUS_COLORS: Record<string, string> = {
 };
 
 const OMNIVA_TRACK_URL = "https://www.omniva.lv/private/track_and_trace?barcode=";
+
+/** Three-stage visual order progress: Paid → In production → Shipped */
+const OrderProgress = ({ order, items, t }: { order: any; items: any[] | undefined; t: any }) => {
+  const paidStatuses = ["confirmed", "processing", "shipped", "delivered"];
+  const isPaid = paidStatuses.includes(order.status) || !!order.manually_paid_at;
+  const hasPrintFiles = (items || []).some((it: any) => {
+    const f = it.zakeke_print_files;
+    if (!f) return false;
+    if (Array.isArray(f)) return f.length > 0;
+    return typeof f === "object" && Object.keys(f).length > 0;
+  });
+  const inProduction = order.status === "processing" || order.status === "shipped" || order.status === "delivered" || hasPrintFiles;
+  const isShipped = !!order.omniva_barcode || !!order.montonio_tracking_number || order.status === "shipped" || order.status === "delivered";
+  const isCancelled = order.status === "cancelled";
+
+  const steps = [
+    { key: "paid", label: t("profile.progress.paid", "Apmaksāts"), Icon: CreditCard, done: isPaid },
+    { key: "production", label: t("profile.progress.production", "Ražošanā"), Icon: Factory, done: inProduction },
+    { key: "shipped", label: t("profile.progress.shipped", "Izsūtīts"), Icon: Truck, done: isShipped },
+  ];
+
+  if (isCancelled) {
+    return (
+      <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-body text-destructive">
+        {t("profile.progress.cancelled", "Pasūtījums atcelts")}
+      </div>
+    );
+  }
+
+  const lastDoneIdx = steps.reduce((acc, s, i) => (s.done ? i : acc), -1);
+  const fillPct = lastDoneIdx < 0 ? 0 : (lastDoneIdx / (steps.length - 1)) * 100;
+
+  return (
+    <div className="pt-1">
+      <div className="relative">
+        <div className="absolute left-4 right-4 top-4 h-1 bg-muted rounded-full" />
+        <div
+          className="absolute left-4 top-4 h-1 bg-primary rounded-full transition-all duration-500"
+          style={{ width: `calc((100% - 2rem) * ${fillPct} / 100)` }}
+        />
+        <div className="relative flex justify-between">
+          {steps.map((s, i) => {
+            const isCurrent = i === lastDoneIdx;
+            return (
+              <div key={s.key} className="flex flex-col items-center gap-1.5 w-1/3">
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${
+                    s.done
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "bg-background border-muted-foreground/30 text-muted-foreground"
+                  } ${isCurrent ? "ring-4 ring-primary/20" : ""}`}
+                >
+                  {s.done ? <CheckCircle2 className="w-4 h-4" /> : <s.Icon className="w-4 h-4" />}
+                </div>
+                <span className={`text-[10px] sm:text-xs font-body text-center ${s.done ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                  {s.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Profile = () => {
   const { user, loading: authLoading, isAdmin, isWhitelisted } = useAuth();
