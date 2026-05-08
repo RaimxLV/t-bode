@@ -145,9 +145,15 @@ Deno.serve(async (req) => {
         });
         return { sent: false, error: detail };
       }
+      const newCount = (order as any).payment_reminder_count != null
+        ? Number((order as any).payment_reminder_count) + 1
+        : 1;
       await service
         .from("orders")
-        .update({ last_payment_reminder_at: new Date().toISOString() })
+        .update({
+          last_payment_reminder_at: new Date().toISOString(),
+          payment_reminder_count: newCount,
+        } as any)
         .eq("id", orderId);
       await logEmailAttempt(service, {
         message_id: messageId,
