@@ -50,3 +50,9 @@ verify_jwt = false
 
 [functions.zakeke-webhook]
 verify_jwt = false
+
+[functions.zakeke-files-sync]
+verify_jwt = false
+
+[functions.refund-order]
+verify_jwt = true
