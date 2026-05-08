@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
@@ -835,6 +835,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           {order.omniva_pickup_point && <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>}
                           {order.guest_email && <p className="text-xs text-muted-foreground font-body">✉️ {order.guest_email}</p>}
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
+                          <div className="flex flex-wrap gap-1.5 pt-1.5">
+                            {order.shipping_phone && (
+                              <a href={`tel:${order.shipping_phone}`} className="inline-flex items-center gap-1 text-[11px] font-body px-2 py-1 rounded border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition-colors">
+                                <Phone className="w-3 h-3" /> Zvanīt
+                              </a>
+                            )}
+                            {order.guest_email && (
+                              <a href={`mailto:${order.guest_email}?subject=${encodeURIComponent(`T-Bode pasūtījums ${formatOrderNumber(order.order_number, order.id)}`)}`} className="inline-flex items-center gap-1 text-[11px] font-body px-2 py-1 rounded border border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 transition-colors">
+                                <Mail className="w-3 h-3" /> Rakstīt
+                              </a>
+                            )}
+                            {(order.status === "paid" || order.manually_paid_at || ["confirmed","processing","shipped","delivered"].includes(order.status)) && order.status !== "cancelled" && (
+                              <button
+                                type="button"
+                                onClick={() => refundOrder(order.id)}
+                                className="inline-flex items-center gap-1 text-[11px] font-body px-2 py-1 rounded border border-rose-300 bg-rose-50 text-rose-800 hover:bg-rose-100 transition-colors"
+                                title="Veikt pilnu atmaksu klientam un atcelt pasūtījumu"
+                              >
+                                <Undo2 className="w-3 h-3" /> Atmaksāt
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-col items-start sm:items-end gap-2">
                           <div className="flex items-center justify-between w-full sm:w-[200px] gap-2">
