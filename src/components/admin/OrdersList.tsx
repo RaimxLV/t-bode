@@ -424,6 +424,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     else { toast.success(t("admin.markedAsPaid", "Pasūtījums atzīmēts kā apmaksāts")); onRefresh(); }
   };
 
+  const refundOrder = async (orderId: string) => {
+    if (!confirm("Veikt PILNU atmaksu klientam? Pasūtījums tiks atcelts un tiks ģenerēts kredītrēķins.")) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("refund-order", {
+        body: { order_id: orderId },
+      });
+      if (error) throw error;
+      if ((data as any)?.ok) {
+        toast.success("Atmaksa veikta. Kredītrēķins ģenerēts.");
+        onRefresh();
+      } else {
+        toast.error(`Atmaksa neizdevās: ${(data as any)?.error ?? "nezināma kļūda"}`);
+      }
+    } catch (e: any) {
+      toast.error(`Atmaksa neizdevās: ${e.message}`);
+    }
+  };
+
   const deleteOrder = async (orderId: string) => {
     if (!confirm("Vai tiešām vēlaties dzēst šo pasūtījumu? Šī darbība ir neatgriezeniska.")) return;
     // Delete order items first, then the order
