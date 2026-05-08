@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const sendOne = async (orderId: string, language: Lang) => {
       const { data: order } = await service
         .from("orders")
-        .select("id, order_number, total, guest_email, user_id, shipping_name, status, payment_method")
+        .select("id, order_number, total, guest_email, user_id, shipping_name, status, payment_method, payment_reminder_count")
         .eq("id", orderId)
         .maybeSingle();
       if (!order) return { skipped: true, reason: "not found" };
