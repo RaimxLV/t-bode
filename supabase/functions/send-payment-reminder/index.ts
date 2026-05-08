@@ -172,23 +172,47 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Bulk mode: scan for unpaid bank-transfer orders >= 3 days old, no reminder yet
-    const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: candidates } = await service
+    // Escalation cron: 24h → 3d → 7d (then auto-cancel)
+    const now = Date.now();
+    const { data: pendingOrders } = await service
       .from("orders")
-      .select("id")
+      .select("id, created_at, payment_reminder_count, last_payment_reminder_at")
       .eq("payment_method", "bank_transfer")
-      .eq("status", "pending")
-      .lte("created_at", threeDaysAgo)
-      .is("last_payment_reminder_at", null);
+      .eq("status", "pending");
 
     let sent = 0;
+    let cancelled = 0;
     let skipped = 0;
-    for (const o of candidates ?? []) {
-      const r = await sendOne(o.id, "lv");
-      if ((r as any).sent) sent++; else skipped++;
+
+    for (const o of pendingOrders ?? []) {
+      const count = Number((o as any).payment_reminder_count ?? 0);
+      const ageMs = now - new Date(o.created_at).getTime();
+      const lastSentMs = o.last_payment_reminder_at
+        ? now - new Date(o.last_payment_reminder_at).getTime()
+        : Infinity;
+      if (lastSentMs < 12 * 60 * 60 * 1000) { skipped++; continue; }
+
+      if (count === 0 && ageMs >= 24 * 60 * 60 * 1000) {
+        const r = await sendOne(o.id, "lv");
+        if ((r as any).sent) sent++; else skipped++;
+      } else if (count === 1 && ageMs >= 3 * 24 * 60 * 60 * 1000) {
+        const r = await sendOne(o.id, "lv");
+        if ((r as any).sent) sent++; else skipped++;
+      } else if (count >= 2 && ageMs >= 7 * 24 * 60 * 60 * 1000) {
+        if (count === 2) {
+          const r = await sendOne(o.id, "lv");
+          if ((r as any).sent) sent++;
+        }
+        await service.from("orders").update({
+          status: "cancelled" as any,
+          notes: `[AUTO-CANCEL] Bank transfer not received within 7 days (${new Date().toISOString().slice(0, 10)})`,
+        }).eq("id", o.id);
+        cancelled++;
+      } else {
+        skipped++;
+      }
     }
-    return new Response(JSON.stringify({ sent, skipped, total: candidates?.length ?? 0 }), {
+    return new Response(JSON.stringify({ sent, cancelled, skipped, total: pendingOrders?.length ?? 0 }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
