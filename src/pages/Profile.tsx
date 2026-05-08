@@ -341,7 +341,7 @@ const Profile = () => {
                             )}
                           </div>
                         </div>
-                        <OrderProgress order={order} items={orderItems[order.id]} t={t} />
+                        <div className="mt-1 mb-2"><OrderProgress order={order} items={orderItems[order.id]} t={t} /></div>
                         {orderItems[order.id] && (
                           <div className="border-t border-border pt-3 space-y-2">
                             {orderItems[order.id].map((item: any) => (
