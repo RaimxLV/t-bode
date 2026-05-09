@@ -79,25 +79,25 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-3xl md:text-4xl lg:text-5xl leading-none tracking-tight text-white"
+            className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
           >
-            {t("hero.line1")}
-            <br />
-            {t("hero.line2")}
+            <span className="block text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
+              {t("hero.sloganLine1")}
+            </span>
+            <motion.span
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+              className="block text-gradient-brand drop-shadow-[0_2px_14px_rgba(220,38,38,0.4)]"
+            >
+              {t("hero.sloganLine2")}
+            </motion.span>
           </motion.h1>
-          <motion.h2
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="text-5xl lg:text-8xl leading-none mt-2 text-gradient-brand font-extrabold md:text-8xl border-none text-destructive bg-transparent whitespace-pre-line text-center"
-          >
-            {t("hero.line3")}
-          </motion.h2>
           {imageLoaded && <HeroAnimatedText />}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
             className="mt-6 flex flex-col sm:flex-row gap-4 justify-center"
           >
             <button
@@ -110,7 +110,7 @@ export const HeroSection = () => {
             </button>
             <button
               onClick={() => navigate("/collection")}
-              className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-semibold text-lg border-2 border-white/40 text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/60"
+              className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-semibold text-lg border-2 border-white/50 text-white bg-black/20 transition-all hover:bg-white/10 hover:border-white/70"
             >
               {t("hero.ctaCollection")}
             </button>
