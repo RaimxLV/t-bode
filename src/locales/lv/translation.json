@@ -17,13 +17,13 @@
     "ctaDesign": "Sākt personalizēt",
     "heroAnim": {
       "line1": "Esi unikāls. Izveido savu!",
-      "line2": "T-krekls, hūdijs vai cepure\n– izveido savu stilu tieši tagad.\nTavs apģērbs ir tava ziņa pasaulei."
+      "line2": "T‑krekls, hūdijs vai cepure\n– izveido savu stilu tieši tagad.\nTavs apģērbs ir tava ziņa pasaulei."
     },
     "ctaCollection": "Skatīt kolekciju"
   },
   "about": {
-    "title": "T‑Bode ir vieta, kur T-krekls kļūst par stāstu.",
-    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T-kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
+    "title": "T‑Bode ir vieta, kur T‑krekls kļūst par stāstu.",
+    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T‑kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
     "features": {
       "quality": {
         "title": "Augstas kvalitātes DTF druka",
@@ -45,7 +45,7 @@
     "steps": {
       "s1": {
         "title": "Izvēlies produktu",
-        "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga."
+        "desc": "Izvēlies no mūsu T‑kreklu, hūdiju un krūžu kataloga."
       },
       "s2": {
         "title": "Personalizē to",
@@ -105,7 +105,7 @@
   },
   "categories": {
     "all": "Visi produkti",
-    "t-shirts": "T-krekli",
+    "t-shirts": "T‑krekli",
     "hoodies": "Hūdiji un džemperi",
     "mugs": "Krūzes",
     "bags": "Somas",
