@@ -13,17 +13,17 @@
   "hero": {
     "sloganLine1": "Your Design",
     "sloganLine2": "Your Story.",
-    "description": "Be unique. Create your own design. > \nYour clothing is your message. \nWith our personalization tool, you can create more than just simple clothing – you create your own style icon. \nT-Bode: Your designs – your story.",
+    "description": "Be unique. Create your own design. > \nYour clothing is your message. \nWith our personalization tool, you can create more than just simple clothing – you create your own style icon. \nT‑Bode: Your designs – your story.",
     "ctaDesign": "Start Customizing",
     "heroAnim": {
       "line1": "Be unique. Create yours!",
-      "line2": "T-shirt, hoodie or cap\n– make your own style right now.\nYour clothing is your message to the world."
+      "line2": "T‑shirt, hoodie or cap\n– make your own style right now.\nYour clothing is your message to the world."
     },
     "ctaCollection": "Our Collection"
   },
   "about": {
-    "title": "T-Bode is a place where a T-shirt becomes a story.",
-    "description": "In our stores in <strong>Riga, Latvia</strong>, you can visit us in person, try on a T-shirt, choose the color and size, and submit your design or idea – we'll take care of the rest. We use modern <strong>DTF (Direct to Film) technology</strong> for vibrant colors on both light and dark fabrics.",
+    "title": "T‑Bode is a place where a T‑shirt becomes a story.",
+    "description": "In our stores in <strong>Riga, Latvia</strong>, you can visit us in person, try on a T‑shirt, choose the color and size, and submit your design or idea – we'll take care of the rest. We use modern <strong>DTF (Direct to Film) technology</strong> for vibrant colors on both light and dark fabrics.",
     "features": {
       "quality": {
         "title": "Premium DTF Print Quality",
@@ -67,8 +67,8 @@
   "stores": {
     "title": "Visit T-BODE",
     "subtitle": "Our Stores in Riga Shopping Centers",
-    "pickup": "Orders can be picked up at the T-Bode office: Braslas iela 29, Entrance D, Riga",
-    "officeTitle": "T-Bode Office / Pickup Point",
+    "pickup": "Orders can be picked up at the T‑Bode office: Braslas iela 29, Entrance D, Riga",
+    "officeTitle": "T‑Bode Office / Pickup Point",
     "officeDesc": "Pick up your orders in person at our office in Riga, Braslas iela 29, Entrance D.",
     "openWaze": "OPEN IN WAZE",
     "openGoogleMaps": "OPEN IN GOOGLE MAPS",
@@ -376,12 +376,12 @@
     "giftCards": "Gift Cards",
     "stores": "PHYSICAL STORES",
     "help": "HELP",
-    "copyright": "© 2026 T-Bode (SIA Ervitex). All rights reserved.",
+    "copyright": "© 2026 T‑Bode (SIA Ervitex). All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms & Conditions",
     "securePayments": "Secure payments powered by",
     "share": "Share",
-    "shareText": "Check out T-Bode — personalized apparel store!"
+    "shareText": "Check out T‑Bode — personalized apparel store!"
   },
   "notFound": {
     "title": "404",
@@ -466,14 +466,14 @@
   },
   "install": {
     "shortLabel": "Install app",
-    "title": "Install T-Bode",
-    "description": "Add T-Bode to your home screen and use it like a native app — fast, immersive, no browser bars.",
+    "title": "Install T‑Bode",
+    "description": "Add T‑Bode to your home screen and use it like a native app — fast, immersive, no browser bars.",
     "installButton": "Install now",
-    "readyDesc": "Your device is ready — tap below to add T-Bode to your home screen.",
+    "readyDesc": "Your device is ready — tap below to add T‑Bode to your home screen.",
     "installed": "App installed successfully!",
     "dismissed": "Installation dismissed",
     "alreadyInstalled": "App installed",
-    "alreadyInstalledDesc": "You're already using T-Bode as an installed app.",
+    "alreadyInstalledDesc": "You're already using T‑Bode as an installed app.",
     "iosTitle": "How to install on iPhone or iPad",
     "iosStep1": "Open Safari Share menu",
     "iosStep2": "Choose “Add to Home Screen”",
@@ -481,7 +481,7 @@
     "androidTitle": "How to install on Android",
     "androidManual": "Open the browser menu (⋮) and choose “Add to Home Screen” or “Install app”.",
     "desktopTitle": "How to install on desktop",
-    "desktopManual": "Chrome/Edge: click the install icon on the right side of the address bar, or choose “Install T-Bode” from the menu."
+    "desktopManual": "Chrome/Edge: click the install icon on the right side of the address bar, or choose “Install T‑Bode” from the menu."
   },
   "wishlist": {
     "loginRequired": "Sign in to save items",

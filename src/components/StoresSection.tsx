@@ -140,7 +140,7 @@ export const StoresSection = () => {
 
           {/* Pickup info */}
           <p className="text-center text-sm md:text-base text-muted-foreground font-body mt-4 md:mt-6 px-4">
-            {t("stores.pickup", "Pasūtījumus var saņemt personīgi T-Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
+            {t("stores.pickup", "Pasūtījumus var saņemt personīgi T‑Bode birojā Rīgā, Braslas ielā 29, D ieeja.")}
           </p>
 
           {/* Navigation buttons – white bg, grey border, colored icons */}

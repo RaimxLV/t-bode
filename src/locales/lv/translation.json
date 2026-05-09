@@ -13,17 +13,17 @@
   "hero": {
     "sloganLine1": "Tavs dizains",
     "sloganLine2": "Tavs stāsts.",
-    "description": "Esi unikāls. Izveido savu dizainu. >\nTavs apģērbs ir tava ziņa.\nAr mūsu personalizācijas rīku tu vari izveidot ne tikai vienkāršu apģērbu – tu izveido savu stila ikonu.\nT-Bode: Tavi dizaini – tavs stāsts.",
+    "description": "Esi unikāls. Izveido savu dizainu. >\nTavs apģērbs ir tava ziņa.\nAr mūsu personalizācijas rīku tu vari izveidot ne tikai vienkāršu apģērbu – tu izveido savu stila ikonu.\nT‑Bode: Tavi dizaini – tavs stāsts.",
     "ctaDesign": "Sākt personalizēt",
     "heroAnim": {
       "line1": "Esi unikāls. Izveido savu!",
-      "line2": "T-krekls, hūdijs vai cepure\n– izveido savu stilu tieši tagad.\nTavs apģērbs ir tava ziņa pasaulei."
+      "line2": "T‑krekls, hūdijs vai cepure\n– izveido savu stilu tieši tagad.\nTavs apģērbs ir tava ziņa pasaulei."
     },
     "ctaCollection": "Skatīt kolekciju"
   },
   "about": {
-    "title": "T-Bode ir vieta, kur T-krekls kļūst par stāstu.",
-    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T-kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
+    "title": "T‑Bode ir vieta, kur T‑krekls kļūst par stāstu.",
+    "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T‑kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
     "features": {
       "quality": {
         "title": "Augstas kvalitātes DTF druka",
@@ -45,7 +45,7 @@
     "steps": {
       "s1": {
         "title": "Izvēlies produktu",
-        "desc": "Izvēlies no mūsu T-kreklu, hūdiju un krūžu kataloga."
+        "desc": "Izvēlies no mūsu T‑kreklu, hūdiju un krūžu kataloga."
       },
       "s2": {
         "title": "Personalizē to",
@@ -67,8 +67,8 @@
   "stores": {
     "title": "Apmeklē T-BODE",
     "subtitle": "Mūsu veikali Rīgas tirdzniecības centros",
-    "pickup": "Pasūtījumus var saņemt T-Bode birojā: Braslas iela 29, Ieeja D, Rīga",
-    "officeTitle": "T-Bode Birojs / Saņemšanas punkts",
+    "pickup": "Pasūtījumus var saņemt T‑Bode birojā: Braslas iela 29, Ieeja D, Rīga",
+    "officeTitle": "T‑Bode Birojs / Saņemšanas punkts",
     "officeDesc": "Saņem savus pasūtījumus klātienē mūsu birojā Rīgā, Braslas ielā 29, Ieeja D.",
     "openWaze": "ATVĒRT WAZE",
     "openGoogleMaps": "ATVĒRT GOOGLE MAPS",
@@ -105,7 +105,7 @@
   },
   "categories": {
     "all": "Visi produkti",
-    "t-shirts": "T-krekli",
+    "t-shirts": "T‑krekli",
     "hoodies": "Hūdiji un džemperi",
     "mugs": "Krūzes",
     "bags": "Somas",
@@ -374,12 +374,12 @@
     "giftCards": "Dāvanu kartes",
     "stores": "FIZISKIE VEIKALI",
     "help": "PALĪDZĪBA",
-    "copyright": "© 2026 T-Bode (SIA Ervitex). Visas tiesības aizsargātas.",
+    "copyright": "© 2026 T‑Bode (SIA Ervitex). Visas tiesības aizsargātas.",
     "privacy": "Privātuma politika",
     "terms": "Noteikumi",
     "securePayments": "Drošie maksājumi nodrošina",
     "share": "Dalies",
-    "shareText": "Apskati T-Bode — personalizēta apģērba veikals!"
+    "shareText": "Apskati T‑Bode — personalizēta apģērba veikals!"
   },
   "notFound": {
     "title": "404",
@@ -464,14 +464,14 @@
   },
   "install": {
     "shortLabel": "Instalēt lietotni",
-    "title": "Instalē T-Bode",
-    "description": "Pievieno T-Bode savai sākumlapai un izmanto kā lietotni — ātri, ērti, bez pārlūka joslām.",
+    "title": "Instalē T‑Bode",
+    "description": "Pievieno T‑Bode savai sākumlapai un izmanto kā lietotni — ātri, ērti, bez pārlūka joslām.",
     "installButton": "Instalēt tagad",
-    "readyDesc": "Tava ierīce ir gatava — klikšķini zemāk, lai pievienotu T-Bode sākumlapai.",
+    "readyDesc": "Tava ierīce ir gatava — klikšķini zemāk, lai pievienotu T‑Bode sākumlapai.",
     "installed": "Lietotne veiksmīgi instalēta!",
     "dismissed": "Instalācija atcelta",
     "alreadyInstalled": "Lietotne instalēta",
-    "alreadyInstalledDesc": "Tu jau lieto T-Bode kā instalētu lietotni.",
+    "alreadyInstalledDesc": "Tu jau lieto T‑Bode kā instalētu lietotni.",
     "iosTitle": "Kā instalēt iPhone vai iPad ierīcē",
     "iosStep1": "Atver Safari kopīgošanas izvēlni",
     "iosStep2": "Izvēlies “Pievienot sākuma ekrānam”",
@@ -479,7 +479,7 @@
     "androidTitle": "Kā instalēt Android ierīcē",
     "androidManual": "Atver pārlūka izvēlni (⋮) un izvēlies “Pievienot sākuma ekrānam” vai “Instalēt lietotni”.",
     "desktopTitle": "Kā instalēt datorā",
-    "desktopManual": "Chrome/Edge: noklikšķini uz instalēšanas ikonas adreses joslas labajā pusē, vai izvēlnē izvēlies “Instalēt T-Bode”."
+    "desktopManual": "Chrome/Edge: noklikšķini uz instalēšanas ikonas adreses joslas labajā pusē, vai izvēlnē izvēlies “Instalēt T‑Bode”."
   },
   "wishlist": {
     "loginRequired": "Lai saglabātu, ielogojies",

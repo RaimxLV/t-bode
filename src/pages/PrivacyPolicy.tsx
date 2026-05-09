@@ -29,7 +29,7 @@ const PrivacyContentLV = () => (
     <p><strong>Spēkā no:</strong> 2026. gada 16. aprīlis</p>
     <p>
       SIA "Ervitex" (reģ. nr. 40203512897, adrese: Braslas iela 29-2, Rīga, LV-1084),
-      turpmāk — <strong>T-Bode</strong>, apņemas aizsargāt jūsu privātumu un personas datus
+      turpmāk — <strong>T‑Bode</strong>, apņemas aizsargāt jūsu privātumu un personas datus
       saskaņā ar Eiropas Parlamenta un Padomes Regulu (ES) 2016/679 (Vispārīgā datu aizsardzības regula — GDPR)
       un Latvijas Fizisko personu datu apstrādes likumu.
     </p>
@@ -116,7 +116,7 @@ const PrivacyContentEN = () => (
     <p><strong>Effective from:</strong> April 16, 2026</p>
     <p>
       SIA "Ervitex" (reg. no. 40203512897, address: Braslas iela 29-2, Riga, LV-1084),
-      hereinafter — <strong>T-Bode</strong>, is committed to protecting your privacy and personal data
+      hereinafter — <strong>T‑Bode</strong>, is committed to protecting your privacy and personal data
       in accordance with Regulation (EU) 2016/679 (General Data Protection Regulation — GDPR)
       and the Latvian Personal Data Processing Law.
     </p>
