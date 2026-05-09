@@ -21,6 +21,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
