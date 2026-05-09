@@ -447,8 +447,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       .from("orders")
       .update({ status: "delivered" as any })
       .eq("id", orderId);
-    if (error) toast.error("Kļūda: " + error.message);
-    else { toast.success("Pasūtījums atzīmēts kā gatavs"); onRefresh(); }
+    if (error) { toast.error("Kļūda: " + error.message); return; }
+    toast.success("Pasūtījums atzīmēts kā gatavs");
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-pickup-ready-email", {
+        body: { order_id: orderId },
+      });
+      if (emailErr) toast.warning("E-pasts netika nosūtīts: " + emailErr.message);
+      else toast.success("Klientam nosūtīts paziņojums e-pastā");
+    } catch (e: any) {
+      toast.warning("E-pasts netika nosūtīts: " + e.message);
+    }
+    onRefresh();
   };
 
   const deleteOrder = async (orderId: string) => {
@@ -1019,30 +1029,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       )}
 
-                      <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
-                        {order.omniva_pickup_point?.startsWith("BIROJS") ? (
-                          <>
-                            <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
-                              <Building2 className="w-3.5 h-3.5" /> Saņemšana birojā
-                            </p>
-                            {order.status === "delivered" ? (
-                              <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
-                                <CheckCircle className="w-3 h-3 mr-1" /> Pabeigts
-                              </Badge>
-                            ) : (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
-                                onClick={() => markOfficePickupReady(order.id)}
-                              >
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                Pasūtījums ir gatavs
-                              </Button>
-                            )}
-                          </>
+                      {order.omniva_pickup_point?.startsWith("BIROJS") ? (
+                        order.status === "delivered" ? (
+                          <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50 w-fit">
+                            <CheckCircle className="w-3 h-3 mr-1" /> Pasūtījums izsniegts
+                          </Badge>
                         ) : (
-                          <>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white w-fit"
+                            onClick={() => markOfficePickupReady(order.id)}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Pasūtījums ir gatavs
+                          </Button>
+                        )
+                      ) : order.omniva_pickup_point ? (
+                        <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                         <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
                           <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}
                         </p>
@@ -1080,9 +1084,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             </Button>
                           </div>
                         )}
-                          </>
-                        )}
-                      </div>
+                        </div>
+                      ) : null}
 
                       {items.length > 0 && (
                         <div className="border border-border rounded-lg overflow-hidden">

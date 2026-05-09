@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.refund-order]
 verify_jwt = true
+
+[functions.send-pickup-ready-email]
+verify_jwt = false
