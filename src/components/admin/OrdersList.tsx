@@ -443,7 +443,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const markOfficePickupReady = async (orderId: string) => {
-    if (!confirm("Atzīmēt pasūtījumu kā gatavu un pabeigtu?")) return;
     const { error } = await supabase
       .from("orders")
       .update({ status: "delivered" as any })
