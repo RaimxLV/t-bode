@@ -567,7 +567,7 @@ const Checkout = () => {
                       <Store className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
                       <div className="font-body text-sm">
                         <p className="font-semibold mb-1">{t("checkout.pickupTitle", "Saņemšana birojā")}</p>
-                        <p className="text-muted-foreground">Braslas iela 29, Ieeja D, Rīga, LV-1084</p>
+                        <p className="text-muted-foreground">{OFFICE_PICKUP_ADDRESS}, LV-1084</p>
                         <p className="text-xs text-muted-foreground mt-2">
                           {t("checkout.pickupHint", "Pēc pasūtījuma saņemšanas sazināsimies, lai vienotos par ērtu saņemšanas laiku.")}
                         </p>
