@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { isOfficePickup, stripOfficePrefix } from "@/lib/officePickup";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
 
@@ -443,20 +444,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const markOfficePickupReady = async (orderId: string) => {
+    const order = orders.find((o) => o.id === orderId);
+    // Warn admin if marking ready while payment is still outstanding.
+    const isPaid = !!order?.manually_paid_at
+      || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
+    if (!isPaid) {
+      const ok = confirm(
+        "BRĪDINĀJUMS: Šis pasūtījums vēl nav apmaksāts.\n\nVai tiešām atzīmēt kā gatavu un izsniegt klientam bez maksas?"
+      );
+      if (!ok) return;
+    }
     const { error } = await supabase
       .from("orders")
       .update({ status: "delivered" as any })
       .eq("id", orderId);
     if (error) { toast.error("Kļūda: " + error.message); return; }
-    toast.success("Pasūtījums atzīmēts kā gatavs");
     try {
       const { error: emailErr } = await supabase.functions.invoke("send-pickup-ready-email", {
         body: { order_id: orderId },
       });
-      if (emailErr) toast.warning("E-pasts netika nosūtīts: " + emailErr.message);
-      else toast.success("Klientam nosūtīts paziņojums e-pastā");
+      if (emailErr) toast.warning("Atzīmēts kā gatavs, bet e-pasts netika nosūtīts: " + emailErr.message);
+      else toast.success("Pasūtījums atzīmēts kā gatavs un klientam nosūtīts e-pasts");
     } catch (e: any) {
-      toast.warning("E-pasts netika nosūtīts: " + e.message);
+      toast.warning("Atzīmēts kā gatavs, bet e-pasts netika nosūtīts: " + e.message);
     }
     onRefresh();
   };
@@ -867,8 +877,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           {order.shipping_name && <p className="text-xs text-muted-foreground font-body">👤 {order.shipping_name} · {order.shipping_phone}</p>}
                           {order.shipping_address && <p className="text-xs text-muted-foreground font-body">📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>}
                           {order.omniva_pickup_point && (
-                            order.omniva_pickup_point.startsWith("BIROJS")
-                              ? <p className="text-xs text-muted-foreground font-body">🏢 Birojs: {order.omniva_pickup_point.replace(/^BIROJS:?\s*/i, "")}</p>
+                            isOfficePickup(order.omniva_pickup_point)
+                              ? <p className="text-xs text-muted-foreground font-body">🏢 Birojs: {stripOfficePrefix(order.omniva_pickup_point)}</p>
                               : <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>
                           )}
                           {order.guest_email && <p className="text-xs text-muted-foreground font-body">✉️ {order.guest_email}</p>}
@@ -884,7 +894,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                 <Mail className="w-3 h-3" /> Rakstīt
                               </a>
                             )}
-                            {(order.status === "paid" || order.manually_paid_at || ["confirmed","processing","shipped","delivered"].includes(order.status)) && order.status !== "cancelled" && (
+                            {(order.manually_paid_at || ["confirmed","processing","shipped","delivered"].includes(order.status)) && (
                               <button
                                 type="button"
                                 onClick={() => refundOrder(order.id)}
@@ -1029,7 +1039,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       )}
 
-                      {order.omniva_pickup_point?.startsWith("BIROJS") ? (
+                      {isOfficePickup(order.omniva_pickup_point) ? (
                         order.status === "delivered" ? (
                           <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50 w-fit">
                             <CheckCircle className="w-3 h-3 mr-1" /> Pasūtījums izsniegts
