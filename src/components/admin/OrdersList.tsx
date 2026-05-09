@@ -442,6 +442,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  const markOfficePickupReady = async (orderId: string) => {
+    if (!confirm("Atzīmēt pasūtījumu kā gatavu un pabeigtu?")) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "delivered" as any })
+      .eq("id", orderId);
+    if (error) toast.error("Kļūda: " + error.message);
+    else { toast.success("Pasūtījums atzīmēts kā gatavs"); onRefresh(); }
+  };
+
   const deleteOrder = async (orderId: string) => {
     if (!confirm("Vai tiešām vēlaties dzēst šo pasūtījumu? Šī darbība ir neatgriezeniska.")) return;
     // Delete order items first, then the order
