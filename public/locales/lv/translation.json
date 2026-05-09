@@ -11,16 +11,13 @@
     "skipToContent": "Pāriet uz saturu"
   },
   "hero": {
-    "line1": "Dizains.",
-    "line2": "Druka.",
-    "line3": "Izstāsti savu stāstu.",
+    "sloganLine1": "Tavs dizains",
+    "sloganLine2": "Tavs stāsts.",
     "description": "Esi unikāls. Izveido savu dizainu. >\nTavs apģērbs ir tava ziņa.\nAr mūsu personalizācijas rīku tu vari izveidot ne tikai vienkāršu apģērbu – tu izveido savu stila ikonu.\nT-Bode: Tavi dizaini – tavs stāsts.",
     "ctaDesign": "Sākt personalizēt",
     "heroAnim": {
       "line1": "Esi unikāls. Izveido savu!",
-      "line2": "T-krekls, hūdijs vai cepure – izveido savu stilu tieši tagad. Tavs apģērbs ir tava ziņa pasaulei.",
-      "line3": "T-Bode: Tavs dizains – tavs stāsts.",
-      "glowPhrase": "tavs stāsts."
+      "line2": "T-krekls, hūdijs vai cepure\n– izveido savu stilu tieši tagad.\nTavs apģērbs ir tava ziņa pasaulei."
     },
     "ctaCollection": "Skatīt kolekciju"
   },
