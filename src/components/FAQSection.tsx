@@ -19,6 +19,31 @@ interface FAQ {
   sort_order: number;
 }
 
+// Render text and keep emails / brand name from breaking across lines.
+const renderRichText = (text: string) => {
+  // Split on emails while keeping them as tokens
+  const emailRe = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)/g;
+  const parts = text.split(emailRe);
+  return parts.map((part, i) => {
+    if (emailRe.test(part)) {
+      // Reset regex state because of /g flag
+      emailRe.lastIndex = 0;
+      return (
+        <a
+          key={i}
+          href={`mailto:${part}`}
+          className="text-primary hover:underline whitespace-nowrap"
+        >
+          {part.replace(/-/g, "\u2011")}
+        </a>
+      );
+    }
+    // Replace standalone "T-Bode" / "T-bode" with non-breaking-hyphen version
+    const withNbHyphen = part.replace(/T-([Bb])ode/g, "T\u2011$1ode");
+    return <span key={i}>{withNbHyphen}</span>;
+  });
+};
+
 export const FAQSection = () => {
   const { t, i18n } = useTranslation();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
@@ -79,7 +104,7 @@ export const FAQSection = () => {
                   {lang === "lv" ? faq.question_lv : (faq.question_en || faq.question_lv)}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground font-body text-sm leading-relaxed">
-                  {lang === "lv" ? faq.answer_lv : (faq.answer_en || faq.answer_lv)}
+                  {renderRichText(lang === "lv" ? faq.answer_lv : (faq.answer_en || faq.answer_lv))}
                 </AccordionContent>
               </AccordionItem>
             ))}
