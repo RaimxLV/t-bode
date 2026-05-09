@@ -131,7 +131,7 @@ export function renderTrackingHtml(order: SampleOrder): string {
         <a href="${trackingUrl}" style="background:#DC2626;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;display:inline-block;">Sekot sūtījumam</a>
       </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;">
-        Jautājumi? Raksti mums: <a href="mailto:eriks@ervitex.lv" style="color:#DC2626;">eriks@ervitex.lv</a>
+        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">

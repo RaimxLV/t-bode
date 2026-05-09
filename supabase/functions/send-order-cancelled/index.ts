@@ -25,8 +25,8 @@ const t = (lang: Lang) => ({
       : "If a payment was made, a refund will be issued to the same account within 5–10 business days.",
   questions:
     lang === "lv"
-      ? "Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz eriks@ervitex.lv."
-      : "If you have questions, reply to this email or contact eriks@ervitex.lv.",
+      ? "Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz info@t-bode.lv."
+      : "If you have questions, reply to this email or contact info@t-bode.lv.",
   team: lang === "lv" ? "T-Bode komanda" : "T-Bode team",
 });
 

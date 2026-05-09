@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileBarChart, FileSpreadsheet } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,6 @@ const SettingsManager = lazy(() => import("@/components/admin/SettingsManager").
 const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m => ({ default: m.EmailPreview })));
 const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ default: m.EmailLog })));
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
-const ReportsManager = lazy(() => import("@/components/admin/ReportsManager").then(m => ({ default: m.ReportsManager })));
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
 
 const TabFallback = () => (
@@ -285,7 +284,6 @@ const Admin = () => {
             <TabsTrigger value="emails" className="gap-1.5 text-sm"><Mail className="w-4 h-4" /> E-pastu priekšskat.</TabsTrigger>
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
-            <TabsTrigger value="reports" className="gap-1.5 text-sm"><FileBarChart className="w-4 h-4" /> Atskaites</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
           </TabsList>
 
@@ -405,12 +403,6 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="reports">
-            <Suspense fallback={<TabFallback />}>
-              <ReportsManager />
-            </Suspense>
-          </TabsContent>
-
           <TabsContent value="accounting">
             <Suspense fallback={<TabFallback />}>
               <AccountingSpreadsheet />
@@ -446,8 +438,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo"].includes(activeTab)
-                  || activeTab === "reports"
+                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -471,7 +462,6 @@ const Admin = () => {
                   { value: "emails", icon: Mail, label: "E-pastu priekšsk." },
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
-                  { value: "reports", icon: FileBarChart, label: "Atskaites" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
