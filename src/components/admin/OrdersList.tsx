@@ -442,6 +442,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  const markOfficePickupReady = async (orderId: string) => {
+    if (!confirm("Atzīmēt pasūtījumu kā gatavu un pabeigtu?")) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "delivered" as any })
+      .eq("id", orderId);
+    if (error) toast.error("Kļūda: " + error.message);
+    else { toast.success("Pasūtījums atzīmēts kā gatavs"); onRefresh(); }
+  };
+
   const deleteOrder = async (orderId: string) => {
     if (!confirm("Vai tiešām vēlaties dzēst šo pasūtījumu? Šī darbība ir neatgriezeniska.")) return;
     // Delete order items first, then the order
@@ -1010,6 +1020,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                       )}
 
                       <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                        {order.omniva_pickup_point?.startsWith("BIROJS") ? (
+                          <>
+                            <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
+                              <Building2 className="w-3.5 h-3.5" /> Saņemšana birojā
+                            </p>
+                            {order.status === "delivered" ? (
+                              <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
+                                <CheckCircle className="w-3 h-3 mr-1" /> Pabeigts
+                              </Badge>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={() => markOfficePickupReady(order.id)}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Pasūtījums ir gatavs
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <>
                         <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
                           <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}
                         </p>
@@ -1045,17 +1078,9 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               {omnivaLoading[order.id] === "create" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Truck className="w-3.5 h-3.5" />}
                               {t("admin.omnivaCreateShipment")}
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-xs gap-1.5 h-8"
-                              onClick={() => runOmnivaTest(order)}
-                              title="Test režīms — pārbauda datus bez reāla sūtījuma"
-                            >
-                              <FlaskConical className="w-3.5 h-3.5" />
-                              Test režīms
-                            </Button>
                           </div>
+                        )}
+                          </>
                         )}
                       </div>
 
