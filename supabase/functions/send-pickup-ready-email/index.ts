@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         Lūdzu, pirms ierašanās sazinies ar mums, lai saskaņotu laiku.
       </p>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;margin-top:24px;">
-        Jautājumi? Raksti mums: <a href="mailto:eriks@ervitex.lv" style="color:#DC2626;">eriks@ervitex.lv</a>
+        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
