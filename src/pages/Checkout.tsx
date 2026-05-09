@@ -239,7 +239,7 @@ const Checkout = () => {
           shippingMethod === "omniva"
             ? selectedOmniva
             : shippingMethod === "pickup"
-              ? "BIROJS: Braslas iela 29, Ieeja D, Rīga"
+              ? OFFICE_PICKUP_VALUE
               : null,
         notes: form.notes?.trim() || null,
         is_business: isBusiness,
