@@ -443,7 +443,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const markOfficePickupReady = async (orderId: string) => {
-    if (!confirm("Atzīmēt pasūtījumu kā gatavu un pabeigtu?")) return;
     const { error } = await supabase
       .from("orders")
       .update({ status: "delivered" as any })
@@ -746,27 +745,24 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         aria-label="Atlasīt pasūtījumu"
                       />
                     </div>
-                    <div className={`relative w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${statusInfo.color}`}>
-                      <StatusIcon className="w-3.5 h-3.5" />
-                      {isUnread && (
-                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 ring-2 ring-background" />
-                      )}
-                    </div>
                     {previewThumbs.length > 0 && (
-                      <div className="flex items-center -space-x-1.5 sm:-space-x-2 shrink-0">
+                      <div className="relative flex items-center -space-x-1.5 sm:-space-x-2 shrink-0">
                         {previewThumbs.map((src, idx) => (
                           <img
                             key={idx}
                             src={src}
                             alt=""
                             loading="lazy"
-                            className="w-7 h-7 sm:w-10 sm:h-10 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                            className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
                           />
                         ))}
                         {extraCount > 0 && (
-                          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[9px] sm:text-[10px] font-semibold text-muted-foreground">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] sm:text-xs font-semibold text-muted-foreground">
                             +{extraCount}
                           </div>
+                        )}
+                        {isUnread && (
+                          <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 ring-2 ring-background z-10" />
                         )}
                       </div>
                     )}
@@ -860,7 +856,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <p className="text-xs font-semibold font-body text-foreground">Piegādes informācija</p>
                           {order.shipping_name && <p className="text-xs text-muted-foreground font-body">👤 {order.shipping_name} · {order.shipping_phone}</p>}
                           {order.shipping_address && <p className="text-xs text-muted-foreground font-body">📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>}
-                          {order.omniva_pickup_point && <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>}
+                          {order.omniva_pickup_point && (
+                            order.omniva_pickup_point.startsWith("BIROJS")
+                              ? <p className="text-xs text-muted-foreground font-body">🏢 Birojs: {order.omniva_pickup_point.replace(/^BIROJS:?\s*/i, "")}</p>
+                              : <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>
+                          )}
                           {order.guest_email && <p className="text-xs text-muted-foreground font-body">✉️ {order.guest_email}</p>}
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
                           <div className="flex flex-wrap gap-1.5 pt-1.5">
