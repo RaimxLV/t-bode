@@ -92,8 +92,8 @@ export const Footer = () => {
                   <MapPin className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                   <div>
                     <span className="text-gray-300 font-medium">{store.name}</span>
-                    <a href={`mailto:${store.detail}`} className="block text-gray-500 text-xs hover:text-white transition-colors break-all">
-                      {store.detail}
+                    <a href={`mailto:${store.detail}`} className="block text-gray-500 text-xs hover:text-white transition-colors whitespace-nowrap">
+                      {store.detail.replace("t-bode", "t\u2011bode")}
                     </a>
                   </div>
                 </li>
@@ -111,7 +111,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <a href="mailto:info@t-bode.lv" className="text-gray-400 hover:text-white transition-colors">info@t-bode.lv</a>
+                <a href="mailto:info@t-bode.lv" className="text-gray-400 hover:text-white transition-colors whitespace-nowrap">info@t‑bode.lv</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
