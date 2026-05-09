@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       <img src="https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="T-Bode" style="height:60px;display:block;margin:0 auto;" />
     </div>
     <div style="padding:32px 24px;">
-      <h2 style="color:#111;margin:0 0 16px;">Tavs pasūtījums ir gatavs saņemšanai! 🎉</h2>
+      <h2 style="color:#111;margin:0 0 16px;line-height:1.3;">Tavs pasūtījums ir gatavs saņemšanai! 🎉</h2>
       <p style="color:#444;line-height:1.6;">Sveiks${name ? `, ${name}` : ""}!</p>
       <p style="color:#444;line-height:1.6;">
         Tavs pasūtījums <strong>#${orderNum}</strong> ir izgatavots un gaida tevi birojā.
@@ -68,11 +68,11 @@ Deno.serve(async (req) => {
         Lūdzu, pirms ierašanās sazinies ar mums, lai saskaņotu laiku.
       </p>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;margin-top:24px;">
-        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
+        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
-      © ${new Date().getFullYear()} SIA Ervitex · T-Bode
+      © ${new Date().getFullYear()} SIA Ervitex · <span style="white-space:nowrap;">T‑Bode</span>
     </div>
   </div>
 </body>
