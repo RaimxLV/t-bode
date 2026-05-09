@@ -859,7 +859,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <p className="text-xs font-semibold font-body text-foreground">Piegādes informācija</p>
                           {order.shipping_name && <p className="text-xs text-muted-foreground font-body">👤 {order.shipping_name} · {order.shipping_phone}</p>}
                           {order.shipping_address && <p className="text-xs text-muted-foreground font-body">📍 {order.shipping_address}, {order.shipping_city} {order.shipping_zip}</p>}
-                          {order.omniva_pickup_point && <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>}
+                          {order.omniva_pickup_point && (
+                            order.omniva_pickup_point.startsWith("BIROJS")
+                              ? <p className="text-xs text-muted-foreground font-body">🏢 Birojs: {order.omniva_pickup_point.replace(/^BIROJS:?\s*/i, "")}</p>
+                              : <p className="text-xs text-muted-foreground font-body">📦 Omniva: {order.omniva_pickup_point}</p>
+                          )}
                           {order.guest_email && <p className="text-xs text-muted-foreground font-body">✉️ {order.guest_email}</p>}
                           {order.notes && <p className="text-xs text-muted-foreground font-body">📝 {order.notes}</p>}
                           <div className="flex flex-wrap gap-1.5 pt-1.5">
