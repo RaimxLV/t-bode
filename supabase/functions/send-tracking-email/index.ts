@@ -76,11 +76,11 @@ Deno.serve(async (req) => {
         <a href="${trackingUrl}" style="background:#DC2626;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;display:inline-block;">Sekot sūtījumam</a>
       </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;">
-        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
+        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
-      © ${new Date().getFullYear()} SIA Ervitex · T-Bode
+      © ${new Date().getFullYear()} SIA Ervitex · <span style="white-space:nowrap;">T‑Bode</span>
     </div>
   </div>
 </body>
