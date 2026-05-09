@@ -447,8 +447,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       .from("orders")
       .update({ status: "delivered" as any })
       .eq("id", orderId);
-    if (error) toast.error("Kļūda: " + error.message);
-    else { toast.success("Pasūtījums atzīmēts kā gatavs"); onRefresh(); }
+    if (error) { toast.error("Kļūda: " + error.message); return; }
+    toast.success("Pasūtījums atzīmēts kā gatavs");
+    try {
+      const { error: emailErr } = await supabase.functions.invoke("send-pickup-ready-email", {
+        body: { order_id: orderId },
+      });
+      if (emailErr) toast.warning("E-pasts netika nosūtīts: " + emailErr.message);
+      else toast.success("Klientam nosūtīts paziņojums e-pastā");
+    } catch (e: any) {
+      toast.warning("E-pasts netika nosūtīts: " + e.message);
+    }
+    onRefresh();
   };
 
   const deleteOrder = async (orderId: string) => {
