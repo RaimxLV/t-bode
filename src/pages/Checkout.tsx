@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, Package, Search, Building2, User as UserIcon, LogIn, CreditCard, Landmark, Tag, X, CheckCircle2, Store, Clock } from "lucide-react";
 import { OmnivaMapPicker } from "@/components/OmnivaMapPicker";
 import { z } from "zod";
 import { Navbar } from "@/components/Navbar";
@@ -562,15 +562,45 @@ const Checkout = () => {
                 )}
 
                 {shippingMethod === "pickup" && (
-                  <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                    <div className="flex items-start gap-3">
-                      <Store className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
-                      <div className="font-body text-sm">
-                        <p className="font-semibold mb-1">{t("checkout.pickupTitle", "Saņemšana birojā")}</p>
-                        <p className="text-muted-foreground">{OFFICE_PICKUP_ADDRESS}, LV-1084</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {t("checkout.pickupHint", "Pēc pasūtījuma saņemšanas sazināsimies, lai vienotos par ērtu saņemšanas laiku.")}
-                        </p>
+                  <div className="mt-4 rounded-lg overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+                    <div className="px-4 py-3 bg-primary/10 border-b border-primary/20 flex items-center gap-2">
+                      <Store className="w-5 h-5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                      <p className="font-body font-bold text-sm uppercase tracking-wide">
+                        {t("checkout.pickupTitle", "Saņemšana birojā")}
+                      </p>
+                    </div>
+                    <div className="p-4 space-y-4 font-body text-sm">
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-0.5">
+                            {t("checkout.pickupAddressLabel", "Adrese")}
+                          </p>
+                          <p className="font-semibold">Braslas iela 29, Ieeja D</p>
+                          <p className="text-muted-foreground">Rīga, LV‑1084</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
+                        <div className="w-full">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1.5">
+                            {t("checkout.pickupHoursLabel", "Darba laiks")}
+                          </p>
+                          <div className="space-y-1">
+                            <div className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">{t("checkout.pickupMonThu", "Pirmdiena – Ceturtdiena")}</span>
+                              <span className="font-semibold whitespace-nowrap">9:00 – 17:30</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">{t("checkout.pickupFri", "Piektdiena")}</span>
+                              <span className="font-semibold whitespace-nowrap">9:00 – 16:00</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-muted-foreground">{t("checkout.pickupWeekend", "Sestdiena, Svētdiena")}</span>
+                              <span className="font-semibold whitespace-nowrap">{t("checkout.pickupClosed", "Slēgts")}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
