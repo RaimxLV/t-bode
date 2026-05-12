@@ -159,7 +159,6 @@ function extractOrderItemId(item: any): string | null {
     item?.detailID ??
     item?.detailId ??
     item?.code ??
-    item?.orderDetailCode ??
     null
   ) ? String(
     item?.orderItemId ??
@@ -167,8 +166,7 @@ function extractOrderItemId(item: any): string | null {
     item?.id ??
     item?.detailID ??
     item?.detailId ??
-    item?.code ??
-    item?.orderDetailCode
+    item?.code
   ) : null;
 }
 
