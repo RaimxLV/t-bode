@@ -1100,7 +1100,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                       <p className="text-xs font-semibold">{item.unit_price.toFixed(2)} €</p>
                                     </div>
                                   </div>
-                                  <ZakekePrintFilesButton item={item} variant="block" />
+                                  <ZakekePrintFilesButton
+                                    item={item}
+                                    variant="block"
+                                    orderNumber={order.order_number}
+                                    clientName={order.is_business ? (order.company_name ?? order.shipping_name) : (order.shipping_name ?? order.guest_email)}
+                                  />
                                 </div>
                               );
                             })}
@@ -1133,7 +1138,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
-                                          <ZakekePrintFilesButton item={item} variant="inline" />
+                                          <ZakekePrintFilesButton
+                                            item={item}
+                                            variant="inline"
+                                            orderNumber={order.order_number}
+                                            clientName={order.is_business ? (order.company_name ?? order.shipping_name) : (order.shipping_name ?? order.guest_email)}
+                                          />
                                         </div>
                                       </div>
                                     </TableCell>
