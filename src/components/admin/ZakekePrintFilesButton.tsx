@@ -19,6 +19,7 @@ interface Item {
   zakeke_design_id?: string | null;
   zakeke_order_id?: string | null;
   zakeke_order_item_id?: string | null;
+  zakeke_thumbnail_url?: string | null;
   zakeke_print_files?: any;
 }
 
@@ -197,7 +198,12 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
   const order = { print: 0, mockup: 1, other: 2, zip: 3 } as const;
   unique.sort((a, b) => order[a.kind] - order[b.kind]);
 
-  if (unique.length === 0) {
+  const hasMockup = unique.some(
+    (f) => f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext),
+  );
+  const fallbackMockup = !hasMockup && item.zakeke_thumbnail_url ? item.zakeke_thumbnail_url : null;
+
+  if (unique.length === 0 && !fallbackMockup) {
     return (
       <div className="text-[11px] text-muted-foreground italic">
         Nav pieejamu failu
@@ -244,6 +250,18 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
             </div>
           );
         })}
+        {fallbackMockup && (
+          <button
+            type="button"
+            onClick={() => setPreviewUrl(fallbackMockup)}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-primary/30 bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1.5"
+            title="Apskatīt mockup"
+          >
+            <FileImage className="w-3.5 h-3.5" />
+            <span>Mockup</span>
+            <Eye className="w-3 h-3 opacity-80" />
+          </button>
+        )}
       </div>
 
       {previewUrl && (
