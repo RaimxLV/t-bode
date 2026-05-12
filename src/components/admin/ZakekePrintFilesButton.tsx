@@ -20,6 +20,7 @@ interface Item {
   zakeke_order_id?: string | null;
   zakeke_order_item_id?: string | null;
   zakeke_thumbnail_url?: string | null;
+  zakeke_preview_urls?: string[] | null;
   zakeke_print_files?: any;
 }
 
@@ -201,9 +202,32 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
   const hasMockup = unique.some(
     (f) => f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext),
   );
-  const fallbackMockup = !hasMockup && item.zakeke_thumbnail_url ? item.zakeke_thumbnail_url : null;
+  // Build the list of mockup preview URLs (front, back, …) coming from
+  // Zakeke's previews[] array. Falls back to the single thumbnail URL when
+  // we don't have the full list (older orders).
+  const previewList: string[] = (() => {
+    const raw = item.zakeke_preview_urls;
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw.filter((u): u is string => typeof u === "string" && !!u);
+    }
+    if (item.zakeke_thumbnail_url) return [item.zakeke_thumbnail_url];
+    return [];
+  })();
+  const fallbackPreviews = !hasMockup ? previewList : [];
 
-  if (unique.length === 0 && !fallbackMockup) {
+  const previewLabel = (url: string, idx: number, total: number) => {
+    const u = url.toLowerCase();
+    if (/front|priekš/.test(u)) return "Priekša";
+    if (/back|aizmug/.test(u)) return "Aizmugure";
+    if (/left|kreis/.test(u)) return "Kreisā";
+    if (/right|lab/.test(u)) return "Labā";
+    if (total === 1) return "Mockup";
+    if (idx === 0) return "Priekša";
+    if (idx === 1) return "Aizmugure";
+    return `Mockup ${idx + 1}`;
+  };
+
+  if (unique.length === 0 && fallbackPreviews.length === 0) {
     return (
       <div className="text-[11px] text-muted-foreground italic">
         Nav pieejamu failu
@@ -250,18 +274,19 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
             </div>
           );
         })}
-        {fallbackMockup && (
+        {fallbackPreviews.map((url, idx) => (
           <button
+            key={`preview-${idx}-${url}`}
             type="button"
-            onClick={() => setPreviewUrl(fallbackMockup)}
+            onClick={() => setPreviewUrl(url)}
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-primary/30 bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1.5"
             title="Apskatīt mockup"
           >
             <FileImage className="w-3.5 h-3.5" />
-            <span>Mockup</span>
+            <span>{previewLabel(url, idx, fallbackPreviews.length)}</span>
             <Eye className="w-3 h-3 opacity-80" />
           </button>
-        )}
+        ))}
       </div>
 
       {previewUrl && (
