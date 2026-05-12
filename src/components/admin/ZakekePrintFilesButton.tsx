@@ -22,6 +22,7 @@ interface Item {
   zakeke_thumbnail_url?: string | null;
   zakeke_preview_urls?: string[] | null;
   zakeke_print_files?: any;
+  zakeke_files_downloaded_at?: string | null;
 }
 
 interface Props {
