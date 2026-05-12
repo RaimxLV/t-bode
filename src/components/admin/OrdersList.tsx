@@ -434,6 +434,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const markOfficePickupReady = async (orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
+    // Block until all Zakeke print files have been downloaded.
+    const items = orderItems[orderId] ?? [];
+    const missing = items.filter(
+      (it: any) => it.zakeke_design_id && !it.zakeke_files_downloaded_at,
+    );
+    if (missing.length > 0) {
+      const names = missing.map((it: any) => `• ${it.product_name}`).join("\n");
+      toast.error(
+        `Vispirms lejupielādē drukas failus (${missing.length} prece${
+          missing.length === 1 ? "i" : "s"
+        }):\n${names}`,
+        { duration: 6000 },
+      );
+      return;
+    }
     // Warn admin if marking ready while payment is still outstanding.
     const isPaid = !!order?.manually_paid_at
       || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
