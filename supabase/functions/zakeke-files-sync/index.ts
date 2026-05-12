@@ -48,8 +48,18 @@ Deno.serve(async (req) => {
     const targets = (candidates ?? []).filter((row: any) => {
       if (!isReadyForProduction(row.orders)) return false;
       const f = row.zakeke_print_files;
-      const hasFiles = Array.isArray(f) ? f.length > 0 : (f && typeof f === "object" && Object.keys(f).length > 0);
-      return !hasFiles;
+      const arr: any[] = Array.isArray(f)
+        ? f
+        : (f && typeof f === "object" ? Object.values(f) : []);
+      if (arr.length === 0) return true;
+      // Treat "ZIP-only" results as still pending so we can replace them
+      // with individual print/mockup files once Zakeke exposes them.
+      const hasIndividual = arr.some((x: any) => {
+        const url = String(x?.url ?? x?.fileUrl ?? "");
+        const isZip = /\.zip(\?|$)/i.test(url) || x?.type === "zip" || x?.side === "production-zip";
+        return !isZip;
+      });
+      return !hasIndividual;
     }).slice(0, MAX_ITEMS_PER_RUN);
 
     let attached = 0;
@@ -85,7 +95,15 @@ Deno.serve(async (req) => {
         }
 
         if (files.length > 0) {
-          await service.from("order_items").update({ zakeke_print_files: files }).eq("id", row.id);
+          const hasIndividual = files.some(
+            (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+          );
+          const finalFiles = hasIndividual
+            ? files.filter(
+                (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+              )
+            : files;
+          await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
           attached++;
         } else {
           stillPending++;
