@@ -137,9 +137,9 @@ export const AccountingSpreadsheet = () => {
         const productsStr = its.length
           ? its.map((it) => {
               const variant = [it.color, it.size].filter(Boolean).join(" / ");
-              const qty = (it.quantity ?? 1) > 1 ? ` ×${it.quantity}` : "";
-              return `${it.product_name}${variant ? ` (${variant})` : ""}${qty}`;
-            }).join("; ")
+              const qty = (it.quantity ?? 1) > 1 ? ` ×${it.quantity}` : ` ×1`;
+              return `• ${it.product_name}${variant ? ` (${variant})` : ""}${qty}`;
+            }).join("\n")
           : "—";
         const gross = Number(o.total ?? 0);
         const vatRate = Number(inv?.vat_rate ?? 21);
@@ -193,7 +193,7 @@ export const AccountingSpreadsheet = () => {
     { accessorKey: "invoiceNumber", header: "Rēķina Nr." },
     { accessorKey: "client", header: "Klients/Uzņēmums" },
     { accessorKey: "products", header: "Preces", cell: (i) => (
-      <span className="block max-w-[360px] whitespace-normal text-xs">{i.getValue() as string}</span>
+      <span className="block max-w-[360px] whitespace-pre-line text-xs leading-snug">{i.getValue() as string}</span>
     ) },
     { accessorKey: "regNumber", header: "Reģ. nr." },
     { accessorKey: "vatNumber", header: "PVN nr." },
@@ -234,6 +234,7 @@ export const AccountingSpreadsheet = () => {
     ws.getRow(1).font = { bold: true };
     rows.filter((r) => !r.isGroupHeader).forEach((r) => {
       const row = ws.addRow(r);
+      row.getCell("products").alignment = { wrapText: true, vertical: "top" };
       const b = statusBucket(r.status);
       const fill = b === "paid" ? "FFD1FAE5" : b === "pending" ? "FFFEF3C7" : b === "cancelled" ? "FFFEE2E2" : null;
       if (fill) row.eachCell((c) => { c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } }; });
