@@ -754,7 +754,9 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             const StatusIcon = statusInfo.icon;
             const urgency = getOrderUrgency(order);
             const isUnread = !order.admin_opened_at && !ARCHIVED_STATUSES.includes(order.status) && order.status !== "cancelled";
-            // Build small thumbnails preview from order items (first product image of each item)
+            // Build small thumbnails preview from order items (first product image of each item).
+            // On mobile we only have ~384px wide cards so showing 3 thumbnails crushes the
+            // order number / total row. Limit to 2 thumbs on small screens via CSS below.
             const previewThumbs = items.slice(0, 3).map((it: any) => {
               const product = it.products;
               const colorVariants = product?.color_variants as any[] | undefined;
@@ -762,6 +764,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               return it.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
             }).filter(Boolean) as string[];
             const extraCount = Math.max(0, items.length - previewThumbs.length);
+            const extraCountMobile = Math.max(0, items.length - Math.min(2, previewThumbs.length));
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -785,12 +788,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             src={src}
                             alt=""
                             loading="lazy"
-                            className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                            className={`w-11 h-11 sm:w-14 sm:h-14 object-cover rounded-md border-2 border-background bg-muted shadow-sm ${idx >= 2 ? "hidden sm:block" : ""}`}
                           />
                         ))}
                         {extraCount > 0 && (
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] sm:text-xs font-semibold text-muted-foreground">
+                          <div className="hidden sm:flex w-14 h-14 rounded-md border-2 border-background bg-muted items-center justify-center text-xs font-semibold text-muted-foreground">
                             +{extraCount}
+                          </div>
+                        )}
+                        {extraCountMobile > 0 && (
+                          <div className="sm:hidden w-11 h-11 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                            +{extraCountMobile}
                           </div>
                         )}
                         {isUnread && (
