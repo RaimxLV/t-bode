@@ -109,6 +109,108 @@ export interface ZakekeOutputFile {
   orderItemId?: string | null;
 }
 
+function extractOrderId(order: any): string | null {
+  return (
+    order?.id ??
+    order?.orderId ??
+    order?.orderID ??
+    order?.zakekeOrderId ??
+    order?.zakekeOrderID ??
+    order?.order?.id ??
+    order?.order?.orderId ??
+    order?.order?.orderID ??
+    order?.data?.id ??
+    order?.data?.orderId ??
+    order?.result?.id ??
+    null
+  ) ? String(
+    order?.id ??
+    order?.orderId ??
+    order?.orderID ??
+    order?.zakekeOrderId ??
+    order?.zakekeOrderID ??
+    order?.order?.id ??
+    order?.order?.orderId ??
+    order?.order?.orderID ??
+    order?.data?.id ??
+    order?.data?.orderId ??
+    order?.result?.id
+  ) : null;
+}
+
+function extractOrderItemsList(order: any): any[] {
+  return (
+    order?.items ??
+    order?.orderItems ??
+    order?.details ??
+    order?.designs ??
+    order?.compositionDetails ??
+    order?.order?.items ??
+    order?.order?.orderItems ??
+    []
+  );
+}
+
+function extractOrderItemId(item: any): string | null {
+  return (
+    item?.orderItemId ??
+    item?.orderItemID ??
+    item?.id ??
+    item?.detailID ??
+    item?.detailId ??
+    item?.code ??
+    item?.orderDetailCode ??
+    null
+  ) ? String(
+    item?.orderItemId ??
+    item?.orderItemID ??
+    item?.id ??
+    item?.detailID ??
+    item?.detailId ??
+    item?.code ??
+    item?.orderDetailCode
+  ) : null;
+}
+
+function mapPrintingFilesFromOrder(order: any): ZakekeOutputFile[] {
+  const out: ZakekeOutputFile[] = [];
+  const items = extractOrderItemsList(order);
+  for (const item of items) {
+    const orderItemId = extractOrderItemId(item);
+    const designId = item?.design ? String(item.design) : item?.designID ? String(item.designID) : null;
+    const itemCode = item?.code ?? item?.orderDetailCode ?? orderItemId ?? "item";
+    const zipUrl = item?.printingFilesZip ?? item?.printFilesZip ?? null;
+    if (zipUrl) {
+      out.push({
+        name: `${itemCode}.zip`,
+        url: String(zipUrl),
+        side: "production-zip",
+        designId,
+        orderItemId,
+      });
+    }
+
+    const files: any[] = Array.isArray(item?.printingFiles)
+      ? item.printingFiles
+      : Array.isArray(item?.files)
+        ? item.files
+        : [];
+
+    for (const file of files) {
+      const fileUrl = file?.url ?? file?.fileUrl ?? file?.downloadUrl ?? file?.link;
+      if (!fileUrl) continue;
+      out.push({
+        name: file?.name ?? `${itemCode}-${file?.type ?? "print-file"}`,
+        url: String(fileUrl),
+        side: file?.side ?? file?.type ?? file?.kind ?? item?.printFilesStatus ?? null,
+        designId,
+        orderItemId,
+      });
+    }
+  }
+  return out;
+}
+
 async function resolveZakekeOrderByCode(
   orderCode: string,
   token: string,
@@ -129,7 +231,8 @@ async function resolveZakekeOrderByCode(
   }
 
   try {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed[0] ?? null : parsed;
   } catch {
     console.error(`[zakeke-order-lookup] non-JSON response from ${url}: ${text.slice(0, 500)}`);
     return null;
@@ -319,30 +422,12 @@ export async function createZakekeOrder(opts: {
   // IMPORTANT: Zakeke V2 returns its own internal order id which is what
   // /v2/orders/{id}/output-files expects. We must NEVER fall back to our
   // externalOrderId — using our UUID against output-files yields HTTP 400.
-  let zakekeOrderId =
-    data?.id ??
-    data?.orderId ??
-    data?.orderID ??
-    data?.zakekeOrderId ??
-    data?.zakekeOrderID ??
-    data?.order?.id ??
-    data?.order?.orderId ??
-    data?.order?.orderID ??
-    data?.data?.id ??
-    data?.data?.orderId ??
-    data?.result?.id ??
-    null;
+  let zakekeOrderId = extractOrderId(data);
   if (!zakekeOrderId) {
     const resolvedOrder = await resolveZakekeOrderByCode(opts.externalOrderId, token);
     if (resolvedOrder) {
       data = resolvedOrder;
-      zakekeOrderId =
-        resolvedOrder?.id ??
-        resolvedOrder?.orderId ??
-        resolvedOrder?.orderID ??
-        resolvedOrder?.order?.id ??
-        resolvedOrder?.data?.id ??
-        null;
+      zakekeOrderId = extractOrderId(resolvedOrder);
     }
   }
   if (!zakekeOrderId) {
@@ -357,24 +442,9 @@ export async function createZakekeOrder(opts: {
   console.log(`[zakeke-create-order] extracted zakekeOrderId=${zakekeOrderId}`);
 
   // Pull Zakeke-side order-item ids from whichever shape the API returned.
-  const itemsList: any[] =
-    data?.orderItems ??
-    data?.items ??
-    data?.designs ??
-    data?.details ??
-    data?.compositionDetails ??
-    data?.order?.orderItems ??
-    [];
+  const itemsList = extractOrderItemsList(data);
   const orderItemIds = itemsList
-    .map(
-      (it) =>
-        it?.orderItemId ??
-        it?.orderItemID ??
-        it?.id ??
-        it?.detailID ??
-        it?.detailId ??
-        null,
-    )
+    .map((it) => extractOrderItemId(it))
     .filter((x: unknown) => x !== null && x !== undefined)
     .map(String);
 
@@ -475,6 +545,11 @@ export async function getZakekeOrderOutputFiles(
     if (res.ok) {
       let data: any;
       try { data = JSON.parse(text); } catch { data = null; }
+      const orderFiles = mapPrintingFilesFromOrder(data);
+      if (orderFiles.length > 0) {
+        out.push(...orderFiles);
+        return out;
+      }
       const list: any[] = Array.isArray(data)
         ? data
         : (data?.files ?? data?.outputFiles ?? data?.items ?? []);
@@ -524,14 +599,14 @@ export async function getZakekeOrderOutputFiles(
       lastError = `non-JSON @ ${url}`;
       continue;
     }
-    const itemsList: any[] =
-      data?.orderItems ??
-      data?.items ??
-      data?.designs ??
-      data?.order?.orderItems ??
-      [];
+    const orderFiles = mapPrintingFilesFromOrder(data);
+    if (orderFiles.length > 0) {
+      out.push(...orderFiles);
+      return out;
+    }
+    const itemsList = extractOrderItemsList(data);
     const ids = itemsList
-      .map((it) => it?.orderItemId ?? it?.orderItemID ?? it?.id ?? null)
+      .map((it) => extractOrderItemId(it))
       .filter((x: unknown) => !!x)
       .map(String);
 
