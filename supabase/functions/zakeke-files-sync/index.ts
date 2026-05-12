@@ -95,7 +95,15 @@ Deno.serve(async (req) => {
         }
 
         if (files.length > 0) {
-          await service.from("order_items").update({ zakeke_print_files: files }).eq("id", row.id);
+          const hasIndividual = files.some(
+            (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+          );
+          const finalFiles = hasIndividual
+            ? files.filter(
+                (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+              )
+            : files;
+          await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
           attached++;
         } else {
           stillPending++;
