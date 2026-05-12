@@ -1089,21 +1089,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                       <p className="text-xs font-semibold">{item.unit_price.toFixed(2)} €</p>
                                     </div>
                                   </div>
-                                  {(item.zakeke_design_id || item.zakeke_order_id) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
-                                      disabled={!!zakekeZipLoading[item.id]}
-                                      className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full disabled:opacity-50"
-                                    >
-                                      {zakekeZipLoading[item.id] ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      ) : (
-                                        <FileArchive className="w-3.5 h-3.5" />
-                                      )}
-                                      Lejupielādēt ZIP (drukas faili)
-                                    </button>
-                                  )}
+                                  <ZakekePrintFilesButton item={item} variant="block" />
                                 </div>
                               );
                             })}
@@ -1136,22 +1122,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
-                                          {(item.zakeke_design_id || item.zakeke_order_id) && (
-                                            <button
-                                              type="button"
-                                              onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
-                                              disabled={!!zakekeZipLoading[item.id]}
-                                              className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit disabled:opacity-50"
-                                              title="Lejupielādēt visus drukas failus kā ZIP"
-                                            >
-                                              {zakekeZipLoading[item.id] ? (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                              ) : (
-                                                <FileArchive className="w-3.5 h-3.5" />
-                                              )}
-                                              Lejupielādēt ZIP (drukas faili)
-                                            </button>
-                                          )}
+                                          <ZakekePrintFilesButton item={item} variant="inline" />
                                         </div>
                                       </div>
                                     </TableCell>
