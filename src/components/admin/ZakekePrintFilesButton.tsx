@@ -352,6 +352,14 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   return (
     <>
       <div className={`flex flex-wrap gap-1.5 ${baseClasses}`}>
+        {downloadedAt && (
+          <div
+            className="inline-flex items-center gap-1 text-[10px] font-body font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded"
+            title={`Lejupielādēts ${new Date(downloadedAt).toLocaleString("lv-LV")}`}
+          >
+            ✓ Lejupielādēts
+          </div>
+        )}
         {unique.map((f, i) => {
           const Icon =
             f.kind === "mockup"
@@ -374,6 +382,11 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                   setDownloadingUrl(f.url);
                   try {
                     await triggerDownload(f, friendlyName);
+                    // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
+                    // "ready for production". Mockup previews don't.
+                    if (f.kind === "print") {
+                      await markDownloaded();
+                    }
                   } finally {
                     setDownloadingUrl(null);
                   }
