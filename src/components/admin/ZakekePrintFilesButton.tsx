@@ -212,6 +212,9 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
+  const [downloadedAt, setDownloadedAt] = useState<string | null>(
+    item.zakeke_files_downloaded_at ?? null,
+  );
   const [elapsed, setElapsed] = useState<number>(() => {
     if (!item.created_at) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(item.created_at).getTime()) / 1000));
@@ -224,6 +227,28 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   useEffect(() => {
     setFiles(item.zakeke_print_files);
   }, [item.zakeke_print_files]);
+
+  useEffect(() => {
+    setDownloadedAt(item.zakeke_files_downloaded_at ?? null);
+  }, [item.zakeke_files_downloaded_at]);
+
+  const markDownloaded = async () => {
+    const nowIso = new Date().toISOString();
+    setDownloadedAt(nowIso);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("order_items")
+      .update({
+        zakeke_files_downloaded_at: nowIso,
+        zakeke_files_downloaded_by: userData?.user?.id ?? null,
+      })
+      .eq("id", item.id);
+    if (error) {
+      // revert local state on failure so admin sees the real situation
+      setDownloadedAt(item.zakeke_files_downloaded_at ?? null);
+      console.error("mark downloaded failed", error.message);
+    }
+  };
 
   useEffect(() => {
     if (!hasZakeke || ready) return;
