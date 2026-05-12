@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
       const { data: row, error: rowErr } = await service
         .from("order_items")
         .select(
-          "id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, product_name"
+          "id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, product_name"
         )
         .eq("id", orderItemId)
         .maybeSingle();
@@ -137,6 +137,7 @@ Deno.serve(async (req) => {
           const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
             externalOrderId: `${row.order_id}:${row.id}`,
             customerCode: String(row.order_id),
+            visitorCode: row.zakeke_visitor_code ?? null,
             items: [
               {
                 designId: String(row.zakeke_design_id),
