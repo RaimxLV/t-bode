@@ -99,22 +99,35 @@ Deno.serve(async (req) => {
 
       const zipUrl: string | null =
         detail?.detailZipUrl ?? detail?.zipUrl ?? null;
-      const printFiles = zipUrl
-        ? [{ type: "zip", url: zipUrl, fileName: zipUrl.split("/").pop() }]
-        : null;
-
       const update: Record<string, unknown> = {};
       if (zakekeOrderId) update.zakeke_order_id = String(zakekeOrderId);
-      if (printFiles) update.zakeke_print_files = printFiles;
 
-      // If still nothing useful, try API fallback by zakeke order id
-      if (!printFiles && zakekeOrderId) {
+      // Prefer individual print files (front/back/mockup) over a single ZIP
+      // so the admin can download just what they need. Only fall back to
+      // the ZIP url when Zakeke hasn't exposed individual files yet.
+      let individual: Awaited<ReturnType<typeof getZakekeOrderOutputFiles>> = [];
+      if (zakekeOrderId) {
         try {
-          const files = await getZakekeOrderOutputFiles(String(zakekeOrderId));
-          if (files.length > 0) update.zakeke_print_files = files;
+          individual = await getZakekeOrderOutputFiles(String(zakekeOrderId));
         } catch (e) {
-          console.error("zakeke-webhook API fallback failed:", e);
+          console.error("zakeke-webhook output-files fetch failed:", e);
         }
+      }
+      // Drop pure ZIP entries if we also have individual files.
+      const hasIndividual = individual.some(
+        (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+      );
+      const filtered = hasIndividual
+        ? individual.filter(
+            (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
+          )
+        : individual;
+      if (filtered.length > 0) {
+        update.zakeke_print_files = filtered;
+      } else if (zipUrl) {
+        update.zakeke_print_files = [
+          { type: "zip", url: zipUrl, fileName: zipUrl.split("/").pop(), side: "production-zip" },
+        ];
       }
 
       if (Object.keys(update).length > 0) {
