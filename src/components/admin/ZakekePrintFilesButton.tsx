@@ -1,7 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileArchive, Loader2, Clock } from "lucide-react";
+import {
+  FileArchive,
+  FileImage,
+  FileText,
+  Loader2,
+  Clock,
+  Download,
+  Eye,
+  X,
+} from "lucide-react";
 
 interface Item {
   id: string;
@@ -18,6 +27,14 @@ interface Props {
   variant?: "block" | "inline";
 }
 
+interface NormalizedFile {
+  name: string;
+  url: string;
+  side?: string | null;
+  kind: "mockup" | "print" | "zip" | "other";
+  ext: string;
+}
+
 const filesReady = (f: any): boolean => {
   if (!f) return false;
   if (Array.isArray(f)) return f.length > 0;
@@ -25,32 +42,85 @@ const filesReady = (f: any): boolean => {
   return false;
 };
 
-const triggerBlobDownload = (blob: Blob, fileName: string) => {
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = fileName;
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  window.setTimeout(() => {
-    URL.revokeObjectURL(objectUrl);
-    link.remove();
-  }, 1500);
+const getExt = (name: string, url: string): string => {
+  const m = (name || url).toLowerCase().match(/\.([a-z0-9]+)(?:\?|$)/);
+  return m ? m[1] : "";
 };
 
-/**
- * Inline status + download button for Zakeke production files.
- *
- * Behaviour: while Zakeke is still building the print bundle we show a
- * "Gatavojas..." indicator with elapsed time. The component polls
- * `order_items.zakeke_print_files` every 20s and asks the
- * `zakeke-files-sync` edge function to attempt a backfill on mount,
- * so the employee does not have to keep clicking.
- */
+const detectKind = (
+  side: string | null | undefined,
+  name: string,
+  ext: string,
+): NormalizedFile["kind"] => {
+  const s = `${side ?? ""} ${name}`.toLowerCase();
+  if (ext === "zip" || s.includes("zip")) return "zip";
+  if (s.includes("mockup") || s.includes("preview") || s.includes("thumbnail")) return "mockup";
+  if (s.includes("print") || s.includes("production") || s.includes("front") || s.includes("back") || s.includes("side")) return "print";
+  if (["png", "jpg", "jpeg", "webp"].includes(ext)) return "mockup";
+  if (["pdf", "ai", "eps", "svg", "tif", "tiff"].includes(ext)) return "print";
+  return "other";
+};
+
+const normalize = (raw: any): NormalizedFile[] => {
+  if (!raw) return [];
+  const arr: any[] = Array.isArray(raw)
+    ? raw
+    : typeof raw === "object"
+      ? Object.values(raw)
+      : [];
+  return arr
+    .map((f: any): NormalizedFile | null => {
+      const url = f?.url ?? f?.fileUrl ?? f?.downloadUrl ?? f?.link;
+      if (!url) return null;
+      const name = String(f?.name ?? f?.fileName ?? url.split("/").pop() ?? "fails");
+      const ext = getExt(name, url);
+      return {
+        name,
+        url: String(url),
+        side: f?.side ?? null,
+        kind: detectKind(f?.side, name, ext),
+        ext,
+      };
+    })
+    .filter((f): f is NormalizedFile => !!f);
+};
+
+const sideLabel = (f: NormalizedFile): string => {
+  const s = (f.side ?? "").toString().toLowerCase();
+  if (s.includes("front") || /front/i.test(f.name)) return "Priekša";
+  if (s.includes("back") || /back/i.test(f.name)) return "Aizmugure";
+  if (s.includes("left")) return "Kreisā";
+  if (s.includes("right")) return "Labā";
+  if (f.kind === "mockup") return "Mockup";
+  if (f.kind === "zip") return "ZIP arhīvs";
+  if (f.side) return f.side;
+  return f.name;
+};
+
+const triggerDownload = async (f: NormalizedFile) => {
+  try {
+    const res = await fetch(f.url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(objectUrl);
+      a.remove();
+    }, 1500);
+  } catch {
+    // Fallback: open in new tab so admin can save manually
+    window.open(f.url, "_blank", "noopener");
+  }
+};
+
 export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
-  const [downloading, setDownloading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState<number>(() => {
     if (!item.created_at) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(item.created_at).getTime()) / 1000));
@@ -64,20 +134,13 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
     setFiles(item.zakeke_print_files);
   }, [item.zakeke_print_files]);
 
-  // Poll for readiness + trigger backfill once
   useEffect(() => {
     if (!hasZakeke || ready) return;
-
     let cancelled = false;
-
-    // Ask the cron function to attempt a sync immediately (best-effort).
     if (!syncTriggered.current) {
       syncTriggered.current = true;
-      supabase.functions.invoke("zakeke-files-sync").catch(() => {
-        /* silent — cron will keep trying every 5 min */
-      });
+      supabase.functions.invoke("zakeke-files-sync").catch(() => {});
     }
-
     const poll = async () => {
       const { data } = await supabase
         .from("order_items")
@@ -86,12 +149,8 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
         .maybeSingle();
       if (!cancelled && data) setFiles(data.zakeke_print_files);
     };
-
     const pollId = window.setInterval(poll, 20000);
-    const tickId = window.setInterval(
-      () => setElapsed((s) => s + 1),
-      1000,
-    );
+    const tickId = window.setInterval(() => setElapsed((s) => s + 1), 1000);
     return () => {
       cancelled = true;
       window.clearInterval(pollId);
@@ -99,56 +158,19 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
     };
   }, [hasZakeke, ready, item.id]);
 
-  const handleDownload = async () => {
-    setDownloading(true);
-    try {
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zakeke-print-files`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ order_item_id: item.id, zip: true }),
-      });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const j = await res.json();
-          msg = j?.error || msg;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      const blob = await res.blob();
-      const safe = (item.product_name || "item").replace(/[^a-z0-9]+/gi, "-");
-      triggerBlobDownload(blob, `print-files-${safe}-${item.id.slice(0, 8)}.zip`);
-      toast.success("ZIP lejupielādēts");
-    } catch (e: any) {
-      toast.error(e?.message || "Neizdevās lejupielādēt ZIP");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   if (!hasZakeke) return null;
 
   const baseClasses =
-    variant === "block"
-      ? "w-full justify-center"
-      : "w-full sm:w-fit justify-center";
+    variant === "block" ? "w-full" : "w-full sm:w-auto";
 
   if (!ready) {
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
-    const elapsedLabel =
-      mins > 0 ? `${mins} min ${secs}s` : `${secs}s`;
+    const elapsedLabel = mins > 0 ? `${mins} min ${secs}s` : `${secs}s`;
     return (
       <div
         className={`inline-flex items-center gap-2 text-[11px] font-body font-medium text-amber-900 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded ${baseClasses}`}
-        title="Zakeke joprojām sagatavo augstas izšķirtspējas drukas failus. Pārbaudām automātiski."
+        title="Zakeke joprojām sagatavo augstas izšķirtspējas drukas failus."
       >
         <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
         <span className="flex-1 text-left leading-tight">
@@ -162,20 +184,89 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
     );
   }
 
+  const list = normalize(files);
+  // De-duplicate by URL
+  const seen = new Set<string>();
+  const unique = list.filter((f) => {
+    if (seen.has(f.url)) return false;
+    seen.add(f.url);
+    return true;
+  });
+
+  // Sort: print files first (front, back...), then mockups, then zip/other
+  const order = { print: 0, mockup: 1, other: 2, zip: 3 } as const;
+  unique.sort((a, b) => order[a.kind] - order[b.kind]);
+
+  if (unique.length === 0) {
+    return (
+      <div className="text-[11px] text-muted-foreground italic">
+        Nav pieejamu failu
+      </div>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      disabled={downloading}
-      className={`inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded disabled:opacity-50 ${baseClasses}`}
-      title="Lejupielādēt visus drukas failus kā ZIP"
-    >
-      {downloading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-      ) : (
-        <FileArchive className="w-3.5 h-3.5" />
+    <>
+      <div className={`flex flex-wrap gap-1.5 ${baseClasses}`}>
+        {unique.map((f, i) => {
+          const Icon =
+            f.kind === "mockup"
+              ? FileImage
+              : f.kind === "zip"
+                ? FileArchive
+                : FileText;
+          const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
+          return (
+            <div
+              key={`${f.url}-${i}`}
+              className="inline-flex items-stretch text-[11px] font-semibold rounded overflow-hidden border border-primary/30"
+            >
+              <button
+                type="button"
+                onClick={() => triggerDownload(f)}
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-1.5"
+                title={`Lejupielādēt ${f.name}`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span className="max-w-[140px] truncate">{sideLabel(f)}</span>
+                <Download className="w-3 h-3 opacity-80" />
+              </button>
+              {isMockup && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewUrl(f.url)}
+                  className="inline-flex items-center bg-primary/15 text-primary hover:bg-primary/25 px-1.5"
+                  title="Apskatīt mockup"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewUrl(null)}
+            className="absolute top-4 right-4 text-white bg-white/10 hover:bg-white/20 rounded-full p-2"
+            aria-label="Aizvērt"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <img
+            src={previewUrl}
+            alt="Mockup priekšskatījums"
+            className="max-w-full max-h-full object-contain rounded"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       )}
-      Lejupielādēt ZIP (drukas faili)
-    </button>
+    </>
   );
 };
