@@ -284,6 +284,10 @@ const Checkout = () => {
         unit_price: item.price,
         zakeke_design_id: item.designId || null,
         zakeke_thumbnail_url: item.designThumbnail || null,
+        zakeke_preview_urls:
+          item.designPreviews && item.designPreviews.length > 0
+            ? (item.designPreviews as any)
+            : null,
         zakeke_visitor_code: item.zakekeVisitorCode || null,
       }));
       const { error: itemsError } = await checkoutClient.from("order_items").insert(orderItems);
