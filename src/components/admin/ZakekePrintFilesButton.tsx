@@ -49,8 +49,27 @@ const filesReady = (f: any): boolean => {
 };
 
 const getExt = (name: string, url: string): string => {
-  const m = (name || url).toLowerCase().match(/\.([a-z0-9]+)(?:\?|$)/);
-  return m ? m[1] : "";
+  // Try filename first (clean — no query string)
+  const nameMatch = name.toLowerCase().match(/\.([a-z0-9]{2,5})$/);
+  if (nameMatch) return nameMatch[1];
+  // Strip query/fragment from URL and look at the path's last segment
+  try {
+    const u = new URL(url);
+    // Some signed URLs put the real filename in a query param
+    const cd = u.searchParams.get("response-content-disposition") ?? "";
+    const cdMatch = cd.toLowerCase().match(/filename[^;=\n]*=(?:"([^"]+)"|([^;]+))/);
+    const cdName = cdMatch ? (cdMatch[1] || cdMatch[2] || "") : "";
+    if (cdName) {
+      const m = cdName.toLowerCase().match(/\.([a-z0-9]{2,5})$/);
+      if (m) return m[1];
+    }
+    const pathMatch = u.pathname.toLowerCase().match(/\.([a-z0-9]{2,5})$/);
+    if (pathMatch) return pathMatch[1];
+  } catch {
+    const m = url.toLowerCase().match(/\.([a-z0-9]{2,5})(?:\?|#|$)/);
+    if (m) return m[1];
+  }
+  return "";
 };
 
 const detectKind = (
@@ -136,15 +155,46 @@ const buildFriendlyName = (
   return `${parts.join("_")}.${ext}`;
 };
 
+const extFromMime = (mime: string): string => {
+  const m = mime.toLowerCase().split(";")[0].trim();
+  const map: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/svg+xml": "svg",
+    "image/tiff": "tiff",
+    "application/pdf": "pdf",
+    "application/zip": "zip",
+    "application/postscript": "eps",
+    "application/illustrator": "ai",
+  };
+  return map[m] ?? "";
+};
+
+const swapExt = (filename: string, newExt: string): string => {
+  if (!newExt) return filename;
+  const dot = filename.lastIndexOf(".");
+  return dot > 0 ? `${filename.slice(0, dot)}.${newExt}` : `${filename}.${newExt}`;
+};
+
 const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
   try {
     const res = await fetch(f.url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
+    // If we couldn't determine the extension up front (ended in .bin), use
+    // the response's Content-Type to fix it before saving.
+    let finalName = friendlyName;
+    if (/\.bin$/i.test(finalName)) {
+      const fromMime = extFromMime(blob.type || res.headers.get("content-type") || "");
+      if (fromMime) finalName = swapExt(finalName, fromMime);
+    }
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = friendlyName;
+    a.download = finalName;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
