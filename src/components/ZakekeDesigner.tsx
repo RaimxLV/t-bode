@@ -219,6 +219,11 @@ export const ZakekeDesigner = ({
             console.log("[Zakeke] addToCart payload (full):", JSON.stringify(zakekeData, null, 2));
             console.log("[Zakeke] addToCart payload keys:", Object.keys(zakekeData || {}));
             const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
+            const previews: string[] = Array.isArray(zakekeData?.previews)
+              ? zakekeData.previews
+                  .map((p: any) => p?.url)
+                  .filter((u: any): u is string => typeof u === "string" && !!u)
+              : [];
             const designId =
               zakekeData?.designId ||
               zakekeData?.designID ||
@@ -250,6 +255,7 @@ export const ZakekeDesigner = ({
               slug: productSlug,
               designId: designId,
               designThumbnail: thumbnail,
+              designPreviews: previews,
               zakekeVisitorCode: getVisitorCode(),
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));
@@ -261,6 +267,11 @@ export const ZakekeDesigner = ({
             console.log("[Zakeke] editAddToCart payload (full):", JSON.stringify(zakekeData, null, 2));
             console.log("[Zakeke] editAddToCart payload keys:", Object.keys(zakekeData || {}));
             const thumbnail = zakekeData?.previews?.[0]?.url || productImage;
+            const previews: string[] = Array.isArray(zakekeData?.previews)
+              ? zakekeData.previews
+                  .map((p: any) => p?.url)
+                  .filter((u: any): u is string => typeof u === "string" && !!u)
+              : [];
             const designId =
               zakekeData?.designId ||
               zakekeData?.designID ||
@@ -289,6 +300,7 @@ export const ZakekeDesigner = ({
               slug: productSlug,
               designId: designId,
               designThumbnail: thumbnail,
+              designPreviews: previews,
               zakekeVisitorCode: getVisitorCode(),
             });
             toast.success(t("productDetail.addedToCart", { name: productName }));

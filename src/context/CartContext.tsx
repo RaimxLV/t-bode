@@ -11,6 +11,8 @@ export interface CartItem {
   slug: string;
   designId?: string;
   designThumbnail?: string;
+  /** All design preview image URLs from Zakeke (front, back, etc.). */
+  designPreviews?: string[];
   /** Zakeke visitor code from the session that created this design — required to register the order with Zakeke. */
   zakekeVisitorCode?: string;
   /** Extra per-unit price added by Zakeke customization (already included in `price`). */
