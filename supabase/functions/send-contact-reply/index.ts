@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const NOTIFY_EMAIL = "info@t-bode.lv";
 
 type Lang = "lv" | "en";
 
@@ -139,6 +140,52 @@ Deno.serve(async (req) => {
       status: "sent",
       metadata: { submission_id, lang: language },
     });
+
+    // Send internal notification to info@t-bode.lv (fire-and-forget)
+    try {
+      const notifySubject = `Jauna ziņa no mājaslapas: ${submission.name || submission.email}`;
+      const notifyHtml = `<!doctype html><html><body style="font-family:Arial,sans-serif;color:#111;">
+        <h2 style="margin:0 0 12px;">Jauna kontaktformas ziņa</h2>
+        <p><strong>Vārds:</strong> ${escapeHtml(submission.name || "—")}</p>
+        <p><strong>E-pasts:</strong> <a href="mailto:${escapeHtml(submission.email)}">${escapeHtml(submission.email)}</a></p>
+        <p><strong>Ziņa:</strong></p>
+        <div style="background:#f7f7f7;border-left:4px solid #DC2626;padding:12px 16px;white-space:pre-wrap;">${escapeHtml(submission.message || "")}</div>
+        <p style="margin-top:16px;color:#666;font-size:12px;">Lai atbildētu — vienkārši atbildi uz šo e-pastu vai raksti tieši klientam.</p>
+      </body></html>`;
+      const notifyMessageId = makeMessageId("contact-notify");
+      await logEmailAttempt(service, {
+        message_id: notifyMessageId,
+        template_name: "contact-notify",
+        recipient_email: NOTIFY_EMAIL,
+        status: "pending",
+        metadata: { submission_id },
+      });
+      const notifyResp = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: FROM_EMAIL,
+          to: [NOTIFY_EMAIL],
+          reply_to: toEmail,
+          subject: notifySubject,
+          html: notifyHtml,
+        }),
+      });
+      const notifyText = await notifyResp.text();
+      await logEmailAttempt(service, {
+        message_id: notifyMessageId,
+        template_name: "contact-notify",
+        recipient_email: NOTIFY_EMAIL,
+        status: notifyResp.ok ? "sent" : "failed",
+        error_message: notifyResp.ok ? undefined : notifyText,
+        metadata: { submission_id, http_status: notifyResp.status },
+      });
+    } catch (notifyErr) {
+      console.error("Internal notify failed:", (notifyErr as Error).message);
+    }
 
     return new Response(JSON.stringify({ sent: true, to: toEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
