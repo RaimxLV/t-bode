@@ -980,7 +980,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs gap-1.5 mt-1"
+                            className="w-full sm:w-auto justify-center text-destructive hover:text-destructive hover:bg-destructive/10 text-xs gap-1.5 mt-1"
                             onClick={() => deleteOrder(order.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Dzēst pasūtījumu
@@ -988,7 +988,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs gap-1.5 mt-1"
+                            className="w-full sm:w-auto justify-center text-xs gap-1.5 mt-1"
                             onClick={() => setInvoiceOrder(order)}
                           >
                             <FileText className="w-3.5 h-3.5" /> Pārvaldīt dokumentu
@@ -997,7 +997,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs gap-1.5 mt-1 border-green-300 text-green-700 hover:bg-green-50"
+                              className="w-full sm:w-auto justify-center text-xs gap-1.5 mt-1 border-green-300 text-green-700 hover:bg-green-50"
                               onClick={() => markOrderUnread(order.id)}
                               title="Atzīmēt kā nelasītu — kartīte atkal kļūs zaļa"
                             >
@@ -1068,7 +1068,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="default"
                             size="sm"
-                            className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white w-fit"
+                            className="text-xs gap-1.5 h-9 bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-fit justify-center"
                             onClick={() => markOfficePickupReady(order.id)}
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
