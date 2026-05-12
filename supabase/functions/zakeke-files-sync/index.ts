@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // belong to a paid order (not pending / cancelled).
     const { data: candidates, error: candErr } = await service
       .from("order_items")
-      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at)")
+      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at)")
       .gte("created_at", since)
       .not("zakeke_design_id", "is", null)
       .limit(200);
@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
             const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
               externalOrderId: `${row.order_id}:${row.id}`,
               customerCode: String(row.order_id),
+              visitorCode: row.zakeke_visitor_code ?? null,
               items: [{ designId: String(row.zakeke_design_id), quantity: row.quantity ?? 1, reference: row.id }],
             });
             await service.from("order_items").update({
