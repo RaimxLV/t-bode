@@ -22,6 +22,7 @@ interface Item {
   zakeke_thumbnail_url?: string | null;
   zakeke_preview_urls?: string[] | null;
   zakeke_print_files?: any;
+  zakeke_files_downloaded_at?: string | null;
 }
 
 interface Props {
@@ -211,6 +212,9 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
+  const [downloadedAt, setDownloadedAt] = useState<string | null>(
+    item.zakeke_files_downloaded_at ?? null,
+  );
   const [elapsed, setElapsed] = useState<number>(() => {
     if (!item.created_at) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(item.created_at).getTime()) / 1000));
@@ -223,6 +227,28 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   useEffect(() => {
     setFiles(item.zakeke_print_files);
   }, [item.zakeke_print_files]);
+
+  useEffect(() => {
+    setDownloadedAt(item.zakeke_files_downloaded_at ?? null);
+  }, [item.zakeke_files_downloaded_at]);
+
+  const markDownloaded = async () => {
+    const nowIso = new Date().toISOString();
+    setDownloadedAt(nowIso);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("order_items")
+      .update({
+        zakeke_files_downloaded_at: nowIso,
+        zakeke_files_downloaded_by: userData?.user?.id ?? null,
+      })
+      .eq("id", item.id);
+    if (error) {
+      // revert local state on failure so admin sees the real situation
+      setDownloadedAt(item.zakeke_files_downloaded_at ?? null);
+      console.error("mark downloaded failed", error.message);
+    }
+  };
 
   useEffect(() => {
     if (!hasZakeke || ready) return;
@@ -326,6 +352,14 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   return (
     <>
       <div className={`flex flex-wrap gap-1.5 ${baseClasses}`}>
+        {downloadedAt && (
+          <div
+            className="inline-flex items-center gap-1 text-[10px] font-body font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded"
+            title={`Lejupielādēts ${new Date(downloadedAt).toLocaleString("lv-LV")}`}
+          >
+            ✓ Lejupielādēts
+          </div>
+        )}
         {unique.map((f, i) => {
           const Icon =
             f.kind === "mockup"
@@ -348,6 +382,11 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                   setDownloadingUrl(f.url);
                   try {
                     await triggerDownload(f, friendlyName);
+                    // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
+                    // "ready for production". Mockup previews don't.
+                    if (f.kind === "print") {
+                      await markDownloaded();
+                    }
                   } finally {
                     setDownloadingUrl(null);
                   }

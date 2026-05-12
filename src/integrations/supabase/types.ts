@@ -306,6 +306,8 @@ export type Database = {
           size: string | null
           unit_price: number
           zakeke_design_id: string | null
+          zakeke_files_downloaded_at: string | null
+          zakeke_files_downloaded_by: string | null
           zakeke_order_id: string | null
           zakeke_order_item_id: string | null
           zakeke_preview_urls: Json | null
@@ -324,6 +326,8 @@ export type Database = {
           size?: string | null
           unit_price: number
           zakeke_design_id?: string | null
+          zakeke_files_downloaded_at?: string | null
+          zakeke_files_downloaded_by?: string | null
           zakeke_order_id?: string | null
           zakeke_order_item_id?: string | null
           zakeke_preview_urls?: Json | null
@@ -342,6 +346,8 @@ export type Database = {
           size?: string | null
           unit_price?: number
           zakeke_design_id?: string | null
+          zakeke_files_downloaded_at?: string | null
+          zakeke_files_downloaded_by?: string | null
           zakeke_order_id?: string | null
           zakeke_order_item_id?: string | null
           zakeke_preview_urls?: Json | null
