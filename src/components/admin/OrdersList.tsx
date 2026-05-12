@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { isOfficePickup, stripOfficePrefix } from "@/lib/officePickup";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
+import { ZakekePrintFilesButton } from "./ZakekePrintFilesButton";
 
 const ORDER_STATUSES = [
   { value: "pending", key: "admin.orderStatuses.pending", color: "bg-yellow-100 text-yellow-800 border-yellow-200", icon: Clock },
@@ -91,8 +92,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [bulkLoading, setBulkLoading] = useState(false);
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
-  // Per-item loading state for the "download print files ZIP" button.
-  const [zakekeZipLoading, setZakekeZipLoading] = useState<Record<string, boolean>>({});
   const [showCancelled, setShowCancelled] = useState(false);
 
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
@@ -108,40 +107,6 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       URL.revokeObjectURL(objectUrl);
       link.remove();
     }, 1500);
-  };
-
-  const downloadZakekePrintFiles = async (itemId: string, productName?: string) => {
-    setZakekeZipLoading((p) => ({ ...p, [itemId]: true }));
-    try {
-      const { data: sess } = await supabase.auth.getSession();
-      const token = sess.session?.access_token;
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/zakeke-print-files`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ order_item_id: itemId, zip: true }),
-      });
-      if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const j = await res.json();
-          msg = j?.error || msg;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      const blob = await res.blob();
-      const safe = (productName || "item").replace(/[^a-z0-9]+/gi, "-");
-      triggerBlobDownload(blob, `print-files-${safe}-${itemId.slice(0, 8)}.zip`);
-      toast.success("ZIP lejupielādēts");
-    } catch (e: any) {
-      toast.error(e?.message || "Neizdevās lejupielādēt ZIP");
-    } finally {
-      setZakekeZipLoading((p) => ({ ...p, [itemId]: false }));
-    }
   };
 
   const toggleOverride = (id: string) => {
@@ -1124,21 +1089,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                       <p className="text-xs font-semibold">{item.unit_price.toFixed(2)} €</p>
                                     </div>
                                   </div>
-                                  {(item.zakeke_design_id || item.zakeke_order_id) && (
-                                    <button
-                                      type="button"
-                                      onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
-                                      disabled={!!zakekeZipLoading[item.id]}
-                                      className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full disabled:opacity-50"
-                                    >
-                                      {zakekeZipLoading[item.id] ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      ) : (
-                                        <FileArchive className="w-3.5 h-3.5" />
-                                      )}
-                                      Lejupielādēt ZIP (drukas faili)
-                                    </button>
-                                  )}
+                                  <ZakekePrintFilesButton item={item} variant="block" />
                                 </div>
                               );
                             })}
@@ -1171,22 +1122,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
-                                          {(item.zakeke_design_id || item.zakeke_order_id) && (
-                                            <button
-                                              type="button"
-                                              onClick={() => downloadZakekePrintFiles(item.id, item.product_name)}
-                                              disabled={!!zakekeZipLoading[item.id]}
-                                              className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 px-2.5 py-1.5 rounded w-full sm:w-fit disabled:opacity-50"
-                                              title="Lejupielādēt visus drukas failus kā ZIP"
-                                            >
-                                              {zakekeZipLoading[item.id] ? (
-                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                              ) : (
-                                                <FileArchive className="w-3.5 h-3.5" />
-                                              )}
-                                              Lejupielādēt ZIP (drukas faili)
-                                            </button>
-                                          )}
+                                          <ZakekePrintFilesButton item={item} variant="inline" />
                                         </div>
                                       </div>
                                     </TableCell>
