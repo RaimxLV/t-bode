@@ -629,7 +629,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
           <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Ienākošie pasūtījumi</span>
+            <span className="truncate">
+              <span className="sm:hidden">Ienākošie</span>
+              <span className="hidden sm:inline">Ienākošie pasūtījumi</span>
+            </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
           </Button>
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
@@ -680,8 +683,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             className="w-full pl-8 pr-3 py-2 rounded-lg border border-border bg-card text-xs font-body focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="min-w-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="min-w-0 col-span-2 sm:col-span-1">
             <Label className="font-body text-[11px] text-muted-foreground">Statuss</Label>
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="w-full text-xs mt-1"><SelectValue /></SelectTrigger>
@@ -751,7 +754,9 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             const StatusIcon = statusInfo.icon;
             const urgency = getOrderUrgency(order);
             const isUnread = !order.admin_opened_at && !ARCHIVED_STATUSES.includes(order.status) && order.status !== "cancelled";
-            // Build small thumbnails preview from order items (first product image of each item)
+            // Build small thumbnails preview from order items (first product image of each item).
+            // On mobile we only have ~384px wide cards so showing 3 thumbnails crushes the
+            // order number / total row. Limit to 2 thumbs on small screens via CSS below.
             const previewThumbs = items.slice(0, 3).map((it: any) => {
               const product = it.products;
               const colorVariants = product?.color_variants as any[] | undefined;
@@ -759,6 +764,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               return it.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
             }).filter(Boolean) as string[];
             const extraCount = Math.max(0, items.length - previewThumbs.length);
+            const extraCountMobile = Math.max(0, items.length - Math.min(2, previewThumbs.length));
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -782,12 +788,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             src={src}
                             alt=""
                             loading="lazy"
-                            className="w-12 h-12 sm:w-14 sm:h-14 object-cover rounded-md border-2 border-background bg-muted shadow-sm"
+                            className={`w-11 h-11 sm:w-14 sm:h-14 object-cover rounded-md border-2 border-background bg-muted shadow-sm ${idx >= 2 ? "hidden sm:block" : ""}`}
                           />
                         ))}
                         {extraCount > 0 && (
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] sm:text-xs font-semibold text-muted-foreground">
+                          <div className="hidden sm:flex w-14 h-14 rounded-md border-2 border-background bg-muted items-center justify-center text-xs font-semibold text-muted-foreground">
                             +{extraCount}
+                          </div>
+                        )}
+                        {extraCountMobile > 0 && (
+                          <div className="sm:hidden w-11 h-11 rounded-md border-2 border-background bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground">
+                            +{extraCountMobile}
                           </div>
                         )}
                         {isUnread && (
@@ -969,7 +980,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 text-xs gap-1.5 mt-1"
+                            className="w-full sm:w-auto justify-center text-destructive hover:text-destructive hover:bg-destructive/10 text-xs gap-1.5 mt-1"
                             onClick={() => deleteOrder(order.id)}
                           >
                             <Trash2 className="w-3.5 h-3.5" /> Dzēst pasūtījumu
@@ -977,7 +988,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs gap-1.5 mt-1"
+                            className="w-full sm:w-auto justify-center text-xs gap-1.5 mt-1"
                             onClick={() => setInvoiceOrder(order)}
                           >
                             <FileText className="w-3.5 h-3.5" /> Pārvaldīt dokumentu
@@ -986,7 +997,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             <Button
                               variant="outline"
                               size="sm"
-                              className="text-xs gap-1.5 mt-1 border-green-300 text-green-700 hover:bg-green-50"
+                              className="w-full sm:w-auto justify-center text-xs gap-1.5 mt-1 border-green-300 text-green-700 hover:bg-green-50"
                               onClick={() => markOrderUnread(order.id)}
                               title="Atzīmēt kā nelasītu — kartīte atkal kļūs zaļa"
                             >
@@ -1057,7 +1068,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           <Button
                             variant="default"
                             size="sm"
-                            className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white w-fit"
+                            className="text-xs gap-1.5 h-9 bg-emerald-600 hover:bg-emerald-700 text-white w-full sm:w-fit justify-center"
                             onClick={() => markOfficePickupReady(order.id)}
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
