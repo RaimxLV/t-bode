@@ -629,7 +629,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
           <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Ienākošie pasūtījumi</span>
+            <span className="truncate">
+              <span className="sm:hidden">Ienākošie</span>
+              <span className="hidden sm:inline">Ienākošie pasūtījumi</span>
+            </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
           </Button>
           <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
