@@ -27,6 +27,10 @@ interface Item {
 interface Props {
   item: Item;
   variant?: "block" | "inline";
+  /** Order number used for friendly filenames, e.g. 78 → TB-0078 */
+  orderNumber?: number | null;
+  /** Client / company name used as filename prefix */
+  clientName?: string | null;
 }
 
 interface NormalizedFile {
@@ -99,7 +103,40 @@ const sideLabel = (f: NormalizedFile): string => {
   return f.name;
 };
 
-const triggerDownload = async (f: NormalizedFile) => {
+const slugify = (s: string): string =>
+  s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "fails";
+
+const sideSlug = (f: NormalizedFile): string => {
+  const label = sideLabel(f).toLowerCase();
+  if (label.includes("priekš")) return "priekspuse";
+  if (label.includes("aizmug")) return "aizmugure";
+  if (label.includes("kreis")) return "kreisa";
+  if (label.includes("lab")) return "laba";
+  if (label.includes("mockup")) return "mockup";
+  if (label.includes("zip")) return "arhivs";
+  return slugify(label);
+};
+
+const buildFriendlyName = (
+  f: NormalizedFile,
+  ctx: { orderNumber?: number | null; clientName?: string | null },
+): string => {
+  const parts: string[] = [];
+  if (ctx.orderNumber != null) {
+    parts.push(`TB-${String(ctx.orderNumber).padStart(4, "0")}`);
+  }
+  if (ctx.clientName) parts.push(slugify(ctx.clientName));
+  parts.push(sideSlug(f));
+  const ext = f.ext || "bin";
+  return `${parts.join("_")}.${ext}`;
+};
+
+const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
   try {
     const res = await fetch(f.url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -107,7 +144,7 @@ const triggerDownload = async (f: NormalizedFile) => {
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = objectUrl;
-    a.download = f.name;
+    a.download = friendlyName;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
@@ -120,9 +157,10 @@ const triggerDownload = async (f: NormalizedFile) => {
   }
 };
 
-export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
+export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, clientName }: Props) => {
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState<number>(() => {
     if (!item.created_at) return 0;
     return Math.max(0, Math.floor((Date.now() - new Date(item.created_at).getTime()) / 1000));
@@ -246,6 +284,8 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
                 ? FileArchive
                 : FileText;
           const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
+          const isDownloading = downloadingUrl === f.url;
+          const friendlyName = buildFriendlyName(f, { orderNumber, clientName });
           return (
             <div
               key={`${f.url}-${i}`}
@@ -253,13 +293,30 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline" }: Props) => {
             >
               <button
                 type="button"
-                onClick={() => triggerDownload(f)}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 px-2 py-1.5"
-                title={`Lejupielādēt ${f.name}`}
+                disabled={isDownloading}
+                onClick={async () => {
+                  setDownloadingUrl(f.url);
+                  try {
+                    await triggerDownload(f, friendlyName);
+                  } finally {
+                    setDownloadingUrl(null);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-80 disabled:cursor-wait px-2 py-1.5"
+                title={`Lejupielādēt ${friendlyName}`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                <span className="max-w-[140px] truncate">{sideLabel(f)}</span>
-                <Download className="w-3 h-3 opacity-80" />
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span className="max-w-[140px] truncate">Lādējas…</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon className="w-3.5 h-3.5" />
+                    <span className="max-w-[140px] truncate">{sideLabel(f)}</span>
+                    <Download className="w-3 h-3 opacity-80" />
+                  </>
+                )}
               </button>
               {isMockup && (
                 <button
