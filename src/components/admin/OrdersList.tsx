@@ -44,6 +44,12 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 
 const canTransitionTo = (from: string, to: string) => from === to || (STATUS_TRANSITIONS[from] ?? []).includes(to);
 
+const hasReadyPrintFiles = (files: any): boolean => {
+  if (!files) return false;
+  if (Array.isArray(files)) return files.length > 0;
+  return typeof files === "object" && Object.keys(files).length > 0;
+};
+
 interface OrdersListProps {
   orders: any[];
   orderItems: Record<string, any[]>;
@@ -509,8 +515,13 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   };
 
   const activeOrders = useMemo(
-    () => orders.filter(o => !ARCHIVED_STATUSES.includes(o.status) && !HIDDEN_FROM_INBOX_STATUSES.includes(o.status)),
-    [orders]
+    () => orders.filter((o) => {
+      if (ARCHIVED_STATUSES.includes(o.status) || HIDDEN_FROM_INBOX_STATUSES.includes(o.status)) return false;
+      const items = orderItems[o.id] || [];
+      const hasPendingZakekeItem = items.some((item: any) => item.zakeke_design_id && !hasReadyPrintFiles(item.zakeke_print_files));
+      return !hasPendingZakekeItem;
+    }),
+    [orders, orderItems]
   );
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
   const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
