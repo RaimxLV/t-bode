@@ -205,14 +205,14 @@ export const AccountingSpreadsheet = () => {
         return <span className="text-xs text-muted-foreground">—</span>;
       }
       return (
-        <ul className="space-y-1 min-w-[260px] max-w-[420px] text-xs leading-snug">
+        <ul className="space-y-0.5 min-w-[200px] max-w-[320px] text-[10px] leading-tight">
           {list.map((it, idx) => (
             <li key={idx} className="flex gap-2">
               <span className="text-muted-foreground select-none">•</span>
               <span className="flex-1">
                 <span className="font-medium">{it.name}</span>
                 {it.variant && (
-                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1 py-0 text-[9px] text-muted-foreground">
                     {it.variant}
                   </span>
                 )}
@@ -314,12 +314,12 @@ export const AccountingSpreadsheet = () => {
       </div>
 
       <div className="rounded-lg border border-border overflow-auto bg-card">
-        <table className="w-full text-xs sm:text-sm border-collapse select-text">
+        <table className="w-full text-[10px] sm:text-[11px] border-collapse select-text">
           <thead className="bg-muted sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((h) => (
-                  <th key={h.id} className="text-left font-medium px-2 py-2 border-b border-border whitespace-nowrap">
+                  <th key={h.id} className="text-left font-medium px-1.5 py-1.5 border-b border-border whitespace-nowrap text-[10px] uppercase tracking-wide">
                     {flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
                 ))}
@@ -356,7 +356,7 @@ export const AccountingSpreadsheet = () => {
               return (
                 <tr key={row.id} className={`${tint} hover:bg-muted/40 transition-colors`}>
                   {row.getVisibleCells().map((c) => (
-                    <td key={c.id} className="px-2 py-1.5 border-b border-border/40 whitespace-nowrap">
+                    <td key={c.id} className="px-1.5 py-1 border-b border-border/40 whitespace-nowrap">
                       {flexRender(c.column.columnDef.cell, c.getContext()) as any}
                     </td>
                   ))}
