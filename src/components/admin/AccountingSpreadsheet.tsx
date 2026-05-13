@@ -18,6 +18,7 @@ type Row = {
   invoiceNumber: string;
   client: string;
   products: string;
+  productItems?: { name: string; variant: string; qty: number }[];
   regNumber: string;
   vatNumber: string;
   net: number;
@@ -134,6 +135,11 @@ export const AccountingSpreadsheet = () => {
       list.forEach((o) => {
         const inv = invoiceByOrder.get(o.id);
         const its = itemsByOrder.get(o.id) ?? [];
+        const productItems = its.map((it) => ({
+          name: String(it.product_name ?? "—"),
+          variant: [it.color, it.size].filter(Boolean).join(" / "),
+          qty: Number(it.quantity ?? 1),
+        }));
         const productsStr = its.length
           ? its.map((it) => {
               const variant = [it.color, it.size].filter(Boolean).join(" / ");
@@ -153,6 +159,7 @@ export const AccountingSpreadsheet = () => {
             ? (o.company_name ?? o.shipping_name ?? "—")
             : (o.shipping_name ?? o.guest_email ?? "—"),
           products: productsStr,
+          productItems,
           regNumber: o.company_reg_number ?? "",
           vatNumber: o.company_vat_number ?? "",
           net,
@@ -192,9 +199,30 @@ export const AccountingSpreadsheet = () => {
     { accessorKey: "orderNumber", header: "Pas. Nr." },
     { accessorKey: "invoiceNumber", header: "Rēķina Nr." },
     { accessorKey: "client", header: "Klients/Uzņēmums" },
-    { accessorKey: "products", header: "Preces", cell: (i) => (
-      <span className="block max-w-[360px] whitespace-pre-line text-xs leading-snug">{i.getValue() as string}</span>
-    ) },
+    { accessorKey: "products", header: "Preces", cell: (i) => {
+      const list = i.row.original.productItems;
+      if (!list || list.length === 0) {
+        return <span className="text-xs text-muted-foreground">—</span>;
+      }
+      return (
+        <ul className="space-y-1 min-w-[260px] max-w-[420px] text-xs leading-snug">
+          {list.map((it, idx) => (
+            <li key={idx} className="flex gap-2">
+              <span className="text-muted-foreground select-none">•</span>
+              <span className="flex-1">
+                <span className="font-medium">{it.name}</span>
+                {it.variant && (
+                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    {it.variant}
+                  </span>
+                )}
+                <span className="ml-1 whitespace-nowrap text-muted-foreground">×{it.qty}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      );
+    } },
     { accessorKey: "regNumber", header: "Reģ. nr." },
     { accessorKey: "vatNumber", header: "PVN nr." },
     { accessorKey: "net", header: "Bez PVN", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
