@@ -40,6 +40,11 @@ export const transformImage = (url: string, opts: TransformOpts = {}): string =>
   if (opts.width) params.set("width", String(opts.width));
   if (opts.quality) params.set("quality", String(opts.quality));
   if (opts.format && opts.format !== "origin") params.set("format", opts.format);
+  // Always preserve aspect ratio when only width is specified.
+  // Without this, Supabase Storage defaults to "fill" which keeps the original
+  // height and squishes the image horizontally — visible as stretched/broken
+  // images in galleries and product cards.
+  params.set("resize", "contain");
 
   // Preserve existing query (strip width/quality/format we're overriding).
   const [base, existing = ""] = rewritten.split("?");
