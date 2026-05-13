@@ -189,6 +189,174 @@ const swapExt = (filename: string, newExt: string): string => {
   return dot > 0 ? `${filename.slice(0, dot)}.${newExt}` : `${filename}.${newExt}`;
 };
 
+const downloadBlob = (blob: Blob, filename: string) => {
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+    a.remove();
+  }, 1500);
+};
+
+const PNG_SIGNATURE = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+
+const readUint32BE = (bytes: Uint8Array, offset: number): number =>
+  ((bytes[offset] << 24) | (bytes[offset + 1] << 16) | (bytes[offset + 2] << 8) | bytes[offset + 3]) >>> 0;
+
+const getPngChunk = (bytes: Uint8Array, type: string): Uint8Array | null => {
+  let offset = 8;
+  while (offset + 8 <= bytes.length) {
+    const length = readUint32BE(bytes, offset);
+    const end = offset + length + 12;
+    if (end > bytes.length) return null;
+    const chunkType = String.fromCharCode(
+      bytes[offset + 4],
+      bytes[offset + 5],
+      bytes[offset + 6],
+      bytes[offset + 7],
+    );
+    if (chunkType === type) return bytes.slice(offset, end);
+    offset = end;
+  }
+  return null;
+};
+
+const concatUint8Arrays = (parts: Uint8Array[]): Uint8Array => {
+  const total = parts.reduce((sum, part) => sum + part.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
+};
+
+const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+};
+
+const injectPngPhysChunk = (pngBytes: Uint8Array, physChunk: Uint8Array | null): Uint8Array => {
+  if (!physChunk || pngBytes.length < PNG_SIGNATURE.length) return pngBytes;
+  for (let i = 0; i < PNG_SIGNATURE.length; i += 1) {
+    if (pngBytes[i] !== PNG_SIGNATURE[i]) return pngBytes;
+  }
+
+  const parts: Uint8Array[] = [pngBytes.slice(0, 8)];
+  let offset = 8;
+  let inserted = false;
+
+  while (offset + 8 <= pngBytes.length) {
+    const length = readUint32BE(pngBytes, offset);
+    const end = offset + length + 12;
+    if (end > pngBytes.length) return pngBytes;
+
+    const chunkType = String.fromCharCode(
+      pngBytes[offset + 4],
+      pngBytes[offset + 5],
+      pngBytes[offset + 6],
+      pngBytes[offset + 7],
+    );
+
+    if (chunkType !== "pHYs") {
+      parts.push(pngBytes.slice(offset, end));
+      if (!inserted && chunkType === "IHDR") {
+        parts.push(physChunk);
+        inserted = true;
+      }
+    }
+
+    offset = end;
+  }
+
+  return inserted ? concatUint8Arrays(parts) : pngBytes;
+};
+
+const loadImageElement = (blob: Blob): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Neizdevās atvērt PNG failu"));
+    };
+    img.src = objectUrl;
+  });
+
+const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
+  const originalBytes = new Uint8Array(await blob.arrayBuffer());
+  const physChunk = getPngChunk(originalBytes, "pHYs");
+  const source = typeof createImageBitmap === "function"
+    ? await createImageBitmap(blob)
+    : await loadImageElement(blob);
+
+  try {
+    const width = "naturalWidth" in source ? source.naturalWidth : source.width;
+    const height = "naturalHeight" in source ? source.naturalHeight : source.height;
+    if (!width || !height) return blob;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Canvas nav pieejams");
+    ctx.drawImage(source, 0, 0);
+
+    const { data } = ctx.getImageData(0, 0, width, height);
+    let minX = width;
+    let minY = height;
+    let maxX = -1;
+    let maxY = -1;
+
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        if (data[(y * width + x) * 4 + 3] === 0) continue;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+
+    if (maxX === -1) return blob;
+    if (minX === 0 && minY === 0 && maxX === width - 1 && maxY === height - 1) return blob;
+
+    const cropWidth = maxX - minX + 1;
+    const cropHeight = maxY - minY + 1;
+    const outCanvas = document.createElement("canvas");
+    outCanvas.width = cropWidth;
+    outCanvas.height = cropHeight;
+    const outCtx = outCanvas.getContext("2d");
+    if (!outCtx) throw new Error("Canvas nav pieejams");
+    outCtx.drawImage(canvas, minX, minY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+    const croppedBlob = await new Promise<Blob>((resolve, reject) => {
+      outCanvas.toBlob((result) => {
+        if (result) resolve(result);
+        else reject(new Error("Neizdevās sagatavot apgriezto PNG"));
+      }, "image/png");
+    });
+
+    const croppedBytes = new Uint8Array(await croppedBlob.arrayBuffer());
+    const finalBytes = injectPngPhysChunk(croppedBytes, physChunk);
+    return new Blob([toArrayBuffer(finalBytes)], { type: "image/png" });
+  } finally {
+    if ("close" in source && typeof source.close === "function") {
+      source.close();
+    }
+  }
+};
+
 const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
   try {
     const res = await fetch(f.url);
@@ -201,16 +369,18 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
       const fromMime = extFromMime(blob.type || res.headers.get("content-type") || "");
       if (fromMime) finalName = swapExt(finalName, fromMime);
     }
-    const objectUrl = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = objectUrl;
-    a.download = finalName;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      URL.revokeObjectURL(objectUrl);
-      a.remove();
-    }, 1500);
+    let finalBlob = blob;
+    const ext = (f.ext || extFromMime(blob.type || res.headers.get("content-type") || "")).toLowerCase();
+    if (f.kind === "print" && (ext === "png" || blob.type === "image/png")) {
+      try {
+        finalBlob = await cropTransparentPaddingFromPng(blob);
+        finalName = swapExt(finalName, "png");
+      } catch (error) {
+        console.error("trim transparent padding failed", error);
+        toast.error("Neizdevās noņemt caurspīdīgās malas, lejupielādēju oriģinālo failu.");
+      }
+    }
+    downloadBlob(finalBlob, finalName);
   } catch {
     // Fallback: open in new tab so admin can save manually
     window.open(f.url, "_blank", "noopener");
@@ -322,9 +492,6 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const order = { print: 0, mockup: 1, other: 2, zip: 3 } as const;
   unique.sort((a, b) => order[a.kind] - order[b.kind]);
 
-  const hasMockup = unique.some(
-    (f) => f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext),
-  );
   // Build the list of mockup preview URLs (front, back, …) coming from
   // Zakeke's previews[] array. Falls back to the single thumbnail URL when
   // we don't have the full list (older orders).
