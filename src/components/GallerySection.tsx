@@ -3,14 +3,14 @@ import { useState } from "react";
 import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 
 const galleryImages = [
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0025-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0017-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0019-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0013-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0021-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0009-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20251209-WA0003-scaled.jpg",
-  "https://www.mml.s-host.net/t-bode/wp-content/uploads/2026/02/IMG-20260210-WA0011-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0025-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0017-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0019-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0013-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0021-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20251209-WA0009-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20251209-WA0003-scaled.jpg",
+  "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0011-scaled.jpg",
 ];
 
 const GalleryImage = ({ src, index }: { src: string; index: number }) => {
