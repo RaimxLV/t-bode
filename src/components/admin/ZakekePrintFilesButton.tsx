@@ -236,6 +236,12 @@ const concatUint8Arrays = (parts: Uint8Array[]): Uint8Array => {
   return out;
 };
 
+const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
+  const buffer = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(buffer).set(bytes);
+  return buffer;
+};
+
 const injectPngPhysChunk = (pngBytes: Uint8Array, physChunk: Uint8Array | null): Uint8Array => {
   if (!physChunk || pngBytes.length < PNG_SIGNATURE.length) return pngBytes;
   for (let i = 0; i < PNG_SIGNATURE.length; i += 1) {
@@ -343,7 +349,7 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
 
     const croppedBytes = new Uint8Array(await croppedBlob.arrayBuffer());
     const finalBytes = injectPngPhysChunk(croppedBytes, physChunk);
-    return new Blob([finalBytes], { type: "image/png" });
+    return new Blob([toArrayBuffer(finalBytes)], { type: "image/png" });
   } finally {
     if ("close" in source && typeof source.close === "function") {
       source.close();
