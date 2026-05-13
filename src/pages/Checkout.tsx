@@ -65,7 +65,7 @@ type FieldErrors = Record<string, string>;
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, totalPrice } = useCart();
+  const { items, totalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const { locations, loading: omnivaLoading } = useOmnivaLocations();
   const { t } = useTranslation();
@@ -328,6 +328,7 @@ const Checkout = () => {
         });
         if (mError) throw mError;
         if (mData?.url) {
+          clearCart();
           window.location.href = mData.url;
           return;
         }
@@ -354,6 +355,7 @@ const Checkout = () => {
 
       if (sessionError) throw sessionError;
       if (sessionData?.url) {
+        clearCart();
         window.location.href = sessionData.url;
       } else {
         throw new Error("No checkout URL received");

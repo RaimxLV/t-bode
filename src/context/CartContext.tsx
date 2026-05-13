@@ -1,5 +1,32 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 
+const CART_STORAGE_KEY = "t-bode-cart";
+const CART_TTL_MS = 1000 * 60 * 60 * 24;
+
+type PersistedCart = {
+  items: CartItem[];
+  updatedAt: number;
+};
+
+const readStoredCart = (): CartItem[] => {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    if (!saved) return [];
+
+    const parsed = JSON.parse(saved) as CartItem[] | PersistedCart | null;
+    if (Array.isArray(parsed)) return parsed;
+
+    if (parsed && Array.isArray(parsed.items)) {
+      const isExpired = !parsed.updatedAt || Date.now() - parsed.updatedAt > CART_TTL_MS;
+      return isExpired ? [] : parsed.items;
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+};
+
 export interface CartItem {
   productId: string;
   name: string;
@@ -37,17 +64,17 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>(() => {
-    try {
-      const saved = localStorage.getItem("t-bode-cart");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+    return readStoredCart();
   });
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("t-bode-cart", JSON.stringify(items));
+    const payload: PersistedCart = {
+      items,
+      updatedAt: Date.now(),
+    };
+
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(payload));
   }, [items]);
 
   const getKey = (id: string, size: string, color: string) => `${id}-${size}-${color}`;
