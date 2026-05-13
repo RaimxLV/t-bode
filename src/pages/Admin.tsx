@@ -107,7 +107,7 @@ const Admin = () => {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
     typeof Notification !== "undefined" ? Notification.permission : "denied"
   );
-  useNewOrderNotifications(isAdmin, loadOrders);
+  useNewOrderNotifications(isAdmin, () => loadOrders());
 
   const enableDesktopNotifications = async () => {
     if (typeof Notification === "undefined") {
