@@ -22,7 +22,7 @@ export type Product = {
   customizable: boolean;
 };
 
-const BASE = "https://www.mml.s-host.net/t-bode/wp-content/uploads";
+const BASE = "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp";
 
 export const products: Product[] = [
   // ── T-SHIRTS ──────────────────────────────────────────
