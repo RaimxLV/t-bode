@@ -4,6 +4,8 @@ export type ColorVariant = {
   image?: string;
 };
 
+import storeDomina from "@/assets/store-domina.jpg";
+
 export type Product = {
   id: string;
   name: string;
@@ -700,7 +702,7 @@ export const stores = [
     name: "T/C DOMINA",
     phone: "+371 67 130 030",
     email: "domina@t-bode.lv",
-    image: `${BASE}/2026/02/veikals-3-1024x789.jpg`,
+    image: storeDomina,
   },
   {
     name: "T/C ORIGO",
