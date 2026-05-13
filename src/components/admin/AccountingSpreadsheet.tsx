@@ -205,14 +205,14 @@ export const AccountingSpreadsheet = () => {
         return <span className="text-xs text-muted-foreground">—</span>;
       }
       return (
-        <ul className="space-y-1 min-w-[260px] max-w-[420px] text-xs leading-snug">
+        <ul className="space-y-0.5 min-w-[200px] max-w-[320px] text-[10px] leading-tight">
           {list.map((it, idx) => (
             <li key={idx} className="flex gap-2">
               <span className="text-muted-foreground select-none">•</span>
               <span className="flex-1">
                 <span className="font-medium">{it.name}</span>
                 {it.variant && (
-                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1 py-0 text-[9px] text-muted-foreground">
                     {it.variant}
                   </span>
                 )}
