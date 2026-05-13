@@ -10,6 +10,7 @@ import {
   Download,
   Eye,
   X,
+  Check,
 } from "lucide-react";
 
 interface Item {
@@ -380,10 +381,13 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
           const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
           const isDownloading = downloadingUrl === f.url;
           const friendlyName = buildFriendlyName(f, { orderNumber, clientName });
+          const isDownloaded = f.kind === "print" && !!downloadedAt;
           return (
             <div
               key={`${f.url}-${i}`}
-              className="inline-flex items-stretch text-[11px] font-semibold rounded overflow-hidden border border-primary/30"
+              className={`inline-flex items-stretch text-[11px] font-semibold rounded overflow-hidden border ${
+                isDownloaded ? "border-emerald-600/40" : "border-primary/30"
+              }`}
             >
               <button
                 type="button"
@@ -401,8 +405,16 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                     setDownloadingUrl(null);
                   }
                 }}
-                className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-80 disabled:cursor-wait px-2 py-1.5"
-                title={`Lejupielādēt ${friendlyName}`}
+                className={`inline-flex items-center gap-1.5 disabled:opacity-80 disabled:cursor-wait px-2 py-1.5 ${
+                  isDownloaded
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                }`}
+                title={
+                  isDownloaded
+                    ? `Lejupielādēts ${new Date(downloadedAt!).toLocaleString("lv-LV")} — klikšķini, lai lejupielādētu vēlreiz`
+                    : `Lejupielādēt ${friendlyName}`
+                }
               >
                 {isDownloading ? (
                   <>
@@ -411,7 +423,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                   </>
                 ) : (
                   <>
-                    <Icon className="w-3.5 h-3.5" />
+                    {isDownloaded ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
                     <span className="max-w-[140px] truncate">{sideLabel(f)}</span>
                     <Download className="w-3 h-3 opacity-80" />
                   </>
@@ -421,7 +433,11 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 <button
                   type="button"
                   onClick={() => setPreviewUrl(f.url)}
-                  className="inline-flex items-center bg-primary/15 text-primary hover:bg-primary/25 px-1.5"
+                  className={`inline-flex items-center px-1.5 ${
+                    isDownloaded
+                      ? "bg-emerald-600/15 text-emerald-700 hover:bg-emerald-600/25"
+                      : "bg-primary/15 text-primary hover:bg-primary/25"
+                  }`}
                   title="Apskatīt mockup"
                 >
                   <Eye className="w-3.5 h-3.5" />
