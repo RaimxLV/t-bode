@@ -17,6 +17,9 @@ import type { DBProduct } from "@/hooks/useProducts";
 import { useCategories, getTopLevel, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 import { EMPTY_PRODUCT, type ProductForm, type ColorVariant } from "@/components/admin/ProductDialog";
 import { AdminMfaGate } from "@/components/security/AdminMfaGate";
+import { InstallButton } from "@/components/InstallButton";
+import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
+import { Bell, BellOff } from "lucide-react";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -99,6 +102,27 @@ const Admin = () => {
   }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, navigate, t]);
 
   useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); loadWhitelist(); }, [isAdmin]);
+
+  // Real-time new-order notifications (in-app toast + desktop notification)
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission>(
+    typeof Notification !== "undefined" ? Notification.permission : "denied"
+  );
+  useNewOrderNotifications(isAdmin, () => loadOrders());
+
+  const enableDesktopNotifications = async () => {
+    if (typeof Notification === "undefined") {
+      toast.error("Pārlūks neatbalsta paziņojumus");
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    setNotifPermission(perm);
+    if (perm === "granted") {
+      toast.success("Paziņojumi ieslēgti");
+      try { new Notification("T-Bode", { body: "Paziņojumi par jauniem pasūtījumiem ir aktīvi." }); } catch { /* ignore */ }
+    } else {
+      toast.info("Paziņojumi nav atļauti");
+    }
+  };
 
   const loadWhitelist = async () => {
     setLoadingWhitelist(true);
@@ -263,6 +287,19 @@ const Admin = () => {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-white/70 hover:text-white hover:bg-white/10"><ArrowLeft className="w-5 h-5" /></Button>
             <img src={logo} alt="T-Bode" className="h-7 sm:h-8" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={enableDesktopNotifications}
+              className="gap-2 bg-transparent border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+              title={notifPermission === "granted" ? "Paziņojumi ieslēgti" : "Ieslēgt pasūtījumu paziņojumus"}
+            >
+              {notifPermission === "granted" ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+              <span className="hidden sm:inline">{notifPermission === "granted" ? "Paziņojumi ieslēgti" : "Ieslēgt paziņojumus"}</span>
+            </Button>
+            <InstallButton />
           </div>
         </div>
       </header>
