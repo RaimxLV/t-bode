@@ -141,7 +141,7 @@ export function amountToLatvianWords(amount: number): string {
   const rounded = Math.round(amount * 100);
   const euros = Math.floor(rounded / 100);
   const cents = rounded % 100;
-  const eurWord = euros === 1 ? "euro" : "euro";
+  const eurWord = euros === 1 ? "eiro" : "eiro";
   const centWord = cents === 1 ? "cents" : "centi";
   const eurosText = lvIntegerWords(euros);
   const centsText = cents === 0 ? "nulle" : lvIntegerWords(cents);

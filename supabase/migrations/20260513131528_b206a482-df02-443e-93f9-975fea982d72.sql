@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET company_address = 'Braslas iela 29 - 2, Rīga, LV-1084';
