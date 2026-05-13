@@ -314,12 +314,12 @@ export const AccountingSpreadsheet = () => {
       </div>
 
       <div className="rounded-lg border border-border overflow-auto bg-card">
-        <table className="w-full text-xs sm:text-sm border-collapse select-text">
+        <table className="w-full text-[10px] sm:text-[11px] border-collapse select-text">
           <thead className="bg-muted sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((h) => (
-                  <th key={h.id} className="text-left font-medium px-2 py-2 border-b border-border whitespace-nowrap">
+                  <th key={h.id} className="text-left font-medium px-1.5 py-1.5 border-b border-border whitespace-nowrap text-[10px] uppercase tracking-wide">
                     {flexRender(h.column.columnDef.header, h.getContext())}
                   </th>
                 ))}
@@ -356,7 +356,7 @@ export const AccountingSpreadsheet = () => {
               return (
                 <tr key={row.id} className={`${tint} hover:bg-muted/40 transition-colors`}>
                   {row.getVisibleCells().map((c) => (
-                    <td key={c.id} className="px-2 py-1.5 border-b border-border/40 whitespace-nowrap">
+                    <td key={c.id} className="px-1.5 py-1 border-b border-border/40 whitespace-nowrap">
                       {flexRender(c.column.columnDef.cell, c.getContext()) as any}
                     </td>
                   ))}
