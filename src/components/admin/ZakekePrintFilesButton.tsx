@@ -189,86 +189,17 @@ const swapExt = (filename: string, newExt: string): string => {
   return dot > 0 ? `${filename.slice(0, dot)}.${newExt}` : `${filename}.${newExt}`;
 };
 
-/**
- * Apgriež caurspīdīgās malas no PNG/WebP attēla blob'a.
- * Atgriež jaunu PNG blob, kurā paliek tikai patiesais dizains.
- * Ja nekas nav apgriežams (vai radusies kļūda) — atgriež oriģinālo blob.
- */
-const trimTransparentBorders = async (blob: Blob): Promise<Blob> => {
-  try {
-    const bmp = await createImageBitmap(blob);
-    const w = bmp.width;
-    const h = bmp.height;
-    if (!w || !h) return blob;
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return blob;
-    ctx.drawImage(bmp, 0, 0);
-    const { data } = ctx.getImageData(0, 0, w, h);
-
-    const ALPHA_THRESHOLD = 8; // ignorē gandrīz-caurspīdīgus pikseļus
-    let top = -1, bottom = -1, left = w, right = -1;
-    for (let y = 0; y < h; y++) {
-      let rowHasPixel = false;
-      for (let x = 0; x < w; x++) {
-        const a = data[(y * w + x) * 4 + 3];
-        if (a > ALPHA_THRESHOLD) {
-          rowHasPixel = true;
-          if (x < left) left = x;
-          if (x > right) right = x;
-        }
-      }
-      if (rowHasPixel) {
-        if (top === -1) top = y;
-        bottom = y;
-      }
-    }
-    // Nekas nav atrasts vai jau apgriezts — atgriežam oriģinālu
-    if (top === -1 || right === -1) return blob;
-    const cropW = right - left + 1;
-    const cropH = bottom - top + 1;
-    if (cropW >= w && cropH >= h) return blob;
-
-    const out = document.createElement("canvas");
-    out.width = cropW;
-    out.height = cropH;
-    const octx = out.getContext("2d");
-    if (!octx) return blob;
-    octx.drawImage(canvas, left, top, cropW, cropH, 0, 0, cropW, cropH);
-    const trimmed: Blob = await new Promise((resolve) => {
-      out.toBlob((b) => resolve(b ?? blob), "image/png");
-    });
-    return trimmed;
-  } catch (e) {
-    console.warn("trimTransparentBorders failed:", e);
-    return blob;
-  }
-};
-
 const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
   try {
     const res = await fetch(f.url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    let blob = await res.blob();
+    const blob = await res.blob();
     // If we couldn't determine the extension up front (ended in .bin), use
     // the response's Content-Type to fix it before saving.
     let finalName = friendlyName;
     if (/\.bin$/i.test(finalName)) {
       const fromMime = extFromMime(blob.type || res.headers.get("content-type") || "");
       if (fromMime) finalName = swapExt(finalName, fromMime);
-    }
-    // Apgriež caurspīdīgās malas drukas PNG/WebP failiem, lai paliek tikai dizains.
-    if (
-      f.kind === "print" &&
-      ["png", "webp"].includes((finalName.split(".").pop() ?? "").toLowerCase())
-    ) {
-      const trimmed = await trimTransparentBorders(blob);
-      if (trimmed !== blob) {
-        blob = trimmed;
-        finalName = swapExt(finalName, "png");
-      }
     }
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
