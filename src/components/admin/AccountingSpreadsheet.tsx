@@ -18,6 +18,7 @@ type Row = {
   invoiceNumber: string;
   client: string;
   products: string;
+  productItems?: { name: string; variant: string; qty: number }[];
   regNumber: string;
   vatNumber: string;
   net: number;
