@@ -31,7 +31,18 @@ const Terms = lazy(() => import("./pages/Terms.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Keep data fresh for 5 minutes — avoids refetching products / categories
+      // every time the user navigates between pages.
+      staleTime: 5 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const DynamicLang = () => {
   const { i18n } = useTranslation();
