@@ -77,13 +77,21 @@ const detectKind = (
   side: string | null | undefined,
   name: string,
   ext: string,
+  url: string,
 ): NormalizedFile["kind"] => {
-  const s = `${side ?? ""} ${name}`.toLowerCase();
+  const s = `${side ?? ""} ${name} ${url}`.toLowerCase();
   if (ext === "zip" || s.includes("zip")) return "zip";
+  // Zakeke production files put the side in the URL (e.g. _Front_, _Back_)
+  // even when the `side` field is just "PNG" — classify those as print.
+  if (/front|back|left|right/.test(s)) {
+    if (s.includes("mockup") || s.includes("preview") || s.includes("thumbnail")) return "mockup";
+    return "print";
+  }
   if (s.includes("mockup") || s.includes("preview") || s.includes("thumbnail")) return "mockup";
-  if (s.includes("print") || s.includes("production") || s.includes("front") || s.includes("back") || s.includes("side")) return "print";
-  if (["png", "jpg", "jpeg", "webp"].includes(ext)) return "mockup";
-  if (["pdf", "ai", "eps", "svg", "tif", "tiff"].includes(ext)) return "print";
+  if (s.includes("print") || s.includes("production")) return "print";
+  // zakeke_print_files only contains production assets — mockups live in
+  // zakeke_preview_urls — so default unknown images to print.
+  if (["png", "jpg", "jpeg", "webp", "pdf", "ai", "eps", "svg", "tif", "tiff"].includes(ext)) return "print";
   return "other";
 };
 
@@ -104,7 +112,7 @@ const normalize = (raw: any): NormalizedFile[] => {
         name,
         url: String(url),
         side: f?.side ?? null,
-        kind: detectKind(f?.side, name, ext),
+        kind: detectKind(f?.side, name, ext, String(url)),
         ext,
       };
     })
@@ -112,14 +120,14 @@ const normalize = (raw: any): NormalizedFile[] => {
 };
 
 const sideLabel = (f: NormalizedFile): string => {
-  const s = (f.side ?? "").toString().toLowerCase();
-  if (s.includes("front") || /front/i.test(f.name)) return "Priekša";
-  if (s.includes("back") || /back/i.test(f.name)) return "Aizmugure";
-  if (s.includes("left")) return "Kreisā";
-  if (s.includes("right")) return "Labā";
+  const s = `${f.side ?? ""} ${f.name} ${f.url}`.toLowerCase();
+  if (/front/.test(s)) return "Priekša";
+  if (/back/.test(s)) return "Aizmugure";
+  if (/left/.test(s)) return "Kreisā";
+  if (/right/.test(s)) return "Labā";
   if (f.kind === "mockup") return "Mockup";
   if (f.kind === "zip") return "ZIP arhīvs";
-  if (f.side) return f.side;
+  if (f.side && f.side.toLowerCase() !== "png") return f.side;
   return f.name;
 };
 
@@ -327,7 +335,9 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
     if (item.zakeke_thumbnail_url) return [item.zakeke_thumbnail_url];
     return [];
   })();
-  const fallbackPreviews = !hasMockup ? previewList : [];
+  // Always show product mockups from zakeke_preview_urls — they live separately
+  // from zakeke_print_files which holds only production assets.
+  const fallbackPreviews = previewList;
 
   const previewLabel = (url: string, idx: number, total: number) => {
     const u = url.toLowerCase();
