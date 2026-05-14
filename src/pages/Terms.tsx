@@ -30,8 +30,8 @@ const TermsContentLV = () => (
     <p><strong>Spēkā no:</strong> 2026. gada 16. aprīlis</p>
     <p>
       Šie lietošanas noteikumi nosaka interneta veikala <strong>T‑Bode</strong> lietošanas kārtību un
-      preču iegādes nosacījumus. Vietni pārvalda SIA "Ervitex", reģ. nr. 40203512897,
-      adrese: Braslas iela 29-2, Rīga, LV-1084.
+      preču iegādes nosacījumus. Vietni pārvalda SIA "Ervitex", reģ. nr. 40002074377,
+      PVN reģ. nr. LV40002074377, adrese: Braslas iela 29-2, Rīga, LV-1084.
     </p>
 
     <h2>1. Vispārīgie noteikumi</h2>
@@ -105,7 +105,7 @@ const TermsContentEN = () => (
     <p>
       These Terms & Conditions govern the use of the <strong>T‑Bode</strong> online store and the
       purchase of products offered on this website. The website is operated by SIA "Ervitex",
-      reg. no. 40203512897, address: Braslas iela 29-2, Riga, LV-1084.
+      reg. no. 40002074377, VAT no. LV40002074377, address: Braslas iela 29-2, Riga, LV-1084.
     </p>
 
     <h2>1. General</h2>
