@@ -121,7 +121,12 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     const ext = file.name.split(".").pop();
     const path = `${product.slug || "temp"}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-    if (error) { toast.error(t("admin.uploadError")); setUploadingImage(null); return; }
+    if (error) {
+      console.error("Image upload error:", error);
+      toast.error(t("admin.uploadError") + ": " + (error.message || "unknown"));
+      setUploadingImage(null);
+      return;
+    }
     const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
     const url = urlData.publicUrl;
     if (target === "main") { onProductChange({ ...product, image_url: url }); }
@@ -140,11 +145,11 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     setNewSize("");
   };
 
-  const addColorVariant = () => onProductChange({ ...product, color_variants: [...product.color_variants, { name: "", hex: "#000000", images: [] }] });
+  const addColorVariant = () => onProductChange({ ...product, color_variants: [{ name: "", hex: "#000000", images: [] }, ...product.color_variants] });
   const addExistingColor = (c: { name: string; hex: string }) => {
     const exists = product.color_variants.some((v) => v.hex.toLowerCase() === c.hex.toLowerCase());
     if (exists) return;
-    onProductChange({ ...product, color_variants: [...product.color_variants, { name: c.name, hex: c.hex, images: [] }] });
+    onProductChange({ ...product, color_variants: [{ name: c.name, hex: c.hex, images: [] }, ...product.color_variants] });
   };
   const removeColorVariant = (i: number) => onProductChange({ ...product, color_variants: product.color_variants.filter((_, idx) => idx !== i) });
   const updateColorVariant = (i: number, field: keyof ColorVariant, value: string | string[]) => { const v = [...product.color_variants]; (v[i] as any)[field] = value; onProductChange({ ...product, color_variants: v }); };
@@ -400,13 +405,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             <div className="space-y-4">
               {product.color_variants.map((variant, ci) => (
                 <Card key={ci} className="p-3 sm:p-4 border border-border">
-                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3">
-                    <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
-                    <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1 min-w-0" />
-                    <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-24 sm:w-28" />
-                    <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     {variant.images.map((img, ii) => (
                       <div key={ii} className="relative group">
                         <img src={img} alt="" className="w-16 h-16 object-cover rounded border border-border" />
@@ -417,6 +416,12 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                       {uploadingImage === `color-${ci}` ? <span className="text-xs text-muted-foreground">...</span> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, { colorIndex: ci })} disabled={uploadingImage === `color-${ci}`} />
                     </label>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
+                    <Input value={variant.name} onChange={(e) => updateColorVariant(ci, "name", e.target.value)} placeholder={t("admin.colorName")} className="flex-1 min-w-0" />
+                    <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-24 sm:w-28" />
+                    <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </Card>
               ))}
