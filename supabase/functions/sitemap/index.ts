@@ -1,7 +1,7 @@
 // Public sitemap.xml generator. Returns XML listing static routes + all products.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
-const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://t-bode.lovable.app").replace(/\/$/, "");
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://www.t-bode.lv").replace(/\/$/, "");
 
 const STATIC_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },

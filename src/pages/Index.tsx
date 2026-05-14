@@ -14,11 +14,11 @@ const Index = () => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "T-Bode — Apdrukāti T-krekli, hūdiji un krūzes Latvijā"
-    : "T-Bode — Custom printed t-shirts, hoodies and mugs in Latvia";
+    ? "T-kreklu apdruka Rīgā — Krekli, hūdiji, krūzes ar savu dizainu"
+    : "Custom T-shirt printing in Riga — Hoodies, mugs & bags with your design";
   const description = isLv
-    ? "Izveido savu unikālo dizainu vai izvēlies no mūsu kolekcijas. Apdruka uz t-krekliem, hūdijiem, krūzēm un somām. Veikali Rīgā: Akropole, Domina, Origo, Alfa."
-    : "Design your own or shop our collection of custom-printed t-shirts, hoodies, mugs and bags. Stores in Riga: Akropole, Domina, Origo, Alfa.";
+    ? "T-kreklu apdruka ar savu dizainu Rīgā. Kreklu, džemperu, krūžu un somu apdruka ar DTF tehnoloģiju. T-Bode veikali: Akropole, Domina, Origo, Alfa."
+    : "Custom t-shirt, hoodie, mug & bag printing in Riga with DTF technology. Design your own or shop the T-Bode collection. Stores: Akropole, Domina, Origo, Alfa.";
   return (
     <div className="min-h-screen">
       <Seo title={title} description={description} type="website" />
