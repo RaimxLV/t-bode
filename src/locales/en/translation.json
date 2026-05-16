@@ -26,20 +26,20 @@
     "description": "In our stores in <strong>Riga, Latvia</strong>, you can visit us in person, try on a T‑shirt, choose the color and size, and submit your design or idea – we'll take care of the rest. We use modern <strong>DTF (Direct to Film) technology</strong> for vibrant colors on both light and dark fabrics.",
     "features": {
       "quality": {
-        "title": "Premium DTF Print Quality",
-        "desc": "Vibrant, durable, and high-quality prints using Direct-to-Film (DTF) technology."
+        "title": "Industrial DTF Printing",
+        "desc": "High-resolution t-shirt printing using Direct-to-Film technology. Delivers maximum color accuracy, design flexibility, and high abrasion resistance for everyday wear."
       },
       "tool": {
-        "title": "Easy-to-Use Design Tool",
-        "desc": "Effortlessly create your own custom designs with our intuitive built-in builder."
+        "title": "Interactive Print Designer",
+        "desc": "Easy online design tool for placing graphics and text. The system supports simple image scaling and instant visualization on the selected product."
       },
       "production": {
-        "title": "Fast Production",
-        "desc": "With a large on-site warehouse, we guarantee quick manufacturing and order processing."
+        "title": "In-House Production & Textile Stock in Riga",
+        "desc": "A permanent stock of core garments on-site ensures an optimized and predictable order fulfillment cycle. Order processing begins immediately after payment is received."
       },
       "delivery": {
-        "title": "Convenient Delivery",
-        "desc": "Get your order delivered smoothly to any Omniva parcel machine."
+        "title": "Parcel Locker Delivery",
+        "desc": "Receive your shipment at your parcel locker (Omniva and other logistics partners across Latvia). The integrated system processes data automatically and provides tracking after checkout."
       }
     },
     "steps": {
