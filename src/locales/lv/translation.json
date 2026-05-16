@@ -26,20 +26,20 @@
     "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T‑kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
     "features": {
       "quality": {
-        "title": "Augstas kvalitātes DTF druka",
-        "desc": "Spilgti, izturīgi un kvalitatīvi apdruki, izmantojot DTF (Direct-to-Film) tehnoloģiju."
+        "title": "Industriālā DTF druka",
+        "desc": "Augstas izšķirtspējas T-kreklu apdruka, izmantojot Direct-to-Film tehnoloģiju. Nodrošina maksimālu krāsu precizitāti, dizaina elastību un augstu nodilumizturību ikdienas lietošanā."
       },
       "tool": {
-        "title": "Ērts dizaina rīks",
-        "desc": "Viegli izveido savus unikālos dizainus ar mūsu intuitīvo iebūvēto redaktoru."
+        "title": "Interaktīvais apdrukas konstruktors",
+        "desc": "Ērts tiešsaistes dizaina rīks grafisko elementu un teksta izvietošanai. Sistēma nodrošina vienkāršu attēlu mērogošanu un tūlītēju vizualizāciju uz izvēlētā produkta."
       },
       "production": {
-        "title": "Ātra ražošana",
-        "desc": "Ar lielu noliktavu uz vietas mēs garantējam ātru ražošanu un pasūtījumu apstrādi."
+        "title": "Ražošana un tekstila noliktava Rīgā",
+        "desc": "Pastāvīgs pamata sortimenta krājums uz vietas nodrošina optimizētu un prognozējamu pasūtījumu izpildes ciklu. Pasūtījuma apstrāde tiek uzsākta uzreiz pēc apmaksas saņemšanas."
       },
       "delivery": {
-        "title": "Ērta piegāde",
-        "desc": "Saņem savu pasūtījumu jebkurā Omniva pakomātā."
+        "title": "Piegāde uz pakomātiem",
+        "desc": "Saņem sūtījumu savā pakomātā (Omniva un citi loģistikas partneri visā Latvijā). Integrētā sistēma automātiski apstrādā datus un nodrošina sūtījuma izsekošanu pēc pasūtījuma noformēšanas."
       }
     },
     "steps": {
