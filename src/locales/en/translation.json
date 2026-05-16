@@ -26,20 +26,20 @@
     "description": "In our stores in <strong>Riga, Latvia</strong>, you can visit us in person, try on a T‑shirt, choose the color and size, and submit your design or idea – we'll take care of the rest. We use modern <strong>DTF (Direct to Film) technology</strong> for vibrant colors on both light and dark fabrics.",
     "features": {
       "quality": {
-        "title": "Industrial DTF Printing",
-        "desc": "High-resolution t-shirt printing using Direct-to-Film technology. Delivers maximum color accuracy, design flexibility, and high abrasion resistance for everyday wear."
+        "title": "T-Shirt Printing & DTF Technology",
+        "desc": "Professional textile printing is carried out using the Direct-to-Film (DTF) method. This technology ensures precise multi-colour images and fine graphic details are transferred onto fabric while maintaining the material's elasticity and durability for everyday use."
       },
       "tool": {
-        "title": "Interactive Print Designer",
-        "desc": "Easy online design tool for placing graphics and text. The system supports simple image scaling and instant visualization on the selected product."
+        "title": "Online Print Designer",
+        "desc": "The integrated design tool allows you to independently upload your own images, logos or add text. The editor provides instant visualization and lets you precisely place and scale design elements on the selected garment."
       },
       "production": {
         "title": "In-House Production & Textile Stock in Riga",
-        "desc": "A permanent stock of core garments on-site ensures an optimized and predictable order fulfillment cycle. Order processing begins immediately after payment is received."
+        "desc": "The core garment range is maintained right here in our production premises in Riga. This ensures immediate access to materials and speeds up the fulfillment cycle, as order processing and printing begin immediately after payment is received."
       },
       "delivery": {
         "title": "Parcel Locker Delivery",
-        "desc": "Receive your shipment at your parcel locker (Omniva and other logistics partners across Latvia). The integrated system processes data automatically and provides tracking after checkout."
+        "desc": "Completed orders are dispatched to parcel locker networks throughout Latvia. Once the shipment is handed over to the logistics system, the customer automatically receives a tracking code to check the current status."
       }
     },
     "steps": {

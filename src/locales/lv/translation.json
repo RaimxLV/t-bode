@@ -26,20 +26,20 @@
     "description": "Mūsu veikalos <strong>Rīgā, Latvijā</strong> tu vari mūs apmeklēt klātienē, pielaikot T‑kreklu, izvēlēties krāsu un izmēru, un iesniegt savu dizainu vai ideju – par pārējo mēs parūpēsimies. Mēs izmantojam modernu <strong>DTF (Direct to Film) tehnoloģiju</strong>, kas nodrošina spilgtas krāsas gan uz gaišiem, gan tumšiem audumiem.",
     "features": {
       "quality": {
-        "title": "Industriālā DTF druka",
-        "desc": "Augstas izšķirtspējas T-kreklu apdruka, izmantojot Direct-to-Film tehnoloģiju. Nodrošina maksimālu krāsu precizitāti, dizaina elastību un augstu nodilumizturību ikdienas lietošanā."
+        "title": "T-kreklu apdruka un DTF tehnoloģija",
+        "desc": "Profesionāla tekstila apdruka tiek veikta, izmantojot Direct-to-Film (DTF) metodi. Šī tehnoloģija nodrošina precīzu daudzkrāsainu attēlu un smalku grafisko detaļu pārnešanu uz auduma, saglabājot materiāla elastību un izturību ikdienas lietošanā."
       },
       "tool": {
-        "title": "Interaktīvais apdrukas konstruktors",
-        "desc": "Ērts tiešsaistes dizaina rīks grafisko elementu un teksta izvietošanai. Sistēma nodrošina vienkāršu attēlu mērogošanu un tūlītēju vizualizāciju uz izvēlētā produkta."
+        "title": "Tiešsaistes apdrukas konstruktors",
+        "desc": "Integrētais dizaina rīks sniedz iespēju patstāvīgi augšupielādēt pašu sagatavotus attēlus, logotipus vai pievienot tekstu. Redaktors nodrošina tūlītēju vizualizāciju un ļauj precīzi izvietot un mērogot dizaina elementus uz izvēlētā apģērba."
       },
       "production": {
         "title": "Ražošana un tekstila noliktava Rīgā",
-        "desc": "Pastāvīgs pamata sortimenta krājums uz vietas nodrošina optimizētu un prognozējamu pasūtījumu izpildes ciklu. Pasūtījuma apstrāde tiek uzsākta uzreiz pēc apmaksas saņemšanas."
+        "desc": "Apģērbu pamatklāsts tiek uzturēts turpat mūsu ražošanas telpās Rīgā. Tas nodrošina tūlītēju piekļuvi materiāliem un paātrina izpildes ciklu, jo pasūtījuma apstrāde un apdruka tiek uzsākta uzreiz pēc maksājuma saņemšanas."
       },
       "delivery": {
         "title": "Piegāde uz pakomātiem",
-        "desc": "Saņem sūtījumu savā pakomātā (Omniva un citi loģistikas partneri visā Latvijā). Integrētā sistēma automātiski apstrādā datus un nodrošina sūtījuma izsekošanu pēc pasūtījuma noformēšanas."
+        "desc": "Gatavie pasūtījumi tiek izsūtīti uz pakomātu tīkliem visā Latvijas teritorijā. Pēc sūtījuma nodošanas loģistikas sistēmā, klientam automātiski tiek nosūtīts sūtījuma izsekošanas kods pašreizējā statusa pārbaudei."
       }
     },
     "steps": {
