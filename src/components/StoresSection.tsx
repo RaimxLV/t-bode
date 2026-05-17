@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Phone, Mail, Navigation } from "lucide-react";
+import { Phone, Mail, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { stores } from "@/data/products";
 import { useEffect, useRef } from "react";
@@ -116,6 +116,10 @@ export const StoresSection = () => {
                     <Mail className="w-3 h-3 md:w-4 md:h-4 text-primary flex-shrink-0" />
                     <span className="truncate text-[11px] md:text-sm">{store.email}</span>
                   </a>
+                  <div className="flex items-center gap-1.5 md:gap-2 text-primary font-body">
+                    <Clock className="w-3 h-3 md:w-4 md:h-4 text-primary flex-shrink-0" />
+                    <span className="truncate text-[11px] md:text-sm">{t("stores.hours")}</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
