@@ -68,33 +68,31 @@
     text-wrap: balance;
     overflow-wrap: break-word;
     word-break: normal;
-    hyphens: manual;
+    hyphens: none;
+    -webkit-hyphens: none;
   }
 
   p, li, blockquote, figcaption, dd {
     text-wrap: pretty;
     overflow-wrap: break-word;
-    hyphens: manual;
+    hyphens: none;
+    -webkit-hyphens: none;
     orphans: 2;
     widows: 2;
   }
 }
 
-/* Mobile typography: tighter container padding + safer wrapping
-   to avoid short orphan words like "gan", "un", "uz" hanging alone. */
+/* Mobile typography: keep natural clause wrapping without forced hyphenation
+   or global width constraints that can create awkward short-line breaks. */
 @media (max-width: 640px) {
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
-    word-spacing: 0.01em;
-    max-width: 38ch;
-    margin-left: auto;
-    margin-right: auto;
   }
+
   p, li, blockquote, figcaption, dd {
     text-wrap: pretty;
-    max-width: 60ch;
-    hyphens: auto;
-    -webkit-hyphens: auto;
+    hyphens: none;
+    -webkit-hyphens: none;
   }
 }
 

@@ -20,11 +20,11 @@ export const AboutSection = () => {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto text-center mb-16"
+          className="max-w-3xl mx-auto text-center mb-16 px-5 sm:px-4"
         >
           <h2 className="text-4xl md:text-5xl mb-6">{t("about.title")}</h2>
           <p
-            className="text-muted-foreground leading-relaxed font-body"
+            className="text-muted-foreground leading-relaxed font-body text-left sm:text-center max-w-[34rem] mx-auto"
             dangerouslySetInnerHTML={{ __html: t("about.description") }}
           />
         </motion.div>
