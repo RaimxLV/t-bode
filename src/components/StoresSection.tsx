@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Phone, Mail, Navigation } from "lucide-react";
+import { Phone, Mail, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { stores } from "@/data/products";
 import { useEffect, useRef } from "react";
