@@ -118,7 +118,7 @@ export const StoresSection = () => {
                   </a>
                   <div className="flex items-center gap-1.5 md:gap-2 text-primary font-body">
                     <Clock className="w-3 h-3 md:w-4 md:h-4 text-primary flex-shrink-0" />
-                    <span className="truncate text-[11px] md:text-sm">{t("stores.hours")}</span>
+                    <span className="text-[11px] md:text-sm whitespace-nowrap">{t("stores.hours")}</span>
                   </div>
                 </div>
               </div>
