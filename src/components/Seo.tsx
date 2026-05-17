@@ -11,6 +11,12 @@ interface SeoProps {
   jsonLd?: Record<string, any> | Record<string, any>[];
   /** Override og:locale; otherwise inferred from i18n */
   locale?: string;
+  /** Optional breadcrumb trail rendered as BreadcrumbList JSON-LD. */
+  breadcrumbs?: { name: string; url: string }[];
+  /** When true, do NOT append the site name to <title>. */
+  noTitleSuffix?: boolean;
+  /** Optional keyword suffix inserted between page title and site name. */
+  titleKeyword?: string;
 }
 
 const SITE_NAME = "T-Bode";
@@ -29,11 +35,36 @@ export const Seo = ({
   canonical,
   jsonLd,
   locale,
+  breadcrumbs,
+  noTitleSuffix,
+  titleKeyword,
 }: SeoProps) => {
   const { i18n } = useTranslation();
   const lang = locale || i18n.language || "lv";
-  const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
+  const alreadyHasSite = !!title && title.toLowerCase().includes("t-bode");
+  const fullTitle = !title
+    ? SITE_NAME
+    : noTitleSuffix || alreadyHasSite
+      ? title
+      : titleKeyword
+        ? `${title} | ${titleKeyword} | ${SITE_NAME}`
+        : `${title} | ${SITE_NAME}`;
   const url = canonical || (typeof window !== "undefined" ? window.location.href : SITE_URL);
+
+  const jsonLdArray: Record<string, any>[] = [];
+  if (jsonLd) jsonLdArray.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
+  if (breadcrumbs && breadcrumbs.length > 0) {
+    jsonLdArray.push({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: breadcrumbs.map((b, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        name: b.name,
+        item: b.url,
+      })),
+    });
+  }
 
   return (
     <Helmet htmlAttributes={{ lang }}>
@@ -48,6 +79,9 @@ export const Seo = ({
       <meta property="og:type" content={type} />
       <meta property="og:url" content={url} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={fullTitle} />
       <meta property="og:locale" content={lang === "en" ? "en_US" : "lv_LV"} />
 
       {/* Twitter */}
@@ -57,11 +91,9 @@ export const Seo = ({
       <meta name="twitter:image" content={image} />
 
       {/* JSON-LD */}
-      {jsonLd && (
-        <script type="application/ld+json">
-          {JSON.stringify(jsonLd)}
-        </script>
-      )}
+      {jsonLdArray.map((obj, i) => (
+        <script key={i} type="application/ld+json">{JSON.stringify(obj)}</script>
+      ))}
     </Helmet>
   );
 };
