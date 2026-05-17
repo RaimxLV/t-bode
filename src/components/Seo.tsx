@@ -14,9 +14,8 @@ interface SeoProps {
 }
 
 const SITE_NAME = "T-Bode";
-const DEFAULT_IMAGE =
-  "https://storage.googleapis.com/gpt-engineer-file-uploads/yoV8WIlaptNy5kbSOQCEcpFyOL52/social-images/social-1775635326057-1000045973.webp";
 const SITE_URL = "https://www.t-bode.lv";
+const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 /**
  * Centralized SEO component. Renders <title>, meta description,
