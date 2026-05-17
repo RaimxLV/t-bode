@@ -18,7 +18,6 @@
     <meta name="description" content="T-kreklu apdruka Rīgā ar savu dizainu. T-Bode piedāvā kreklu, džemperu, krūžu un somu apdruku ar DTF tehnoloģiju. Veikali Akropolē, Dominā, Origo un Alfā.">
     <meta name="keywords" content="t kreklu apdruka, kreklu apdruka, kreklu apdruka rīgā, krekli ar apdruku, apģērbu apdruka, krūzes apdruka, džemperu apdruka, t-bode" />
     <meta name="author" content="T-Bode / SIA Ervitex" />
-    <link rel="canonical" href="https://www.t-bode.lv/" />
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#DC2626" />
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
@@ -52,13 +51,14 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Store",
+      "@type": "LocalBusiness",
+      "@id": "https://www.t-bode.lv/#localbusiness",
       "name": "T-Bode",
       "alternateName": "SIA Ervitex",
       "url": "https://www.t-bode.lv",
       "logo": "https://www.t-bode.lv/assets/logo.svg",
+      "image": "https://www.t-bode.lv/og-image.jpg",
       "description": "T-kreklu apdruka Rīgā ar savu dizainu. Kreklu, džemperu, krūžu un somu apdruka ar DTF tehnoloģiju.",
-      "telephone": "+371",
       "email": "info@t-bode.lv",
       "address": {
         "@type": "PostalAddress",
@@ -72,6 +72,16 @@
         "latitude": "56.9496",
         "longitude": "24.1052"
       },
+      "areaServed": [
+        { "@type": "City", "name": "Rīga" },
+        { "@type": "Country", "name": "Latvija" }
+      ],
+      "department": [
+        { "@type": "Store", "name": "T-Bode Akropole", "address": { "@type": "PostalAddress", "streetAddress": "Maskavas iela 257", "addressLocality": "Riga", "postalCode": "LV-1019", "addressCountry": "LV" } },
+        { "@type": "Store", "name": "T-Bode Domina", "address": { "@type": "PostalAddress", "streetAddress": "Ieriķu iela 3", "addressLocality": "Riga", "postalCode": "LV-1084", "addressCountry": "LV" } },
+        { "@type": "Store", "name": "T-Bode Origo", "address": { "@type": "PostalAddress", "streetAddress": "Stacijas laukums 2", "addressLocality": "Riga", "postalCode": "LV-1050", "addressCountry": "LV" } },
+        { "@type": "Store", "name": "T-Bode Alfa", "address": { "@type": "PostalAddress", "streetAddress": "Brīvības gatve 372", "addressLocality": "Riga", "postalCode": "LV-1024", "addressCountry": "LV" } }
+      ],
       "openingHoursSpecification": [
         {
           "@type": "OpeningHoursSpecification",
@@ -80,15 +90,21 @@
           "closes": "21:00"
         }
       ],
-      "sameAs": [],
-      "priceRange": "€",
-      "makesOffer": {
-        "@type": "Offer",
-        "itemOffered": {
-          "@type": "Product",
-          "name": "Custom Printed T-Shirts",
-          "description": "Personalized t-shirts with DTF printing technology"
-        }
+      "priceRange": "€€",
+      "keywords": "t-kreklu apdruka, kreklu apdruka Rīgā, DTF apdruka, hūdiju apdruka, krūžu apdruka"
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "url": "https://www.t-bode.lv",
+      "name": "T-Bode",
+      "inLanguage": ["lv-LV","en"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.t-bode.lv/collection?q={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     }
     </script>
