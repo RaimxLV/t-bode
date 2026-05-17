@@ -66,10 +66,35 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
     text-wrap: balance;
+    overflow-wrap: break-word;
+    word-break: normal;
+    hyphens: manual;
   }
 
   p, li, blockquote, figcaption, dd {
     text-wrap: pretty;
+    overflow-wrap: break-word;
+    hyphens: manual;
+    orphans: 2;
+    widows: 2;
+  }
+}
+
+/* Mobile typography: tighter container padding + safer wrapping
+   to avoid short orphan words like "gan", "un", "uz" hanging alone. */
+@media (max-width: 640px) {
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+    word-spacing: 0.01em;
+    max-width: 38ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  p, li, blockquote, figcaption, dd {
+    text-wrap: pretty;
+    max-width: 60ch;
+    hyphens: auto;
+    -webkit-hyphens: auto;
   }
 }
 
