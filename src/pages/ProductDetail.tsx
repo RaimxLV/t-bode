@@ -149,9 +149,22 @@ const ProductDetail = () => {
     <div className="min-h-screen flex flex-col">
       <Seo
         title={displayName}
-        description={(displayDescription || displayName).replace(/<[^>]+>/g, "").slice(0, 160)}
+        titleKeyword={i18n.language === "en" ? "Custom printing in Riga" : "T-kreklu apdruka Rīgā"}
+        description={(() => {
+          const clean = (displayDescription || "").replace(/<[^>]+>/g, "").trim();
+          if (clean.length >= 80) return clean.slice(0, 155);
+          const suffix = i18n.language === "en"
+            ? ` — customize on-site in Riga. T-Bode DTF printing on t-shirts, hoodies, mugs and bags.`
+            : ` — personalizē ar savu dizainu. T-Bode DTF apdruka Rīgā uz krekliem, hūdijiem, krūzēm un somām.`;
+          return (`${displayName}${suffix}`).slice(0, 158);
+        })()}
         image={displayImage || product.image_url || undefined}
         type="product"
+        breadcrumbs={[
+          { name: "T-Bode", url: "https://www.t-bode.lv/" },
+          { name: i18n.language === "en" ? "Collection" : "Kolekcija", url: "https://www.t-bode.lv/collection" },
+          { name: displayName, url: typeof window !== "undefined" ? window.location.href : `https://www.t-bode.lv/product/${product.slug}` },
+        ]}
         jsonLd={{
           "@context": "https://schema.org/",
           "@type": "Product",
@@ -159,6 +172,7 @@ const ProductDetail = () => {
           description: (displayDescription || "").replace(/<[^>]+>/g, "").slice(0, 5000),
           image: galleryImages.length ? galleryImages : [product.image_url].filter(Boolean),
           sku: product.id,
+          mpn: product.id,
           category: product.category,
           brand: { "@type": "Brand", name: "T-Bode" },
           offers: {
@@ -170,6 +184,7 @@ const ProductDetail = () => {
               ? "https://schema.org/InStock"
               : "https://schema.org/OutOfStock",
             itemCondition: "https://schema.org/NewCondition",
+            seller: { "@type": "Organization", "name": "T-Bode" },
           },
         }}
       />
