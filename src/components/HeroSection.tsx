@@ -103,7 +103,7 @@ export const HeroSection = () => {
             <button
               type="button"
               onClick={() => navigate("/design")}
-              className="group relative w-full overflow-hidden rounded-lg px-10 py-6 text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+              className="group relative w-full overflow-hidden rounded-lg px-4 sm:px-10 py-6 text-lg sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
               style={{ background: "var(--gradient-brand)" }}
               aria-label={t("hero.ctaDesign")}
             >
@@ -125,7 +125,7 @@ export const HeroSection = () => {
             </button>
             <button
               onClick={() => navigate("/collection")}
-              className="group w-full inline-flex items-center justify-center gap-3 px-10 py-6 rounded-lg font-body font-bold text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98]"
+              className="group w-full inline-flex items-center justify-center gap-3 px-4 sm:px-10 py-6 rounded-lg font-body font-bold text-lg sm:text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98] whitespace-nowrap"
             >
               {t("hero.ctaCollection")}
               <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
