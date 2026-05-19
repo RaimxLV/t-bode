@@ -117,10 +117,10 @@ export const HeroSection = () => {
               />
               <Sparkles aria-hidden className="absolute left-4 top-3 w-4 h-4 text-white/80 animate-sparkle-spin" />
               <Sparkles aria-hidden className="absolute right-5 bottom-3 w-4 h-4 text-white/70 animate-sparkle-spin" style={{ animationDelay: "0.6s" }} />
-              <span className="relative flex items-center justify-center gap-3">
-                <Wand2 className="w-6 h-6 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
-                <span className="tracking-wide uppercase">{t("hero.ctaDesign")}</span>
-                <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12 group-hover:scale-110" />
+              <span className="relative flex items-center justify-center gap-3 whitespace-nowrap">
+                <Wand2 className="w-6 h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
+                <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
+                <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
               </span>
             </button>
             <button
