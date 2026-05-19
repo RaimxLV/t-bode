@@ -5,10 +5,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // Production builds are deployed to GitHub Pages at
-  // https://raimxlv.github.io/t-bode/, so assets must be served from
-  // `/t-bode/`. Dev (and the Lovable preview) runs from the site root.
-  base: mode === 'production' ? '/t-bode/' : '/',
+  // Served from the site root on Lovable hosting (t-bode.lv) and in dev.
+  base: '/',
   server: {
     host: "::",
     port: 8080,
