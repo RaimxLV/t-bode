@@ -201,6 +201,22 @@ const Checkout = () => {
       setErrors(fieldErrors);
       return false;
     }
+    // Block obvious fake email domains (mirrored server-side)
+    const emailVal = (user?.email ?? form.email ?? "").trim().toLowerCase();
+    const domain = emailVal.split("@")[1] ?? "";
+    const blocked = new Set([
+      "test.com","example.com","example.org","ddd.com","aaa.com","bbb.com","ccc.com",
+      "asd.com","qwe.com","fff.com","eee.com","ggg.com","hhh.com","iii.com","jjj.com",
+      "kkk.com","lll.com","mmm.com","nnn.com","ooo.com","ppp.com","rrr.com","sss.com",
+      "ttt.com","uuu.com","vvv.com","www.com","xxx.com","yyy.com","zzz.com",
+      "mailinator.com","guerrillamail.com","tempmail.com","temp-mail.org","10minutemail.com",
+      "yopmail.com","trashmail.com","sharklasers.com","throwaway.email","fake.com",
+      "fakeinbox.com","dispostable.com","getnada.com","mintemail.com","maildrop.cc"
+    ]);
+    if (blocked.has(domain) || /^([a-z])\1{2,}\./.test(domain)) {
+      setErrors({ email: t("checkout.fakeEmail", "Lūdzu izmantojiet īstu e-pasta adresi") });
+      return false;
+    }
     setErrors({});
     return true;
   };
