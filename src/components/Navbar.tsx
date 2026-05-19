@@ -4,6 +4,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import logo from "@/assets/logo.svg";
 
 export const Navbar = () => {
@@ -14,6 +15,12 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success(t("auth.signedOut", "Veiksmīgi izrakstījies"));
+    navigate("/");
+  };
 
   const navLinks = [
     { label: t("nav.ourStory"), href: "/#about" },
@@ -92,7 +99,7 @@ export const Navbar = () => {
                 <User className="w-5 h-5" />
               </button>
               <button
-                onClick={signOut}
+                onClick={handleSignOut}
                 className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
                 title={t("auth.signOut", "Izrakstīties")}
                 aria-label={t("auth.signOut", "Izrakstīties")}
