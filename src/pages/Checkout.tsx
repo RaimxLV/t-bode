@@ -469,6 +469,19 @@ const Checkout = () => {
               {/* Contact */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.contact")}</h2>
+                {/* Honeypot — hidden from real users, visible to bots */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
+                  <label htmlFor="website">Website</label>
+                  <input
+                    type="text"
+                    id="website"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="font-body text-sm">{t("checkout.name")}</Label>
