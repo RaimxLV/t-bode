@@ -52,7 +52,7 @@ export const HeroSection = () => {
             height={1080}
             className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
             onLoad={() => setImageLoaded(true)}
-            fetchPriority="high"
+            {...({ fetchpriority: "high" } as any)}
             decoding="async"
             loading="eager"
           />
