@@ -22,6 +22,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [adminLoading, setAdminLoading] = useState(true);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
 
+  const applySession = (nextSession: Session | null) => {
+    setSession(nextSession);
+    setUser(nextSession?.user ?? null);
+    setLoading(false);
+
+    if (nextSession?.user) {
+      void checkAdmin(nextSession.user.id, nextSession.user.email ?? "");
+      return;
+    }
+
+    setIsAdmin(false);
+    setIsWhitelisted(false);
+    setAdminLoading(false);
+  };
+
   const checkAdmin = async (userId: string, email: string) => {
     try {
       const [roleResult, whitelistResult] = await Promise.all([
@@ -39,28 +54,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        checkAdmin(session.user.id, session.user.email ?? "");
-      } else {
-        setIsAdmin(false);
-        setIsWhitelisted(false);
-        setAdminLoading(false);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        checkAdmin(session.user.id, session.user.email ?? "");
-      } else {
-        setAdminLoading(false);
-      }
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      applySession(initialSession);
     });
 
     return () => subscription.unsubscribe();
