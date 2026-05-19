@@ -125,10 +125,10 @@ export const HeroSection = () => {
             </button>
             <button
               onClick={() => navigate("/collection")}
-              className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-body font-semibold text-base text-white/90 border border-white/40 bg-black/20 backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/70 hover:text-white"
+              className="group w-full inline-flex items-center justify-center gap-3 px-10 py-6 rounded-lg font-body font-bold text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98]"
             >
               {t("hero.ctaCollection")}
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>
         </div>
