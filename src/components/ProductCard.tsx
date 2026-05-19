@@ -195,7 +195,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           {product.customizable && (
             <Link
               to={`/product/${product.slug}`}
-              className="flex items-center justify-center gap-1.5 w-full py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body border-2 border-cta-red text-cta-red hover:bg-cta-red hover:text-white transition-all"
+              className="flex items-center justify-center gap-1.5 w-full py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body border-2 border-cta-red text-cta-red hover:bg-cta-red hover:text-white transition-all whitespace-nowrap"
             >
               {t("products.customize")}
             </Link>
