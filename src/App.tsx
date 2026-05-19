@@ -6,7 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/context/CartContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { WishlistProvider } from "@/context/WishlistContext";
 import { CartSidebar } from "@/components/CartSidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -52,6 +52,90 @@ const DynamicLang = () => {
   return null;
 };
 
+const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+const LOCKED_VIEWPORT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
+
+const ViewportRecovery = () => {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (!viewportMeta) return;
+
+    let frameA = 0;
+    let frameB = 0;
+    const timers: number[] = [];
+
+    const setViewport = (content: string) => {
+      if (viewportMeta.getAttribute("content") !== content) {
+        viewportMeta.setAttribute("content", content);
+      }
+    };
+
+    const forceViewportReset = () => {
+      setViewport(LOCKED_VIEWPORT);
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+      frameA = window.requestAnimationFrame(() => {
+        frameB = window.requestAnimationFrame(() => {
+          setViewport(DEFAULT_VIEWPORT);
+        });
+      });
+    };
+
+    const scheduleViewportRecovery = () => {
+      forceViewportReset();
+      timers.push(window.setTimeout(forceViewportReset, 120));
+      timers.push(window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 420));
+    };
+
+    const hasOAuthReturnParams =
+      window.location.hash.includes("access_token") ||
+      window.location.hash.includes("error") ||
+      new URLSearchParams(window.location.search).has("code");
+
+    const cameFromGoogle = document.referrer.includes("google.");
+
+    const handlePageShow = () => {
+      if (cameFromGoogle || hasOAuthReturnParams) {
+        scheduleViewportRecovery();
+      }
+    };
+
+    const handleFocus = () => {
+      if (document.visibilityState === "visible") {
+        scheduleViewportRecovery();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        scheduleViewportRecovery();
+      }
+    };
+
+    if (cameFromGoogle || hasOAuthReturnParams || user) {
+      scheduleViewportRecovery();
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.cancelAnimationFrame(frameA);
+      window.cancelAnimationFrame(frameB);
+      timers.forEach((timer) => window.clearTimeout(timer));
+      setViewport(DEFAULT_VIEWPORT);
+    };
+  }, [user]);
+
+  return null;
+};
+
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
     <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -71,6 +155,7 @@ const App = () => {
                   <Sonner />
                   <BrowserRouter basename={import.meta.env.BASE_URL}>
                     <DynamicLang />
+                    <ViewportRecovery />
                     <ScrollToTop />
                     <CartSidebar />
                     <CookieConsent />
