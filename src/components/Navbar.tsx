@@ -50,13 +50,13 @@ export const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-md border-b border-white/10" role="navigation" aria-label={t("nav.main", "Galvenā navigācija")}>
-      <div className="container mx-auto flex items-center justify-between gap-2 h-16 px-3 sm:px-4">
+      <div className="container mx-auto flex items-center justify-between gap-2 h-16 min-w-0 px-2 sm:px-4">
         <a
           href="/"
           onClick={(e) => { e.preventDefault(); navigate("/"); }}
-          className="flex-shrink-0 mr-2"
+          className="flex-shrink min-w-0 mr-2"
         >
-          <img src={logo} alt="T-Bode" className="h-9 sm:h-10" />
+          <img src={logo} alt="T-Bode" className="h-8 sm:h-10 w-auto max-w-[112px] sm:max-w-none" />
         </a>
 
         <div className="hidden lg:flex items-center gap-8">
@@ -71,10 +71,10 @@ export const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-3">
+        <div className="flex items-center gap-0.5 sm:gap-3 flex-shrink-0">
           <button
             onClick={toggleLanguage}
-            className="px-2 py-1 text-xs font-body font-bold text-white/70 hover:text-white transition-colors border border-white/20 rounded"
+            className="px-1.5 sm:px-2 py-1 text-[11px] sm:text-xs font-body font-bold text-white/70 hover:text-white transition-colors border border-white/20 rounded"
           >
             {i18n.language === "lv" ? "EN" : "LV"}
           </button>
@@ -100,7 +100,7 @@ export const Navbar = () => {
               </button>
               <button
                 onClick={handleSignOut}
-                className="p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
+                className="hidden sm:inline-flex p-1.5 sm:p-2 text-white/70 hover:text-white transition-colors"
                 title={t("auth.signOut", "Izrakstīties")}
                 aria-label={t("auth.signOut", "Izrakstīties")}
               >
