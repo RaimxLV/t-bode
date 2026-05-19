@@ -107,17 +107,6 @@ export const AdminMfaGate = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      {!hasMfa && (
-        <div className="bg-yellow-50 dark:bg-yellow-950/30 border-b border-yellow-200 dark:border-yellow-900 px-4 py-2.5 text-sm">
-          <div className="max-w-7xl mx-auto flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-            <span className="flex-1">Tavam admin kontam nav 2FA. Aktivizē to drošībai.</span>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/profile?tab=security">Aktivizēt</Link>
-            </Button>
-          </div>
-        </div>
-      )}
       {children}
     </>
   );

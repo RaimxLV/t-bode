@@ -102,6 +102,9 @@ const Checkout = () => {
     discount_value: number;
     discount_amount: number;
   } | null>(null);
+  // Honeypot: hidden field bots will fill but humans won't see
+  const [website, setWebsite] = useState("");
+  const [formLoadedAt] = useState(() => Date.now());
 
   const filteredLocations = useMemo(() => {
     if (!omnivaSearch.trim()) return locations.slice(0, 20);
@@ -223,6 +226,12 @@ const Checkout = () => {
 
   const handleSubmit = async () => {
     if (!validate() || items.length === 0) return;
+    // Honeypot check: silently reject bots
+    if (website.trim() !== "" || Date.now() - formLoadedAt < 2000) {
+      // Pretend success to not tip off bots
+      toast.error(t("checkout.spamBlocked", "Pārāk ātri. Lūdzu mēģiniet vēlreiz."));
+      return;
+    }
     setSubmitting(true);
     try {
       const isGuestCheckout = mode === "guest" || !user;
@@ -460,6 +469,19 @@ const Checkout = () => {
               {/* Contact */}
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.contact")}</h2>
+                {/* Honeypot — hidden from real users, visible to bots */}
+                <div aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}>
+                  <label htmlFor="website">Website</label>
+                  <input
+                    type="text"
+                    id="website"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="font-body text-sm">{t("checkout.name")}</Label>
