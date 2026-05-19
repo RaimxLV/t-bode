@@ -161,6 +161,32 @@ export const Navbar = () => {
                 Admin Panelis
               </button>
             )}
+            {user ? (
+              <>
+                <button
+                  onClick={() => { setIsOpen(false); navigate("/profile"); }}
+                  className="flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  {t("profile.title", "Mans profils")}
+                </button>
+                <button
+                  onClick={() => { setIsOpen(false); handleSignOut(); }}
+                  className="flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  {t("auth.signOut", "Izrakstīties")}
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => { setIsOpen(false); navigate("/auth"); }}
+                className="flex items-center gap-2 text-sm font-medium text-white/80 hover:text-white transition-colors py-2 text-left bg-transparent border-none cursor-pointer"
+              >
+                <User className="w-4 h-4" />
+                {t("auth.login")}
+              </button>
+            )}
           </div>
         </div>
       )}
