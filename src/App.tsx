@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded routes for code splitting
