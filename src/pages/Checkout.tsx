@@ -102,6 +102,9 @@ const Checkout = () => {
     discount_value: number;
     discount_amount: number;
   } | null>(null);
+  // Honeypot: hidden field bots will fill but humans won't see
+  const [website, setWebsite] = useState("");
+  const [formLoadedAt] = useState(() => Date.now());
 
   const filteredLocations = useMemo(() => {
     if (!omnivaSearch.trim()) return locations.slice(0, 20);
@@ -223,6 +226,12 @@ const Checkout = () => {
 
   const handleSubmit = async () => {
     if (!validate() || items.length === 0) return;
+    // Honeypot check: silently reject bots
+    if (website.trim() !== "" || Date.now() - formLoadedAt < 2000) {
+      // Pretend success to not tip off bots
+      toast.error(t("checkout.spamBlocked", "Pārāk ātri. Lūdzu mēģiniet vēlreiz."));
+      return;
+    }
     setSubmitting(true);
     try {
       const isGuestCheckout = mode === "guest" || !user;
