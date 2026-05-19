@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroJpg from "@/assets/hero-1280.jpg";
@@ -98,21 +98,37 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-6 flex flex-col sm:flex-row gap-4 justify-center"
+            className="mt-8 flex flex-col gap-4 items-center max-w-xl mx-auto"
           >
             <button
+              type="button"
               onClick={() => navigate("/design")}
-              className="group inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-bold text-lg transition-all hover:scale-105 hover:shadow-lg"
-              style={{ background: "var(--gradient-brand)", color: "white" }}
+              className="group relative w-full overflow-hidden rounded-lg px-10 py-6 text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+              style={{ background: "var(--gradient-brand)" }}
+              aria-label={t("hero.ctaDesign")}
             >
-              {t("hero.ctaDesign")}
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 -inset-x-1 block animate-shimmer-slide"
+                style={{
+                  background:
+                    "linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.45) 50%, transparent 70%)",
+                }}
+              />
+              <Sparkles aria-hidden className="absolute left-4 top-3 w-4 h-4 text-white/80 animate-sparkle-spin" />
+              <Sparkles aria-hidden className="absolute right-5 bottom-3 w-4 h-4 text-white/70 animate-sparkle-spin" style={{ animationDelay: "0.6s" }} />
+              <span className="relative flex items-center justify-center gap-3">
+                <Wand2 className="w-6 h-6 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
+                <span className="tracking-wide uppercase">{t("hero.ctaDesign")}</span>
+                <Sparkles className="w-5 h-5 transition-transform group-hover:rotate-12 group-hover:scale-110" />
+              </span>
             </button>
             <button
               onClick={() => navigate("/collection")}
-              className="inline-flex items-center justify-center gap-3 px-10 py-4 rounded-md font-body font-semibold text-lg border-2 border-white/50 text-white bg-black/20 transition-all hover:bg-white/10 hover:border-white/70"
+              className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-body font-semibold text-base text-white/90 border border-white/40 bg-black/20 backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/70 hover:text-white"
             >
               {t("hero.ctaCollection")}
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>
         </div>
