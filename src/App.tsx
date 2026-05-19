@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded routes for code splitting
@@ -53,18 +54,56 @@ const DynamicLang = () => {
 };
 
 const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, viewport-fit=cover";
-const LOCKED_VIEWPORT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
+
+const OAuthSessionRecovery = () => {
+  useEffect(() => {
+    const recoverOAuthSession = async () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+      const code = searchParams.get("code");
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const hasOAuthError = hashParams.has("error") || searchParams.has("error");
+
+      if (hasOAuthError) {
+        const cleanPath = `${window.location.pathname}${window.location.search.replace(/([?&])error[^&]*/g, "").replace(/[?&]$/, "")}`;
+        window.history.replaceState({}, "", cleanPath || "/");
+        return;
+      }
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) {
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+        return;
+      }
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (!error) {
+          window.history.replaceState({}, "", window.location.pathname + window.location.search);
+        }
+      }
+    };
+
+    void recoverOAuthSession();
+  }, []);
+
+  return null;
+};
 
 const ViewportRecovery = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) return;
-
-    let frameA = 0;
-    let frameB = 0;
-    const timers: number[] = [];
 
     const setViewport = (content: string) => {
       if (viewportMeta.getAttribute("content") !== content) {
@@ -72,25 +111,14 @@ const ViewportRecovery = () => {
       }
     };
 
-    const forceViewportReset = () => {
-      setViewport(LOCKED_VIEWPORT);
+    const resetViewport = () => {
+      setViewport(DEFAULT_VIEWPORT);
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-
-      frameA = window.requestAnimationFrame(() => {
-        frameB = window.requestAnimationFrame(() => {
-          setViewport(DEFAULT_VIEWPORT);
-        });
-      });
-    };
-
-    const scheduleViewportRecovery = () => {
-      forceViewportReset();
-      timers.push(window.setTimeout(forceViewportReset, 120));
-      timers.push(window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 420));
     };
 
     const hasOAuthReturnParams =
       window.location.hash.includes("access_token") ||
+      window.location.hash.includes("refresh_token") ||
       window.location.hash.includes("error") ||
       new URLSearchParams(window.location.search).has("code");
 
@@ -98,24 +126,24 @@ const ViewportRecovery = () => {
 
     const handlePageShow = () => {
       if (cameFromGoogle || hasOAuthReturnParams) {
-        scheduleViewportRecovery();
+        resetViewport();
       }
     };
 
     const handleFocus = () => {
-      if (document.visibilityState === "visible") {
-        scheduleViewportRecovery();
+      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams)) {
+        resetViewport();
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        scheduleViewportRecovery();
+      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || user)) {
+        resetViewport();
       }
     };
 
-    if (cameFromGoogle || hasOAuthReturnParams || user) {
-      scheduleViewportRecovery();
+    if (!loading && (cameFromGoogle || hasOAuthReturnParams || user)) {
+      resetViewport();
     }
 
     window.addEventListener("pageshow", handlePageShow);
@@ -126,12 +154,9 @@ const ViewportRecovery = () => {
       window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.cancelAnimationFrame(frameA);
-      window.cancelAnimationFrame(frameB);
-      timers.forEach((timer) => window.clearTimeout(timer));
       setViewport(DEFAULT_VIEWPORT);
     };
-  }, [user]);
+  }, [loading, user]);
 
   return null;
 };
@@ -155,6 +180,7 @@ const App = () => {
                   <Sonner />
                   <BrowserRouter basename={import.meta.env.BASE_URL}>
                     <DynamicLang />
+                    <OAuthSessionRecovery />
                     <ViewportRecovery />
                     <ScrollToTop />
                     <CartSidebar />

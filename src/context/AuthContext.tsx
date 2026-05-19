@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -21,6 +21,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const hasResolvedInitialSession = useRef(false);
+
+  const applySession = (nextSession: Session | null, options?: { allowFinishLoading?: boolean }) => {
+    setSession(nextSession);
+    setUser(nextSession?.user ?? null);
+
+    if (options?.allowFinishLoading) {
+      setLoading(false);
+      hasResolvedInitialSession.current = true;
+    }
+
+    if (nextSession?.user) {
+      void checkAdmin(nextSession.user.id, nextSession.user.email ?? "");
+      return;
+    }
+
+    setIsAdmin(false);
+    setIsWhitelisted(false);
+    setAdminLoading(false);
+  };
 
   const checkAdmin = async (userId: string, email: string) => {
     try {
@@ -39,28 +59,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        checkAdmin(session.user.id, session.user.email ?? "");
-      } else {
-        setIsAdmin(false);
-        setIsWhitelisted(false);
-        setAdminLoading(false);
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      applySession(nextSession, { allowFinishLoading: hasResolvedInitialSession.current });
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.user) {
-        checkAdmin(session.user.id, session.user.email ?? "");
-      } else {
-        setAdminLoading(false);
-      }
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      applySession(initialSession, { allowFinishLoading: true });
     });
 
     return () => subscription.unsubscribe();
