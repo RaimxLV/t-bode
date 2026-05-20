@@ -1,0 +1,16 @@
+# T-Bode
+
+> T-kreklu apdruka Rīgā ar savu dizainu. SIA Ervitex veikals piedāvā kreklu, hūdiju, krūžu un somu DTF apdruku. Veikali Rīgā: Akropole, Domina, Origo, Alfa.
+
+T-Bode (SIA Ervitex) ir Latvijas uzņēmums, kas specializējas pielāgotā apģērba un aksesuāru apdrukā ar DTF tehnoloģiju. Klienti var izveidot savu dizainu tiešsaistē vai pārlūkot gatavo kolekciju.
+
+## Pages
+
+- [Sākums](/): T-Bode pārskats — par mums, veikali, kontakti, FAQ.
+- [Mūsu kolekcija](/collection): Gatavo t-kreklu, hūdiju, krūžu un somu katalogs.
+- [Izveido savu dizainu](/design): Tiešsaistes apdrukas konstruktors — augšupielādē attēlu vai tekstu.
+
+## Optional
+
+- [Privātuma politika](/privacy): GDPR un datu apstrādes informācija.
+- [Lietošanas noteikumi](/terms): Interneta veikala noteikumi un pirkuma nosacījumi.

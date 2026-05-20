@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Seo } from "@/components/Seo";
 import { useTranslation } from "react-i18next";
 
 const PrivacyPolicy = () => {
@@ -8,6 +9,16 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="min-h-screen">
+      <Seo
+        title={isLv ? "Privātuma politika | T-Bode" : "Privacy Policy | T-Bode"}
+        description={
+          isLv
+            ? "T-Bode (SIA Ervitex) privātuma politika — kā mēs apstrādājam jūsu personas datus saskaņā ar GDPR un Latvijas tiesību aktiem."
+            : "T-Bode (SIA Ervitex) privacy policy — how we process your personal data in line with GDPR and Latvian data protection law."
+        }
+        canonical="https://www.t-bode.lv/privacy"
+        noTitleSuffix
+      />
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
