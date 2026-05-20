@@ -22,6 +22,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
+import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
@@ -42,7 +43,12 @@ const createGuestCheckoutClient = () =>
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
-  phone: z.string().trim().min(8, "Ievadiet derīgu telefona numuru").max(20),
+  phone: z
+    .string()
+    .trim()
+    .min(8, "Ievadiet derīgu telefona numuru")
+    .max(20)
+    .regex(phoneRegex, "Telefona numurs drīkst saturēt tikai ciparus"),
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi").max(255),
   notes: z.string().max(500).optional(),
 });
