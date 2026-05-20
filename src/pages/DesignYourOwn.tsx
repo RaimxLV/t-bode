@@ -8,8 +8,8 @@ const DesignYourOwn = () => {
   const { i18n } = useTranslation();
   const isLv = i18n.language === "lv";
   const title = isLv
-    ? "Izveido savu T-kreklu | Tiešsaistes apdrukas konstruktors | T-Bode"
-    : "Design your own T-shirt | Online print configurator | T-Bode";
+    ? "Izveido savu T-kreklu dizainu | T-Bode"
+    : "Design your own T-shirt | T-Bode";
   const description = isLv
     ? "Intuitīvs dizaina konstruktors t-kreklu, hūdiju un cepuru apdrukai tiešsaistē. Augšupielādē savu attēlu vai tekstu, pielāgo izmēru un uzreiz redzi vizualizāciju. Ražošana Rīgā."
     : "Intuitive online design configurator for t-shirts, hoodies and caps. Upload your image or text, adjust the size and instantly preview your design. Made in Riga.";
