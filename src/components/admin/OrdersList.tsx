@@ -106,6 +106,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   const [showCancelled, setShowCancelled] = useState(false);
+  const [showUnpaid, setShowUnpaid] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleManualRefresh = async () => {
@@ -591,7 +592,13 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     () => activeOrders.filter(o => !o.admin_opened_at).length,
     [activeOrders]
   );
-  const currentOrders = showCancelled ? cancelledOrders : showArchive ? archivedOrders : activeOrders;
+  const currentOrders = showUnpaid
+    ? unpaidOrders
+    : showCancelled
+      ? cancelledOrders
+      : showArchive
+        ? archivedOrders
+        : activeOrders;
 
   const stats = useMemo(() => {
     const paidOrders = orders.filter((o) => o.status !== "cancelled" && isOrderPaid(o));
@@ -628,7 +635,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Reset to page 1 whenever filters / tab change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled]);
+  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled, showUnpaid]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
