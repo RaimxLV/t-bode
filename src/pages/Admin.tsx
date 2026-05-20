@@ -126,6 +126,26 @@ const Admin = () => {
     loadOrders();
   });
 
+  // Safety net: realtime can silently disconnect (especially in installed PWA
+  // after the OS suspends the tab). Poll every 30s and on tab focus so the
+  // orders list stays in sync without forcing the user to reopen the app.
+  useEffect(() => {
+    if (!isAdmin) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") loadOrders();
+    }, 30000);
+    const onFocus = () => {
+      if (document.visibilityState === "visible") loadOrders();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [isAdmin]);
+
   const loadWhitelist = async () => {
     setLoadingWhitelist(true);
     const { data, error } = await supabase.from("admin_whitelist").select("id, email").order("created_at", { ascending: true });

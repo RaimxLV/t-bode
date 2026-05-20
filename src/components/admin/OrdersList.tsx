@@ -106,6 +106,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   const [showCancelled, setShowCancelled] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleManualRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.resolve(onRefresh());
+      toast.success("Saraksts atjaunots");
+    } finally {
+      // small delay so the spinner is visible even on instant refreshes
+      setTimeout(() => setRefreshing(false), 400);
+    }
+  };
 
   const triggerBlobDownload = (blob: Blob, fileName: string) => {
     const objectUrl = URL.createObjectURL(blob);
@@ -633,6 +645,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           <span className="text-xs font-body text-muted-foreground">
             {unreadCount > 0 ? `${unreadCount} jauni pasūtījumi gaida` : "Visi pasūtījumi apskatīti"}
           </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManualRefresh}
+            disabled={refreshing || loading}
+            className="ml-auto gap-1.5 text-[11px] sm:text-xs px-2.5"
+            title="Atjaunot pasūtījumu sarakstu"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+            <span className="hidden sm:inline">Atjaunot</span>
+          </Button>
         </div>
         <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
           <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
