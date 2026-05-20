@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getAuthRedirectOrigin, redirectToCanonicalHost } from "@/lib/authDomain";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -40,6 +41,10 @@ const Auth = () => {
   const [form, setForm] = useState({ email: "", password: "", fullName: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [forgotOpen, setForgotOpen] = useState(false);
+
+  useEffect(() => {
+    redirectToCanonicalHost();
+  }, []);
 
   useEffect(() => {
     if (authLoading || !user || adminLoading) return;
@@ -84,7 +89,7 @@ const Auth = () => {
       } else {
         const { error } = await supabase.auth.signUp({
           email: form.email.trim(), password: form.password,
-          options: { data: { full_name: form.fullName.trim() }, emailRedirectTo: window.location.origin },
+          options: { data: { full_name: form.fullName.trim() }, emailRedirectTo: getAuthRedirectOrigin() },
         });
         if (error) throw error;
         toast.success(t("auth.registerSuccess"));
@@ -101,7 +106,7 @@ const Auth = () => {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: getAuthRedirectOrigin(),
       });
       if (result.error) {
         toast.error(t("auth.googleError"));
