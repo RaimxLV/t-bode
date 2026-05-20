@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -34,8 +34,9 @@ const SHOW_GOOGLE_LOGIN = true;
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
-  const { user, isAdmin, adminLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin, adminLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -44,13 +45,13 @@ const Auth = () => {
   const [forgotOpen, setForgotOpen] = useState(false);
 
   useEffect(() => {
-    if (!user || adminLoading) return;
+    if (authLoading || !user || adminLoading) return;
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
     if (redirect) { navigate(redirect); return; }
     if (isAdmin) navigate("/admin");
     else navigate("/");
-  }, [user, isAdmin, adminLoading, navigate]);
+  }, [user, authLoading, isAdmin, adminLoading, navigate]);
 
   const validate = (): boolean => {
     const schema = isLogin ? loginSchema : registerSchema;
@@ -103,13 +104,16 @@ const Auth = () => {
     try {
       sessionStorage.setItem(OAUTH_PENDING_STORAGE_KEY, "1");
 
-      const redirectUrl = new URL(`${window.location.origin}/auth`);
       const redirect = new URLSearchParams(window.location.search).get("redirect");
+      const redirectUrl = new URL(`${window.location.origin}${location.pathname}`);
       if (redirect) {
         redirectUrl.searchParams.set("redirect", redirect);
       }
 
-      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUrl.toString() });
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: redirectUrl.toString(),
+        extraParams: { prompt: "select_account" },
+      });
       if (result.error) {
         sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
         toast.error(t("auth.googleError"));
