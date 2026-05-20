@@ -184,7 +184,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         pendingOAuth: hasPendingManagedOAuth,
         hasReturnParams: oauthReturnParamsPresent,
       });
-      const resolvedSession = initialSession ?? latestSessionRef.current;
+      const resolvedSession = initialSession?.user ? initialSession : latestSessionRef.current ?? initialSession;
       applySession(resolvedSession, { allowFinishLoading: true });
 
       if (resolvedSession?.user && oauthReturnParamsPresent) {
