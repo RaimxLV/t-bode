@@ -73,7 +73,7 @@ const Checkout = () => {
   // Mode: if logged in skip choose; if not, show choose first
   const [mode, setMode] = useState<CheckoutMode>(user ? "loggedin" : "choose");
   const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("omniva");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("montonio");
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -655,6 +655,8 @@ const Checkout = () => {
               <section className="bg-card border border-border rounded-lg p-6">
                 <h2 className="text-lg font-display mb-4">{t("checkout.paymentMethod", "Apmaksas veids")}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Stripe card payment temporarily hidden */}
+                  {false && (
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("card")}
@@ -666,7 +668,18 @@ const Checkout = () => {
                       <p className="text-xs text-muted-foreground font-body">{t("checkout.payCardDesc", "Tūlītēja apmaksa caur Stripe (Visa, Mastercard)")}</p>
                     </div>
                   </button>
-                  {/* Montonio bank-link option temporarily hidden until production go-live */}
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("montonio")}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "montonio" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                  >
+                    <Landmark className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: paymentMethod === "montonio" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.payMontonio", "Maksāt ar bankas linku")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.payMontonioDesc", "Tūlītēja apmaksa caur Swedbank, SEB, Citadele, Luminor u.c.")}</p>
+                    </div>
+                  </button>
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("bank_transfer")}
