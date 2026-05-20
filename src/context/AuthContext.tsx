@@ -53,19 +53,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
-  const hasResolvedInitialSession = useRef(false);
+  const isInitializingAuth = useRef(true);
+  const latestSessionRef = useRef<Session | null>(null);
 
   const applySession = (nextSession: Session | null, options?: { allowFinishLoading?: boolean }) => {
+    latestSessionRef.current = nextSession;
     setSession(nextSession);
     setUser(nextSession?.user ?? null);
 
     if (nextSession?.user) {
       clearPendingOAuthFlag();
+      setAdminLoading(true);
     }
 
     if (options?.allowFinishLoading) {
       setLoading(false);
-      hasResolvedInitialSession.current = true;
+      isInitializingAuth.current = false;
     }
 
     if (nextSession?.user) {
@@ -96,7 +99,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      applySession(nextSession, { allowFinishLoading: true });
+      if (isInitializingAuth.current) {
+        if (event !== "INITIAL_SESSION") {
+          applySession(nextSession);
+        }
+      } else {
+        applySession(nextSession, { allowFinishLoading: true });
+      }
 
       if (event === "SIGNED_OUT") {
         clearPendingOAuthFlag();
@@ -105,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initializeAuth = async () => {
       const shouldRecoverOAuth = hasOAuthReturnParams() || sessionStorage.getItem(OAUTH_PENDING_STORAGE_KEY) === "1";
+      let recoveredSession: Session | null = null;
 
       if (shouldRecoverOAuth) {
         const searchParams = new URLSearchParams(window.location.search);
@@ -120,15 +130,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearPendingOAuthFlag();
             cleanOAuthUrl();
           } else if (code) {
-            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) throw error;
+            recoveredSession = data.session;
             cleanOAuthUrl();
           } else if (accessToken && refreshToken) {
-            const { error } = await supabase.auth.setSession({
+            const { data, error } = await supabase.auth.setSession({
               access_token: accessToken,
               refresh_token: refreshToken,
             });
             if (error) throw error;
+            recoveredSession = data.session;
             cleanOAuthUrl();
           }
         } catch (error) {
@@ -139,9 +151,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { data: { session: initialSession } } = await supabase.auth.getSession();
-      applySession(initialSession, { allowFinishLoading: true });
+      const resolvedSession = recoveredSession ?? initialSession ?? latestSessionRef.current;
+      applySession(resolvedSession, { allowFinishLoading: true });
 
-      if (!initialSession?.user) {
+      if (!resolvedSession?.user) {
         clearPendingOAuthFlag();
       }
     };
