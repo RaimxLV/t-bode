@@ -491,12 +491,22 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="font-body text-sm">{t("checkout.name")}</Label>
-                    <Input id="name" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="Jānis Bērziņš" className={`mt-1 ${errors.name ? "border-destructive" : ""}`} maxLength={100} />
+                    <Input id="name" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="Jānis Bērziņš" className={`mt-1 ${errors.name ? "border-destructive" : ""}`} maxLength={100} autoComplete="name" autoCapitalize="words" />
                     <FieldError field="name" />
                   </div>
                   <div>
                     <Label htmlFor="phone" className="font-body text-sm">{t("checkout.phone")}</Label>
-                    <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+371 20000000" className={`mt-1 ${errors.phone ? "border-destructive" : ""}`} maxLength={20} />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={form.phone}
+                      onChange={(e) => updateField("phone", sanitizePhoneInput(e.target.value))}
+                      placeholder="+371 20000000"
+                      className={`mt-1 ${errors.phone ? "border-destructive" : ""}`}
+                      maxLength={20}
+                    />
                     <FieldError field="phone" />
                   </div>
                   <div className="sm:col-span-2">
@@ -504,6 +514,11 @@ const Checkout = () => {
                     <Input
                       id="email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
                       value={user?.email ?? form.email}
                       onChange={(e) => updateField("email", e.target.value)}
                       disabled={!!user}
