@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -83,6 +83,7 @@ const Checkout = () => {
   const [omnivaSearch, setOmnivaSearch] = useState("");
   const [selectedOmniva, setSelectedOmniva] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const [isBusiness, setIsBusiness] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -231,6 +232,7 @@ const Checkout = () => {
   };
 
   const handleSubmit = async () => {
+    if (submitLockRef.current || submitting) return;
     if (!validate() || items.length === 0) return;
     // Honeypot check: silently reject bots
     if (website.trim() !== "" || Date.now() - formLoadedAt < 2000) {
@@ -238,6 +240,7 @@ const Checkout = () => {
       toast.error(t("checkout.spamBlocked", "Pārāk ātri. Lūdzu mēģiniet vēlreiz."));
       return;
     }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
       const isGuestCheckout = mode === "guest" || !user;
@@ -394,6 +397,7 @@ const Checkout = () => {
     } catch (error: any) {
       toast.error(error.message || t("checkout.error"));
     } finally {
+      submitLockRef.current = false;
       setSubmitting(false);
     }
   };
