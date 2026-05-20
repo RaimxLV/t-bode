@@ -14,6 +14,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
+import { redirectToCanonicalHost } from "@/lib/authDomain";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded routes for code splitting
@@ -58,6 +59,8 @@ const ViewportRecovery = () => {
   const { user, loading } = useAuth();
 
   useEffect(() => {
+    if (redirectToCanonicalHost()) return;
+
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) return;
 
@@ -73,12 +76,8 @@ const ViewportRecovery = () => {
     };
 
     const hasOAuthReturnParams =
-      new URLSearchParams(window.location.search).has("access_token") ||
-      new URLSearchParams(window.location.search).has("refresh_token") ||
-      window.location.hash.includes("access_token") ||
-      window.location.hash.includes("refresh_token") ||
-      window.location.hash.includes("error") ||
-      new URLSearchParams(window.location.search).has("code");
+      new URLSearchParams(window.location.search).has("code") ||
+      window.location.hash.includes("error");
 
     const cameFromGoogle = document.referrer.includes("google.");
 
