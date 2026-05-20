@@ -117,7 +117,10 @@ Deno.serve(async (req) => {
     if (!customerCode) throw new Error("OMNIVA_CUSTOMER_CODE not configured");
     log("Omniva credentials present", "ok", "Customer code and login secrets are available");
 
-    const recipientName = order.shipping_name || "Recipient";
+    const orderNumStr = `#${String(order.order_number ?? "").padStart(5, "0")}`;
+    // Omniva shows person_name in their notification email ("Tavs sūtījums X ir reģistrēts").
+    // Use the order number instead of the customer's name so it's clear which order this is.
+    const recipientName = `T-Bode pasūtījums ${orderNumStr}`;
     const recipientPhone = order.shipping_phone || "";
     const recipientEmail = order.guest_email || "";
     const isPickup = !!order.omniva_pickup_point;
