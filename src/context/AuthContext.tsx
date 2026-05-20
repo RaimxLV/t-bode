@@ -2,6 +2,38 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
+const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
+
+const hasOAuthReturnParams = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return (
+    searchParams.has("code") ||
+    searchParams.has("error") ||
+    hashParams.has("access_token") ||
+    hashParams.has("refresh_token") ||
+    hashParams.has("error")
+  );
+};
+
+const clearPendingOAuthFlag = () => {
+  sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
+};
+
+const cleanOAuthUrl = () => {
+  const url = new URL(window.location.href);
+
+  ["code", "state", "error", "error_code", "error_description", "provider_token", "provider_refresh_token"].forEach((key) => {
+    url.searchParams.delete(key);
+  });
+
+  url.hash = "";
+
+  const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, "", nextUrl || "/");
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -26,6 +58,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const applySession = (nextSession: Session | null, options?: { allowFinishLoading?: boolean }) => {
     setSession(nextSession);
     setUser(nextSession?.user ?? null);
+
+    if (nextSession?.user) {
+      clearPendingOAuthFlag();
+    }
 
     if (options?.allowFinishLoading) {
       setLoading(false);
@@ -59,13 +95,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      applySession(nextSession, { allowFinishLoading: hasResolvedInitialSession.current });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      applySession(nextSession, { allowFinishLoading: true });
+
+      if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+        clearPendingOAuthFlag();
+      }
     });
 
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    const initializeAuth = async () => {
+      const shouldRecoverOAuth = hasOAuthReturnParams() || sessionStorage.getItem(OAUTH_PENDING_STORAGE_KEY) === "1";
+
+      if (shouldRecoverOAuth) {
+        const searchParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+        try {
+          const code = searchParams.get("code");
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          const hasOAuthError = searchParams.has("error") || hashParams.has("error");
+
+          if (hasOAuthError) {
+            clearPendingOAuthFlag();
+            cleanOAuthUrl();
+          } else if (code) {
+            const { error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) throw error;
+            cleanOAuthUrl();
+          } else if (accessToken && refreshToken) {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
+            if (error) throw error;
+            cleanOAuthUrl();
+          }
+        } catch (error) {
+          console.error("OAuth session recovery failed:", error);
+          clearPendingOAuthFlag();
+          cleanOAuthUrl();
+        }
+      }
+
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
       applySession(initialSession, { allowFinishLoading: true });
-    });
+
+      if (!initialSession?.user) {
+        clearPendingOAuthFlag();
+      }
+    };
+
+    void initializeAuth();
 
     return () => subscription.unsubscribe();
   }, []);
