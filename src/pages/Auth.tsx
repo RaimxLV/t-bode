@@ -16,19 +16,6 @@ import logo from "@/assets/logo.svg";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { checkRateLimit } from "@/lib/rateLimit";
 
-const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
-const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
-
-const setOAuthStorage = (key: string, value: string) => {
-  sessionStorage.setItem(key, value);
-  localStorage.setItem(key, value);
-};
-
-const clearOAuthStorage = (key: string) => {
-  sessionStorage.removeItem(key);
-  localStorage.removeItem(key);
-};
-
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
   password: z.string().min(6, "Parolei jābūt vismaz 6 simbolus garai"),
@@ -113,28 +100,16 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      setOAuthStorage(OAUTH_PENDING_STORAGE_KEY, "1");
-
-      const redirect = new URLSearchParams(window.location.search).get("redirect");
-      const returnPath = redirect || "/";
-      setOAuthStorage(OAUTH_RETURN_PATH_KEY, returnPath);
-
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
       });
       if (result.error) {
-        clearOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
-        clearOAuthStorage(OAUTH_RETURN_PATH_KEY);
         toast.error(t("auth.googleError"));
         return;
       }
-      if (result.redirected) return;
-      const finalRedirect = redirect ? redirect : "/";
-      navigate(finalRedirect);
+      // If we get here without a redirect, onAuthStateChange will handle navigation.
     } catch {
-      clearOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
-      clearOAuthStorage(OAUTH_RETURN_PATH_KEY);
       toast.error(t("auth.googleError"));
     } finally {
       setLoading(false);
