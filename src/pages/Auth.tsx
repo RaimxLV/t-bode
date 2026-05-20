@@ -19,6 +19,13 @@ import { checkRateLimit } from "@/lib/rateLimit";
 const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
 const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
+const getCanonicalOrigin = () => {
+  if (typeof window === "undefined") return "";
+
+  const { origin, hostname } = window.location;
+  return hostname === "www.t-bode.lv" ? "https://t-bode.lv" : origin;
+};
+
 const setOAuthStorage = (key: string, value: string) => {
   sessionStorage.setItem(key, value);
   localStorage.setItem(key, value);
@@ -112,6 +119,8 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
+      const redirectOrigin = getCanonicalOrigin();
+
       setOAuthStorage(OAUTH_PENDING_STORAGE_KEY, "1");
 
       const redirect = new URLSearchParams(window.location.search).get("redirect");
@@ -119,7 +128,7 @@ const Auth = () => {
       setOAuthStorage(OAUTH_RETURN_PATH_KEY, returnPath);
 
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: redirectOrigin,
         extraParams: { prompt: "select_account" },
       });
       if (result.error) {
