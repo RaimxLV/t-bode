@@ -569,6 +569,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const activeOrders = useMemo(
     () => orders.filter((o) => {
       if (ARCHIVED_STATUSES.includes(o.status) || HIDDEN_FROM_INBOX_STATUSES.includes(o.status)) return false;
+      // Hide unpaid "pending" orders from the active inbox. These are usually:
+      //   - abandoned carts (user started checkout but never paid)
+      //   - spam / bot submissions
+      // They must NOT appear as work-to-do or inflate stats. They can still be
+      // reviewed in the dedicated "Nesamaksātie" tab below.
+      if (o.status === "pending" && !isOrderPaid(o)) return false;
       const items = orderItems[o.id] || [];
       const hasPendingZakekeItem = items.some((item: any) => item.zakeke_design_id && !hasReadyPrintFiles(item.zakeke_print_files));
       return !hasPendingZakekeItem;
@@ -577,6 +583,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   );
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status) && isOrderPaid(o)), [orders]);
   const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
+  const unpaidOrders = useMemo(
+    () => orders.filter(o => o.status === "pending" && !isOrderPaid(o)),
+    [orders]
+  );
   const unreadCount = useMemo(
     () => activeOrders.filter(o => !o.admin_opened_at).length,
     [activeOrders]
