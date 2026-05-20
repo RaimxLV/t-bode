@@ -119,7 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const initializeAuth = async () => {
-      const shouldRecoverOAuth = hasOAuthReturnParams() || sessionStorage.getItem(OAUTH_PENDING_STORAGE_KEY) === "1";
+      const hasPendingManagedOAuth = sessionStorage.getItem(OAUTH_PENDING_STORAGE_KEY) === "1";
+      const shouldRecoverOAuth = hasOAuthReturnParams() || hasPendingManagedOAuth;
       let recoveredSession: Session | null = null;
 
       if (shouldRecoverOAuth) {
@@ -137,11 +138,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (hasOAuthError) {
             clearPendingOAuthFlag();
             cleanOAuthUrl();
-          } else if (code) {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) throw error;
-            recoveredSession = data.session;
-            cleanOAuthUrl();
           } else if (searchAccessToken && searchRefreshToken) {
             const { data, error } = await supabase.auth.setSession({
               access_token: searchAccessToken,
@@ -155,6 +151,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               access_token: accessToken,
               refresh_token: refreshToken,
             });
+            if (error) throw error;
+            recoveredSession = data.session;
+            cleanOAuthUrl();
+          } else if (code && !hasPendingManagedOAuth) {
+            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) throw error;
             recoveredSession = data.session;
             cleanOAuthUrl();
