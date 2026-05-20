@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public._can_insert_order_item(uuid) FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public._can_insert_order_item(uuid) TO anon, authenticated, service_role;
