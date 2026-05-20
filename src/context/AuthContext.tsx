@@ -105,6 +105,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      console.info("[auth] state change", {
+        event,
+        hasUser: !!nextSession?.user,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        hash: window.location.hash ? "#present" : "",
+      });
+
       if (isInitializingAuth.current) {
         if (event !== "INITIAL_SESSION") {
           applySession(nextSession);
@@ -123,6 +131,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const shouldRecoverOAuth = hasOAuthReturnParams() || hasPendingManagedOAuth;
       let recoveredSession: Session | null = null;
 
+      console.info("[auth] initialize", {
+        pathname: window.location.pathname,
+        search: window.location.search,
+        hash: window.location.hash ? "#present" : "",
+        hasPendingManagedOAuth,
+        shouldRecoverOAuth,
+      });
+
       if (shouldRecoverOAuth) {
         const searchParams = new URLSearchParams(window.location.search);
         const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -134,6 +150,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const accessToken = hashParams.get("access_token");
           const refreshToken = hashParams.get("refresh_token");
           const hasOAuthError = searchParams.has("error") || hashParams.has("error");
+
+          console.info("[auth] oauth return params", {
+            hasCode: !!code,
+            hasSearchAccessToken: !!searchAccessToken,
+            hasSearchRefreshToken: !!searchRefreshToken,
+            hasHashAccessToken: !!accessToken,
+            hasHashRefreshToken: !!refreshToken,
+            hasOAuthError,
+            hasPendingManagedOAuth,
+          });
 
           if (hasOAuthError) {
             clearPendingOAuthFlag();
@@ -168,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const { data: { session: initialSession } } = await supabase.auth.getSession();
+      console.info("[auth] getSession resolved", { hasSession: !!initialSession?.user, recovered: !!recoveredSession?.user });
       const resolvedSession = recoveredSession ?? initialSession ?? latestSessionRef.current;
       applySession(resolvedSession, { allowFinishLoading: true });
 
