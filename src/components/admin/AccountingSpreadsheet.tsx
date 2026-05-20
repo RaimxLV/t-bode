@@ -18,7 +18,9 @@ type Row = {
   invoiceNumber: string;
   client: string;
   products: string;
-  productItems?: { name: string; variant: string; qty: number }[];
+  sizes: string;
+  quantities: string;
+  productItems?: { name: string; size: string; qty: number }[];
   regNumber: string;
   vatNumber: string;
   net: number;
@@ -128,7 +130,7 @@ export const AccountingSpreadsheet = () => {
     const out: Row[] = [];
     for (const [day, list] of byDay) {
       out.push({
-        date: day, orderNumber: "", invoiceNumber: "", client: "", products: "", regNumber: "",
+        date: day, orderNumber: "", invoiceNumber: "", client: "", products: "", sizes: "", quantities: "", regNumber: "",
         vatNumber: "", net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
         isGroupHeader: true, groupLabel: day,
       });
@@ -137,7 +139,7 @@ export const AccountingSpreadsheet = () => {
         const its = itemsByOrder.get(o.id) ?? [];
         const productItems = its.map((it) => ({
           name: String(it.product_name ?? "—"),
-          variant: [it.color, it.size].filter(Boolean).join(" / "),
+          size: String(it.size ?? "").trim() || "—",
           qty: Number(it.quantity ?? 1),
         }));
         const productsStr = its.length
@@ -146,6 +148,12 @@ export const AccountingSpreadsheet = () => {
               const qty = (it.quantity ?? 1) > 1 ? ` ×${it.quantity}` : ` ×1`;
               return `• ${it.product_name}${variant ? ` (${variant})` : ""}${qty}`;
             }).join("\n")
+          : "—";
+        const sizesStr = its.length
+          ? its.map((it) => String(it.size ?? "").trim() || "—").join("\n")
+          : "—";
+        const qtysStr = its.length
+          ? its.map((it) => String(it.quantity ?? 1)).join("\n")
           : "—";
         const gross = Number(o.total ?? 0);
         const vatRate = Number(inv?.vat_rate ?? 21);
@@ -159,6 +167,8 @@ export const AccountingSpreadsheet = () => {
             ? (o.company_name ?? o.shipping_name ?? "—")
             : (o.shipping_name ?? o.guest_email ?? "—"),
           products: productsStr,
+          sizes: sizesStr,
+          quantities: qtysStr,
           productItems,
           regNumber: o.company_reg_number ?? "",
           vatNumber: o.company_vat_number ?? "",
@@ -205,20 +215,34 @@ export const AccountingSpreadsheet = () => {
         return <span className="text-xs text-muted-foreground">—</span>;
       }
       return (
-        <ul className="space-y-0.5 min-w-[200px] max-w-[320px] text-[10px] leading-tight">
+        <ul className="space-y-0.5 min-w-[160px] max-w-[280px] text-[10px] leading-tight">
           {list.map((it, idx) => (
             <li key={idx} className="flex gap-2">
               <span className="text-muted-foreground select-none">•</span>
-              <span className="flex-1">
-                <span className="font-medium">{it.name}</span>
-                {it.variant && (
-                  <span className="ml-1 inline-block whitespace-nowrap rounded bg-muted px-1 py-0 text-[9px] text-muted-foreground">
-                    {it.variant}
-                  </span>
-                )}
-                <span className="ml-1 whitespace-nowrap text-muted-foreground">×{it.qty}</span>
-              </span>
+              <span className="flex-1 font-medium">{it.name}</span>
             </li>
+          ))}
+        </ul>
+      );
+    } },
+    { accessorKey: "sizes", header: "Izmērs", cell: (i) => {
+      const list = i.row.original.productItems;
+      if (!list || list.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+      return (
+        <ul className="space-y-0.5 text-[10px] leading-tight">
+          {list.map((it, idx) => (
+            <li key={idx} className="whitespace-nowrap">{it.size}</li>
+          ))}
+        </ul>
+      );
+    } },
+    { accessorKey: "quantities", header: "Daudz.", cell: (i) => {
+      const list = i.row.original.productItems;
+      if (!list || list.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+      return (
+        <ul className="space-y-0.5 text-[10px] leading-tight text-right tabular-nums">
+          {list.map((it, idx) => (
+            <li key={idx}>{it.qty}</li>
           ))}
         </ul>
       );
@@ -251,6 +275,8 @@ export const AccountingSpreadsheet = () => {
       { header: "Rēķina Nr.", key: "invoiceNumber", width: 16 },
       { header: "Klients", key: "client", width: 30 },
       { header: "Preces", key: "products", width: 50 },
+      { header: "Izmērs", key: "sizes", width: 14 },
+      { header: "Daudzums", key: "quantities", width: 12 },
       { header: "Reģ. nr.", key: "regNumber", width: 14 },
       { header: "PVN nr.", key: "vatNumber", width: 14 },
       { header: "Bez PVN (€)", key: "net", width: 12 },
@@ -263,6 +289,8 @@ export const AccountingSpreadsheet = () => {
     rows.filter((r) => !r.isGroupHeader).forEach((r) => {
       const row = ws.addRow(r);
       row.getCell("products").alignment = { wrapText: true, vertical: "top" };
+      row.getCell("sizes").alignment = { wrapText: true, vertical: "top" };
+      row.getCell("quantities").alignment = { wrapText: true, vertical: "top", horizontal: "right" };
       const b = statusBucket(r.status);
       const fill = b === "paid" ? "FFD1FAE5" : b === "pending" ? "FFFEF3C7" : b === "cancelled" ? "FFFEE2E2" : null;
       if (fill) row.eachCell((c) => { c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } }; });
