@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
+const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
 const hasOAuthReturnParams = () => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -200,6 +201,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!resolvedSession?.user) {
         clearPendingOAuthFlag();
+        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
+      } else if (recoveredSession?.user) {
+        // After a successful OAuth callback, restore the page the user
+        // initiated sign-in from (the broker only redirects to the origin).
+        const returnPath = sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
+        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
+        if (returnPath && returnPath !== window.location.pathname + window.location.search) {
+          window.history.replaceState({}, "", returnPath);
+        }
       }
     };
 
