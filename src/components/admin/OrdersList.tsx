@@ -566,14 +566,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const stats = useMemo(() => {
     const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
-    const pendingCount = orders.filter(o => o.status === "pending").length;
-    const activeCount = orders.filter(o => ["confirmed", "processing", "shipped"].includes(o.status)).length;
+    const pendingCount = activeOrders.filter(o => o.status === "pending").length;
+    const activeCount = activeOrders.filter(o => ["confirmed", "processing", "shipped"].includes(o.status)).length;
     const processingCount = orders.filter(o => o.status === "processing").length;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthRevenue = orders.filter(o => o.status !== "cancelled" && new Date(o.created_at) >= monthStart).reduce((sum, o) => sum + Number(o.total), 0);
     return { totalRevenue, pendingCount, activeCount, processingCount, monthRevenue };
-  }, [orders]);
+  }, [orders, activeOrders]);
 
   const filteredOrders = currentOrders.filter((order) => {
     if (filterStatus !== "all" && order.status !== filterStatus) return false;
