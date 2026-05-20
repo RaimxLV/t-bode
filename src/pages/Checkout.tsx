@@ -610,17 +610,17 @@ const Checkout = () => {
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <Label htmlFor="address" className="font-body text-sm">{t("checkout.address")}</Label>
-                      <Input id="address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Brīvības iela 100-10" className={`mt-1 ${errors.address ? "border-destructive" : ""}`} maxLength={200} />
+                      <Input id="address" autoComplete="street-address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Brīvības iela 100-10" className={`mt-1 ${errors.address ? "border-destructive" : ""}`} maxLength={200} />
                       <FieldError field="address" />
                     </div>
                     <div>
                       <Label htmlFor="city" className="font-body text-sm">{t("checkout.city")}</Label>
-                      <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder="Rīga" className={`mt-1 ${errors.city ? "border-destructive" : ""}`} maxLength={100} />
+                      <Input id="city" autoComplete="address-level2" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder="Rīga" className={`mt-1 ${errors.city ? "border-destructive" : ""}`} maxLength={100} />
                       <FieldError field="city" />
                     </div>
                     <div>
                       <Label htmlFor="zip" className="font-body text-sm">{t("checkout.zip")}</Label>
-                      <Input id="zip" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
+                      <Input id="zip" autoComplete="postal-code" inputMode="text" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
                       <FieldError field="zip" />
                     </div>
                   </div>
