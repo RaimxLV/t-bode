@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { Seo } from "@/components/Seo";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -9,6 +10,16 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen">
+      <Seo
+        title={isLv ? "Lietošanas noteikumi | T-Bode" : "Terms & Conditions | T-Bode"}
+        description={
+          isLv
+            ? "T-Bode interneta veikala lietošanas noteikumi un pirkuma nosacījumi — piegāde, atgriešana, garantija un maksājumi."
+            : "T-Bode online store terms and conditions — delivery, returns, warranty and payment terms for orders placed in Latvia."
+        }
+        canonical="https://www.t-bode.lv/terms"
+        noTitleSuffix
+      />
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
