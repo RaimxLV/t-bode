@@ -1152,6 +1152,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               {omnivaLoading[order.id] === "label" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                               {t("admin.omnivaDownloadLabel")}
                             </Button>
+                            {order.status !== "delivered" && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={async () => {
+                                  if (!confirm("Atzīmēt sūtījumu kā piegādātu un pārvietot uz arhīvu?")) return;
+                                  const { error } = await supabase
+                                    .from("orders")
+                                    .update({
+                                      status: "delivered" as any,
+                                      omniva_tracking_status: "delivered",
+                                    })
+                                    .eq("id", order.id);
+                                  if (error) toast.error("Kļūda: " + error.message);
+                                  else { toast.success("Pasūtījums atzīmēts kā gatavs un pārvietots uz arhīvu"); onRefresh(); }
+                                }}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Pasūtījums gatavs (arhivēt)
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           <div className="flex flex-wrap gap-2">
