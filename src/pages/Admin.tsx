@@ -73,6 +73,10 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("design");
   const [orders, setOrders] = useState<any[]>([]);
+  const activeOrdersCount = useMemo(
+    () => orders.filter((o) => o.status !== "cancelled" && !(o.status === "pending" && !isOrderPaid(o))).length,
+    [orders]
+  );
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [faqs, setFaqs] = useState<any[]>([]);
