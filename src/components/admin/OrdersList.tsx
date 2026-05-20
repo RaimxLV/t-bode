@@ -50,6 +50,13 @@ const hasReadyPrintFiles = (files: any): boolean => {
   return typeof files === "object" && Object.keys(files).length > 0;
 };
 
+const isOrderPaid = (order: any): boolean => {
+  const montonioStatus = (order?.montonio_payment_status ?? "").toString().toUpperCase();
+  return !!order?.manually_paid_at
+    || montonioStatus === "PAID"
+    || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
+};
+
 interface OrdersListProps {
   orders: any[];
   orderItems: Record<string, any[]>;
@@ -556,7 +563,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }),
     [orders, orderItems]
   );
-  const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status)), [orders]);
+  const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status) && isOrderPaid(o)), [orders]);
   const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
   const unreadCount = useMemo(
     () => activeOrders.filter(o => !o.admin_opened_at).length,
@@ -565,13 +572,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const currentOrders = showCancelled ? cancelledOrders : showArchive ? archivedOrders : activeOrders;
 
   const stats = useMemo(() => {
-    const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, o) => sum + Number(o.total), 0);
+    const paidOrders = orders.filter((o) => o.status !== "cancelled" && isOrderPaid(o));
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = activeOrders.filter(o => o.status === "pending").length;
     const activeCount = activeOrders.filter(o => ["confirmed", "processing", "shipped"].includes(o.status)).length;
     const processingCount = orders.filter(o => o.status === "processing").length;
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthRevenue = orders.filter(o => o.status !== "cancelled" && new Date(o.created_at) >= monthStart).reduce((sum, o) => sum + Number(o.total), 0);
+    const monthRevenue = paidOrders.filter(o => new Date(o.created_at) >= monthStart).reduce((sum, o) => sum + Number(o.total), 0);
     return { totalRevenue, pendingCount, activeCount, processingCount, monthRevenue };
   }, [orders, activeOrders]);
 
@@ -669,7 +677,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             Atjaunot rēķinus
           </Button>
         </div>
-        <span className="block text-xs text-muted-foreground font-body">Kopā: {orders.length} pasūtījumi</span>
+        <span className="block text-xs text-muted-foreground font-body">Kopā: {currentOrders.length} pasūtījumi</span>
       </div>
 
       <div className="space-y-2">
