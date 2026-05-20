@@ -180,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (error) throw error;
             recoveredSession = data.session;
             cleanOAuthUrl();
-          } else if (code && !hasPendingManagedOAuth) {
+          } else if (code) {
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
             if (error) throw error;
             recoveredSession = data.session;
