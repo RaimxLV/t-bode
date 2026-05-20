@@ -73,6 +73,8 @@ const ViewportRecovery = () => {
     };
 
     const hasOAuthReturnParams =
+      new URLSearchParams(window.location.search).has("access_token") ||
+      new URLSearchParams(window.location.search).has("refresh_token") ||
       window.location.hash.includes("access_token") ||
       window.location.hash.includes("refresh_token") ||
       window.location.hash.includes("error") ||

@@ -10,6 +10,8 @@ const hasOAuthReturnParams = () => {
 
   return (
     searchParams.has("code") ||
+    searchParams.has("access_token") ||
+    searchParams.has("refresh_token") ||
     searchParams.has("error") ||
     hashParams.has("access_token") ||
     hashParams.has("refresh_token") ||
@@ -25,6 +27,10 @@ const cleanOAuthUrl = () => {
   const url = new URL(window.location.href);
 
   ["code", "state", "error", "error_code", "error_description", "provider_token", "provider_refresh_token"].forEach((key) => {
+    url.searchParams.delete(key);
+  });
+
+  ["access_token", "refresh_token", "expires_in", "expires_at", "token_type"].forEach((key) => {
     url.searchParams.delete(key);
   });
 
@@ -122,6 +128,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         try {
           const code = searchParams.get("code");
+          const searchAccessToken = searchParams.get("access_token");
+          const searchRefreshToken = searchParams.get("refresh_token");
           const accessToken = hashParams.get("access_token");
           const refreshToken = hashParams.get("refresh_token");
           const hasOAuthError = searchParams.has("error") || hashParams.has("error");
@@ -131,6 +139,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             cleanOAuthUrl();
           } else if (code) {
             const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+            if (error) throw error;
+            recoveredSession = data.session;
+            cleanOAuthUrl();
+          } else if (searchAccessToken && searchRefreshToken) {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: searchAccessToken,
+              refresh_token: searchRefreshToken,
+            });
             if (error) throw error;
             recoveredSession = data.session;
             cleanOAuthUrl();
