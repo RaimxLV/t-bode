@@ -109,8 +109,9 @@ const Auth = () => {
         if (error) throw error;
         toast.success(t("auth.registerSuccess"));
       }
-    } catch (error: any) {
-      toast.error(error.message || t("auth.authError"));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t("auth.authError");
+      toast.error(message || t("auth.authError"));
     } finally {
       setLoading(false);
     }
