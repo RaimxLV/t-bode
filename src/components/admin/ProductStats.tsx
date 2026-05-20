@@ -11,6 +11,13 @@ interface ProductStatsProps {
 
 const MONTHS_LV = ["Janvāris", "Februāris", "Marts", "Aprīlis", "Maijs", "Jūnijs", "Jūlijs", "Augusts", "Septembris", "Oktobris", "Novembris", "Decembris"];
 
+const isOrderPaid = (order: any): boolean => {
+  const montonioStatus = (order?.montonio_payment_status ?? "").toString().toUpperCase();
+  return !!order?.manually_paid_at
+    || montonioStatus === "PAID"
+    || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
+};
+
 export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
@@ -25,7 +32,7 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
   // Aggregate product stats
   const { productTotals, monthlyData, yearTotal, yearRevenue } = useMemo(() => {
     const year = Number(selectedYear);
-    const validOrders = orders.filter((o) => o.status !== "cancelled" && new Date(o.created_at).getFullYear() === year);
+    const validOrders = orders.filter((o) => o.status !== "cancelled" && isOrderPaid(o) && new Date(o.created_at).getFullYear() === year);
     const validOrderIds = new Set(validOrders.map((o) => o.id));
 
     const productMap: Record<string, { name: string; qty: number; revenue: number }> = {};
@@ -98,7 +105,7 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
         </Card>
         <Card className="border border-border">
           <CardContent className="p-3 text-center">
-            <p className="text-lg sm:text-xl font-display">{orders.filter((o) => o.status !== "cancelled" && new Date(o.created_at).getFullYear() === Number(selectedYear)).length}</p>
+            <p className="text-lg sm:text-xl font-display">{orders.filter((o) => o.status !== "cancelled" && isOrderPaid(o) && new Date(o.created_at).getFullYear() === Number(selectedYear)).length}</p>
             <p className="text-[10px] text-muted-foreground font-body">Pasūtījumi</p>
           </CardContent>
         </Card>

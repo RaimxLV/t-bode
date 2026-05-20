@@ -54,6 +54,13 @@ const StatCard = ({ icon: Icon, label, value, accent }: { icon: any; label: stri
   </Card>
 );
 
+const isOrderPaid = (order: any): boolean => {
+  const montonioStatus = (order?.montonio_payment_status ?? "").toString().toUpperCase();
+  return !!order?.manually_paid_at
+    || montonioStatus === "PAID"
+    || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
+};
+
 const Admin = () => {
   const { user, loading: authLoading, isAdmin: hasAdminRole, adminLoading, isWhitelisted } = useAuth();
   const navigate = useNavigate();
@@ -86,7 +93,7 @@ const Admin = () => {
     activeDesigns: designProducts.length,
     collectionCount: collectionProducts.length,
     pendingOrders: orders.filter((o: any) => o.status === "pending").length,
-    totalRevenue: orders.filter((o: any) => o.status !== "cancelled").reduce((sum: number, o: any) => sum + Number(o.total), 0),
+    totalRevenue: orders.filter((o: any) => o.status !== "cancelled" && isOrderPaid(o)).reduce((sum: number, o: any) => sum + Number(o.total), 0),
   }), [products, designProducts, collectionProducts, orders]);
 
   useEffect(() => {
