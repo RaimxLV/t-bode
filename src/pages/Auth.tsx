@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -45,7 +45,6 @@ const SHOW_GOOGLE_LOGIN = true;
 
 const Auth = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useTranslation();
   const { user, loading: authLoading, isAdmin, adminLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);

@@ -7,11 +7,6 @@ const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
 const readOAuthStorage = (key: string) => sessionStorage.getItem(key) ?? localStorage.getItem(key);
 
-const writeOAuthStorage = (key: string, value: string) => {
-  sessionStorage.setItem(key, value);
-  localStorage.setItem(key, value);
-};
-
 const removeOAuthStorage = (key: string) => {
   sessionStorage.removeItem(key);
   localStorage.removeItem(key);
