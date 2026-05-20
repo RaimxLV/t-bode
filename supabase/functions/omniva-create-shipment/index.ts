@@ -84,7 +84,12 @@ Deno.serve(async (req) => {
       .eq("user_id", userData.user.id)
       .eq("role", "admin")
       .maybeSingle();
-    if (!roleRow) {
+    let allowed = !!roleRow;
+    if (!allowed && userData.user.email) {
+      const { data: wl } = await supabase.rpc("is_admin_whitelisted", { _email: userData.user.email });
+      allowed = !!wl;
+    }
+    if (!allowed) {
       log("Admin role check", "error", `User ${userData.user.email ?? userData.user.id} is not admin`);
       return new Response(JSON.stringify({ error: "Forbidden", steps }), {
         status: 403,
