@@ -530,6 +530,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  // Delete all unpaid pending orders (abandoned carts / spam).
+  const clearUnpaid = async () => {
+    const ids = orders
+      .filter((o) => o.status === "pending" && !isOrderPaid(o))
+      .map((o) => o.id);
+    if (ids.length === 0) { toast.info("Nav nesamaksātu pasūtījumu"); return; }
+    if (!confirm(`Dzēst VISUS ${ids.length} nesamaksātos pasūtījumus? Šī darbība ir neatgriezeniska.`)) return;
+    setBulkLoading(true);
+    try {
+      await supabase.from("order_items").delete().in("order_id", ids);
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} nesamaksātie pasūtījumi`);
+      setExpandedOrder(null);
+      setSelectedIds(new Set());
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda dzēšot: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   // Re-render every existing invoice with the latest PDF template so old
   // documents look identical to newly issued ones.
   const regenerateAllInvoices = async () => {
