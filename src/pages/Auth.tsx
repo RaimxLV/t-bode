@@ -17,6 +17,7 @@ import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
+const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -105,17 +106,18 @@ const Auth = () => {
       sessionStorage.setItem(OAUTH_PENDING_STORAGE_KEY, "1");
 
       const redirect = new URLSearchParams(window.location.search).get("redirect");
-      const redirectUrl = new URL(`${window.location.origin}${location.pathname}`);
-      if (redirect) {
-        redirectUrl.searchParams.set("redirect", redirect);
-      }
+      // The Lovable OAuth broker only allows the bare origin as redirect_uri
+      // on custom domains. Persist where we actually want to land afterwards.
+      const returnPath = redirect || `${location.pathname}${location.search}` || "/auth";
+      sessionStorage.setItem(OAUTH_RETURN_PATH_KEY, returnPath);
 
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: redirectUrl.toString(),
+        redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
       });
       if (result.error) {
         sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
+        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
         toast.error(t("auth.googleError"));
         return;
       }
@@ -124,6 +126,7 @@ const Auth = () => {
       navigate(finalRedirect);
     } catch {
       sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
+      sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
       toast.error(t("auth.googleError"));
     } finally {
       setLoading(false);
