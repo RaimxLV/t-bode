@@ -8,32 +8,37 @@ type PersistedCart = {
   updatedAt: number;
 };
 
-const readStoredCart = (): CartItem[] => {
+const EMPTY_CART: PersistedCart = {
+  items: [],
+  updatedAt: 0,
+};
+
+const readStoredCart = (): PersistedCart => {
   try {
     const saved = localStorage.getItem(CART_STORAGE_KEY);
-    if (!saved) return [];
+    if (!saved) return EMPTY_CART;
 
     const parsed = JSON.parse(saved) as CartItem[] | PersistedCart | null;
 
     if (Array.isArray(parsed)) {
       localStorage.removeItem(CART_STORAGE_KEY);
-      return [];
+      return EMPTY_CART;
     }
 
     if (parsed && Array.isArray(parsed.items)) {
       const isExpired = !parsed.updatedAt || Date.now() - parsed.updatedAt > CART_TTL_MS;
       if (isExpired) {
         localStorage.removeItem(CART_STORAGE_KEY);
-        return [];
+        return EMPTY_CART;
       }
-      return parsed.items;
+      return parsed;
     }
 
     localStorage.removeItem(CART_STORAGE_KEY);
-    return [];
+    return EMPTY_CART;
   } catch {
     localStorage.removeItem(CART_STORAGE_KEY);
-    return [];
+    return EMPTY_CART;
   }
 };
 
@@ -73,32 +78,37 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [items, setItems] = useState<CartItem[]>(() => {
+  const [cartState, setCartState] = useState<PersistedCart>(() => {
     return readStoredCart();
   });
   const [isOpen, setIsOpen] = useState(false);
+  const items = cartState.items;
 
   useEffect(() => {
-    const payload: PersistedCart = {
-      items,
-      updatedAt: Date.now(),
-    };
+    if (cartState.items.length === 0) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return;
+    }
 
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(payload));
-  }, [items]);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
+  }, [cartState]);
 
   const getKey = (id: string, size: string, color: string) => `${id}-${size}-${color}`;
 
   const addItem = useCallback((item: Omit<CartItem, "quantity"> & { quantity?: number }) => {
     const qty = item.quantity ?? 1;
-    setItems((prev) => {
+    setCartState((prev) => {
+      const nextUpdatedAt = Date.now();
       // Customized items (with a designId) are always treated as a unique cart line
       // so multiple distinct designs of the same product/size/color don't get merged
       // and lose their designId / thumbnail.
       if (item.designId) {
-        return [...prev, { ...item, quantity: qty }];
+        return {
+          items: [...prev.items, { ...item, quantity: qty }],
+          updatedAt: nextUpdatedAt,
+        };
       }
-      const idx = prev.findIndex(
+      const idx = prev.items.findIndex(
         (i) =>
           i.productId === item.productId &&
           i.size === item.size &&
@@ -106,17 +116,23 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           !i.designId
       );
       if (idx >= 0) {
-        const updated = [...prev];
+        const updated = [...prev.items];
         updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + qty };
-        return updated;
+        return { items: updated, updatedAt: nextUpdatedAt };
       }
-      return [...prev, { ...item, quantity: qty }];
+      return {
+        items: [...prev.items, { ...item, quantity: qty }],
+        updatedAt: nextUpdatedAt,
+      };
     });
     setIsOpen(true);
   }, []);
 
   const removeItem = useCallback((productId: string, size: string, color: string) => {
-    setItems((prev) => prev.filter((i) => !(i.productId === productId && i.size === size && i.color === color)));
+    setCartState((prev) => ({
+      items: prev.items.filter((i) => !(i.productId === productId && i.size === size && i.color === color)),
+      updatedAt: Date.now(),
+    }));
   }, []);
 
   const updateQuantity = useCallback((productId: string, size: string, color: string, quantity: number) => {
@@ -124,14 +140,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       removeItem(productId, size, color);
       return;
     }
-    setItems((prev) =>
-      prev.map((i) =>
+    setCartState((prev) => ({
+      items: prev.items.map((i) =>
         i.productId === productId && i.size === size && i.color === color ? { ...i, quantity } : i
-      )
-    );
+      ),
+      updatedAt: Date.now(),
+    }));
   }, [removeItem]);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => setCartState(EMPTY_CART), []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
   const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
