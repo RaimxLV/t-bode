@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
+import { getResendFromEmail } from "../_shared/from-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +9,7 @@ const corsHeaders = {
 };
 
 const TRACKING_URL = (barcode: string) => `https://www.omniva.lv/private/track-and-trace?barcode=${barcode}`;
-const FROM_ADDRESS = Deno.env.get("RESEND_FROM_EMAIL") ?? "T-Bode <onboarding@resend.dev>";
+const FROM_ADDRESS = getResendFromEmail();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
