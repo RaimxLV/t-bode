@@ -113,6 +113,17 @@ const Admin = () => {
   // Real-time new-order notifications — persistent in-app popup
   const [pendingNewOrders, setPendingNewOrders] = useState<NewOrderInfo[]>([]);
   useNewOrderNotifications(isAdmin, (order: any) => {
+    // Only surface PAID orders as "new order" alerts. Unpaid/pending inserts
+    // are usually abandoned carts or spam — they would otherwise create
+    // noisy notifications and inflate today's "new orders" count.
+    const isPaid = !!order?.manually_paid_at
+      || (order?.montonio_payment_status ?? "").toString().toUpperCase() === "PAID"
+      || ["confirmed", "processing", "shipped", "delivered"].includes(order?.status ?? "");
+    if (!isPaid) {
+      // Still refresh the list silently so the order appears in "Nesamaksātie".
+      loadOrders();
+      return;
+    }
     setPendingNewOrders((prev) => {
       if (prev.some((o) => o.id === order.id)) return prev;
       return [...prev, {
