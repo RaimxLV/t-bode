@@ -14,7 +14,6 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
-import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index.tsx";
 
 // Lazy-loaded routes for code splitting
@@ -54,49 +53,6 @@ const DynamicLang = () => {
 };
 
 const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, viewport-fit=cover";
-
-const OAuthSessionRecovery = () => {
-  useEffect(() => {
-    const recoverOAuthSession = async () => {
-      const searchParams = new URLSearchParams(window.location.search);
-      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
-      const code = searchParams.get("code");
-      const accessToken = hashParams.get("access_token");
-      const refreshToken = hashParams.get("refresh_token");
-      const hasOAuthError = hashParams.has("error") || searchParams.has("error");
-
-      if (hasOAuthError) {
-        const cleanPath = `${window.location.pathname}${window.location.search.replace(/([?&])error[^&]*/g, "").replace(/[?&]$/, "")}`;
-        window.history.replaceState({}, "", cleanPath || "/");
-        return;
-      }
-
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error) {
-          window.history.replaceState({}, "", window.location.pathname);
-        }
-        return;
-      }
-
-      if (accessToken && refreshToken) {
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
-
-        if (!error) {
-          window.history.replaceState({}, "", window.location.pathname + window.location.search);
-        }
-      }
-    };
-
-    void recoverOAuthSession();
-  }, []);
-
-  return null;
-};
 
 const ViewportRecovery = () => {
   const { user, loading } = useAuth();
@@ -180,7 +136,6 @@ const App = () => {
                   <Sonner />
                   <BrowserRouter basename={import.meta.env.BASE_URL}>
                     <DynamicLang />
-                    <OAuthSessionRecovery />
                     <ViewportRecovery />
                     <ScrollToTop />
                     <CartSidebar />
