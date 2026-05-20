@@ -73,6 +73,10 @@ const Admin = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("design");
   const [orders, setOrders] = useState<any[]>([]);
+  const activeOrdersCount = useMemo(
+    () => orders.filter((o) => o.status !== "cancelled" && !(o.status === "pending" && !isOrderPaid(o))).length,
+    [orders]
+  );
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [orderItems, setOrderItems] = useState<Record<string, any[]>>({});
   const [faqs, setFaqs] = useState<any[]>([]);
@@ -144,7 +148,7 @@ const Admin = () => {
     if (!isAdmin) return;
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") loadOrders();
-    }, 30000);
+    }, 300000);
     const onFocus = () => {
       if (document.visibilityState === "visible") loadOrders();
     };
@@ -335,7 +339,7 @@ const Admin = () => {
           <TabsList className="hidden sm:flex flex-wrap h-auto mb-6 w-full max-w-full justify-start gap-1 p-1">
             <TabsTrigger value="design" className="gap-1.5 text-sm"><Brush className="w-4 h-4" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{orders.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{orders.length}</Badge>}</TabsTrigger>
+            <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{activeOrdersCount > 0 && <Badge variant="secondary" className="ml-1 text-xs">{activeOrdersCount}</Badge>}</TabsTrigger>
             <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5 text-sm"><BarChart3 className="w-4 h-4" /> Statistika</TabsTrigger>
             <TabsTrigger value="categories" className="gap-1.5 text-sm"><FolderTree className="w-4 h-4" /> Kategorijas</TabsTrigger>
