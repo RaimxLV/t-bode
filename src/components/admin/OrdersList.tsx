@@ -733,6 +733,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
               Iztīrīt arhīvu
             </Button>
           )}
+          {showUnpaid && unpaidOrders.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearUnpaid}
+              disabled={bulkLoading}
+              className="col-span-2 sm:col-span-1 gap-1.5 text-[11px] sm:text-xs px-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 justify-center"
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Iztīrīt nesamaksātos
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
