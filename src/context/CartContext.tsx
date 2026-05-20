@@ -14,15 +14,25 @@ const readStoredCart = (): CartItem[] => {
     if (!saved) return [];
 
     const parsed = JSON.parse(saved) as CartItem[] | PersistedCart | null;
-    if (Array.isArray(parsed)) return parsed;
+
+    if (Array.isArray(parsed)) {
+      localStorage.removeItem(CART_STORAGE_KEY);
+      return [];
+    }
 
     if (parsed && Array.isArray(parsed.items)) {
       const isExpired = !parsed.updatedAt || Date.now() - parsed.updatedAt > CART_TTL_MS;
-      return isExpired ? [] : parsed.items;
+      if (isExpired) {
+        localStorage.removeItem(CART_STORAGE_KEY);
+        return [];
+      }
+      return parsed.items;
     }
 
+    localStorage.removeItem(CART_STORAGE_KEY);
     return [];
   } catch {
+    localStorage.removeItem(CART_STORAGE_KEY);
     return [];
   }
 };
