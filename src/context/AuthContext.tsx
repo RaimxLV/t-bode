@@ -5,6 +5,13 @@ import type { User, Session } from "@supabase/supabase-js";
 const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
 const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
+const readOAuthStorage = (key: string) => sessionStorage.getItem(key) ?? localStorage.getItem(key);
+
+const removeOAuthStorage = (key: string) => {
+  sessionStorage.removeItem(key);
+  localStorage.removeItem(key);
+};
+
 const hasOAuthReturnParams = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -21,7 +28,7 @@ const hasOAuthReturnParams = () => {
 };
 
 const clearPendingOAuthFlag = () => {
-  sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
+  removeOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
 };
 
 const cleanOAuthUrl = () => {
@@ -124,13 +131,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (event === "SIGNED_OUT") {
         clearPendingOAuthFlag();
+        removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
       }
     });
 
     const initializeAuth = async () => {
-      const hasPendingManagedOAuth = sessionStorage.getItem(OAUTH_PENDING_STORAGE_KEY) === "1";
+      const hasPendingManagedOAuth = readOAuthStorage(OAUTH_PENDING_STORAGE_KEY) === "1";
       const shouldRecoverOAuth = hasOAuthReturnParams() || hasPendingManagedOAuth;
       let recoveredSession: Session | null = null;
+
+      const waitForManagedOAuthSession = async () => {
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const { data: { session: polledSession } } = await supabase.auth.getSession();
+          if (polledSession?.user) return polledSession;
+          await new Promise((resolve) => window.setTimeout(resolve, 250));
+        }
+
+        return null;
+      };
 
       console.info("[auth] initialize", {
         pathname: window.location.pathname,
@@ -194,21 +212,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
+      let { data: { session: initialSession } } = await supabase.auth.getSession();
+
+      if (!recoveredSession?.user && !initialSession?.user && hasPendingManagedOAuth) {
+        console.info("[auth] waiting for pending managed oauth session");
+        initialSession = await waitForManagedOAuthSession();
+      }
+
       console.info("[auth] getSession resolved", { hasSession: !!initialSession?.user, recovered: !!recoveredSession?.user });
       const resolvedSession = recoveredSession ?? initialSession ?? latestSessionRef.current;
       applySession(resolvedSession, { allowFinishLoading: true });
 
       if (!resolvedSession?.user) {
         clearPendingOAuthFlag();
-        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
-      } else if (recoveredSession?.user) {
-        // After a successful OAuth callback, restore the page the user
-        // initiated sign-in from (the broker only redirects to the origin).
-        const returnPath = sessionStorage.getItem(OAUTH_RETURN_PATH_KEY);
-        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
-        if (returnPath && returnPath !== window.location.pathname + window.location.search) {
-          window.history.replaceState({}, "", returnPath);
+        removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
+      } else if (hasPendingManagedOAuth || recoveredSession?.user) {
+        const returnPath = readOAuthStorage(OAUTH_RETURN_PATH_KEY);
+        removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
+
+        const nextPath = !returnPath || returnPath === "/auth" || returnPath.startsWith("/auth?")
+          ? "/"
+          : returnPath;
+
+        if (nextPath !== window.location.pathname + window.location.search) {
+          window.history.replaceState({}, "", nextPath);
         }
       }
     };
@@ -228,6 +255,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.email]);
 
   const signOut = async () => {
+    clearPendingOAuthFlag();
+    removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
     await supabase.auth.signOut();
   };
 

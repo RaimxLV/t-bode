@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { z } from "zod";
@@ -19,6 +19,16 @@ import { checkRateLimit } from "@/lib/rateLimit";
 const OAUTH_PENDING_STORAGE_KEY = "tbode.oauth.pending";
 const OAUTH_RETURN_PATH_KEY = "tbode.oauth.returnPath";
 
+const setOAuthStorage = (key: string, value: string) => {
+  sessionStorage.setItem(key, value);
+  localStorage.setItem(key, value);
+};
+
+const clearOAuthStorage = (key: string) => {
+  sessionStorage.removeItem(key);
+  localStorage.removeItem(key);
+};
+
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
   password: z.string().min(6, "Parolei jābūt vismaz 6 simbolus garai"),
@@ -35,7 +45,6 @@ const SHOW_GOOGLE_LOGIN = true;
 
 const Auth = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useTranslation();
   const { user, loading: authLoading, isAdmin, adminLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
@@ -103,21 +112,19 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      sessionStorage.setItem(OAUTH_PENDING_STORAGE_KEY, "1");
+      setOAuthStorage(OAUTH_PENDING_STORAGE_KEY, "1");
 
       const redirect = new URLSearchParams(window.location.search).get("redirect");
-      // The Lovable OAuth broker only allows the bare origin as redirect_uri
-      // on custom domains. Persist where we actually want to land afterwards.
-      const returnPath = redirect || `${location.pathname}${location.search}` || "/auth";
-      sessionStorage.setItem(OAUTH_RETURN_PATH_KEY, returnPath);
+      const returnPath = redirect || "/";
+      setOAuthStorage(OAUTH_RETURN_PATH_KEY, returnPath);
 
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
       });
       if (result.error) {
-        sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
-        sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
+        clearOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
+        clearOAuthStorage(OAUTH_RETURN_PATH_KEY);
         toast.error(t("auth.googleError"));
         return;
       }
@@ -125,8 +132,8 @@ const Auth = () => {
       const finalRedirect = redirect ? redirect : "/";
       navigate(finalRedirect);
     } catch {
-      sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
-      sessionStorage.removeItem(OAUTH_RETURN_PATH_KEY);
+      clearOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
+      clearOAuthStorage(OAUTH_RETURN_PATH_KEY);
       toast.error(t("auth.googleError"));
     } finally {
       setLoading(false);
