@@ -674,8 +674,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             <span className="hidden sm:inline">Atjaunot</span>
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-          <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:gap-2 gap-1.5">
+          <Button variant={!showArchive && !showCancelled && !showUnpaid && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">
               <span className="sm:hidden">Ienākošie</span>
@@ -683,12 +683,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
           </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Arhīvs</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
           </Button>
-          <Button variant={showCancelled ? "default" : "outline"} size="sm" onClick={() => { setShowCancelled(true); setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={showUnpaid ? "default" : "outline"} size="sm" onClick={() => { setShowUnpaid(true); setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Nesamaksātie</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{unpaidOrders.length}</Badge>
+          </Button>
+          <Button variant={showCancelled ? "default" : "outline"} size="sm" onClick={() => { setShowCancelled(true); setShowArchive(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <X className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Atceltie</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{cancelledOrders.length}</Badge>
