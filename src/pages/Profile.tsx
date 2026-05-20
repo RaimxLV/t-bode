@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ProductCard } from "@/components/ProductCard";
+import { sanitizePhoneInput } from "@/lib/phone";
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -275,14 +276,21 @@ const Profile = () => {
                           value={profile.full_name}
                           onChange={(e) => setProfile((p) => ({ ...p, full_name: e.target.value }))}
                           className="mt-1"
+                          autoComplete="name"
+                          autoCapitalize="words"
+                          maxLength={100}
                           placeholder={t("profile.fullNamePlaceholder", "Ievadiet vārdu un uzvārdu")}
                         />
                       </div>
                       <div>
                         <Label className="font-body text-sm">{t("profile.phone", "Telefons")}</Label>
                         <Input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel"
+                          maxLength={20}
                           value={profile.phone}
-                          onChange={(e) => setProfile((p) => ({ ...p, phone: e.target.value }))}
+                          onChange={(e) => setProfile((p) => ({ ...p, phone: sanitizePhoneInput(e.target.value) }))}
                           className="mt-1"
                           placeholder="+371 20000000"
                         />
