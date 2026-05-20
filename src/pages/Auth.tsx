@@ -110,7 +110,11 @@ const Auth = () => {
       }
 
       const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUrl.toString() });
-      if (result.error) { toast.error(t("auth.googleError")); return; }
+      if (result.error) {
+        sessionStorage.removeItem(OAUTH_PENDING_STORAGE_KEY);
+        toast.error(t("auth.googleError"));
+        return;
+      }
       if (result.redirected) return;
       const finalRedirect = redirect ? redirect : "/";
       navigate(finalRedirect);
