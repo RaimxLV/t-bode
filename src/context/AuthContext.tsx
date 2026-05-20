@@ -27,6 +27,13 @@ const hasOAuthReturnParams = () => {
   );
 };
 
+const hasOAuthErrorParams = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return searchParams.has("error") || hashParams.has("error");
+};
+
 const clearPendingOAuthFlag = () => {
   removeOAuthStorage(OAUTH_PENDING_STORAGE_KEY);
 };
@@ -137,14 +144,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initializeAuth = async () => {
       const hasPendingManagedOAuth = readOAuthStorage(OAUTH_PENDING_STORAGE_KEY) === "1";
-      const shouldRecoverOAuth = hasOAuthReturnParams() || hasPendingManagedOAuth;
-      let recoveredSession: Session | null = null;
+      const oauthReturnParamsPresent = hasOAuthReturnParams();
+      const oauthErrorPresent = hasOAuthErrorParams();
+      const shouldWaitForOAuth = oauthReturnParamsPresent || hasPendingManagedOAuth;
 
       const waitForManagedOAuthSession = async () => {
-        for (let attempt = 0; attempt < 8; attempt += 1) {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
           const { data: { session: polledSession } } = await supabase.auth.getSession();
           if (polledSession?.user) return polledSession;
-          await new Promise((resolve) => window.setTimeout(resolve, 250));
+          await new Promise((resolve) => window.setTimeout(resolve, 500));
         }
 
         return null;
@@ -155,78 +163,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         search: window.location.search,
         hash: window.location.hash ? "#present" : "",
         hasPendingManagedOAuth,
-        shouldRecoverOAuth,
+        shouldRecoverOAuth: shouldWaitForOAuth,
       });
 
-      if (shouldRecoverOAuth) {
-        const searchParams = new URLSearchParams(window.location.search);
-        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
-        try {
-          const code = searchParams.get("code");
-          const searchAccessToken = searchParams.get("access_token");
-          const searchRefreshToken = searchParams.get("refresh_token");
-          const accessToken = hashParams.get("access_token");
-          const refreshToken = hashParams.get("refresh_token");
-          const hasOAuthError = searchParams.has("error") || hashParams.has("error");
-
-          console.info("[auth] oauth return params", {
-            hasCode: !!code,
-            hasSearchAccessToken: !!searchAccessToken,
-            hasSearchRefreshToken: !!searchRefreshToken,
-            hasHashAccessToken: !!accessToken,
-            hasHashRefreshToken: !!refreshToken,
-            hasOAuthError,
-            hasPendingManagedOAuth,
-          });
-
-          if (hasOAuthError) {
-            clearPendingOAuthFlag();
-            cleanOAuthUrl();
-          } else if (searchAccessToken && searchRefreshToken) {
-            const { data, error } = await supabase.auth.setSession({
-              access_token: searchAccessToken,
-              refresh_token: searchRefreshToken,
-            });
-            if (error) throw error;
-            recoveredSession = data.session;
-            cleanOAuthUrl();
-          } else if (accessToken && refreshToken) {
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
-            if (error) throw error;
-            recoveredSession = data.session;
-            cleanOAuthUrl();
-          } else if (code) {
-            const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-            if (error) throw error;
-            recoveredSession = data.session;
-            cleanOAuthUrl();
-          }
-        } catch (error) {
-          console.error("OAuth session recovery failed:", error);
-          clearPendingOAuthFlag();
-          cleanOAuthUrl();
-        }
+      if (oauthErrorPresent) {
+        clearPendingOAuthFlag();
+        removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
+        cleanOAuthUrl();
       }
 
       let { data: { session: initialSession } } = await supabase.auth.getSession();
 
-      if (!recoveredSession?.user && !initialSession?.user && hasPendingManagedOAuth) {
+      if (!initialSession?.user && shouldWaitForOAuth && !oauthErrorPresent) {
         console.info("[auth] waiting for pending managed oauth session");
         initialSession = await waitForManagedOAuthSession();
       }
 
-      console.info("[auth] getSession resolved", { hasSession: !!initialSession?.user, recovered: !!recoveredSession?.user });
-      const resolvedSession = recoveredSession ?? initialSession ?? latestSessionRef.current;
+      console.info("[auth] getSession resolved", {
+        hasSession: !!initialSession?.user,
+        pendingOAuth: hasPendingManagedOAuth,
+        hasReturnParams: oauthReturnParamsPresent,
+      });
+      const resolvedSession = initialSession ?? latestSessionRef.current;
       applySession(resolvedSession, { allowFinishLoading: true });
 
-      if (!resolvedSession?.user) {
+      if (resolvedSession?.user && oauthReturnParamsPresent) {
+        cleanOAuthUrl();
+      }
+
+      if (resolvedSession?.user && (hasPendingManagedOAuth || oauthReturnParamsPresent)) {
         clearPendingOAuthFlag();
-        removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
-      } else if (hasPendingManagedOAuth || recoveredSession?.user) {
         const returnPath = readOAuthStorage(OAUTH_RETURN_PATH_KEY);
         removeOAuthStorage(OAUTH_RETURN_PATH_KEY);
 
