@@ -106,6 +106,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Per-order override toggle: when true, allow free status changes (admin override)
   const [statusOverride, setStatusOverride] = useState<Set<string>>(new Set());
   const [showCancelled, setShowCancelled] = useState(false);
+  const [showUnpaid, setShowUnpaid] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleManualRefresh = async () => {
@@ -529,6 +530,29 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
     }
   };
 
+  // Delete all unpaid pending orders (abandoned carts / spam).
+  const clearUnpaid = async () => {
+    const ids = orders
+      .filter((o) => o.status === "pending" && !isOrderPaid(o))
+      .map((o) => o.id);
+    if (ids.length === 0) { toast.info("Nav nesamaksātu pasūtījumu"); return; }
+    if (!confirm(`Dzēst VISUS ${ids.length} nesamaksātos pasūtījumus? Šī darbība ir neatgriezeniska.`)) return;
+    setBulkLoading(true);
+    try {
+      await supabase.from("order_items").delete().in("order_id", ids);
+      const { error } = await supabase.from("orders").delete().in("id", ids);
+      if (error) throw error;
+      toast.success(`Izdzēsti ${ids.length} nesamaksātie pasūtījumi`);
+      setExpandedOrder(null);
+      setSelectedIds(new Set());
+      onRefresh();
+    } catch (e: any) {
+      toast.error("Kļūda dzēšot: " + e.message);
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
   // Re-render every existing invoice with the latest PDF template so old
   // documents look identical to newly issued ones.
   const regenerateAllInvoices = async () => {
@@ -569,6 +593,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const activeOrders = useMemo(
     () => orders.filter((o) => {
       if (ARCHIVED_STATUSES.includes(o.status) || HIDDEN_FROM_INBOX_STATUSES.includes(o.status)) return false;
+      // Hide unpaid "pending" orders from the active inbox. These are usually:
+      //   - abandoned carts (user started checkout but never paid)
+      //   - spam / bot submissions
+      // They must NOT appear as work-to-do or inflate stats. They can still be
+      // reviewed in the dedicated "Nesamaksātie" tab below.
+      if (o.status === "pending" && !isOrderPaid(o)) return false;
       const items = orderItems[o.id] || [];
       const hasPendingZakekeItem = items.some((item: any) => item.zakeke_design_id && !hasReadyPrintFiles(item.zakeke_print_files));
       return !hasPendingZakekeItem;
@@ -577,11 +607,21 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   );
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status) && isOrderPaid(o)), [orders]);
   const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
+  const unpaidOrders = useMemo(
+    () => orders.filter(o => o.status === "pending" && !isOrderPaid(o)),
+    [orders]
+  );
   const unreadCount = useMemo(
     () => activeOrders.filter(o => !o.admin_opened_at).length,
     [activeOrders]
   );
-  const currentOrders = showCancelled ? cancelledOrders : showArchive ? archivedOrders : activeOrders;
+  const currentOrders = showUnpaid
+    ? unpaidOrders
+    : showCancelled
+      ? cancelledOrders
+      : showArchive
+        ? archivedOrders
+        : activeOrders;
 
   const stats = useMemo(() => {
     const paidOrders = orders.filter((o) => o.status !== "cancelled" && isOrderPaid(o));
@@ -618,7 +658,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   // Reset to page 1 whenever filters / tab change
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled]);
+  }, [filterStatus, filterDateFrom, filterDateTo, searchQuery, showArchive, showCancelled, showUnpaid]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
   const pagedOrders = filteredOrders.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -657,8 +697,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             <span className="hidden sm:inline">Atjaunot</span>
           </Button>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:gap-2">
-          <Button variant={!showArchive && !showCancelled && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:gap-2 gap-1.5">
+          <Button variant={!showArchive && !showCancelled && !showUnpaid && filterStatus === "all" ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(false); setShowCancelled(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Inbox className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">
               <span className="sm:hidden">Ienākošie</span>
@@ -666,12 +706,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             </span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{activeOrders.length}</Badge>
           </Button>
-          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={showArchive ? "default" : "outline"} size="sm" onClick={() => { setShowArchive(true); setShowCancelled(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <Archive className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Arhīvs</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{archivedOrders.length}</Badge>
           </Button>
-          <Button variant={showCancelled ? "default" : "outline"} size="sm" onClick={() => { setShowCancelled(true); setShowArchive(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+          <Button variant={showUnpaid ? "default" : "outline"} size="sm" onClick={() => { setShowUnpaid(true); setShowArchive(false); setShowCancelled(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
+            <Clock className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Nesamaksātie</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{unpaidOrders.length}</Badge>
+          </Button>
+          <Button variant={showCancelled ? "default" : "outline"} size="sm" onClick={() => { setShowCancelled(true); setShowArchive(false); setShowUnpaid(false); setFilterStatus("all"); }} className="gap-1 text-[11px] sm:text-xs px-2 min-w-0 justify-center">
             <X className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">Atceltie</span>
             <Badge variant="secondary" className="text-[10px] px-1.5 shrink-0">{cancelledOrders.length}</Badge>
@@ -686,6 +731,18 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             >
               {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
               Iztīrīt arhīvu
+            </Button>
+          )}
+          {showUnpaid && unpaidOrders.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearUnpaid}
+              disabled={bulkLoading}
+              className="col-span-2 sm:col-span-1 gap-1.5 text-[11px] sm:text-xs px-2 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 justify-center"
+            >
+              {bulkLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+              Iztīrīt nesamaksātos
             </Button>
           )}
           <Button
@@ -1130,6 +1187,28 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               {omnivaLoading[order.id] === "label" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
                               {t("admin.omnivaDownloadLabel")}
                             </Button>
+                            {order.status !== "delivered" && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="text-xs gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                onClick={async () => {
+                                  if (!confirm("Atzīmēt sūtījumu kā piegādātu un pārvietot uz arhīvu?")) return;
+                                  const { error } = await supabase
+                                    .from("orders")
+                                    .update({
+                                      status: "delivered" as any,
+                                      omniva_tracking_status: "delivered",
+                                    })
+                                    .eq("id", order.id);
+                                  if (error) toast.error("Kļūda: " + error.message);
+                                  else { toast.success("Pasūtījums atzīmēts kā gatavs un pārvietots uz arhīvu"); onRefresh(); }
+                                }}
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" />
+                                Pasūtījums gatavs (arhivēt)
+                              </Button>
+                            )}
                           </div>
                         ) : (
                           <div className="flex flex-wrap gap-2">
