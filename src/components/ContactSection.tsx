@@ -6,13 +6,20 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
-  phone: z.string().max(20).optional(),
+  phone: z
+    .string()
+    .max(20)
+    .optional()
+    .refine((v) => !v || phoneRegex.test(v.trim()), {
+      message: "Telefona numurs drīkst saturēt tikai ciparus",
+    }),
   message: z.string().trim().min(10, "Ziņojumam jābūt vismaz 10 simbolus garam").max(500),
 });
 
@@ -193,6 +200,9 @@ export const ContactSection = () => {
                 <label className="block text-sm font-medium font-body mb-1.5">{t("contact.firstName")}</label>
                 <input
                   type="text"
+                  autoComplete="name"
+                  autoCapitalize="words"
+                  maxLength={100}
                   value={form.name}
                   onChange={(e) => updateField("name", e.target.value)}
                   className={`w-full bg-background border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring ${errors.name ? "border-destructive" : "border-border"}`}
@@ -203,6 +213,12 @@ export const ContactSection = () => {
                 <label className="block text-sm font-medium font-body mb-1.5">{t("contact.email") || "E-pasts"}</label>
                 <input
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  maxLength={255}
                   value={form.email}
                   onChange={(e) => updateField("email", e.target.value)}
                   className={`w-full bg-background border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring ${errors.email ? "border-destructive" : "border-border"}`}
@@ -215,10 +231,14 @@ export const ContactSection = () => {
               <label className="block text-sm font-medium font-body mb-1.5">{t("contact.phone")}</label>
               <input
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                maxLength={20}
                 value={form.phone}
-                onChange={(e) => updateField("phone", e.target.value)}
-                className="w-full bg-background border border-border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring"
+                onChange={(e) => updateField("phone", sanitizePhoneInput(e.target.value))}
+                className={`w-full bg-background border rounded-md px-4 py-2.5 text-sm font-body focus:outline-none focus:ring-2 focus:ring-ring ${errors.phone ? "border-destructive" : "border-border"}`}
               />
+              <FieldError field="phone" />
             </div>
 
             <div>

@@ -186,6 +186,9 @@ const Auth = () => {
                     <Input
                       id="fullName"
                       placeholder="Jānis Bērziņš"
+                      autoComplete="name"
+                      autoCapitalize="words"
+                      maxLength={100}
                       value={form.fullName}
                       onChange={(e) => updateField("fullName", e.target.value)}
                       className={`pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-primary ${errors.fullName ? "border-destructive" : ""}`}
@@ -201,6 +204,12 @@ const Auth = () => {
                   <Input
                     id="email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    maxLength={255}
                     placeholder="tavs@epasts.lv"
                     value={form.email}
                     onChange={(e) => updateField("email", e.target.value)}
@@ -216,6 +225,8 @@ const Auth = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    autoComplete={isLogin ? "current-password" : "new-password"}
+                    maxLength={128}
                     placeholder="••••••••"
                     value={form.password}
                     onChange={(e) => updateField("password", e.target.value)}

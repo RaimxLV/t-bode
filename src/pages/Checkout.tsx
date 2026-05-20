@@ -22,6 +22,7 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
+import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
@@ -42,7 +43,12 @@ const createGuestCheckoutClient = () =>
 
 const baseSchema = z.object({
   name: z.string().trim().min(2, "Vārdam jābūt vismaz 2 simbolus garam").max(100),
-  phone: z.string().trim().min(8, "Ievadiet derīgu telefona numuru").max(20),
+  phone: z
+    .string()
+    .trim()
+    .min(8, "Ievadiet derīgu telefona numuru")
+    .max(20)
+    .regex(phoneRegex, "Telefona numurs drīkst saturēt tikai ciparus"),
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi").max(255),
   notes: z.string().max(500).optional(),
 });
@@ -485,12 +491,22 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="font-body text-sm">{t("checkout.name")}</Label>
-                    <Input id="name" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="Jānis Bērziņš" className={`mt-1 ${errors.name ? "border-destructive" : ""}`} maxLength={100} />
+                    <Input id="name" value={form.name} onChange={(e) => updateField("name", e.target.value)} placeholder="Jānis Bērziņš" className={`mt-1 ${errors.name ? "border-destructive" : ""}`} maxLength={100} autoComplete="name" autoCapitalize="words" />
                     <FieldError field="name" />
                   </div>
                   <div>
                     <Label htmlFor="phone" className="font-body text-sm">{t("checkout.phone")}</Label>
-                    <Input id="phone" value={form.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="+371 20000000" className={`mt-1 ${errors.phone ? "border-destructive" : ""}`} maxLength={20} />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      value={form.phone}
+                      onChange={(e) => updateField("phone", sanitizePhoneInput(e.target.value))}
+                      placeholder="+371 20000000"
+                      className={`mt-1 ${errors.phone ? "border-destructive" : ""}`}
+                      maxLength={20}
+                    />
                     <FieldError field="phone" />
                   </div>
                   <div className="sm:col-span-2">
@@ -498,6 +514,11 @@ const Checkout = () => {
                     <Input
                       id="email"
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="off"
+                      autoCorrect="off"
+                      spellCheck={false}
                       value={user?.email ?? form.email}
                       onChange={(e) => updateField("email", e.target.value)}
                       disabled={!!user}
@@ -589,17 +610,17 @@ const Checkout = () => {
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <Label htmlFor="address" className="font-body text-sm">{t("checkout.address")}</Label>
-                      <Input id="address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Brīvības iela 100-10" className={`mt-1 ${errors.address ? "border-destructive" : ""}`} maxLength={200} />
+                      <Input id="address" autoComplete="street-address" value={form.address} onChange={(e) => updateField("address", e.target.value)} placeholder="Brīvības iela 100-10" className={`mt-1 ${errors.address ? "border-destructive" : ""}`} maxLength={200} />
                       <FieldError field="address" />
                     </div>
                     <div>
                       <Label htmlFor="city" className="font-body text-sm">{t("checkout.city")}</Label>
-                      <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder="Rīga" className={`mt-1 ${errors.city ? "border-destructive" : ""}`} maxLength={100} />
+                      <Input id="city" autoComplete="address-level2" value={form.city} onChange={(e) => updateField("city", e.target.value)} placeholder="Rīga" className={`mt-1 ${errors.city ? "border-destructive" : ""}`} maxLength={100} />
                       <FieldError field="city" />
                     </div>
                     <div>
                       <Label htmlFor="zip" className="font-body text-sm">{t("checkout.zip")}</Label>
-                      <Input id="zip" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
+                      <Input id="zip" autoComplete="postal-code" inputMode="text" value={form.zip} onChange={(e) => updateField("zip", e.target.value)} placeholder="LV-1001" className={`mt-1 ${errors.zip ? "border-destructive" : ""}`} maxLength={10} />
                       <FieldError field="zip" />
                     </div>
                   </div>
