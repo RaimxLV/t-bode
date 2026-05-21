@@ -243,12 +243,7 @@ const Admin = () => {
     else { toast.success("Produkts publicēts"); loadProducts(); }
   };
 
-  const handleUnpublish = async (id: string) => {
-    if (!confirm("Atgriezt produktu melnrakstā? Klienti to vairs neredzēs.")) return;
-    const { error } = await supabase.from("products").update({ is_draft: true }).eq("id", id);
-    if (error) toast.error("Neizdevās: " + error.message);
-    else { toast.success("Pārvietots uz melnrakstiem"); loadProducts(); }
-  };
+  // Future: unpublish action (back to draft) — wire when needed.
 
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
@@ -577,6 +572,7 @@ const Admin = () => {
                 {[
                   { value: "customers", icon: Users, label: "Klienti" },
                   { value: "categories", icon: FolderTree, label: "Kategorijas" },
+                  { value: "drafts", icon: FileEdit, label: "Melnraksti" },
                   { value: "faq", icon: HelpCircle, label: "FAQ" },
                   { value: "access", icon: UserCheck, label: "Piekļuve" },
                   { value: "settings", icon: SettingsIcon, label: "Iestatījumi" },
