@@ -309,9 +309,27 @@ const Checkout = () => {
       if (orderError) throw orderError;
       const order = { id: newOrderId };
 
+      // Fetch authoritative base prices from the products table so we can
+      // always split unit_price into shirt vs print, even if the cart item
+      // is stale (created before basePrice/customizationPrice were tracked)
+      // or Zakeke's price callback never fired before checkout.
+      const productIds = Array.from(new Set(items.map((i) => i.productId)));
+      const { data: priceRows } = await checkoutClient
+        .from("products")
+        .select("id, price")
+        .in("id", productIds);
+      const basePriceMap = new Map<string, number>(
+        (priceRows ?? []).map((p: any) => [p.id, Number(p.price)])
+      );
+
       const orderItems = items.map((item) => {
-        const printUnit = Math.max(0, Number(item.customizationPrice ?? 0));
-        const baseUnit = Math.max(0, Number(item.basePrice ?? (item.price - printUnit)));
+        const dbBase = basePriceMap.get(item.productId);
+        // Prefer DB base price (authoritative). Fall back to cart hints.
+        let baseUnit = typeof dbBase === "number" && !isNaN(dbBase) ? dbBase : Number(item.basePrice ?? item.price);
+        // Never let baseUnit exceed the actual unit price (would mean negative print).
+        if (baseUnit > item.price) baseUnit = item.price;
+        baseUnit = Math.max(0, Math.round(baseUnit * 100) / 100);
+        const printUnit = Math.max(0, Math.round((item.price - baseUnit) * 100) / 100);
         return ({
         order_id: order.id,
         product_id: item.productId,
