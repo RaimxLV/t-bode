@@ -786,6 +786,42 @@ export type Database = {
         }
         Relationships: []
       }
+      print_presets: {
+        Row: {
+          created_at: string
+          dpi: number
+          height_cm: number
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+          width_cm: number
+        }
+        Insert: {
+          created_at?: string
+          dpi?: number
+          height_cm: number
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+          width_cm: number
+        }
+        Update: {
+          created_at?: string
+          dpi?: number
+          height_cm?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          width_cm?: number
+        }
+        Relationships: []
+      }
       processed_webhook_events: {
         Row: {
           event_id: string
