@@ -308,7 +308,10 @@ const Checkout = () => {
       if (orderError) throw orderError;
       const order = { id: newOrderId };
 
-      const orderItems = items.map((item) => ({
+      const orderItems = items.map((item) => {
+        const printUnit = Math.max(0, Number(item.customizationPrice ?? 0));
+        const baseUnit = Math.max(0, Number(item.basePrice ?? (item.price - printUnit)));
+        return ({
         order_id: order.id,
         product_id: item.productId,
         product_name: item.name,
@@ -316,6 +319,8 @@ const Checkout = () => {
         color: item.color,
         quantity: item.quantity,
         unit_price: item.price,
+        base_unit_price: baseUnit,
+        print_unit_price: printUnit,
         zakeke_design_id: item.designId || null,
         zakeke_thumbnail_url: item.designThumbnail || null,
         zakeke_preview_urls:
@@ -323,7 +328,8 @@ const Checkout = () => {
             ? (item.designPreviews as any)
             : null,
         zakeke_visitor_code: item.zakekeVisitorCode || null,
-      }));
+        });
+      });
       const { error: itemsError } = await checkoutClient.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 

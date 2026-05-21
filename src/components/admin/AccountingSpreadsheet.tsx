@@ -23,6 +23,9 @@ type Row = {
   productItems?: { name: string; size: string; qty: number }[];
   regNumber: string;
   vatNumber: string;
+  shirts: number;
+  print: number;
+  shipping: number;
   net: number;
   vat: number;
   gross: number;
@@ -78,7 +81,7 @@ export const AccountingSpreadsheet = () => {
       const [ordersRes, invoicesRes, itemsRes] = await Promise.all([
         supabase.from("orders").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("invoice_number, order_id, net_amount, vat_amount, gross_amount, vat_rate, is_current"),
-        supabase.from("order_items").select("order_id, product_name, quantity, size, color"),
+        supabase.from("order_items").select("order_id, product_name, quantity, size, color, unit_price, base_unit_price, print_unit_price"),
       ]);
       if (ordersRes.error) toast.error("Neizdevās ielādēt pasūtījumus");
       else setOrders(ordersRes.data || []);
@@ -131,7 +134,7 @@ export const AccountingSpreadsheet = () => {
     for (const [day, list] of byDay) {
       out.push({
         date: day, orderNumber: "", invoiceNumber: "", client: "", products: "", sizes: "", quantities: "", regNumber: "",
-        vatNumber: "", net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
+        vatNumber: "", shirts: 0, print: 0, shipping: 0, net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
         isGroupHeader: true, groupLabel: day,
       });
       list.forEach((o) => {
@@ -159,6 +162,17 @@ export const AccountingSpreadsheet = () => {
         const vatRate = Number(inv?.vat_rate ?? 21);
         const net = inv?.net_amount != null ? Number(inv.net_amount) : +(gross / (1 + vatRate / 100)).toFixed(2);
         const vat = inv?.vat_amount != null ? Number(inv.vat_amount) : +(gross - net).toFixed(2);
+        const shirtsGross = its.reduce((s, it) => {
+          const q = Number(it.quantity ?? 1);
+          const base = Number(it.base_unit_price ?? 0);
+          const print = Number(it.print_unit_price ?? 0);
+          const unit = Number(it.unit_price ?? 0);
+          return s + q * (base > 0 || print > 0 ? base : unit);
+        }, 0);
+        const printGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.print_unit_price ?? 0), 0);
+        const itemsGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.unit_price ?? 0), 0);
+        const discount = Number(o.discount_amount ?? 0);
+        const shippingGross = Math.max(0, +(gross - itemsGross + discount).toFixed(2));
         out.push({
           date: new Date(o.created_at).toLocaleDateString("lv-LV"),
           orderNumber: o.order_number != null ? `TB-${String(o.order_number).padStart(5, "0")}` : "—",
@@ -172,6 +186,9 @@ export const AccountingSpreadsheet = () => {
           productItems,
           regNumber: o.company_reg_number ?? "",
           vatNumber: o.company_vat_number ?? "",
+          shirts: +shirtsGross.toFixed(2),
+          print: +printGross.toFixed(2),
+          shipping: shippingGross,
           net,
           vat,
           gross,
@@ -249,6 +266,9 @@ export const AccountingSpreadsheet = () => {
     } },
     { accessorKey: "regNumber", header: "Reģ. nr." },
     { accessorKey: "vatNumber", header: "PVN nr." },
+    { accessorKey: "shirts", header: "Krekli", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
+    { accessorKey: "print", header: "Druka", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
+    { accessorKey: "shipping", header: "Piegāde", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
     { accessorKey: "net", header: "Bez PVN", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
     { accessorKey: "vat", header: "PVN 21%", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
     { accessorKey: "gross", header: "Kopsumma", cell: (i) => (i.row.original.isGroupHeader ? "" : `${(i.getValue() as number).toFixed(2)} €`) },
@@ -279,6 +299,9 @@ export const AccountingSpreadsheet = () => {
       { header: "Daudzums", key: "quantities", width: 12 },
       { header: "Reģ. nr.", key: "regNumber", width: 14 },
       { header: "PVN nr.", key: "vatNumber", width: 14 },
+      { header: "Krekli (€)", key: "shirts", width: 12 },
+      { header: "Druka (€)", key: "print", width: 12 },
+      { header: "Piegāde (€)", key: "shipping", width: 12 },
       { header: "Bez PVN (€)", key: "net", width: 12 },
       { header: "PVN 21% (€)", key: "vat", width: 12 },
       { header: "Kopsumma (€)", key: "gross", width: 12 },

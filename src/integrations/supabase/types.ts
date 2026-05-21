@@ -557,10 +557,12 @@ export type Database = {
       }
       order_items: {
         Row: {
+          base_unit_price: number
           color: string | null
           created_at: string
           id: string
           order_id: string
+          print_unit_price: number
           product_id: string
           product_name: string
           quantity: number
@@ -577,10 +579,12 @@ export type Database = {
           zakeke_visitor_code: string | null
         }
         Insert: {
+          base_unit_price?: number
           color?: string | null
           created_at?: string
           id?: string
           order_id: string
+          print_unit_price?: number
           product_id: string
           product_name: string
           quantity?: number
@@ -597,10 +601,12 @@ export type Database = {
           zakeke_visitor_code?: string | null
         }
         Update: {
+          base_unit_price?: number
           color?: string | null
           created_at?: string
           id?: string
           order_id?: string
+          print_unit_price?: number
           product_id?: string
           product_name?: string
           quantity?: number
