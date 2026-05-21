@@ -511,7 +511,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting"].includes(activeTab)
+                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "bulk"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -536,6 +536,7 @@ const Admin = () => {
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
+                  { value: "bulk", icon: Wand2, label: "Bulk Studio" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
