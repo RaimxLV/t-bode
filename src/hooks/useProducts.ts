@@ -45,7 +45,7 @@ export function getProductDescription(
 }
 
 async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
-  let query = supabase.from("products").select("*").order("created_at", { ascending: true });
+  let query = supabase.from("products").select("*").eq("is_draft", false).order("created_at", { ascending: true });
   if (customizable !== undefined) {
     query = query.eq("customizable", customizable);
   }
@@ -63,6 +63,7 @@ async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
     .from("products")
     .select("*")
     .eq("slug", slug)
+    .eq("is_draft", false)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
