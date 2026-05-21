@@ -1,26 +1,17 @@
 import { lazy, Suspense, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Image as ImageIcon, Shirt, Wand2, Construction, Ruler } from "lucide-react";
+import { Image as ImageIcon, Shirt, Wand2, Ruler } from "lucide-react";
 
 const DesignLibrary = lazy(() => import("./bulk/DesignLibrary").then((m) => ({ default: m.DesignLibrary })));
 const BaseProducts = lazy(() => import("./bulk/BaseProducts").then((m) => ({ default: m.BaseProducts })));
 const PrintPresets = lazy(() => import("./bulk/PrintPresets").then((m) => ({ default: m.PrintPresets })));
+const Generator = lazy(() => import("./bulk/Generator").then((m) => ({ default: m.Generator })));
 
 const Fallback = () => (
   <div className="flex items-center justify-center py-16">
     <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
-);
-
-const ComingSoon = ({ title, desc }: { title: string; desc: string }) => (
-  <Card className="border border-dashed border-border">
-    <CardContent className="p-8 sm:p-12 text-center space-y-3">
-      <Construction className="w-12 h-12 mx-auto text-muted-foreground" />
-      <h3 className="text-lg font-display">{title}</h3>
-      <p className="text-sm text-muted-foreground font-body max-w-md mx-auto">{desc}</p>
-    </CardContent>
-  </Card>
 );
 
 export function BulkStudio() {
@@ -70,10 +61,9 @@ export function BulkStudio() {
         </TabsContent>
 
         <TabsContent value="generate" className="mt-4">
-          <ComingSoon
-            title="Bulk Ģenerators — pēc bāzu pievienošanas"
-            desc="Izvēlies dizainus + bāzes kreklus + cenu, un viena klikšķa attālumā automātiski izveidosies produkti ar mockup visām krāsām, gatavi tirgoties."
-          />
+          <Suspense fallback={<Fallback />}>
+            <Generator />
+          </Suspense>
         </TabsContent>
       </Tabs>
     </div>
