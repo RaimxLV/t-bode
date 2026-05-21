@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2 } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m
 const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ default: m.EmailLog })));
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
+const BulkStudio = lazy(() => import("@/components/admin/BulkStudio").then(m => ({ default: m.BulkStudio })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
