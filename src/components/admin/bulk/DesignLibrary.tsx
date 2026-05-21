@@ -159,7 +159,7 @@ export function DesignLibrary() {
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/png,image/jpeg,image/webp"
+              accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg"
               className="hidden"
               onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
             />
