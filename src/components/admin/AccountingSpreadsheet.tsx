@@ -23,6 +23,9 @@ type Row = {
   productItems?: { name: string; size: string; qty: number }[];
   regNumber: string;
   vatNumber: string;
+  shirts: number;
+  print: number;
+  shipping: number;
   net: number;
   vat: number;
   gross: number;
@@ -78,7 +81,7 @@ export const AccountingSpreadsheet = () => {
       const [ordersRes, invoicesRes, itemsRes] = await Promise.all([
         supabase.from("orders").select("*").order("created_at", { ascending: false }),
         supabase.from("invoices").select("invoice_number, order_id, net_amount, vat_amount, gross_amount, vat_rate, is_current"),
-        supabase.from("order_items").select("order_id, product_name, quantity, size, color"),
+        supabase.from("order_items").select("order_id, product_name, quantity, size, color, unit_price, base_unit_price, print_unit_price"),
       ]);
       if (ordersRes.error) toast.error("Neizdevās ielādēt pasūtījumus");
       else setOrders(ordersRes.data || []);
