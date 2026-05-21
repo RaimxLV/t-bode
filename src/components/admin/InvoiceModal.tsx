@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, RefreshCw, Download, FileText, Send, Eye, Pencil } from "lucide-react";
+import { Loader2, RefreshCw, Download, FileText, Send, Eye, Pencil, FileSearch } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface InvoiceModalProps {
@@ -38,6 +38,7 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
   const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [current, setCurrent] = useState<InvoiceRow | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -130,6 +131,42 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
     URL.revokeObjectURL(link.href);
   };
 
+  const openPreview = async (useFormOverrides: boolean) => {
+    setPreviewing(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const body: any = {};
+      if (order?.id) body.order_id = order.id;
+      else body.sample = true;
+      if (useFormOverrides) {
+        body.buyer_overrides = {
+          name: form.name, address: form.address,
+          reg_number: form.reg_number, vat_number: form.vat_number,
+          email: form.email, phone: form.phone,
+        };
+        body.notes = form.notes;
+      }
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/preview-invoice`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (e: any) {
+      toast.error(`Priekšskatījuma kļūda: ${e.message}`);
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[95vh] sm:h-[90vh] flex flex-col p-0 gap-0">
@@ -206,6 +243,18 @@ export const InvoiceModal = ({ open, onOpenChange, order, onSaved }: InvoiceModa
                     <Pencil className="w-3.5 h-3.5" /> {editing ? "Atcelt" : "Rediģēt"}
                   </Button>
                 </div>
+
+                <Button
+                  size="sm" variant="outline" className="w-full gap-1.5"
+                  onClick={() => openPreview(editing)}
+                  disabled={previewing}
+                >
+                  {previewing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSearch className="w-3.5 h-3.5" />}
+                  Priekšskatīt šablonu {editing ? "(ar formas datiem)" : ""}
+                </Button>
+                <p className="text-[10px] text-muted-foreground -mt-1">
+                  Atver PDF jaunā cilnē. Nekas netiek saglabāts un versija nemainās.
+                </p>
 
                 {editing && (
                   <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/5 p-3">
