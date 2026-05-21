@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2 } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -89,8 +89,10 @@ const Admin = () => {
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
   const { data: allCategories = [] } = useCategories();
 
-  const designProducts = products.filter((p) => p.customizable);
-  const collectionProducts = products.filter((p) => !p.customizable);
+  const publishedProducts = products.filter((p) => !(p as any).is_draft);
+  const draftProducts = products.filter((p) => (p as any).is_draft);
+  const designProducts = publishedProducts.filter((p) => p.customizable);
+  const collectionProducts = publishedProducts.filter((p) => !p.customizable);
 
   const stats = useMemo(() => ({
     total: products.length,
@@ -234,6 +236,20 @@ const Admin = () => {
     else { toast.success(!currentStock ? t("admin.markedInStock", "Atzīmēts kā pieejams") : t("admin.markedOutOfStock", "Atzīmēts kā nav noliktavā")); loadProducts(); }
   };
 
+  const handlePublishDraft = async (id: string) => {
+    if (!confirm("Publicēt šo produktu? Tas kļūs redzams klientiem veikalā.")) return;
+    const { error } = await supabase.from("products").update({ is_draft: false }).eq("id", id);
+    if (error) toast.error("Neizdevās publicēt: " + error.message);
+    else { toast.success("Produkts publicēts"); loadProducts(); }
+  };
+
+  const handleUnpublish = async (id: string) => {
+    if (!confirm("Atgriezt produktu melnrakstā? Klienti to vairs neredzēs.")) return;
+    const { error } = await supabase.from("products").update({ is_draft: true }).eq("id", id);
+    if (error) toast.error("Neizdevās: " + error.message);
+    else { toast.success("Pārvietots uz melnrakstiem"); loadProducts(); }
+  };
+
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
   const openEditDialog = (product: DBProduct) => {
     setEditingProduct({ id: product.id, name: product.name, slug: product.slug, description: product.description || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", in_stock: product.in_stock, is_draft: (product as any).is_draft ?? false, zakeke_model_code: product.zakeke_model_code || "" });
@@ -340,6 +356,7 @@ const Admin = () => {
           <TabsList className="hidden sm:flex flex-wrap h-auto mb-6 w-full max-w-full justify-start gap-1 p-1">
             <TabsTrigger value="design" className="gap-1.5 text-sm"><Brush className="w-4 h-4" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEdit className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{activeOrdersCount > 0 && <Badge variant="secondary" className="ml-1 text-xs">{activeOrdersCount}</Badge>}</TabsTrigger>
             <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5 text-sm"><BarChart3 className="w-4 h-4" /> Statistika</TabsTrigger>
@@ -366,6 +383,37 @@ const Admin = () => {
               <Button onClick={() => openCreateDialog(false)} className="w-full sm:w-auto bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
             </div>
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
+          </TabsContent>
+
+          <TabsContent value="drafts">
+            <div className="mb-3 sm:mb-4 p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs sm:text-sm text-muted-foreground font-body">
+                Melnraksti ir redzami tikai šeit, admin panelī. Klienti tos neredz veikalā. Kad kartiņa ir gatava, nospied <strong>Publicēt</strong>, lai produkts parādītos veikalā.
+              </p>
+            </div>
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
+            ) : draftProducts.length === 0 ? (
+              <div className="text-center py-12 sm:py-20">
+                <p className="text-muted-foreground font-body">Nav neviena melnraksta.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {draftProducts.map((p) => (
+                  <div key={p.id} className="relative rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-50/30 p-2">
+                    <div className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded bg-amber-500 text-white text-[10px] font-body font-bold uppercase">Melnraksts</div>
+                    <ProductCard product={p} onEdit={openEditDialog} onDelete={handleDelete} />
+                    <Button
+                      onClick={() => handlePublishDraft(p.id)}
+                      className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white"
+                      size="sm"
+                    >
+                      <Eye className="w-4 h-4 mr-1.5" /> Publicēt veikalā
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="orders">
