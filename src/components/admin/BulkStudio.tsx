@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Image as ImageIcon, Shirt, Wand2, Construction } from "lucide-react";
 
 const DesignLibrary = lazy(() => import("./bulk/DesignLibrary").then((m) => ({ default: m.DesignLibrary })));
+const BaseProducts = lazy(() => import("./bulk/BaseProducts").then((m) => ({ default: m.BaseProducts })));
 
 const Fallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -53,10 +54,9 @@ export function BulkStudio() {
         </TabsContent>
 
         <TabsContent value="bases" className="mt-4">
-          <ComingSoon
-            title="Bāzes krekli — nāk nākamajā solī"
-            desc="Šeit varēsi katram krekla modelim × krāsai pievienot tukšu mockup foto un atzīmēt print zonu (kur dizains liekas virsū). Vienreizējs darbs ~1-2h."
-          />
+          <Suspense fallback={<Fallback />}>
+            <BaseProducts />
+          </Suspense>
         </TabsContent>
 
         <TabsContent value="generate" className="mt-4">
