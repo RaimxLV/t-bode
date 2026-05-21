@@ -23,6 +23,7 @@ interface DesignItem {
 }
 
 const BUCKET = "design-library";
+const SUPPORTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
 
 export function DesignLibrary() {
   const [categories, setCategories] = useState<DesignCategory[]>([]);
@@ -53,21 +54,27 @@ export function DesignLibrary() {
     return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
   }
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
+  function isSupportedImageFile(file: File) {
+    if (file.type.startsWith("image/")) return true;
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    return SUPPORTED_EXTENSIONS.has(ext);
+  }
+
+  async function handleFiles(files: File[]) {
+    if (files.length === 0) return;
     const defaultCat = filterCat !== "all" ? filterCat : (categories[0]?.id ?? null);
     setUploading(true);
     setUploadProgress({ done: 0, total: files.length });
     let ok = 0; let failed = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith("image/")) { failed++; continue; }
+      if (!isSupportedImageFile(file)) { failed++; continue; }
       try {
-        const ext = file.name.split(".").pop() || "png";
+        const ext = file.name.split(".").pop()?.toLowerCase() || "png";
         const safeName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
-        const path = `${defaultCat ?? "uncat"}/${Date.now()}-${safeName}.${ext}`;
+        const path = `${defaultCat ?? "uncat"}/${crypto.randomUUID()}-${safeName}.${ext}`;
         const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-          contentType: file.type,
+          contentType: file.type || undefined,
           upsert: false,
         });
         if (upErr) throw upErr;
@@ -153,7 +160,7 @@ export function DesignLibrary() {
               className="bg-primary text-primary-foreground"
             >
               {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-              Augšupielādēt PNG (bulk)
+              Augšupielādēt bildes (bulk)
             </Button>
             <input
               ref={fileInputRef}
@@ -161,7 +168,11 @@ export function DesignLibrary() {
               multiple
               accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg"
               className="hidden"
-              onChange={(e) => { handleFiles(e.target.files); e.target.value = ""; }}
+              onChange={(e) => {
+                const files = Array.from(e.target.files ?? []);
+                e.target.value = "";
+                void handleFiles(files);
+              }}
             />
             {uploadProgress && (
               <span className="text-xs text-muted-foreground font-body">
