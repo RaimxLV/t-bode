@@ -166,6 +166,15 @@ Deno.serve(async (req) => {
       invoiceNumber = existing![0].invoice_number;
     }
 
+    // Derive shipping cost: order total = items - discount + shipping
+    const itemsGrossSum = invoiceItems.reduce(
+      (s, it) => s + Number(it.unit_price_gross) * Number(it.quantity),
+      0,
+    );
+    const discountGross = Number(order.discount_amount ?? 0);
+    const orderTotal = Number(order.total ?? 0);
+    const shippingGross = Math.max(0, Math.round((orderTotal - itemsGrossSum + discountGross) * 100) / 100);
+
     const data: InvoiceData = {
       invoice_number: invoiceNumber,
       order_number: order.order_number,
@@ -173,7 +182,8 @@ Deno.serve(async (req) => {
       buyer,
       seller,
       items: invoiceItems,
-      discount_gross: Number(order.discount_amount ?? 0),
+      discount_gross: discountGross,
+      shipping_gross: shippingGross,
       vat_rate: 21,
       notes: body.notes ?? null,
       payment_method: order.payment_method,
