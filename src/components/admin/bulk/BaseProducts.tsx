@@ -347,6 +347,7 @@ function PrintAreaEditor({
   const [area, setArea] = useState(base.print_area);
   const [widthCm, setWidthCm] = useState<number>(base.mockup_width_cm || 50);
   const [heightCm, setHeightCm] = useState<number>(base.mockup_height_cm || 70);
+  const [lockAspect, setLockAspect] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ mode: "move" | "resize"; startX: number; startY: number; orig: typeof area } | null>(null);
 
@@ -368,14 +369,47 @@ function PrintAreaEditor({
         w: o.w, h: o.h,
       });
     } else {
-      setArea({
-        x: o.x, y: o.y,
-        w: Math.max(0.05, Math.min(1 - o.x, o.w + dx)),
-        h: Math.max(0.05, Math.min(1 - o.y, o.h + dy)),
-      });
+      const keepAspect = lockAspect !== e.shiftKey; // shift toggles
+      if (keepAspect) {
+        const aspect = o.w / o.h;
+        // use the larger relative delta to drive scaling
+        const useDx = Math.abs(dx) * (1 / o.w) >= Math.abs(dy) * (1 / o.h);
+        let newW = useDx ? o.w + dx : (o.h + dy) * aspect;
+        let newH = newW / aspect;
+        newW = Math.max(0.05, Math.min(1 - o.x, newW));
+        newH = Math.max(0.05, Math.min(1 - o.y, newH));
+        // re-sync to respect the tightest bound
+        if (newW / aspect > 1 - o.y) { newH = 1 - o.y; newW = newH * aspect; }
+        if (newH * aspect > 1 - o.x) { newW = 1 - o.x; newH = newW / aspect; }
+        setArea({ x: o.x, y: o.y, w: newW, h: newH });
+      } else {
+        setArea({
+          x: o.x, y: o.y,
+          w: Math.max(0.05, Math.min(1 - o.x, o.w + dx)),
+          h: Math.max(0.05, Math.min(1 - o.y, o.h + dy)),
+        });
+      }
     }
   }
   function onPointerUp() { dragRef.current = null; }
+
+  function onWheelScale(e: React.WheelEvent) {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.05 : 0.95;
+    setArea((a) => {
+      let newW = Math.max(0.05, Math.min(1, a.w * factor));
+      let newH = Math.max(0.05, Math.min(1, a.h * factor));
+      // keep centered on current center
+      const cx = a.x + a.w / 2;
+      const cy = a.y + a.h / 2;
+      let nx = clamp(cx - newW / 2, 0, 1 - newW);
+      let ny = clamp(cy - newH / 2, 0, 1 - newH);
+      // fit within bounds
+      if (nx + newW > 1) newW = 1 - nx;
+      if (ny + newH > 1) newH = 1 - ny;
+      return { x: nx, y: ny, w: newW, h: newH };
+    });
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onCancel}>
@@ -384,7 +418,7 @@ function PrintAreaEditor({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-lg">Print zona — {base.name} ({base.color_name})</h3>
-              <p className="text-xs text-muted-foreground font-body">Velc, lai pārvietotu. Velc apakšējo labo stūri, lai mainītu izmēru.</p>
+              <p className="text-xs text-muted-foreground font-body">Velc, lai pārvietotu. Velc stūri, lai mērogotu proporcionāli (Shift = brīvi). Ritenītis = mērogot no centra.</p>
             </div>
             <Button size="sm" variant="ghost" onClick={onCancel}><X className="w-4 h-4" /></Button>
           </div>
@@ -392,6 +426,7 @@ function PrintAreaEditor({
           <div
             ref={containerRef}
             className="relative w-full aspect-square bg-[repeating-conic-gradient(#e5e7eb_0_25%,#fff_0_50%)] bg-[length:20px_20px] select-none touch-none rounded-lg overflow-hidden border border-border"
+            onWheel={onWheelScale}
           >
             <img src={url} alt="" className="w-full h-full object-contain pointer-events-none" draggable={false} />
             <div
@@ -405,11 +440,32 @@ function PrintAreaEditor({
               onPointerUp={onPointerUp}
             >
               <div
-                className="absolute -bottom-2 -right-2 w-5 h-5 bg-primary rounded-sm cursor-se-resize border-2 border-background"
+                className="absolute -bottom-2 -right-2 w-6 h-6 bg-primary rounded-sm cursor-se-resize border-2 border-background z-10"
                 onPointerDown={(e) => onPointerDown("resize", e)}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
               />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 text-xs font-body">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={lockAspect} onChange={(e) => setLockAspect(e.target.checked)} />
+              <span>Saglabāt proporcijas, mainot izmēru</span>
+            </label>
+            <div className="flex items-center gap-1">
+              <Button size="sm" variant="outline" onClick={() => setArea((a) => {
+                const f = 0.9; const cx = a.x + a.w/2, cy = a.y + a.h/2;
+                const w = Math.max(0.05, a.w*f), h = Math.max(0.05, a.h*f);
+                return { x: clamp(cx - w/2, 0, 1-w), y: clamp(cy - h/2, 0, 1-h), w, h };
+              })}>−</Button>
+              <Button size="sm" variant="outline" onClick={() => setArea((a) => {
+                const f = 1.1; const cx = a.x + a.w/2, cy = a.y + a.h/2;
+                let w = Math.min(1, a.w*f), h = Math.min(1, a.h*f);
+                let nx = clamp(cx - w/2, 0, 1-w), ny = clamp(cy - h/2, 0, 1-h);
+                if (nx + w > 1) w = 1 - nx; if (ny + h > 1) h = 1 - ny;
+                return { x: nx, y: ny, w, h };
+              })}>+</Button>
             </div>
           </div>
 
