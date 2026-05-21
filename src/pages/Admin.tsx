@@ -554,7 +554,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "bulk"].includes(activeTab)
+                  ["customers", "categories", "drafts", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "bulk"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
