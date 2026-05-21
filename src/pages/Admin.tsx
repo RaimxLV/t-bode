@@ -475,6 +475,12 @@ const Admin = () => {
               <AccountingSpreadsheet />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="bulk">
+            <Suspense fallback={<TabFallback />}>
+              <BulkStudio />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
