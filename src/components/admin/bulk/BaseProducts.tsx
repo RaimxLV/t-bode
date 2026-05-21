@@ -24,6 +24,8 @@ interface BaseProduct {
   print_area: { x: number; y: number; w: number; h: number };
   sort_order: number;
   is_active: boolean;
+  mockup_width_cm: number;
+  mockup_height_cm: number;
 }
 
 const BUCKET = "mockup-templates";
@@ -67,6 +69,8 @@ export function BaseProducts() {
     setBases(((bs as any[]) || []).map((b) => ({
       ...b,
       print_area: b.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+      mockup_width_cm: Number(b.mockup_width_cm ?? 50),
+      mockup_height_cm: Number(b.mockup_height_cm ?? 70),
     })));
     setLoading(false);
   }
@@ -132,6 +136,22 @@ export function BaseProducts() {
 
   async function savePrintArea(b: BaseProduct, area: { x: number; y: number; w: number; h: number }) {
     const { error } = await supabase.from("base_products").update({ print_area: area }).eq("id", b.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Print zona saglabāta");
+    setEditingPrintArea(null);
+    await loadAll();
+  }
+
+  async function savePrintAreaAndDims(
+    b: BaseProduct,
+    area: { x: number; y: number; w: number; h: number },
+    dims: { mockup_width_cm: number; mockup_height_cm: number }
+  ) {
+    const { error } = await supabase.from("base_products").update({
+      print_area: area,
+      mockup_width_cm: dims.mockup_width_cm,
+      mockup_height_cm: dims.mockup_height_cm,
+    }).eq("id", b.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Print zona saglabāta");
     setEditingPrintArea(null);
@@ -229,7 +249,7 @@ export function BaseProducts() {
         <PrintAreaEditor
           base={editingPrintArea}
           url={publicUrl(editingPrintArea.mockup_path)}
-          onSave={(area) => savePrintArea(editingPrintArea, area)}
+          onSave={(area, dims) => savePrintAreaAndDims(editingPrintArea, area, dims)}
           onCancel={() => setEditingPrintArea(null)}
         />
       )}
