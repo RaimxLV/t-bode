@@ -131,7 +131,7 @@ export const AccountingSpreadsheet = () => {
     for (const [day, list] of byDay) {
       out.push({
         date: day, orderNumber: "", invoiceNumber: "", client: "", products: "", sizes: "", quantities: "", regNumber: "",
-        vatNumber: "", net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
+        vatNumber: "", shirts: 0, print: 0, shipping: 0, net: 0, vat: 0, gross: 0, paymentMethod: "", status: "",
         isGroupHeader: true, groupLabel: day,
       });
       list.forEach((o) => {
