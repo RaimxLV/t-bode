@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Upload, Trash2, Search, Loader2, Image as ImageIcon, Plus } from "lucide-react";
+import { Upload, Trash2, Search, Loader2, Image as ImageIcon, Plus, Printer } from "lucide-react";
+import { cropTransparentPng, pool } from "@/lib/imageCrop";
+import { PrintExportDialog } from "./PrintExportDialog";
 
 interface DesignCategory {
   id: string;
@@ -24,6 +26,7 @@ interface DesignItem {
 
 const BUCKET = "design-library";
 const SUPPORTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
+const UPLOAD_CONCURRENCY = 5;
 
 export function DesignLibrary() {
   const [categories, setCategories] = useState<DesignCategory[]>([]);
@@ -35,6 +38,8 @@ export function DesignLibrary() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [newCatName, setNewCatName] = useState("");
+  const [cropPng, setCropPng] = useState(false);
+  const [exportDesign, setExportDesign] = useState<DesignItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { void loadAll(); }, []);
@@ -66,33 +71,39 @@ export function DesignLibrary() {
     setUploading(true);
     setUploadProgress({ done: 0, total: files.length });
     let ok = 0; let failed = 0;
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!isSupportedImageFile(file)) { failed++; continue; }
-      try {
-        const ext = file.name.split(".").pop()?.toLowerCase() || "png";
-        const safeName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
-        const path = `${defaultCat ?? "uncat"}/${crypto.randomUUID()}-${safeName}.${ext}`;
-        const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
-          contentType: file.type || undefined,
-          upsert: false,
-        });
-        if (upErr) throw upErr;
-        const { error: dbErr } = await supabase.from("design_library").insert({
-          name: safeName || file.name,
-          file_path: path,
-          category_id: defaultCat,
-          file_size: file.size,
-          tags: [],
-        });
-        if (dbErr) throw dbErr;
-        ok++;
-      } catch (e: any) {
-        console.error("upload failed", file.name, e);
-        failed++;
-      }
-      setUploadProgress({ done: i + 1, total: files.length });
-    }
+    const results = await pool(
+      files,
+      UPLOAD_CONCURRENCY,
+      async (file) => {
+        if (!isSupportedImageFile(file)) return false;
+        try {
+          const toUpload = cropPng ? await cropTransparentPng(file) : file;
+          const ext = toUpload.name.split(".").pop()?.toLowerCase() || "png";
+          const safeName = toUpload.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
+          const path = `${defaultCat ?? "uncat"}/${crypto.randomUUID()}-${safeName}.${ext}`;
+          const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, toUpload, {
+            contentType: toUpload.type || undefined,
+            upsert: false,
+          });
+          if (upErr) throw upErr;
+          const { error: dbErr } = await supabase.from("design_library").insert({
+            name: safeName || toUpload.name,
+            file_path: path,
+            category_id: defaultCat,
+            file_size: toUpload.size,
+            tags: [],
+          });
+          if (dbErr) throw dbErr;
+          return true;
+        } catch (e: any) {
+          console.error("upload failed", file.name, e);
+          return false;
+        }
+      },
+      (done, total) => setUploadProgress({ done, total }),
+    );
+    ok = results.filter(Boolean).length;
+    failed = results.length - ok;
     setUploading(false);
     setUploadProgress(null);
     if (ok) toast.success(`Augšupielādēti ${ok} dizaini`);
@@ -179,6 +190,10 @@ export function DesignLibrary() {
                 {uploadProgress.done} / {uploadProgress.total}
               </span>
             )}
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground font-body cursor-pointer">
+              <input type="checkbox" checked={cropPng} onChange={(e) => setCropPng(e.target.checked)} />
+              Apgriezt PNG malas
+            </label>
             <div className="relative ml-auto">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
@@ -285,6 +300,14 @@ export function DesignLibrary() {
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setExportDesign(d); }}
+                  className="absolute top-1 right-7 p-1 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-primary transition-all"
+                  aria-label="Sagatavot drukai"
+                  title="Sagatavot drukai"
+                >
+                  <Printer className="w-3 h-3" />
+                </button>
                 {sel && (
                   <div className="absolute top-1 left-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
                     ✓
@@ -294,6 +317,14 @@ export function DesignLibrary() {
             );
           })}
         </div>
+      )}
+
+      {exportDesign && (
+        <PrintExportDialog
+          designName={exportDesign.name}
+          designUrl={publicUrl(exportDesign.file_path)}
+          onClose={() => setExportDesign(null)}
+        />
       )}
     </div>
   );
