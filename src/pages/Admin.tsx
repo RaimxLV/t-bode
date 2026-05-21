@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2 } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m
 const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ default: m.EmailLog })));
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
+const BulkStudio = lazy(() => import("@/components/admin/BulkStudio").then(m => ({ default: m.BulkStudio })));
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -350,6 +351,7 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
+            <TabsTrigger value="bulk" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Bulk Studio</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -473,6 +475,12 @@ const Admin = () => {
               <AccountingSpreadsheet />
             </Suspense>
           </TabsContent>
+
+          <TabsContent value="bulk">
+            <Suspense fallback={<TabFallback />}>
+              <BulkStudio />
+            </Suspense>
+          </TabsContent>
         </Tabs>
       </main>
 
@@ -503,7 +511,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting"].includes(activeTab)
+                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "bulk"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -528,6 +536,7 @@ const Admin = () => {
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
+                  { value: "bulk", icon: Wand2, label: "Bulk Studio" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button

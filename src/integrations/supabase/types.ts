@@ -32,6 +32,78 @@ export type Database = {
         }
         Relationships: []
       }
+      base_products: {
+        Row: {
+          color_hex: string | null
+          color_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+          mockup_path: string
+          name: string
+          print_area: Json
+          product_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          color_hex?: string | null
+          color_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mockup_path: string
+          name: string
+          print_area?: Json
+          product_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          color_hex?: string | null
+          color_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          mockup_path?: string
+          name?: string
+          print_area?: Json
+          product_id?: string | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      bulk_generation_jobs: {
+        Row: {
+          completed: number
+          created_at: string
+          created_by: string | null
+          id: string
+          params: Json
+          status: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          params?: Json
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          params?: Json
+          status?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
@@ -102,6 +174,80 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      design_categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      design_library: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          file_path: string
+          file_size: number | null
+          height: number | null
+          id: string
+          name: string
+          tags: string[]
+          thumbnail_path: string | null
+          width: number | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_path: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          name: string
+          tags?: string[]
+          thumbnail_path?: string | null
+          width?: number | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          file_path?: string
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          name?: string
+          tags?: string[]
+          thumbnail_path?: string | null
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_library_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "design_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_send_log: {
         Row: {
@@ -225,6 +371,61 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      generated_mockups: {
+        Row: {
+          base_product_id: string | null
+          created_at: string
+          design_id: string | null
+          id: string
+          job_id: string | null
+          mockup_path: string
+          published_product_id: string | null
+          status: string
+        }
+        Insert: {
+          base_product_id?: string | null
+          created_at?: string
+          design_id?: string | null
+          id?: string
+          job_id?: string | null
+          mockup_path: string
+          published_product_id?: string | null
+          status?: string
+        }
+        Update: {
+          base_product_id?: string | null
+          created_at?: string
+          design_id?: string | null
+          id?: string
+          job_id?: string | null
+          mockup_path?: string
+          published_product_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_mockups_base_product_id_fkey"
+            columns: ["base_product_id"]
+            isOneToOne: false
+            referencedRelation: "base_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_mockups_design_id_fkey"
+            columns: ["design_id"]
+            isOneToOne: false
+            referencedRelation: "design_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "generated_mockups_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_generation_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       invoice_sequences: {
         Row: {
