@@ -162,6 +162,17 @@ export const AccountingSpreadsheet = () => {
         const vatRate = Number(inv?.vat_rate ?? 21);
         const net = inv?.net_amount != null ? Number(inv.net_amount) : +(gross / (1 + vatRate / 100)).toFixed(2);
         const vat = inv?.vat_amount != null ? Number(inv.vat_amount) : +(gross - net).toFixed(2);
+        const shirtsGross = its.reduce((s, it) => {
+          const q = Number(it.quantity ?? 1);
+          const base = Number(it.base_unit_price ?? 0);
+          const print = Number(it.print_unit_price ?? 0);
+          const unit = Number(it.unit_price ?? 0);
+          return s + q * (base > 0 || print > 0 ? base : unit);
+        }, 0);
+        const printGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.print_unit_price ?? 0), 0);
+        const itemsGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.unit_price ?? 0), 0);
+        const discount = Number(o.discount_amount ?? 0);
+        const shippingGross = Math.max(0, +(gross - itemsGross + discount).toFixed(2));
         out.push({
           date: new Date(o.created_at).toLocaleDateString("lv-LV"),
           orderNumber: o.order_number != null ? `TB-${String(o.order_number).padStart(5, "0")}` : "—",
@@ -175,6 +186,9 @@ export const AccountingSpreadsheet = () => {
           productItems,
           regNumber: o.company_reg_number ?? "",
           vatNumber: o.company_vat_number ?? "",
+          shirts: +shirtsGross.toFixed(2),
+          print: +printGross.toFixed(2),
+          shipping: shippingGross,
           net,
           vat,
           gross,
