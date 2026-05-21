@@ -316,6 +316,10 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <Switch checked={product.in_stock} onCheckedChange={(v) => onProductChange({ ...product, in_stock: v })} />
               <Label className="font-body text-sm">{t("admin.inStock")}</Label>
             </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={!!product.is_draft} onCheckedChange={(v) => onProductChange({ ...product, is_draft: v })} />
+              <Label className="font-body text-sm">Melnraksts (slēpt no veikala)</Label>
+            </div>
           </div>
 
           <div>
