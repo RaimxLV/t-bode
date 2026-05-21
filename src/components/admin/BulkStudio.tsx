@@ -1,10 +1,11 @@
 import { lazy, Suspense, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Image as ImageIcon, Shirt, Wand2, Construction } from "lucide-react";
+import { Image as ImageIcon, Shirt, Wand2, Construction, Ruler } from "lucide-react";
 
 const DesignLibrary = lazy(() => import("./bulk/DesignLibrary").then((m) => ({ default: m.DesignLibrary })));
 const BaseProducts = lazy(() => import("./bulk/BaseProducts").then((m) => ({ default: m.BaseProducts })));
+const PrintPresets = lazy(() => import("./bulk/PrintPresets").then((m) => ({ default: m.PrintPresets })));
 
 const Fallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -42,6 +43,9 @@ export function BulkStudio() {
           <TabsTrigger value="bases" className="gap-1.5">
             <Shirt className="w-4 h-4" /> Bāzes krekli
           </TabsTrigger>
+          <TabsTrigger value="sizes" className="gap-1.5">
+            <Ruler className="w-4 h-4" /> Drukas izmēri
+          </TabsTrigger>
           <TabsTrigger value="generate" className="gap-1.5">
             <Wand2 className="w-4 h-4" /> Ģenerators
           </TabsTrigger>
@@ -56,6 +60,12 @@ export function BulkStudio() {
         <TabsContent value="bases" className="mt-4">
           <Suspense fallback={<Fallback />}>
             <BaseProducts />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="sizes" className="mt-4">
+          <Suspense fallback={<Fallback />}>
+            <PrintPresets />
           </Suspense>
         </TabsContent>
 
