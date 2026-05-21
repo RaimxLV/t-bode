@@ -1,0 +1,2 @@
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS shipping_cost numeric(10,2);
+COMMENT ON COLUMN public.orders.shipping_cost IS 'Gross shipping fee charged to the customer (EUR, incl. VAT). NULL for legacy orders.';
