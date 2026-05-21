@@ -283,6 +283,7 @@ const Checkout = () => {
         discount_amount: promo
           ? (promo.discount_type === "free_shipping" ? baseShippingCost : promo.discount_amount)
           : 0,
+        shipping_cost: shippingCost,
       };
 
       if (activeUser) {

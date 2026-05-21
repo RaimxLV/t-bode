@@ -678,6 +678,7 @@ export type Database = {
           provider: string
           shipping_address: string | null
           shipping_city: string | null
+          shipping_cost: number | null
           shipping_name: string | null
           shipping_phone: string | null
           shipping_zip: string | null
@@ -728,6 +729,7 @@ export type Database = {
           provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_name?: string | null
           shipping_phone?: string | null
           shipping_zip?: string | null
@@ -778,6 +780,7 @@ export type Database = {
           provider?: string
           shipping_address?: string | null
           shipping_city?: string | null
+          shipping_cost?: number | null
           shipping_name?: string | null
           shipping_phone?: string | null
           shipping_zip?: string | null

@@ -172,7 +172,11 @@ export const AccountingSpreadsheet = () => {
         const printGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.print_unit_price ?? 0), 0);
         const itemsGross = its.reduce((s, it) => s + Number(it.quantity ?? 1) * Number(it.unit_price ?? 0), 0);
         const discount = Number(o.discount_amount ?? 0);
-        const shippingGross = Math.max(0, +(gross - itemsGross + discount).toFixed(2));
+        // Use the actual shipping fee stored on the order (Omniva etc.).
+        // Fall back to deriving it for legacy orders without the column.
+        const shippingGross = o.shipping_cost != null
+          ? Math.max(0, Number(o.shipping_cost))
+          : Math.max(0, +(gross - itemsGross + discount).toFixed(2));
         out.push({
           date: new Date(o.created_at).toLocaleDateString("lv-LV"),
           orderNumber: o.order_number != null ? `TB-${String(o.order_number).padStart(5, "0")}` : "—",
