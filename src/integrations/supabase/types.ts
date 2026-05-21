@@ -39,7 +39,9 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          mockup_height_cm: number
           mockup_path: string
+          mockup_width_cm: number
           name: string
           print_area: Json
           product_id: string | null
@@ -51,7 +53,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          mockup_height_cm?: number
           mockup_path: string
+          mockup_width_cm?: number
           name: string
           print_area?: Json
           product_id?: string | null
@@ -63,7 +67,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          mockup_height_cm?: number
           mockup_path?: string
+          mockup_width_cm?: number
           name?: string
           print_area?: Json
           product_id?: string | null

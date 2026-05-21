@@ -24,6 +24,8 @@ interface BaseProduct {
   print_area: { x: number; y: number; w: number; h: number };
   sort_order: number;
   is_active: boolean;
+  mockup_width_cm: number;
+  mockup_height_cm: number;
 }
 
 const BUCKET = "mockup-templates";
@@ -67,6 +69,8 @@ export function BaseProducts() {
     setBases(((bs as any[]) || []).map((b) => ({
       ...b,
       print_area: b.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+      mockup_width_cm: Number(b.mockup_width_cm ?? 50),
+      mockup_height_cm: Number(b.mockup_height_cm ?? 70),
     })));
     setLoading(false);
   }
@@ -132,6 +136,22 @@ export function BaseProducts() {
 
   async function savePrintArea(b: BaseProduct, area: { x: number; y: number; w: number; h: number }) {
     const { error } = await supabase.from("base_products").update({ print_area: area }).eq("id", b.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Print zona saglabāta");
+    setEditingPrintArea(null);
+    await loadAll();
+  }
+
+  async function savePrintAreaAndDims(
+    b: BaseProduct,
+    area: { x: number; y: number; w: number; h: number },
+    dims: { mockup_width_cm: number; mockup_height_cm: number }
+  ) {
+    const { error } = await supabase.from("base_products").update({
+      print_area: area,
+      mockup_width_cm: dims.mockup_width_cm,
+      mockup_height_cm: dims.mockup_height_cm,
+    }).eq("id", b.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Print zona saglabāta");
     setEditingPrintArea(null);
@@ -229,7 +249,7 @@ export function BaseProducts() {
         <PrintAreaEditor
           base={editingPrintArea}
           url={publicUrl(editingPrintArea.mockup_path)}
-          onSave={(area) => savePrintArea(editingPrintArea, area)}
+          onSave={(area, dims) => savePrintAreaAndDims(editingPrintArea, area, dims)}
           onCancel={() => setEditingPrintArea(null)}
         />
       )}
@@ -314,15 +334,19 @@ function MissingColorCard({ colorName, onUpload }: { colorName: string; onUpload
   );
 }
 
-// Interactive print area editor — drag to move, resize from corner
 function PrintAreaEditor({
   base, url, onSave, onCancel,
 }: {
   base: BaseProduct; url: string;
-  onSave: (area: { x: number; y: number; w: number; h: number }) => void;
+  onSave: (
+    area: { x: number; y: number; w: number; h: number },
+    dims: { mockup_width_cm: number; mockup_height_cm: number }
+  ) => void;
   onCancel: () => void;
 }) {
   const [area, setArea] = useState(base.print_area);
+  const [widthCm, setWidthCm] = useState<number>(base.mockup_width_cm || 50);
+  const [heightCm, setHeightCm] = useState<number>(base.mockup_height_cm || 70);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ mode: "move" | "resize"; startX: number; startY: number; orig: typeof area } | null>(null);
 
@@ -390,15 +414,39 @@ function PrintAreaEditor({
           </div>
 
           <div className="grid grid-cols-4 gap-2 text-xs font-body">
-            <Field label="X" value={area.x} onChange={(v) => setArea((a) => ({ ...a, x: clamp(v, 0, 1 - a.w) }))} />
-            <Field label="Y" value={area.y} onChange={(v) => setArea((a) => ({ ...a, y: clamp(v, 0, 1 - a.h) }))} />
-            <Field label="W" value={area.w} onChange={(v) => setArea((a) => ({ ...a, w: clamp(v, 0.05, 1 - a.x) }))} />
-            <Field label="H" value={area.h} onChange={(v) => setArea((a) => ({ ...a, h: clamp(v, 0.05, 1 - a.y) }))} />
+            <CmField label="X (cm)" valueCm={area.x * widthCm} max={widthCm - area.w * widthCm}
+              onChange={(cm) => setArea((a) => ({ ...a, x: clamp(cm / widthCm, 0, 1 - a.w) }))} />
+            <CmField label="Y (cm)" valueCm={area.y * heightCm} max={heightCm - area.h * heightCm}
+              onChange={(cm) => setArea((a) => ({ ...a, y: clamp(cm / heightCm, 0, 1 - a.h) }))} />
+            <CmField label="Platums (cm)" valueCm={area.w * widthCm} max={widthCm - area.x * widthCm}
+              onChange={(cm) => setArea((a) => ({ ...a, w: clamp(cm / widthCm, 0.05, 1 - a.x) }))} />
+            <CmField label="Augstums (cm)" valueCm={area.h * heightCm} max={heightCm - area.y * heightCm}
+              onChange={(cm) => setArea((a) => ({ ...a, h: clamp(cm / heightCm, 0.05, 1 - a.y) }))} />
           </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs font-body pt-2 border-t border-border">
+            <label className="flex flex-col gap-1">
+              <span className="text-muted-foreground">Mockup platums (cm)</span>
+              <input type="number" min={1} step={0.5} value={widthCm}
+                onChange={(e) => setWidthCm(parseFloat(e.target.value) || 0)}
+                className="px-2 py-1 rounded border border-border bg-card" />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-muted-foreground">Mockup augstums (cm)</span>
+              <input type="number" min={1} step={0.5} value={heightCm}
+                onChange={(e) => setHeightCm(parseFloat(e.target.value) || 0)}
+                className="px-2 py-1 rounded border border-border bg-card" />
+            </label>
+          </div>
+
+          <p className="text-[11px] text-muted-foreground font-body">
+            Print zona: {(area.w * widthCm).toFixed(1)} × {(area.h * heightCm).toFixed(1)} cm
+            &nbsp;·&nbsp; pozīcija: {(area.x * widthCm).toFixed(1)}, {(area.y * heightCm).toFixed(1)} cm
+          </p>
 
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={onCancel}>Atcelt</Button>
-            <Button onClick={() => onSave(area)} className="bg-primary text-primary-foreground">
+            <Button onClick={() => onSave(area, { mockup_width_cm: widthCm, mockup_height_cm: heightCm })} className="bg-primary text-primary-foreground">
               <Save className="w-4 h-4 mr-2" /> Saglabāt
             </Button>
           </div>
@@ -410,13 +458,13 @@ function PrintAreaEditor({
 
 function clamp(n: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, n)); }
 
-function Field({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+function CmField({ label, valueCm, max, onChange }: { label: string; valueCm: number; max: number; onChange: (cm: number) => void }) {
   return (
     <label className="flex flex-col gap-1">
       <span className="text-muted-foreground">{label}</span>
       <input
-        type="number" min={0} max={1} step={0.01} value={Number(value.toFixed(3))}
-        onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        type="number" min={0} step={0.1} value={Number(valueCm.toFixed(1))}
+        onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
         className="px-2 py-1 rounded border border-border bg-card"
       />
     </label>
