@@ -347,7 +347,7 @@ function PrintAreaEditor({
   const [area, setArea] = useState(base.print_area);
   const [widthCm, setWidthCm] = useState<number>(base.mockup_width_cm || 50);
   const [heightCm, setHeightCm] = useState<number>(base.mockup_height_cm || 70);
-  const [lockAspect, setLockAspect] = useState(true);
+  const [lockAspect, setLockAspect] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ mode: "move" | "resize"; startX: number; startY: number; orig: typeof area } | null>(null);
 
@@ -418,7 +418,7 @@ function PrintAreaEditor({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-display text-lg">Print zona — {base.name} ({base.color_name})</h3>
-              <p className="text-xs text-muted-foreground font-body">Velc, lai pārvietotu. Velc stūri, lai mērogotu proporcionāli (Shift = brīvi). Ritenītis = mērogot no centra.</p>
+              <p className="text-xs text-muted-foreground font-body">Velc, lai pārvietotu. Velc stūri, lai mainītu izmēru brīvi (Shift = proporcionāli). Ritenītis = mērogot no centra.</p>
             </div>
             <Button size="sm" variant="ghost" onClick={onCancel}><X className="w-4 h-4" /></Button>
           </div>
