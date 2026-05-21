@@ -200,7 +200,12 @@ Deno.serve(async (req) => {
     );
     const discountGross = Number(order.discount_amount ?? 0);
     const orderTotal = Number(order.total ?? 0);
-    const shippingGross = Math.max(0, Math.round((orderTotal - itemsGrossSum + discountGross) * 100) / 100);
+    // Prefer the actual shipping fee stored on the order (e.g. Omniva price).
+    // Fall back to derivation for legacy rows that pre-date the column.
+    const storedShipping = (order as any).shipping_cost;
+    const shippingGross = storedShipping !== null && storedShipping !== undefined
+      ? Math.max(0, Number(storedShipping))
+      : Math.max(0, Math.round((orderTotal - itemsGrossSum + discountGross) * 100) / 100);
 
     const data: InvoiceData = {
       invoice_number: invoiceNumber,
