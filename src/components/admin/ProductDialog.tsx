@@ -17,11 +17,11 @@ import { useExistingColors } from "@/hooks/useExistingColors";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "2XL", "3XL", "4XL", "5XL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, zakeke_model_code: "" };
+export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, is_draft: false, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
@@ -100,7 +100,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, zakeke_model_code: product.zakeke_model_code || null };
+    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
     if (product.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) toast.error(t("admin.saveError") + ": " + error.message);
@@ -315,6 +315,10 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             <div className="flex items-center gap-2">
               <Switch checked={product.in_stock} onCheckedChange={(v) => onProductChange({ ...product, in_stock: v })} />
               <Label className="font-body text-sm">{t("admin.inStock")}</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch checked={!!product.is_draft} onCheckedChange={(v) => onProductChange({ ...product, is_draft: v })} />
+              <Label className="font-body text-sm">Melnraksts (slēpt no veikala)</Label>
             </div>
           </div>
 

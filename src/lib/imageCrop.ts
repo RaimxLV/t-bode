@@ -146,6 +146,47 @@ export async function renderPrintReady(opts: {
   return { blob, widthPx: canvasW, heightPx: canvasH };
 }
 
+/**
+ * Composite a design onto a mockup using a normalized print_area rect (0..1 of mockup size).
+ * The design is contained inside the rect (preserving aspect). Output is JPEG for smaller files.
+ */
+export async function composeMockup(opts: {
+  mockupUrl: string;
+  designUrl: string;
+  printArea: { x: number; y: number; w: number; h: number };
+  maxWidth?: number; // output max width in px (default 1200)
+  quality?: number;  // jpeg quality
+}): Promise<Blob> {
+  const [mock, design] = await Promise.all([urlToImage(opts.mockupUrl), urlToImage(opts.designUrl)]);
+  const maxW = opts.maxWidth ?? 1200;
+  const scale = mock.naturalWidth > maxW ? maxW / mock.naturalWidth : 1;
+  const cw = Math.round(mock.naturalWidth * scale);
+  const ch = Math.round(mock.naturalHeight * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = cw; canvas.height = ch;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas context unavailable");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(mock, 0, 0, cw, ch);
+
+  const rx = opts.printArea.x * cw;
+  const ry = opts.printArea.y * ch;
+  const rw = opts.printArea.w * cw;
+  const rh = opts.printArea.h * ch;
+  const aspect = design.naturalWidth / design.naturalHeight;
+  let dw = rw, dh = rw / aspect;
+  if (dh > rh) { dh = rh; dw = rh * aspect; }
+  const dx = rx + (rw - dw) / 2;
+  const dy = ry + (rh - dh) / 2;
+  ctx.drawImage(design, dx, dy, dw, dh);
+  const blob = await new Promise<Blob | null>((res) =>
+    canvas.toBlob(res, "image/jpeg", opts.quality ?? 0.9)
+  );
+  if (!blob) throw new Error("Failed to render mockup");
+  return blob;
+}
+
 async function trimCanvas(img: HTMLImageElement, alphaThreshold = 8): Promise<Blob | null> {
   const w = img.naturalWidth, h = img.naturalHeight;
   if (!w || !h) return null;

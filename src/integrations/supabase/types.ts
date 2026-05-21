@@ -859,6 +859,7 @@ export type Database = {
           id: string
           image_url: string | null
           in_stock: boolean
+          is_draft: boolean
           name: string
           name_en: string | null
           name_lv: string | null
@@ -880,6 +881,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean
+          is_draft?: boolean
           name: string
           name_en?: string | null
           name_lv?: string | null
@@ -901,6 +903,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           in_stock?: boolean
+          is_draft?: boolean
           name?: string
           name_en?: string | null
           name_lv?: string | null
