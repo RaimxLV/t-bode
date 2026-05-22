@@ -132,7 +132,8 @@ Deno.serve(async (req) => {
         ip_address: (order as any).buyer_ip ?? null,
       };
 
-      const invoiceItems = (items ?? []).flatMap((it: any) => {
+      let totalPrintGross = 0;
+      const productLines = (items ?? []).map((it: any) => {
         const slug = it.products?.slug ?? null;
         const colorCode = it.color ? String(it.color).toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3) : "";
         const sizeCode = it.size ? String(it.size).toUpperCase() : "";
@@ -142,19 +143,23 @@ Deno.serve(async (req) => {
         const unit = Number(it.unit_price);
         const printUnit = Math.max(0, Number(it.print_unit_price ?? 0));
         const baseUnit = Math.max(0, Number(it.base_unit_price ?? 0)) || Math.max(0, unit - printUnit);
-        if (printUnit <= 0) {
-          return [{
-            name: it.product_name, quantity: qty, unit_price_gross: unit,
-            size: it.size, color: it.color, sku: baseSku, unit: "gab",
-          }];
-        }
-        return [
-          { name: `${it.product_name} — krekls`, quantity: qty, unit_price_gross: baseUnit,
-            size: it.size, color: it.color, sku: baseSku, unit: "gab" },
-          { name: `${it.product_name} — druka / dizains`, quantity: qty, unit_price_gross: printUnit,
-            size: null, color: null, sku: baseSku ? `${baseSku}_PRINT` : null, unit: "gab" },
-        ];
+        if (printUnit > 0) totalPrintGross += printUnit * qty;
+        return {
+          name: it.product_name,
+          quantity: qty,
+          unit_price_gross: printUnit > 0 ? baseUnit : unit,
+          size: it.size, color: it.color, sku: baseSku, unit: "gab",
+        };
       });
+      const invoiceItems = [...productLines];
+      if (totalPrintGross > 0) {
+        invoiceItems.push({
+          name: "Druka / dizains (visiem izstrādājumiem)",
+          quantity: 1,
+          unit_price_gross: Math.round(totalPrintGross * 100) / 100,
+          size: null, color: null, sku: "PRINT", unit: "kompl",
+        });
+      }
 
       const itemsGrossSum = invoiceItems.reduce((s, it) => s + it.unit_price_gross * it.quantity, 0);
       const discountGross = Number(order.discount_amount ?? 0);
