@@ -577,7 +577,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
 
   // Optional shipping line
   if (data.shipping_gross && data.shipping_gross > 0) {
-    if (y - rowH < (currentPage === page ? 230 : 80)) {
+    if (y - rowH < (currentPage === currentPage ? 230 : 80)) {
       const newPage = pdf.addPage([595.28, 841.89]);
       currentPage = newPage;
       y = newPage.getSize().height - 50;
@@ -615,18 +615,18 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const totalsBlockLeft = xPrice;        // start of label area
 
   // KOPĀ (net subtotal)
-  drawRight(page, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
-  drawRight(page, `${fmtNum(totals.net, 2)} EUR`, totalsValueRight, y, bold, 9, colorText);
+  drawRight(currentPage, "KOPĀ (bez PVN):", totalsLabelRight, y, bold, 9, colorText);
+  drawRight(currentPage, `${fmtNum(totals.net, 2)} EUR`, totalsValueRight, y, bold, 9, colorText);
   y -= 16;
 
   // PVN row
-  drawRight(page, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
-  drawRight(page, `${fmtNum(totals.vat, 2)} EUR`, totalsValueRight, y, font, 9, colorText);
+  drawRight(currentPage, `PVN ${rate}%:`, totalsLabelRight, y, font, 9, colorText);
+  drawRight(currentPage, `${fmtNum(totals.vat, 2)} EUR`, totalsValueRight, y, font, 9, colorText);
   y -= 14;
 
   // Separator line BETWEEN PVN row and "Pavisam apmaksai"
   // Sits in the gap, clear of both the PVN text above and the totals text below
-  page.drawLine({
+  currentPage.drawLine({
     start: { x: totalsBlockLeft, y: y },
     end: { x: totalsValueRight, y: y },
     thickness: 0.7,
@@ -635,8 +635,8 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   y -= 16;
 
   // Pavisam apmaksai — text + value on the same baseline, both right-aligned
-  drawRight(page, "Pavisam apmaksai:", totalsLabelRight, y, bold, 11, colorText);
-  drawRight(page, `${fmtNum(totals.gross, 2)} EUR`, totalsValueRight, y, bold, 12, colorAccent);
+  drawRight(currentPage, "Pavisam apmaksai:", totalsLabelRight, y, bold, 11, colorText);
+  drawRight(currentPage, `${fmtNum(totals.gross, 2)} EUR`, totalsValueRight, y, bold, 12, colorAccent);
   y -= 28;
 
   // ============================================================
