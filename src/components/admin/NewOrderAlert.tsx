@@ -30,42 +30,44 @@ export const NewOrderAlert = ({
   onAcknowledge: () => void;
 }) => {
   const open = orders.length > 0;
-  const intervalRef = useRef<number | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
 
   useEffect(() => {
     if (!open) return;
 
-    const playBeep = () => {
+    // Soft two-note chime, played once.
+    const playChime = () => {
       try {
         const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         if (!Ctx) return;
         if (!ctxRef.current) ctxRef.current = new Ctx();
         const ctx = ctxRef.current;
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
-        o.type = "sine";
-        o.frequency.value = 880;
-        g.gain.value = 0.2;
-        o.connect(g);
-        g.connect(ctx.destination);
-        o.start();
-        o.stop(ctx.currentTime + 0.3);
+        const playNote = (freq: number, startOffset: number, duration: number) => {
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = "sine";
+          o.frequency.value = freq;
+          const start = ctx.currentTime + startOffset;
+          const end = start + duration;
+          // Gentle envelope: fade in/out so it sounds soft, not piercing.
+          g.gain.setValueAtTime(0.0001, start);
+          g.gain.exponentialRampToValueAtTime(0.08, start + 0.04);
+          g.gain.exponentialRampToValueAtTime(0.0001, end);
+          o.connect(g);
+          g.connect(ctx.destination);
+          o.start(start);
+          o.stop(end + 0.02);
+        };
+        // C5 → E5, soft mallet-like chime
+        playNote(523.25, 0, 0.45);
+        playNote(659.25, 0.18, 0.55);
       } catch { /* ignore */ }
     };
 
-    playBeep();
-    intervalRef.current = window.setInterval(playBeep, 1500);
+    playChime();
 
     // Try to focus the window so the modal is visible
     try { window.focus(); } catch { /* ignore */ }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
   }, [open]);
 
   const latest = orders[orders.length - 1];

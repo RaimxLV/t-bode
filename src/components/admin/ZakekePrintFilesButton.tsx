@@ -492,6 +492,14 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const order = { print: 0, mockup: 1, other: 2, zip: 3 } as const;
   unique.sort((a, b) => order[a.kind] - order[b.kind]);
 
+  // Only keep print PNG/JPG files (front/back). Hide DXF, PDF, SVG, ZIP,
+  // and any cryptic-id files — admins only need the production raster.
+  const printable = unique.filter((f) => {
+    if (f.kind !== "print") return false;
+    const ext = (f.ext || "").toLowerCase();
+    return ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp";
+  });
+
   // Build the list of mockup preview URLs (front, back, …) coming from
   // Zakeke's previews[] array. Falls back to the single thumbnail URL when
   // we don't have the full list (older orders).
@@ -519,7 +527,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
     return `Mockup ${idx + 1}`;
   };
 
-  if (unique.length === 0 && fallbackPreviews.length === 0) {
+  if (printable.length === 0 && fallbackPreviews.length === 0) {
     return (
       <div className="text-[11px] text-muted-foreground italic">
         Nav pieejamu failu
@@ -530,7 +538,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   return (
     <>
       <div className={`flex flex-wrap gap-1.5 ${baseClasses}`}>
-        {unique.map((f, i) => {
+        {printable.map((f, i) => {
           const Icon =
             f.kind === "mockup"
               ? FileImage
