@@ -1,15 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
-import { getResendFromEmail } from "../_shared/from-email.ts";
+import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-const FROM_EMAIL = getResendFromEmail();
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
 
@@ -90,8 +86,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
     const { order_id, lang } = await req.json();
     if (!order_id) {
       return new Response(JSON.stringify({ error: "Missing order_id" }), {
@@ -130,82 +124,48 @@ Deno.serve(async (req) => {
     const html = renderHtml(order, items ?? [], language);
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
-    const messageId = makeMessageId("order-confirmation");
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "order-confirmation",
-      recipient_email: toEmail,
-      status: "pending",
-      metadata: { order_id, order_number: order.order_number, lang: language },
-    });
-
-    // For B2B orders, attach current invoice PDF when available
-    const attachments: { filename: string; content: string }[] = [];
+    // For B2B orders, include a signed download link to the current invoice PDF
+    // (Lovable Emails does not support file attachments)
+    let invoiceHtml = "";
     if (order.is_business) {
       try {
         const { data: inv } = await service
           .from("invoices").select("pdf_path, invoice_number, version")
           .eq("order_id", order_id).eq("is_current", true).maybeSingle();
         if (inv?.pdf_path) {
-          const { data: blob } = await service.storage.from("invoices").download(inv.pdf_path);
-          if (blob) {
-            const buf = new Uint8Array(await blob.arrayBuffer());
-            // Base64 encode for Resend
-            let bin = "";
-            for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
-            const b64 = btoa(bin);
-            attachments.push({
-              filename: `${inv.invoice_number}_v${inv.version}.pdf`,
-              content: b64,
-            });
+          const { data: signed } = await service.storage
+            .from("invoices")
+            .createSignedUrl(inv.pdf_path, 60 * 60 * 24 * 30); // 30 days
+          if (signed?.signedUrl) {
+            const label = language === "lv" ? "Lejupielādēt rēķinu" : "Download invoice";
+            invoiceHtml = `<p style="margin:16px 0 0;"><a href="${signed.signedUrl}" style="display:inline-block;background:#DC2626;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:bold;">${label} (${inv.invoice_number})</a></p>`;
           }
         }
       } catch (e) {
-        console.error("Failed to attach invoice:", (e as Error).message);
+        console.error("Failed to build invoice link:", (e as Error).message);
       }
     }
 
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [toEmail],
-        subject,
-        html,
-        ...(attachments.length ? { attachments } : {}),
-      }),
-    });
+    const htmlWithInvoice = invoiceHtml
+      ? html.replace("</div>\n</body>", `${invoiceHtml}</div>\n</body>`)
+      : html;
 
-    const text = await resp.text();
-    if (!resp.ok) {
-      console.error("Resend error:", resp.status, text);
-      await logEmailAttempt(service, {
-        message_id: messageId,
-        template_name: "order-confirmation",
-        recipient_email: toEmail,
-        status: "failed",
-        error_message: text,
-        metadata: { order_id, http_status: resp.status },
-      });
-      return new Response(JSON.stringify({ error: "Failed to send email", detail: text }), {
+    const result = await sendLovableTransactional(service, {
+      template: "order-confirmation",
+      to: toEmail,
+      subject,
+      html: htmlWithInvoice,
+      idempotencyKey: `order-confirmation-${order_id}`,
+      metadata: { order_id, order_number: order.order_number, lang: language },
+    });
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: "Failed to enqueue email", detail: result.error }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 502,
       });
     }
 
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "order-confirmation",
-      recipient_email: toEmail,
-      status: "sent",
-      metadata: { order_id, order_number: order.order_number, lang: language },
-    });
-
-    return new Response(JSON.stringify({ sent: true, to: toEmail }), {
+    return new Response(JSON.stringify({ queued: true, to: toEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
