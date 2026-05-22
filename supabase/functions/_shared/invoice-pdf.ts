@@ -502,6 +502,26 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   let totalQty = 0;
   let netSum = 0;
 
+  // Helper to start a new page when items run out of room, redrawing the
+  // table header on the new page so the layout stays consistent.
+  let currentPage = page;
+  const drawTableHeader = (p: PDFPage, yTop: number): number => {
+    p.drawRectangle({ x: tableX, y: yTop - headerH + 4, width: tableW, height: headerH, color: rgb(0.93, 0.93, 0.94) });
+    p.drawLine({ start: { x: tableX, y: yTop + 4 }, end: { x: xEnd, y: yTop + 4 }, thickness: 0.7, color: colorLine });
+    p.drawLine({ start: { x: tableX, y: yTop - headerH + 4 }, end: { x: xEnd, y: yTop - headerH + 4 }, thickness: 0.7, color: colorLine });
+    [xName, xQty, xUnit, xPrice, xSum].forEach((vx) => {
+      p.drawLine({ start: { x: vx, y: yTop + 4 }, end: { x: vx, y: yTop - headerH + 4 }, thickness: 0.4, color: colorLineSoft });
+    });
+    const hY = yTop - 9;
+    drawText(p, "Kods", xKods + 4, hY, bold, 9, colorText);
+    drawText(p, "Nosaukums", xName + 4, hY, bold, 9, colorText);
+    drawRight(p, "Daudz.", xUnit - 4, hY, bold, 9, colorText);
+    drawText(p, "Mērv.", xUnit + 4, hY, bold, 9, colorText);
+    drawRight(p, "Cena", xSum - 4, hY, bold, 9, colorText);
+    drawRight(p, "Summa", xEnd - 4, hY, bold, 9, colorText);
+    return yTop - headerH;
+  };
+
   for (const it of data.items) {
     const lineGross = round2(it.unit_price_gross * it.quantity);
     const lineNet = round2(lineGross / (1 + rate / 100));
@@ -509,56 +529,82 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     netSum += lineNet;
     totalQty += Number(it.quantity);
 
-    // Description (name + variants)
-    let desc = it.name;
-    const extras = [it.size, it.color].filter(Boolean).join(", ");
-    if (extras) desc += `, ${extras}`;
-    // Wrap aggressively — no overflow into adjacent columns.
-    // Allow up to 4 lines for product name, 3 for SKU.
-    const nameLines = wrapText(desc, font, 9, cName - 8).slice(0, 4);
+    // Description: product name on main line, variants (izmērs, krāsa)
+    // on a separate muted second line so multiple items don't visually merge.
+    const nameLines = wrapText(it.name, font, 9, cName - 8).slice(0, 3);
+    const variantParts: string[] = [];
+    if (it.size) variantParts.push(`Izmērs: ${it.size}`);
+    if (it.color) variantParts.push(`Krāsa: ${it.color}`);
+    const variantLine = variantParts.join("   ·   ");
     const skuLines = wrapText(it.sku ?? "", font, 8.5, cKods - 6).slice(0, 3);
-    const linesUsed = Math.max(nameLines.length, skuLines.length, 1);
-    const rowHeight = linesUsed * 11 + 6;
+    const nameBlockLines = nameLines.length + (variantLine ? 1 : 0);
+    const linesUsed = Math.max(nameBlockLines, skuLines.length, 1);
+    const rowHeight = linesUsed * 12 + 10; // extra breathing room between items
+
+    // Page break: if remaining space below the row would dip below the
+    // bottom reserve (~230pt for totals/footer on first page, ~80pt on
+    // continuation pages), start a fresh page and redraw the header.
+    const isFirstPage = currentPage === page;
+    const reserve = isFirstPage ? 230 : 80;
+    if (y - rowHeight < reserve) {
+      const newPage = pdf.addPage([595.28, 841.89]);
+      currentPage = newPage;
+      y = newPage.getSize().height - 50;
+      y = drawTableHeader(newPage, y);
+    }
 
     for (let i = 0; i < skuLines.length; i++) {
-      drawText(page, skuLines[i], xKods + 4, y - 4 - i * 11, font, 8.5, colorText);
+      drawText(currentPage, skuLines[i], xKods + 4, y - 4 - i * 12, font, 8.5, colorMuted);
     }
     for (let i = 0; i < nameLines.length; i++) {
-      drawText(page, nameLines[i], xName + 4, y - 4 - i * 11, font, 9, colorText);
+      drawText(currentPage, nameLines[i], xName + 4, y - 4 - i * 12, font, 9, colorText);
     }
-    drawRight(page, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
-    drawText(page, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, `${fmtNum(unitNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, `${fmtNum(lineNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
+    if (variantLine) {
+      drawText(currentPage, variantLine, xName + 4, y - 4 - nameLines.length * 12, font, 8.5, colorMuted);
+    }
+    drawRight(currentPage, fmtNum(it.quantity, it.quantity % 1 === 0 ? 0 : 1), xUnit - 4, y - 4, font, 9, colorText);
+    drawText(currentPage, it.unit ?? "gab", xUnit + 4, y - 4, font, 9, colorText);
+    drawRight(currentPage, `${fmtNum(unitNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
+    drawRight(currentPage, `${fmtNum(lineNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
+    // Thin separator between items
+    currentPage.drawLine({
+      start: { x: tableX, y: y - rowHeight + 4 },
+      end: { x: xEnd, y: y - rowHeight + 4 },
+      thickness: 0.3, color: colorLineSoft,
+    });
     y -= rowHeight;
-
-    if (y < 240) break; // safety; one-page layout per requirement
   }
 
   // Optional shipping line
   if (data.shipping_gross && data.shipping_gross > 0) {
+    if (y - rowH < (currentPage === page ? 230 : 80)) {
+      const newPage = pdf.addPage([595.28, 841.89]);
+      currentPage = newPage;
+      y = newPage.getSize().height - 50;
+      y = drawTableHeader(newPage, y);
+    }
     const shipGross = round2(data.shipping_gross);
     const shipNet = round2(shipGross / (1 + rate / 100));
     netSum += shipNet;
     totalQty += 1;
-    drawText(page, "PIEG", xKods + 4, y - 4, font, 9, colorText);
-    drawText(page, "Piegāde", xName + 4, y - 4, font, 9, colorText);
-    drawRight(page, "1", xUnit - 4, y - 4, font, 9, colorText);
-    drawText(page, "gab", xUnit + 4, y - 4, font, 9, colorText);
-    drawRight(page, `${fmtNum(shipNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
-    drawRight(page, `${fmtNum(shipNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
+    drawText(currentPage, "PIEG", xKods + 4, y - 4, font, 9, colorMuted);
+    drawText(currentPage, "Piegāde", xName + 4, y - 4, font, 9, colorText);
+    drawRight(currentPage, "1", xUnit - 4, y - 4, font, 9, colorText);
+    drawText(currentPage, "gab", xUnit + 4, y - 4, font, 9, colorText);
+    drawRight(currentPage, `${fmtNum(shipNet, 2)} EUR`, xSum - 4, y - 4, font, 9, colorText);
+    drawRight(currentPage, `${fmtNum(shipNet, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorText);
     y -= rowH;
   }
   if (data.discount_gross && data.discount_gross > 0) {
     const d = round2(data.discount_gross);
-    drawText(page, "ATL", xKods + 4, y - 4, font, 9, colorAccent);
-    drawText(page, "Atlaide", xName + 4, y - 4, font, 9, colorAccent);
-    drawRight(page, `-${fmtNum(d, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorAccent);
+    drawText(currentPage, "ATL", xKods + 4, y - 4, font, 9, colorAccent);
+    drawText(currentPage, "Atlaide", xName + 4, y - 4, font, 9, colorAccent);
+    drawRight(currentPage, `-${fmtNum(d, 2)} EUR`, xEnd - 4, y - 4, font, 9, colorAccent);
     y -= rowH;
   }
 
   // Bottom border of items table
-  page.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
+  currentPage.drawLine({ start: { x: tableX, y: y + 4 }, end: { x: xEnd, y: y + 4 }, thickness: 0.7, color: colorLine });
   y -= 18;
 
   // ============================================================
