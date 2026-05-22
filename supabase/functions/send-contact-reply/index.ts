@@ -1,14 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
-import { getResendFromEmail } from "../_shared/from-email.ts";
+import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const FROM_EMAIL = getResendFromEmail();
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const NOTIFY_EMAIL = "info@t-bode.lv";
 
 type Lang = "lv" | "en";
@@ -61,8 +58,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
     const { submission_id, lang } = await req.json();
     if (!submission_id) {
       return new Response(JSON.stringify({ error: "Missing submission_id" }), {
@@ -94,53 +89,20 @@ Deno.serve(async (req) => {
     const html = renderHtml(submission, language);
     const subject = t(language).subject;
 
-    const messageId = makeMessageId("contact-reply");
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "contact-reply",
-      recipient_email: toEmail,
-      status: "pending",
+    const replyResult = await sendLovableTransactional(service, {
+      template: "contact-reply",
+      to: toEmail,
+      subject,
+      html,
+      idempotencyKey: `contact-reply-${submission_id}`,
       metadata: { submission_id, lang: language },
     });
-
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [toEmail],
-        subject,
-        html,
-      }),
-    });
-
-    const text = await resp.text();
-    if (!resp.ok) {
-      console.error("Resend error:", resp.status, text);
-      await logEmailAttempt(service, {
-        message_id: messageId,
-        template_name: "contact-reply",
-        recipient_email: toEmail,
-        status: "failed",
-        error_message: text,
-        metadata: { submission_id, http_status: resp.status },
-      });
-      return new Response(JSON.stringify({ error: "Failed to send email", detail: text }), {
+    if (!replyResult.ok) {
+      return new Response(JSON.stringify({ error: "Failed to enqueue email", detail: replyResult.error }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "contact-reply",
-      recipient_email: toEmail,
-      status: "sent",
-      metadata: { submission_id, lang: language },
-    });
 
     // Send internal notification to info@t-bode.lv (fire-and-forget)
     try {
@@ -151,44 +113,21 @@ Deno.serve(async (req) => {
         <p><strong>E-pasts:</strong> <a href="mailto:${escapeHtml(submission.email)}">${escapeHtml(submission.email)}</a></p>
         <p><strong>Ziņa:</strong></p>
         <div style="background:#f7f7f7;border-left:4px solid #DC2626;padding:12px 16px;white-space:pre-wrap;">${escapeHtml(submission.message || "")}</div>
-        <p style="margin-top:16px;color:#666;font-size:12px;">Lai atbildētu — vienkārši atbildi uz šo e-pastu vai raksti tieši klientam.</p>
+        <p style="margin-top:16px;color:#666;font-size:12px;">Lai atbildētu — raksti tieši klientam: <a href="mailto:${escapeHtml(submission.email)}">${escapeHtml(submission.email)}</a></p>
       </body></html>`;
-      const notifyMessageId = makeMessageId("contact-notify");
-      await logEmailAttempt(service, {
-        message_id: notifyMessageId,
-        template_name: "contact-notify",
-        recipient_email: NOTIFY_EMAIL,
-        status: "pending",
+      await sendLovableTransactional(service, {
+        template: "contact-notify",
+        to: NOTIFY_EMAIL,
+        subject: notifySubject,
+        html: notifyHtml,
+        idempotencyKey: `contact-notify-${submission_id}`,
         metadata: { submission_id },
-      });
-      const notifyResp = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: FROM_EMAIL,
-          to: [NOTIFY_EMAIL],
-          reply_to: toEmail,
-          subject: notifySubject,
-          html: notifyHtml,
-        }),
-      });
-      const notifyText = await notifyResp.text();
-      await logEmailAttempt(service, {
-        message_id: notifyMessageId,
-        template_name: "contact-notify",
-        recipient_email: NOTIFY_EMAIL,
-        status: notifyResp.ok ? "sent" : "failed",
-        error_message: notifyResp.ok ? undefined : notifyText,
-        metadata: { submission_id, http_status: notifyResp.status },
       });
     } catch (notifyErr) {
       console.error("Internal notify failed:", (notifyErr as Error).message);
     }
 
-    return new Response(JSON.stringify({ sent: true, to: toEmail }), {
+    return new Response(JSON.stringify({ queued: true, to: toEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

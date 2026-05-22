@@ -1,14 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
-import { getResendFromEmail } from "../_shared/from-email.ts";
+import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const FROM_EMAIL = getResendFromEmail();
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
 
@@ -54,8 +50,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
     const { order_id, lang } = await req.json();
     if (!order_id) {
       return new Response(JSON.stringify({ error: "Missing order_id" }), {
@@ -92,41 +86,16 @@ Deno.serve(async (req) => {
     const html = renderHtml(order, language);
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
-    const messageId = makeMessageId("order-cancelled");
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "order-cancelled",
-      recipient_email: recipientEmail,
-      status: "pending",
+    const result = await sendLovableTransactional(service, {
+      template: "order-cancelled",
+      to: recipientEmail,
+      subject,
+      html,
+      idempotencyKey: `order-cancelled-${order_id}`,
       metadata: { order_id, order_number: order.order_number, lang: language },
     });
-
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [recipientEmail],
-        subject,
-        html,
-      }),
-    });
-
-    const text = await resp.text();
-    if (!resp.ok) {
-      console.error("Resend error:", resp.status, text);
-      await logEmailAttempt(service, {
-        message_id: messageId,
-        template_name: "order-cancelled",
-        recipient_email: recipientEmail,
-        status: "failed",
-        error_message: text,
-        metadata: { order_id, http_status: resp.status },
-      });
-      return new Response(JSON.stringify({ error: "Failed to send email", detail: text }), {
+    if (!result.ok) {
+      return new Response(JSON.stringify({ error: "Failed to enqueue email", detail: result.error }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -137,15 +106,7 @@ Deno.serve(async (req) => {
       .update({ cancellation_email_sent_at: new Date().toISOString() })
       .eq("id", order_id);
 
-    await logEmailAttempt(service, {
-      message_id: messageId,
-      template_name: "order-cancelled",
-      recipient_email: recipientEmail,
-      status: "sent",
-      metadata: { order_id, order_number: order.order_number, lang: language },
-    });
-
-    return new Response(JSON.stringify({ sent: true, to: recipientEmail }), {
+    return new Response(JSON.stringify({ queued: true, to: recipientEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -1,14 +1,10 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
-import { getResendFromEmail } from "../_shared/from-email.ts";
+import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const FROM_EMAIL = getResendFromEmail();
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 type Lang = "lv" | "en";
 
@@ -71,8 +67,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
-
     const body = await req.json().catch(() => ({}));
     const { order_id, lang } = body as { order_id?: string; lang?: string };
 
@@ -111,40 +105,19 @@ Deno.serve(async (req) => {
       const html = renderHtml(order, settings, language);
       const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
-      const messageId = makeMessageId("payment-reminder");
-      await logEmailAttempt(service, {
-        message_id: messageId,
-        template_name: "payment-reminder",
-        recipient_email: toEmail,
-        status: "pending",
+      const reminderCount = (order as any).payment_reminder_count != null
+        ? Number((order as any).payment_reminder_count)
+        : 0;
+      const result = await sendLovableTransactional(service, {
+        template: "payment-reminder",
+        to: toEmail,
+        subject,
+        html,
+        idempotencyKey: `payment-reminder-${orderId}-${reminderCount}`,
         metadata: { order_id: orderId, order_number: order.order_number, lang: language },
       });
-
-      const resp = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${RESEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          from: FROM_EMAIL,
-          to: [toEmail],
-          subject,
-          html,
-        }),
-      });
-      if (!resp.ok) {
-        const detail = await resp.text();
-        console.error("Resend error:", resp.status, detail);
-        await logEmailAttempt(service, {
-          message_id: messageId,
-          template_name: "payment-reminder",
-          recipient_email: toEmail,
-          status: "failed",
-          error_message: detail,
-          metadata: { order_id: orderId, http_status: resp.status },
-        });
-        return { sent: false, error: detail };
+      if (!result.ok) {
+        return { sent: false, error: result.error };
       }
       const newCount = (order as any).payment_reminder_count != null
         ? Number((order as any).payment_reminder_count) + 1
@@ -156,13 +129,6 @@ Deno.serve(async (req) => {
           payment_reminder_count: newCount,
         } as any)
         .eq("id", orderId);
-      await logEmailAttempt(service, {
-        message_id: messageId,
-        template_name: "payment-reminder",
-        recipient_email: toEmail,
-        status: "sent",
-        metadata: { order_id: orderId, order_number: order.order_number, lang: language },
-      });
       return { sent: true, to: toEmail };
     };
 

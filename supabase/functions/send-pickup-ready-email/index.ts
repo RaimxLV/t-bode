@@ -1,14 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { logEmailAttempt, makeMessageId } from "../_shared/email-log.ts";
-import { getResendFromEmail } from "../_shared/from-email.ts";
+import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const FROM_ADDRESS = getResendFromEmail();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -40,9 +37,6 @@ Deno.serve(async (req) => {
       recipientEmail = userResp?.user?.email || null;
     }
     if (!recipientEmail) throw new Error("No recipient email");
-
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
 
     const orderNum = String(order.order_number).padStart(5, "0");
     const name = order.shipping_name || "";
@@ -79,51 +73,17 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    const messageId = makeMessageId("pickup-ready");
-    await logEmailAttempt(supabase, {
-      message_id: messageId,
-      template_name: "pickup-ready",
-      recipient_email: recipientEmail,
-      status: "pending",
+    const result = await sendLovableTransactional(supabase, {
+      template: "pickup-ready",
+      to: recipientEmail,
+      subject: `Tavs T-Bode pasūtījums #${orderNum} ir gatavs saņemšanai 🎉`,
+      html,
+      idempotencyKey: `pickup-ready-${order_id}`,
       metadata: { order_id, order_number: order.order_number },
     });
+    if (!result.ok) throw new Error(`Enqueue failed: ${result.error}`);
 
-    const resendResp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: [recipientEmail],
-        subject: `Tavs T-Bode pasūtījums #${orderNum} ir gatavs saņemšanai 🎉`,
-        html,
-      }),
-    });
-
-    const respJson = await resendResp.json();
-    if (!resendResp.ok) {
-      await logEmailAttempt(supabase, {
-        message_id: messageId,
-        template_name: "pickup-ready",
-        recipient_email: recipientEmail,
-        status: "failed",
-        error_message: JSON.stringify(respJson),
-        metadata: { order_id, http_status: resendResp.status },
-      });
-      throw new Error(`Resend ${resendResp.status}: ${JSON.stringify(respJson)}`);
-    }
-
-    await logEmailAttempt(supabase, {
-      message_id: messageId,
-      template_name: "pickup-ready",
-      recipient_email: recipientEmail,
-      status: "sent",
-      metadata: { order_id, order_number: order.order_number, resend_id: respJson.id },
-    });
-
-    return new Response(JSON.stringify({ success: true, message_id: respJson.id }), {
+    return new Response(JSON.stringify({ success: true, message_id: result.messageId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
