@@ -9,6 +9,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Link,
   Preview,
   Text,
@@ -25,27 +26,25 @@ export const InviteEmail = ({
   siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="lv" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Tu esi uzaicināts pievienoties {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Img src={logo} alt={siteName} width="120" style={logoStyle} />
+        <Heading style={h1}>Tu esi uzaicināts</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          Tu esi uzaicināts pievienoties{' '}
+          <Link href={siteUrl} style={link}><strong>{siteName}</strong></Link>.
+          Noklikšķini uz pogas zemāk, lai pieņemtu uzaicinājumu un izveidotu kontu.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          Pieņemt uzaicinājumu
         </Button>
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Ja Tu negaidīji šo uzaicinājumu, vari droši ignorēt šo e-pastu.
         </Text>
+        <Text style={signature}>— {siteName} komanda</Text>
       </Container>
     </Body>
   </Html>
@@ -53,27 +52,33 @@ export const InviteEmail = ({
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', Arial, sans-serif" }
+const container = { padding: '32px 28px', maxWidth: '560px' }
+const logo = 'https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/email-assets/logo.png'
+const logoStyle = { margin: '0 0 24px', display: 'block' as const }
 const h1 = {
-  fontSize: '22px',
+  fontSize: '26px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#111111',
   margin: '0 0 20px',
+  letterSpacing: '0.5px',
 }
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: '#444444',
+  lineHeight: '1.6',
+  margin: '0 0 20px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+const link = { color: '#DC2626', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#DC2626',
   color: '#ffffff',
-  fontSize: '14px',
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
   borderRadius: '8px',
-  padding: '12px 20px',
+  padding: '14px 28px',
   textDecoration: 'none',
+  display: 'inline-block' as const,
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 8px' }
+const signature = { fontSize: '13px', color: '#666666', margin: '4px 0 0' }
