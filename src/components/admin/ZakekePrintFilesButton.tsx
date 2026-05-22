@@ -120,15 +120,21 @@ const normalize = (raw: any): NormalizedFile[] => {
     .filter((f): f is NormalizedFile => !!f);
 };
 
-const sideLabel = (f: NormalizedFile): string => {
+const sideLabel = (f: NormalizedFile, fallbackIndex?: number): string => {
   const s = `${f.side ?? ""} ${f.name} ${f.url}`.toLowerCase();
-  if (/front/.test(s)) return "Priekša";
-  if (/back/.test(s)) return "Aizmugure";
-  if (/left/.test(s)) return "Kreisā";
-  if (/right/.test(s)) return "Labā";
+  if (/front|priekš/.test(s)) return "Priekša";
+  if (/back|aizmug/.test(s)) return "Aizmugure";
+  if (/left|kreis/.test(s)) return "Kreisā";
+  if (/right|\blab/.test(s)) return "Labā";
   if (f.kind === "mockup") return "Mockup";
   if (f.kind === "zip") return "ZIP arhīvs";
   if (f.side && f.side.toLowerCase() !== "png") return f.side;
+  // Fallback for print files with cryptic UUID names — label by order
+  if (f.kind === "print" && typeof fallbackIndex === "number") {
+    if (fallbackIndex === 0) return "Priekša";
+    if (fallbackIndex === 1) return "Aizmugure";
+    return `Druka ${fallbackIndex + 1}`;
+  }
   return f.name;
 };
 
@@ -140,8 +146,8 @@ const slugify = (s: string): string =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 40) || "fails";
 
-const sideSlug = (f: NormalizedFile): string => {
-  const label = sideLabel(f).toLowerCase();
+const sideSlug = (f: NormalizedFile, fallbackIndex?: number): string => {
+  const label = sideLabel(f, fallbackIndex).toLowerCase();
   if (label.includes("priekš")) return "priekspuse";
   if (label.includes("aizmug")) return "aizmugure";
   if (label.includes("kreis")) return "kreisa";
@@ -154,13 +160,14 @@ const sideSlug = (f: NormalizedFile): string => {
 const buildFriendlyName = (
   f: NormalizedFile,
   ctx: { orderNumber?: number | null; clientName?: string | null },
+  fallbackIndex?: number,
 ): string => {
   const parts: string[] = [];
   if (ctx.orderNumber != null) {
     parts.push(`TB-${String(ctx.orderNumber).padStart(4, "0")}`);
   }
   if (ctx.clientName) parts.push(slugify(ctx.clientName));
-  parts.push(sideSlug(f));
+  parts.push(sideSlug(f, fallbackIndex));
   const ext = f.ext || "bin";
   return `${parts.join("_")}.${ext}`;
 };
@@ -492,14 +499,8 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const order = { print: 0, mockup: 1, other: 2, zip: 3 } as const;
   unique.sort((a, b) => order[a.kind] - order[b.kind]);
 
-  // Only keep print PNG/JPG files where we can resolve a clear side
-  // (Priekša / Aizmugure / Kreisā / Labā). Hide DXF, PDF, SVG, ZIP,
-  // and any cryptic-id files without a side hint — admins only need the
-  // production raster labelled by side.
-  const hasSide = (f: NormalizedFile): boolean => {
-    const s = `${f.side ?? ""} ${f.name} ${f.url}`.toLowerCase();
-    return /front|back|left|right|priekš|aizmug|kreis|lab/.test(s);
-  };
+  // Keep only raster PNG/JPG print files. Hide DXF, PDF, SVG, ZIP and any
+  // vector/source files — admins only need the production raster.
   const isRaster = (f: NormalizedFile): boolean => {
     const ext = (f.ext || "").toLowerCase();
     if (ext) return ext === "png" || ext === "jpg" || ext === "jpeg" || ext === "webp";
@@ -507,7 +508,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
     const u = f.url.toLowerCase();
     return /\.png(\?|#|$)|\.jpe?g(\?|#|$)|\.webp(\?|#|$)|image\/(png|jpe?g|webp)/.test(u);
   };
-  const printable = unique.filter((f) => f.kind === "print" && hasSide(f) && isRaster(f));
+  const printable = unique.filter((f) => f.kind === "print" && isRaster(f));
 
   // Build the list of mockup preview URLs (front, back, …) coming from
   // Zakeke's previews[] array. Falls back to the single thumbnail URL when
@@ -556,7 +557,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 : FileText;
           const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
           const isDownloading = downloadingUrl === f.url;
-          const friendlyName = buildFriendlyName(f, { orderNumber, clientName });
+          const friendlyName = buildFriendlyName(f, { orderNumber, clientName }, i);
           const isDownloaded = f.kind === "print" && !!downloadedAt;
           return (
             <div
@@ -600,7 +601,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 ) : (
                   <>
                     {isDownloaded ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
-                    <span className="max-w-[140px] truncate">{sideLabel(f)}</span>
+                    <span className="max-w-[140px] truncate">{sideLabel(f, i)}</span>
                     <Download className="w-3 h-3 opacity-80" />
                   </>
                 )}
