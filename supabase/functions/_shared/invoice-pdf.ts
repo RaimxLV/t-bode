@@ -645,21 +645,21 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const wordsLabel = "Summa vārdiem:";
   const wordsLabelW = font.widthOfTextAtSize(wordsLabel, 9);
   const wordsValueX = marginX + wordsLabelW + 8;
-  drawText(page, wordsLabel, marginX, y, font, 9, colorMuted);
+  drawText(currentPage, wordsLabel, marginX, y, font, 9, colorMuted);
   const wordsLines = wrapText(amountToLatvianWords(totals.gross), bold, 9, contentW - wordsLabelW - 12);
   for (let i = 0; i < Math.min(wordsLines.length, 2); i++) {
-    drawText(page, wordsLines[i], wordsValueX, y - i * 12, bold, 9, colorText);
+    drawText(currentPage, wordsLines[i], wordsValueX, y - i * 12, bold, 9, colorText);
   }
   y -= 14 + (Math.min(wordsLines.length, 2) - 1) * 12;
 
   // Notes (compact)
   if (data.notes && data.notes.trim()) {
     y -= 8;
-    drawText(page, "Piezīmes:", marginX, y, bold, 9, colorMuted);
+    drawText(currentPage, "Piezīmes:", marginX, y, bold, 9, colorMuted);
     y -= 12;
     const noteLines = wrapText(data.notes, font, 9, contentW);
     for (const line of noteLines.slice(0, 3)) {
-      drawText(page, line, marginX, y, font, 9, colorText);
+      drawText(currentPage, line, marginX, y, font, 9, colorText);
       y -= 11;
     }
   }
@@ -669,15 +669,15 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   // ============================================================
   const electronicNotice = "Dokuments sagatavots elektroniski un ir derīgs bez paraksta";
   const noticeW = bold.widthOfTextAtSize(electronicNotice, 8);
-  drawText(page, electronicNotice, (width - noticeW) / 2, 70, bold, 9, colorMuted);
+  drawText(currentPage, electronicNotice, (width - noticeW) / 2, 70, bold, 9, colorMuted);
 
   drawText(
-    page,
+    currentPage,
     `${seller.company_name}${seller.company_reg_number ? " · Reģ. " + seller.company_reg_number : ""}${seller.company_vat_number ? " · PVN " + seller.company_vat_number : ""}`,
     marginX, 44, font, 7, colorMuted,
   );
   if ((data.version ?? 1) > 1) {
-    drawRight(page, `versija v${data.version}`, width - marginX, 44, font, 7, colorMuted);
+    drawRight(currentPage, `versija v${data.version}`, width - marginX, 44, font, 7, colorMuted);
   }
 
   const bytes = await pdf.save();
