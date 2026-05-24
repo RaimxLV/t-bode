@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,6 +17,13 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
 import Index from "./pages/Index.tsx";
+
+// Legacy redirect: send old indexed URLs to their current equivalents.
+// Preserves SEO signal as Google reprocesses the redirected paths.
+const LegacyRedirect = ({ to }: { to: string }) => {
+  const { search } = useLocation();
+  return <Navigate to={`${to}${search}`} replace />;
+};
 
 // Lazy-loaded routes for code splitting
 const DesignYourOwn = lazy(() => import("./pages/DesignYourOwn.tsx"));
@@ -160,6 +168,17 @@ const App = () => {
                         <Route path="/terms" element={<Terms />} />
                         <Route path="/terms-and-conditions" element={<Terms />} />
                         <Route path="/noteikumi" element={<Terms />} />
+                        {/* Legacy URL redirects (old indexed pages → new equivalents) */}
+                        <Route path="/stores" element={<LegacyRedirect to="/#stores" />} />
+                        <Route path="/pasutisana-un-sutisana" element={<LegacyRedirect to="/#faq" />} />
+                        <Route path="/svarigi" element={<LegacyRedirect to="/#faq" />} />
+                        <Route path="/design-catalog" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/configurator/*" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/products" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/products/men-t-shirt" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/products/women-t-shirt" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/products/bernu-t-krekli" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/products/*" element={<LegacyRedirect to="/collection" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>

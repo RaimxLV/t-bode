@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Seo } from "@/components/Seo";
 import { Home, Search } from "lucide-react";
+import { Helmet } from "react-helmet-async";
 
 const NotFound = () => {
   const location = useLocation();
@@ -18,6 +19,9 @@ const NotFound = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Seo title={t("notFound.title")} description={t("notFound.message")} />
+      <Helmet>
+        <meta name="robots" content="noindex,follow" />
+      </Helmet>
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-16">
         <div className="max-w-md w-full text-center">
