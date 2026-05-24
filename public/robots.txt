@@ -14,4 +14,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://t-bode.lv/sitemap.xml
-Sitemap: https://nkqwhiqrljwvzrivhqyh.supabase.co/functions/v1/sitemap
