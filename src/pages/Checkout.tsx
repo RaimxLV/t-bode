@@ -425,11 +425,7 @@ const Checkout = () => {
       if (dupMatch) {
         const existingNum = dupMatch[1].padStart(5, "0");
         toast.error(
-          t(
-            "checkout.duplicateOrder",
-            `Jums jau ir nesens pasūtījums TB-${existingNum} par šo summu. Pārbaudiet e-pastu — apstiprinājums un rēķins jau ir nosūtīts.`,
-            { orderNumber: `TB-${existingNum}` } as any
-          ),
+          `Jums jau ir nesens pasūtījums TB-${existingNum} par šo summu. Pārbaudiet e-pastu — apstiprinājums jau ir nosūtīts.`,
           { duration: 8000 }
         );
       } else {
