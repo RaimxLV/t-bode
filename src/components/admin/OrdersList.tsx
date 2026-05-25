@@ -1131,6 +1131,16 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                   <Bell className="w-3.5 h-3.5" />
                                   {order.last_payment_reminder_at ? "Atgādināt vēlreiz" : "Atgādināt par apmaksu"}
                                 </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-xs gap-1.5 h-8 border-amber-400 text-amber-900 hover:bg-amber-100"
+                                  onClick={() => setInvoiceOrder(order)}
+                                  title="Atver rēķina logu — tur var izveidot/lejupielādēt PDF un nosūtīt klientam manuāli"
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                  Sagatavot rēķinu (PDF)
+                                </Button>
                               </div>
                             </>
                           )}
