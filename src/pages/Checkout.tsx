@@ -420,7 +420,21 @@ const Checkout = () => {
         throw new Error("No checkout URL received");
       }
     } catch (error: any) {
-      toast.error(error.message || t("checkout.error"));
+      const rawMsg = error?.message || "";
+      const dupMatch = rawMsg.match(/DUPLICATE_PENDING_ORDER:(\d+)/);
+      if (dupMatch) {
+        const existingNum = dupMatch[1].padStart(5, "0");
+        toast.error(
+          t(
+            "checkout.duplicateOrder",
+            `Jums jau ir nesens pasūtījums TB-${existingNum} par šo summu. Pārbaudiet e-pastu — apstiprinājums un rēķins jau ir nosūtīts.`,
+            { orderNumber: `TB-${existingNum}` } as any
+          ),
+          { duration: 8000 }
+        );
+      } else {
+        toast.error(rawMsg || t("checkout.error"));
+      }
     } finally {
       submitLockRef.current = false;
       setSubmitting(false);
