@@ -60,8 +60,6 @@ Deno.serve(async (req) => {
       ""
     ).slice(0, 64) || null;
 
-    const stripe = createStripeClient();
-
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -100,6 +98,43 @@ Deno.serve(async (req) => {
         .eq("id", order_id);
     }
 
+    // ========================================
+    // BANK TRANSFER FLOW — T-BODE branded email (no Stripe)
+    // ========================================
+    if (payment_method === "bank_transfer") {
+      // Trigger our own bank-instructions email (uses site_settings + email infra)
+      const { error: emailErr } = await serviceClient.functions.invoke(
+        "send-bank-instructions",
+        { body: { order_id, lang: "lv" } },
+      );
+      if (emailErr) {
+        console.warn("send-bank-instructions failed (continuing):", emailErr.message);
+      }
+      await serviceClient
+        .from("orders")
+        .update({
+          status: "pending",
+          ...(buyerCountry ? { buyer_country: buyerCountry } : {}),
+          ...(buyerIp ? { buyer_ip: buyerIp } : {}),
+        })
+        .eq("id", order_id);
+
+      return new Response(
+        JSON.stringify({
+          url: `${origin_url}/payment-success?order_id=${order_id}&method=bank`,
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        }
+      );
+    }
+
+    // ========================================
+    // CARD FLOW — Stripe Checkout (original)
+    // ========================================
+    const stripe = createStripeClient();
+
     // Load admin-managed site settings (company + bank details + payment instructions)
     const { data: siteSettings } = await serviceClient
       .from("site_settings")
@@ -126,19 +161,6 @@ Deno.serve(async (req) => {
 
     const orderRef = order_id.slice(0, 8).toUpperCase();
 
-    // Bilingual bank-transfer footer assembled from admin settings
-    const bankFooter = [
-      `${settings.payment_instructions_lv ?? ""} / ${settings.payment_instructions_en ?? ""}`.trim(),
-      "",
-      `Saņēmējs / Beneficiary: ${settings.bank_beneficiary}`,
-      `Banka / Bank: ${settings.bank_name}`,
-      `IBAN: ${settings.bank_iban}`,
-      `SWIFT/BIC: ${settings.bank_swift}`,
-      `Maksājuma mērķis / Reference: ${orderRef}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
     // Card-flow footer (just thank-you + seller line)
     const cardFooter = `Paldies, ka iepērkaties pie ${settings.company_name}! / Thank you for shopping with ${settings.company_name}!`;
 
@@ -164,113 +186,6 @@ Deno.serve(async (req) => {
       customerId = newCustomer.id;
     }
 
-    // ========================================
-    // BANK TRANSFER FLOW — Stripe send_invoice
-    // ========================================
-    if (payment_method === "bank_transfer") {
-      if (!customerId) throw new Error("Failed to create customer for bank transfer");
-
-      // Add line items as invoice items
-      for (const item of items) {
-        await stripe.invoiceItems.create({
-          customer: customerId,
-          amount: Math.round(item.price * 100) * item.quantity,
-          currency: "eur",
-          description: `${item.name}${item.size ? ` · ${item.size}` : ""}${item.color ? ` · ${item.color}` : ""}${item.quantity > 1 ? ` × ${item.quantity}` : ""}`,
-        });
-      }
-
-      // Shipping line
-      const shippingCost = items[0]?.shippingCost;
-      if (shippingCost) {
-        await stripe.invoiceItems.create({
-          customer: customerId,
-          amount: Math.round(shippingCost * 100),
-          currency: "eur",
-          description: items[0]?.shippingMethod === "omniva" ? "Omniva Piegāde" : "Kurjera Piegāde",
-        });
-      }
-
-      // Promo discount line (negative)
-      if (appliedDiscount > 0 && appliedPromoCode) {
-        await stripe.invoiceItems.create({
-          customer: customerId,
-          amount: -Math.round(appliedDiscount * 100),
-          currency: "eur",
-          description: `Atlaide / Discount (${appliedPromoCode})`,
-        });
-      }
-
-      // Buyer custom fields (only for B2B). Seller info goes into the footer
-      // because Stripe limits custom_fields to 4 entries total.
-      const buyerFields = business?.is_business
-        ? [
-            ...(business.company_reg_number
-              ? [{ name: "Pircēja Reģ.Nr.", value: String(business.company_reg_number) }]
-              : []),
-            ...(business.company_vat_number
-              ? [{ name: "Pircēja PVN Nr.", value: String(business.company_vat_number) }]
-              : []),
-          ]
-        : [];
-
-      const sellerFields = [
-        ...(settings.company_reg_number
-          ? [{ name: "Pārdevēja Reģ.Nr.", value: String(settings.company_reg_number) }]
-          : []),
-        ...(settings.company_vat_number
-          ? [{ name: "Pārdevēja PVN Nr.", value: String(settings.company_vat_number) }]
-          : []),
-      ];
-
-      const invoice = await stripe.invoices.create({
-        customer: customerId,
-        collection_method: "send_invoice",
-        days_until_due: 3,
-        description: `${settings.company_name} — pasūtījums ${orderRef} — Bankas pārskaitījums`,
-        metadata: {
-          order_id,
-          payment_method: "bank_transfer",
-        },
-        custom_fields: [...buyerFields, ...sellerFields].slice(0, 4),
-        footer: bankFooter,
-      });
-
-      // Finalize and send invoice email
-      const finalized = await stripe.invoices.finalizeInvoice(invoice.id);
-      try {
-        await stripe.invoices.sendInvoice(invoice.id);
-      } catch (e) {
-        console.warn("sendInvoice failed (continuing):", (e as Error).message);
-      }
-
-      // Save invoice metadata; keep order status pending
-      await serviceClient
-        .from("orders")
-        .update({
-          stripe_invoice_id: finalized.id,
-          stripe_invoice_pdf: finalized.invoice_pdf ?? null,
-          status: "pending",
-        })
-        .eq("id", order_id);
-
-      // Return URL to local thank-you page (not Stripe)
-      return new Response(
-        JSON.stringify({
-          url: `${origin_url}/payment-success?order_id=${order_id}&method=bank`,
-          invoice_pdf: finalized.invoice_pdf,
-          hosted_invoice_url: finalized.hosted_invoice_url,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        }
-      );
-    }
-
-    // ========================================
-    // CARD FLOW — Stripe Checkout (original)
-    // ========================================
     const line_items = items.map((item: any) => ({
       price_data: {
         currency: "eur",
