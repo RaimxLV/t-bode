@@ -66,6 +66,32 @@ function renderHtml(order: any, settings: any, lang: Lang) {
 </body></html>`;
 }
 
+function renderText(order: any, settings: any, lang: Lang) {
+  const tr = t(lang);
+  const ref = `#${String(order.order_number).padStart(5, "0")}`;
+  return [
+    `${tr.hi}${order.shipping_name ? `, ${order.shipping_name}` : ""}!`,
+    "",
+    tr.intro,
+    "",
+    `${tr.orderNo} ${ref}`,
+    `${tr.total}: €${Number(order.total).toFixed(2)}`,
+    "",
+    tr.details.toUpperCase(),
+    `${tr.beneficiary}: ${settings.bank_beneficiary}`,
+    `${tr.bank}: ${settings.bank_name}`,
+    `${tr.iban}: ${settings.bank_iban}`,
+    `${tr.swift}: ${settings.bank_swift}`,
+    `${tr.reference}: ${ref}`,
+    "",
+    tr.important,
+    "",
+    tr.afterPaid,
+    "",
+    `— ${tr.team}`,
+  ].join("\n");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -106,6 +132,7 @@ Deno.serve(async (req) => {
     if (!recipientEmail) throw new Error("No recipient email");
 
     const html = renderHtml(order, settings, language);
+    const text = renderText(order, settings, language);
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
     const result = await sendLovableTransactional(service, {
@@ -113,6 +140,7 @@ Deno.serve(async (req) => {
       to: recipientEmail,
       subject,
       html,
+      text,
       idempotencyKey: `bank-instructions-${order_id}`,
       metadata: { order_id, order_number: order.order_number, lang: language },
     });
