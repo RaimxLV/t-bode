@@ -216,6 +216,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo title="Mans profils | T-Bode" description="Pārvaldi savu T-Bode kontu — pasūtījumi, vēlmju saraksts, drošības iestatījumi." noindex />
       <Navbar />
       <main className="flex-1 pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">

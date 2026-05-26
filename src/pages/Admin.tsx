@@ -331,6 +331,7 @@ const Admin = () => {
 
   return (
     <AdminMfaGate>
+    <Seo title="Administrācija | T-Bode" description="T-Bode administrācijas panelis." noindex />
     <div className="min-h-screen bg-background">
       <header className="border-b border-white/10 bg-black/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">

@@ -499,6 +499,7 @@ const Checkout = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo title="Pasūtījuma noformēšana | T-Bode" description="Noformē savu T-Bode pasūtījumu — izvēlies piegādi (Omniva, kurjers, veikals) un apmaksas veidu." noindex />
       <Navbar />
       <main className="flex-1 pt-24 pb-16">
         <div className="container mx-auto px-4">

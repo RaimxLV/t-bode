@@ -133,6 +133,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen w-full bg-black text-white flex flex-col">
+      <Seo title="Atjaunot paroli | T-Bode" description="Iestati jaunu paroli savam T-Bode kontam." noindex />
       <div className="flex items-center justify-between p-4 sm:p-6">
         <button
           onClick={() => navigate("/auth")}
