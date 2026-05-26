@@ -17,6 +17,8 @@ interface SeoProps {
   noTitleSuffix?: boolean;
   /** Optional keyword suffix inserted between page title and site name. */
   titleKeyword?: string;
+  /** When true, instruct crawlers not to index this route. */
+  noindex?: boolean;
 }
 
 const SITE_NAME = "T-Bode";
@@ -38,6 +40,7 @@ export const Seo = ({
   breadcrumbs,
   noTitleSuffix,
   titleKeyword,
+  noindex,
 }: SeoProps) => {
   const { i18n } = useTranslation();
   const lang = locale || i18n.language || "lv";
@@ -71,6 +74,7 @@ export const Seo = ({
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       <link rel="canonical" href={url} />
+      {noindex && <meta name="robots" content="noindex, nofollow" />}
 
       {/* Open Graph */}
       <meta property="og:site_name" content={SITE_NAME} />

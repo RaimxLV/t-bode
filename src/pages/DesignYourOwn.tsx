@@ -11,8 +11,8 @@ const DesignYourOwn = () => {
     ? "Izveido savu T-kreklu dizainu | T-Bode"
     : "Design your own T-shirt | T-Bode";
   const description = isLv
-    ? "Intuitīvs dizaina konstruktors t-kreklu, hūdiju un cepuru apdrukai tiešsaistē. Augšupielādē savu attēlu vai tekstu, pielāgo izmēru un uzreiz redzi vizualizāciju. Ražošana Rīgā."
-    : "Intuitive online design configurator for t-shirts, hoodies and caps. Upload your image or text, adjust the size and instantly preview your design. Made in Riga.";
+    ? "Dizaina konstruktors t-kreklu, hūdiju un cepuru apdrukai. Augšupielādē attēlu vai tekstu un redzi vizualizāciju. Ražojam Rīgā."
+    : "Online design tool for t-shirts, hoodies and caps. Upload your image or text, preview instantly. Printed in Riga.";
 
   const steps = isLv
     ? [
