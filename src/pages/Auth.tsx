@@ -16,6 +16,7 @@ import logo from "@/assets/logo.svg";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getAuthRedirectOrigin, redirectToCanonicalHost } from "@/lib/authDomain";
+import { Seo } from "@/components/Seo";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -126,6 +127,8 @@ const Auth = () => {
   };
 
   return (
+    <>
+    <Seo title="Pieslēgties | T-Bode" description="Pieslēdzies savam T-Bode kontam vai izveido jaunu, lai sekotu līdzi pasūtījumiem un saglabātu dizainus." noindex />
     <div className="min-h-screen w-full bg-black text-white flex flex-col">
       {/* Top bar */}
       <div className="flex items-center justify-between p-4 sm:p-6">
@@ -286,6 +289,7 @@ const Auth = () => {
       </div>
       <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={form.email} />
     </div>
+    </>
   );
 };
 

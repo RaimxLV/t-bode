@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ProductCard } from "@/components/ProductCard";
 import { sanitizePhoneInput } from "@/lib/phone";
+import { Seo } from "@/components/Seo";
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -215,6 +216,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo title="Mans profils | T-Bode" description="Pārvaldi savu T-Bode kontu — pasūtījumi, vēlmju saraksts, drošības iestatījumi." noindex />
       <Navbar />
       <main className="flex-1 pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">

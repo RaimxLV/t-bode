@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
+import { Seo } from "@/components/Seo";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Parolei jābūt vismaz 6 simbolus garai").max(100),
@@ -132,6 +133,7 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen w-full bg-black text-white flex flex-col">
+      <Seo title="Atjaunot paroli | T-Bode" description="Iestati jaunu paroli savam T-Bode kontam." noindex />
       <div className="flex items-center justify-between p-4 sm:p-6">
         <button
           onClick={() => navigate("/auth")}

@@ -20,6 +20,7 @@ import { AdminMfaGate } from "@/components/security/AdminMfaGate";
 import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
+import { Seo } from "@/components/Seo";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -330,6 +331,7 @@ const Admin = () => {
 
   return (
     <AdminMfaGate>
+    <Seo title="Administrācija | T-Bode" description="T-Bode administrācijas panelis." noindex />
     <div className="min-h-screen bg-background">
       <header className="border-b border-white/10 bg-black/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between">
