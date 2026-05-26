@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart3, TrendingUp, ShoppingBag, Calendar } from "lucide-react";
+import { useAllProducts, getProductName } from "@/hooks/useProducts";
 
 interface ProductStatsProps {
   orders: any[];
@@ -21,6 +22,14 @@ const isOrderPaid = (order: any): boolean => {
 export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
+  const { data: products } = useAllProducts();
+  const productNameMap = useMemo(() => {
+    const m: Record<string, string> = {};
+    (products ?? []).forEach((p) => {
+      m[p.id] = getProductName(p, "lv");
+    });
+    return m;
+  }, [products]);
 
   const availableYears = useMemo(() => {
     const years = new Set<number>();
@@ -45,14 +54,16 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
       monthly[m].revenue += Number(o.total);
     });
 
-    // Aggregate items
+    // Aggregate items — group by product_id so LV/EN names of the same product merge
     Object.entries(orderItems).forEach(([orderId, items]) => {
       if (!validOrderIds.has(orderId)) return;
       const order = validOrders.find((o) => o.id === orderId);
       const m = order ? new Date(order.created_at).getMonth() : 0;
       items.forEach((item: any) => {
-        const key = item.product_name;
-        if (!productMap[key]) productMap[key] = { name: key, qty: 0, revenue: 0 };
+        const key = item.product_id || item.product_name;
+        const displayName = productNameMap[item.product_id] || item.product_name;
+        if (!productMap[key]) productMap[key] = { name: displayName, qty: 0, revenue: 0 };
+        else productMap[key].name = displayName;
         productMap[key].qty += item.quantity;
         productMap[key].revenue += item.unit_price * item.quantity;
         monthly[m].qty += item.quantity;
@@ -64,7 +75,7 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
     const totalRev = validOrders.reduce((s, o) => s + Number(o.total), 0);
 
     return { productTotals: sorted, monthlyData: monthly, yearTotal: totalQty, yearRevenue: totalRev };
-  }, [orders, orderItems, selectedYear]);
+  }, [orders, orderItems, selectedYear, productNameMap]);
 
   const maxQty = Math.max(...monthlyData.map((m) => m.qty), 1);
 
@@ -148,7 +159,7 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
           ) : (
             <div className="space-y-2">
               {productTotals.map((p, i) => (
-                <div key={p.name} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0">
+                <div key={`${p.name}-${i}`} className="flex items-center gap-2 py-1.5 border-b border-border last:border-0">
                   <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
                     i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-600" : i === 2 ? "bg-orange-100 text-orange-700" : "bg-muted text-muted-foreground"
                   }`}>
