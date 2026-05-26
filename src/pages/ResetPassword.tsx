@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.svg";
+import { Seo } from "@/components/Seo";
 
 const passwordSchema = z.object({
   password: z.string().min(6, "Parolei jābūt vismaz 6 simbolus garai").max(100),

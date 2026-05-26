@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
 import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
+import { Seo } from "@/components/Seo";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { ProductCard } from "@/components/ProductCard";
 import { sanitizePhoneInput } from "@/lib/phone";
+import { Seo } from "@/components/Seo";
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800",

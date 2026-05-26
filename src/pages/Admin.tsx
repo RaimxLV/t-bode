@@ -20,6 +20,7 @@ import { AdminMfaGate } from "@/components/security/AdminMfaGate";
 import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
+import { Seo } from "@/components/Seo";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));

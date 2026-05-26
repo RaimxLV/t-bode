@@ -289,6 +289,7 @@ const Auth = () => {
       </div>
       <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} defaultEmail={form.email} />
     </div>
+    </>
   );
 };
 
