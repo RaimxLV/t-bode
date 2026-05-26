@@ -36,13 +36,19 @@ export async function sendLovableTransactional(
     metadata: params.metadata ?? {},
   });
 
+  // Lovable Email API requires a plain-text body. Auto-generate from HTML
+  // when caller did not supply one to prevent `missing_parameter: text` 400s.
+  const textBody = params.text && params.text.trim().length > 0
+    ? params.text
+    : htmlToPlainText(params.html);
+
   const payload = {
     to: params.to,
     from: params.from || DEFAULT_FROM,
     sender_domain: SENDER_DOMAIN,
     subject: params.subject,
     html: params.html,
-    text: params.text,
+    text: textBody,
     purpose: "transactional",
     label: params.template,
     idempotency_key: idempotencyKey,
@@ -69,4 +75,23 @@ export async function sendLovableTransactional(
   }
 
   return { ok: true, messageId };
+}
+
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/(p|div|h[1-6]|li|tr|br)>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
 }
