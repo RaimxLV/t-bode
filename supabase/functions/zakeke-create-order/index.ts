@@ -92,11 +92,17 @@ Deno.serve(async (req) => {
 
     // Build a short, human-friendly external order code so it's easy to
     // cross-reference in Zakeke's admin UI ("Number" column) and on
-    // invoices/labels. Falls back to the UUID prefix when order_number
-    // hasn't been assigned yet.
-    const shortOrderCode = orderRow?.order_number != null
+    // invoices/labels.
+    //
+    // IMPORTANT: prefix with "TB-" so the orderCode is globally unique across
+    // all Zakeke tenants. Without the prefix Zakeke has been observed to
+    // ignore short numeric codes (e.g. "0125") and fall back to rendering
+    // its internal UUIDs in the "Number" column — making the order
+    // impossible to cross-reference with our invoices / bank statements.
+    const baseCode = orderRow?.order_number != null
       ? String(orderRow.order_number).padStart(4, "0")
       : orderId.slice(0, 8).toUpperCase();
+    const shortOrderCode = `TB-${baseCode}`;
 
     // Create one Zakeke order per item so that print-files map 1:1 with the row.
     for (let idx = 0; idx < customisedItems.length; idx++) {
