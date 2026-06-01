@@ -117,10 +117,12 @@ Deno.serve(async (req) => {
     if (!customerCode) throw new Error("OMNIVA_CUSTOMER_CODE not configured");
     log("Omniva credentials present", "ok", "Customer code and login secrets are available");
 
-    const orderNumStr = `#${String(order.order_number ?? "").padStart(5, "0")}`;
-    // Omniva shows person_name in their notification email ("Tavs sūtījums X ir reģistrēts").
-    // Use the order number instead of the customer's name so it's clear which order this is.
-    const recipientName = `T-Bode pasūtījums ${orderNumStr}`;
+    // Receiver name on the Omniva label must be the customer's name
+    // (Vārds Uzvārds), not the order number. The order number is already
+    // printed via <reference_number>.
+    const recipientName = (order.shipping_name && String(order.shipping_name).trim())
+      || order.guest_email
+      || "T-Bode klients";
     const recipientPhone = order.shipping_phone || "";
     const recipientEmail = order.guest_email || "";
     const isPickup = !!order.omniva_pickup_point;
@@ -217,7 +219,7 @@ Deno.serve(async (req) => {
               <address ${isPickup ? `offloadPostcode="${escapeXml(offloadPostcode)}"` : ''} postcode="${escapeXml(order.shipping_zip || '')}" deliverypoint="${escapeXml(order.shipping_city || '')}" country="LV" street="${escapeXml(order.shipping_address || '')}"/>
             </receiverAddressee>
             <returnAddressee>
-              <person_name>${escapeXml(OMNIVA_SENDER.contact_person)}</person_name>
+              <person_name>${escapeXml(OMNIVA_SENDER.company)}</person_name>
               <phone>${escapeXml(OMNIVA_SENDER.phone)}</phone>
               <email>${escapeXml(OMNIVA_SENDER.email)}</email>
               <address postcode="${OMNIVA_SENDER.postcode.replace('LV-', '')}" deliverypoint="${escapeXml(OMNIVA_SENDER.city)}" country="LV" street="${escapeXml(OMNIVA_SENDER.street)}"/>
