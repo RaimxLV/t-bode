@@ -1173,10 +1173,10 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                             Pasūtījums ir gatavs
                           </Button>
                         )
-                      ) : order.omniva_pickup_point ? (
+                      ) : (order.omniva_pickup_point || order.shipping_address) ? (
                         <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
                         <p className="text-xs font-semibold font-body text-foreground flex items-center gap-1.5">
-                          <Truck className="w-3.5 h-3.5" /> {t("admin.omnivaShipment")}
+                          <Truck className="w-3.5 h-3.5" /> {order.omniva_pickup_point ? t("admin.omnivaShipment") : "Omniva kurjers"}
                         </p>
                         {order.omniva_barcode ? (
                           <div className="space-y-2">
