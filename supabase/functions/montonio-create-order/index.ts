@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
       customer_name,
       customer_phone,
       shipping, // optional: { method: "omniva-pakomat", pickupPointId, pickupPointName }
+      payment_method, // "paymentInitiation" (default) or "cardPayments"
     } = body ?? {};
 
     if (!order_id || !Array.isArray(items) || items.length === 0 || !customer_email) {
@@ -45,6 +46,8 @@ Deno.serve(async (req) => {
     const returnUrl = `${origin_url}/payment-success?order_id=${order_id}&method=montonio`;
 
     const merchantReference = order_id;
+    const methodCode = payment_method === "cardPayments" ? "cardPayments" : "paymentInitiation";
+    const methodDisplay = methodCode === "cardPayments" ? "Pay by card" : "Pay with your bank";
 
     const payload: Record<string, unknown> = {
       merchantReference,
@@ -54,8 +57,8 @@ Deno.serve(async (req) => {
       grandTotal,
       locale: "lv",
       payment: {
-        method: "paymentInitiation",
-        methodDisplay: "Pay with your bank",
+        method: methodCode,
+        methodDisplay,
         amount: grandTotal,
         currency: "EUR",
         methodOptions: {
@@ -127,7 +130,7 @@ Deno.serve(async (req) => {
         provider: "montonio",
         montonio_order_uuid: montonioUuid ?? null,
         montonio_payment_status: "PENDING",
-        montonio_payment_method: "paymentInitiation",
+        montonio_payment_method: methodCode,
         montonio_shipping_method_code: shipping?.method ?? null,
         montonio_pickup_point_id: shipping?.pickupPointId ?? null,
         montonio_pickup_point_name: shipping?.pickupPointName ?? null,
