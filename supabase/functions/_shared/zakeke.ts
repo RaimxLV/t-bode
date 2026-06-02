@@ -328,6 +328,12 @@ export async function createZakekeOrder(opts: {
   orderDate?: string;
   /** Shipping address for the Zakeke order. */
   shippingAddress?: ZakekeShippingAddress | null;
+  /**
+   * Free-form note appended to the Zakeke order payload. Used to surface the
+   * per-size breakdown for bulk (unified-print) orders so the warehouse sees
+   * "1 design → split across S/M/L/XL".
+   */
+  notes?: string | null;
 }): Promise<{ zakekeOrderId: string; orderItemIds: string[]; raw: any }> {
   // Zakeke binds designs to the visitor session that created them. We MUST
   // pass the same visitorcode that was used while the customer designed in
@@ -359,6 +365,7 @@ export async function createZakekeOrder(opts: {
     sessionID: visitorCode,
     total: Number((opts.totalAmount ?? computedSubtotal).toFixed(2)),
     currency,
+    ...(opts.notes ? { notes: opts.notes } : {}),
     details: opts.items.map((it) => ({
       orderDetailCode: it.reference ?? it.designId,
       designID: it.designId,
