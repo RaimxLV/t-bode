@@ -45,7 +45,16 @@ Deno.serve(async (req) => {
     const notificationUrl = `${supabaseUrl}/functions/v1/montonio-webhook`;
     const returnUrl = `${origin_url}/payment-success?order_id=${order_id}&method=montonio`;
 
-    const merchantReference = order_id;
+    // Fetch human-readable order_number for bank statement reference
+    const { data: orderRow } = await service
+      .from("orders")
+      .select("order_number")
+      .eq("id", order_id)
+      .maybeSingle();
+    const orderNumber = orderRow?.order_number;
+    const orderRef = orderNumber ? `T-${orderNumber}` : order_id.slice(0, 8).toUpperCase();
+    // merchantReference shows up on the customer's bank statement — keep it short & readable.
+    const merchantReference = orderRef;
     const methodCode = payment_method === "cardPayments" ? "cardPayments" : "paymentInitiation";
     const methodDisplay = methodCode === "cardPayments" ? "Pay by card" : "Pay with your bank";
 
@@ -62,7 +71,7 @@ Deno.serve(async (req) => {
         amount: grandTotal,
         currency: "EUR",
         methodOptions: {
-          paymentDescription: `Order #${order_id.slice(0, 8).toUpperCase()}`,
+          paymentDescription: `Pasutijums ${orderRef}`,
           preferredCountry: "LV",
         },
       },
