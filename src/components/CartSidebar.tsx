@@ -44,8 +44,11 @@ export const CartSidebar = () => {
                         {item.name}
                       </Link>
                       <p className="text-xs text-muted-foreground font-body">
-                        {item.size} · {item.color}
+                        {item.isBulk && item.selectedSizes
+                          ? Object.entries(item.selectedSizes).map(([s, n]) => `${n}×${s}`).join(" · ") + ` · ${item.color}`
+                          : `${item.size} · ${item.color}`}
                         {item.designId && <span className="ml-1 text-primary">✦ {t("cart.customized", "Personalizēts")}</span>}
+                        {item.isBulk && <span className="ml-1 text-primary font-semibold">[BULK]</span>}
                       </p>
                       <p className="text-sm font-bold font-body mt-1" style={{ color: "hsl(var(--primary))" }}>
                         {(item.price * item.quantity).toFixed(2).replace(".", ",")} €
