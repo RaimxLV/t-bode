@@ -42,6 +42,11 @@ export async function sendLovableTransactional(
     ? params.text
     : htmlToPlainText(params.html);
 
+  // Lovable Email API requires an unsubscribe token for transactional sends
+  // (otherwise it rejects with 400 missing_unsubscribe). Reuse existing token
+  // for this recipient, or create one.
+  const unsubscribeToken = await getOrCreateUnsubscribeToken(service, params.to);
+
   const payload = {
     to: params.to,
     from: params.from || DEFAULT_FROM,
@@ -52,6 +57,7 @@ export async function sendLovableTransactional(
     purpose: "transactional",
     label: params.template,
     idempotency_key: idempotencyKey,
+    unsubscribe_token: unsubscribeToken,
     message_id: messageId,
     queued_at: new Date().toISOString(),
   };
@@ -94,4 +100,33 @@ function htmlToPlainText(html: string): string {
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]+\n/g, "\n")
     .trim();
+}
+
+async function getOrCreateUnsubscribeToken(
+  service: SupabaseClient,
+  email: string,
+): Promise<string> {
+  const normalized = email.trim().toLowerCase();
+  const { data: existing } = await service
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalized)
+    .maybeSingle();
+  if (existing?.token) return existing.token as string;
+
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  const { data: inserted, error } = await service
+    .from("email_unsubscribe_tokens")
+    .insert({ email: normalized, token })
+    .select("token")
+    .maybeSingle();
+  if (!error && inserted?.token) return inserted.token as string;
+
+  // Race: another concurrent insert created the row; re-read.
+  const { data: retry } = await service
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalized)
+    .maybeSingle();
+  return (retry?.token as string) || token;
 }
