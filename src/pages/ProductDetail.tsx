@@ -500,12 +500,84 @@ const ProductDetail = () => {
           productImage={displayImage || product.image_url || ""}
           selectedColor={selectedColor}
           selectedColorHex={selectedColorHex}
-          selectedSize={selectedSize}
+          selectedSize={designMode === "bulk" ? masterSize || selectedSize : selectedSize}
           availableColors={colors.map((color) => color.name)}
           availableSizes={sizes}
           variantCodes={zakekeVariantCodes}
-          quantity={quantity}
+          quantity={designMode === "bulk" ? 1 : quantity}
           onClose={() => setDesignerOpen(false)}
+          bulkMode={designMode === "bulk"}
+          onBulkAddRequest={handleBulkDesignReady}
+        />
+      )}
+
+      {/* Workflow choice — Bulk vs Individual */}
+      <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">
+              {t("bulk.chooseWorkflowTitle", "Izvēlieties dizaina plūsmu")}
+            </DialogTitle>
+            <DialogDescription className="font-body">
+              {t(
+                "bulk.chooseWorkflowDescription",
+                "Kā vēlaties pielāgot logo izmēru dažādiem krekla izmēriem?"
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => openDesigner("bulk")}
+              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <Users className="w-7 h-7 mb-2 text-primary" />
+              <h3 className="font-display text-lg mb-1">
+                {t(
+                  "bulk.optionATitle",
+                  "Standartizēts logo izmērs (Apjomam / Komandām)"
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+                {t(
+                  "bulk.optionADescription",
+                  "Izveidojiet vienu dizainu uz viena krekla. Pēc tam ērtā tabulā norādiet daudzumus visiem nepieciešamajiem izmēriem (S, M, L, XL...). Logotipa fiziskais izmērs un izvietojums paliks pilnīgi vienāds uz visiem krekliem. Lielisks veids, kā saņemt apjoma atlaides."
+                )}
+              </p>
+            </button>
+            <button
+              onClick={() => openDesigner("individual")}
+              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <UserIcon className="w-7 h-7 mb-2 text-primary" />
+              <h3 className="font-display text-lg mb-1">
+                {t(
+                  "bulk.optionBTitle",
+                  "Individuāls mērogs katram izmēram (Mazumtirdzniecība)"
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+                {t(
+                  "bulk.optionBDescription",
+                  "Izvēlieties šo, ja vēlaties, lai uz mazākiem izmēriem logo būtu fiziski mazāks, bet uz lielākiem – lielāks. Jūs pielāgosiet dizainu katram izmēram atsevišķi. Grozā katrs izmērs parādīsies kā atsevišķa rinda."
+                )}
+              </p>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk size matrix — opens after Zakeke designer closes in bulk mode */}
+      {bulkMatrixOpen && pendingBulkDesign && (
+        <BulkSizeMatrixDialog
+          open={bulkMatrixOpen}
+          onClose={() => {
+            setBulkMatrixOpen(false);
+            setPendingBulkDesign(null);
+          }}
+          productName={displayName}
+          unitPrice={product.price + (pendingBulkDesign.customizationPrice || 0)}
+          sizes={sizes}
+          onConfirm={handleBulkConfirm}
         />
       )}
     </div>
