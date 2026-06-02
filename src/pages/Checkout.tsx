@@ -745,6 +745,17 @@ const Checkout = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setPaymentMethod("montonio_card")}
+                    className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "montonio_card" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
+                  >
+                    <CreditCard className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: paymentMethod === "montonio_card" ? "hsl(var(--primary))" : undefined }} />
+                    <div>
+                      <p className="font-body font-semibold text-sm">{t("checkout.payMontonioCard", "Maksāt ar karti")}</p>
+                      <p className="text-xs text-muted-foreground font-body">{t("checkout.payMontonioCardDesc", "Visa, Mastercard — droša apmaksa caur Montonio")}</p>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setPaymentMethod("bank_transfer")}
                     className={`flex items-start gap-3 p-4 rounded-lg border-2 transition-all text-left ${paymentMethod === "bank_transfer" ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground"}`}
                   >
@@ -863,9 +874,11 @@ const Checkout = () => {
                     ? t("checkout.processing")
                     : paymentMethod === "bank_transfer"
                       ? t("checkout.submitBank", "Veikt pasūtījumu un saņemt rēķinu")
-                      : paymentMethod === "montonio"
-                        ? t("checkout.submitBankLink", "Maksāt caur banku")
-                        : t("checkout.submit")}
+                     : paymentMethod === "montonio"
+                       ? t("checkout.submitBankLink", "Maksāt caur banku")
+                       : paymentMethod === "montonio_card"
+                         ? t("checkout.submitCard", "Maksāt ar karti")
+                         : t("checkout.submit")}
                 </Button>
               </div>
             </motion.div>
