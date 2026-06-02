@@ -101,3 +101,32 @@ function htmlToPlainText(html: string): string {
     .replace(/[ \t]+\n/g, "\n")
     .trim();
 }
+
+async function getOrCreateUnsubscribeToken(
+  service: SupabaseClient,
+  email: string,
+): Promise<string> {
+  const normalized = email.trim().toLowerCase();
+  const { data: existing } = await service
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalized)
+    .maybeSingle();
+  if (existing?.token) return existing.token as string;
+
+  const token = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+  const { data: inserted, error } = await service
+    .from("email_unsubscribe_tokens")
+    .insert({ email: normalized, token })
+    .select("token")
+    .maybeSingle();
+  if (!error && inserted?.token) return inserted.token as string;
+
+  // Race: another concurrent insert created the row; re-read.
+  const { data: retry } = await service
+    .from("email_unsubscribe_tokens")
+    .select("token")
+    .eq("email", normalized)
+    .maybeSingle();
+  return (retry?.token as string) || token;
+}
