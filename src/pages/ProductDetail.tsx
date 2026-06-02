@@ -7,6 +7,9 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { BulkSizeMatrixDialog } from "@/components/BulkSizeMatrixDialog";
+import { Users, User as UserIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useProductBySlug, getProductName, getProductDescription } from "@/hooks/useProducts";
 import { toast } from "sonner";
@@ -32,10 +35,27 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [designerOpen, setDesignerOpen] = useState(false);
+  const [workflowChoiceOpen, setWorkflowChoiceOpen] = useState(false);
+  const [designMode, setDesignMode] = useState<"individual" | "bulk">("individual");
+  const [bulkMatrixOpen, setBulkMatrixOpen] = useState(false);
+  const [pendingBulkDesign, setPendingBulkDesign] = useState<{
+    designId: string | null;
+    thumbnail: string;
+    previews: string[];
+    customizationPrice: number;
+    visitorCode: string | null;
+  } | null>(null);
   const { addItem } = useCart();
 
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
+
+  // Master baseline size for bulk workflow — prefer M, otherwise the middle size.
+  const masterSize = useMemo(() => {
+    if (sizes.length === 0) return "";
+    if (sizes.includes("M")) return "M";
+    return sizes[Math.floor(sizes.length / 2)];
+  }, [sizes]);
 
   // Set defaults when product loads
   useEffect(() => {
@@ -111,6 +131,55 @@ const ProductDetail = () => {
       image: displayImage || product.image_url || "", size: selectedSize, color: selectedColor, quantity, slug: product.slug,
     });
     toast.success(t("productDetail.addedToCart", { name: displayName }));
+  };
+
+  const openDesigner = (mode: "individual" | "bulk") => {
+    setDesignMode(mode);
+    setWorkflowChoiceOpen(false);
+    if (mode === "bulk" && masterSize) {
+      setSelectedSize(masterSize);
+    }
+    setDesignerOpen(true);
+  };
+
+  const handleBulkDesignReady = (payload: {
+    designId: string | null;
+    thumbnail: string;
+    previews: string[];
+    customizationPrice: number;
+    visitorCode: string | null;
+  }) => {
+    setPendingBulkDesign(payload);
+    setBulkMatrixOpen(true);
+  };
+
+  const handleBulkConfirm = (selectedSizes: Record<string, number>, totalQuantity: number) => {
+    if (!product || !pendingBulkDesign) return;
+    const breakdown = Object.entries(selectedSizes)
+      .map(([s, n]) => `${n}×${s}`)
+      .join(", ");
+    const unitPrice = product.price + (pendingBulkDesign.customizationPrice || 0);
+    addItem({
+      productId: product.id,
+      name: displayName,
+      price: unitPrice,
+      basePrice: product.price,
+      customizationPrice: pendingBulkDesign.customizationPrice || 0,
+      image: pendingBulkDesign.thumbnail || displayImage || product.image_url || "",
+      size: breakdown || "BULK",
+      color: selectedColor,
+      quantity: totalQuantity,
+      slug: product.slug,
+      designId: pendingBulkDesign.designId || undefined,
+      designThumbnail: pendingBulkDesign.thumbnail,
+      designPreviews: pendingBulkDesign.previews,
+      zakekeVisitorCode: pendingBulkDesign.visitorCode || undefined,
+      selectedSizes,
+      isBulk: true,
+    });
+    toast.success(t("productDetail.addedToCart", { name: displayName }));
+    setBulkMatrixOpen(false);
+    setPendingBulkDesign(null);
   };
 
   if (isLoading) {
@@ -225,7 +294,7 @@ const ProductDetail = () => {
                 </div>
                 {product.customizable && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setDesignerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setWorkflowChoiceOpen(true); }}
                     disabled={!selectedSize || !selectedColor}
                     className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary/60 backdrop-blur-sm text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed z-10 shadow-lg"
                     title={t("productDetail.customizeDesign", "Personalizēt dizainu")}
