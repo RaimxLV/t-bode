@@ -27,7 +27,7 @@ import { Seo } from "@/components/Seo";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
-type PaymentMethod = "card" | "bank_transfer" | "montonio";
+type PaymentMethod = "card" | "bank_transfer" | "montonio" | "montonio_card";
 
 const createGuestCheckoutClient = () =>
   createClient<Database>(
@@ -367,7 +367,7 @@ const Checkout = () => {
         : null;
 
       // Branch: Montonio (bank links) vs Stripe (card / bank-transfer invoice)
-      if (paymentMethod === "montonio") {
+      if (paymentMethod === "montonio" || paymentMethod === "montonio_card") {
         const { data: mData, error: mError } = await checkoutClient.functions.invoke("montonio-create-order", {
           body: {
             order_id: order.id,
@@ -377,6 +377,7 @@ const Checkout = () => {
             customer_name: form.name.trim(),
             customer_phone: form.phone.trim(),
             promo: promoPayload,
+            payment_method: paymentMethod === "montonio_card" ? "cardPayments" : "paymentInitiation",
             shipping:
               shippingMethod === "omniva" && selectedOmniva
                 ? {
