@@ -113,6 +113,18 @@ Deno.serve(async (req) => {
       const suffix = items.length > 1 ? `-${(itemIndex >= 0 ? itemIndex : idx) + 1}` : "";
       const externalCode = `${shortOrderCode}${suffix}`;
       try {
+        // For bulk (unified print) lines, surface the size breakdown so
+        // production sees a single design needs to be applied across multiple
+        // garment sizes. The Zakeke print-file logic itself is UNCHANGED — one
+        // design id still generates one set of front/back files.
+        let notes: string | null = null;
+        if ((it as any).is_bulk && (it as any).selected_sizes) {
+          const sizes = (it as any).selected_sizes as Record<string, number>;
+          const breakdown = Object.entries(sizes)
+            .map(([s, n]) => `${n}×${s}`)
+            .join(", ");
+          notes = `BULK / unified print size. Total ${it.quantity} pcs. Breakdown: ${breakdown}.`;
+        }
         const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
           externalOrderId: externalCode,
           visitorCode: (it as any).zakeke_visitor_code ?? null,
@@ -123,6 +135,7 @@ Deno.serve(async (req) => {
           subtotal: Number((it as any).unit_price ?? 0) * (it.quantity ?? 1),
           totalAmount: Number((it as any).unit_price ?? 0) * (it.quantity ?? 1),
           shippingAddress,
+          notes,
           items: [
             {
               designId: it.zakeke_design_id as string,
