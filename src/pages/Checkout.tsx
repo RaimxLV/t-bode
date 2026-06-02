@@ -348,6 +348,8 @@ const Checkout = () => {
             ? (item.designPreviews as any)
             : null,
         zakeke_visitor_code: item.zakekeVisitorCode || null,
+        selected_sizes: item.selectedSizes ?? null,
+        is_bulk: !!item.isBulk,
         });
       });
       const { error: itemsError } = await checkoutClient.from("order_items").insert(orderItems);
