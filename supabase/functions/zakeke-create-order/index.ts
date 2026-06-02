@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: items, error } = await supabase
       .from("order_items")
-      .select("id, quantity, unit_price, zakeke_design_id, zakeke_order_id, zakeke_visitor_code, created_at")
+      .select("id, quantity, unit_price, zakeke_design_id, zakeke_order_id, zakeke_visitor_code, created_at, selected_sizes, is_bulk, size")
       .eq("order_id", orderId)
       .order("created_at", { ascending: true });
 
