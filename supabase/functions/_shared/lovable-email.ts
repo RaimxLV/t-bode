@@ -42,6 +42,11 @@ export async function sendLovableTransactional(
     ? params.text
     : htmlToPlainText(params.html);
 
+  // Lovable Email API requires an unsubscribe token for transactional sends
+  // (otherwise it rejects with 400 missing_unsubscribe). Reuse existing token
+  // for this recipient, or create one.
+  const unsubscribeToken = await getOrCreateUnsubscribeToken(service, params.to);
+
   const payload = {
     to: params.to,
     from: params.from || DEFAULT_FROM,
@@ -52,6 +57,7 @@ export async function sendLovableTransactional(
     purpose: "transactional",
     label: params.template,
     idempotency_key: idempotencyKey,
+    unsubscribe_token: unsubscribeToken,
     message_id: messageId,
     queued_at: new Date().toISOString(),
   };
