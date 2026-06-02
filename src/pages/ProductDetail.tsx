@@ -428,7 +428,7 @@ const ProductDetail = () => {
                 <button
                   type="button"
                   disabled={!selectedSize || !selectedColor}
-                  onClick={() => setDesignerOpen(true)}
+                  onClick={() => setWorkflowChoiceOpen(true)}
                   onMouseEnter={prefetchZakeke}
                   onTouchStart={prefetchZakeke}
                   className="group relative mb-4 w-full overflow-hidden rounded-lg px-8 py-5 text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-personalize-pulse"
