@@ -19,6 +19,8 @@ Deno.serve(async (req) => {
       customer_phone,
       shipping, // optional: { method: "omniva-pakomat", pickupPointId, pickupPointName }
       payment_method, // "paymentInitiation" (default) or "cardPayments"
+      hp, // honeypot — must be empty
+      form_loaded_at, // ms timestamp when the form was rendered
     } = body ?? {};
 
     if (!order_id || !Array.isArray(items) || items.length === 0 || !customer_email) {
@@ -26,6 +28,28 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
+    }
+
+    // Bot protection (this function runs with verify_jwt = false, so guests can
+    // hit it directly). Reject if the honeypot is filled or the form was
+    // submitted suspiciously fast.
+    if (typeof hp === "string" && hp.trim().length > 0) {
+      console.warn("montonio-create-order: rejected bot (honeypot filled)");
+      return new Response(JSON.stringify({ error: "Bad request" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+    const loadedAt = Number(form_loaded_at);
+    if (Number.isFinite(loadedAt) && loadedAt > 0) {
+      const elapsedMs = Date.now() - loadedAt;
+      if (elapsedMs < 2000) {
+        console.warn(`montonio-create-order: rejected bot (submitted in ${elapsedMs}ms)`);
+        return new Response(JSON.stringify({ error: "Bad request" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        });
+      }
     }
 
     const service = createClient(
