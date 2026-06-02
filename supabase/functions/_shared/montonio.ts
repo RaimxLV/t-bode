@@ -1,7 +1,11 @@
 // Shared Montonio helpers (JWT signing/verification, base URLs)
 import { create, verify, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
-export const MONTONIO_ENV = (Deno.env.get("MONTONIO_ENV") ?? "sandbox").toLowerCase();
+const RAW_MONTONIO_ENV = (Deno.env.get("MONTONIO_ENV") ?? "sandbox").trim().toLowerCase();
+export const MONTONIO_ENV: "production" | "sandbox" =
+  RAW_MONTONIO_ENV === "production" || RAW_MONTONIO_ENV === "live"
+    ? "production"
+    : "sandbox";
 
 export const MONTONIO_PAYMENTS_BASE =
   MONTONIO_ENV === "production"
@@ -13,6 +17,13 @@ export const MONTONIO_SHIPPING_BASE =
   MONTONIO_ENV === "production"
     ? "https://shipping.montonio.com"
     : "https://sandbox-shipping.montonio.com";
+
+// Safe one-line log so we can confirm which environment is active in edge
+// function logs. Does NOT log the secret key — only the resolved env name and
+// the public base URL.
+console.log(
+  `[montonio] env=${MONTONIO_ENV} (raw="${RAW_MONTONIO_ENV}") payments_base=${MONTONIO_PAYMENTS_BASE}`
+);
 
 function getSecretKey(): CryptoKey | Promise<CryptoKey> {
   const secret = Deno.env.get("MONTONIO_SECRET_KEY");
