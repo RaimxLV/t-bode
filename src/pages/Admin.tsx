@@ -517,7 +517,9 @@ const Admin = () => {
 
           <TabsContent value="accounting">
             <Suspense fallback={<TabFallback />}>
-              <AccountingSpreadsheet />
+              <div className="relative mx-[calc(50%-50vw)] w-screen px-3 sm:px-4">
+                <AccountingSpreadsheet />
+              </div>
             </Suspense>
           </TabsContent>
 
