@@ -378,6 +378,8 @@ const Checkout = () => {
             customer_phone: form.phone.trim(),
             promo: promoPayload,
             payment_method: paymentMethod === "montonio_card" ? "cardPayments" : "paymentInitiation",
+            hp: website,
+            form_loaded_at: formLoadedAt,
             shipping:
               shippingMethod === "omniva" && selectedOmniva
                 ? {

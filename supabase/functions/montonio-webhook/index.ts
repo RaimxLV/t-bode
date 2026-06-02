@@ -29,13 +29,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    const claims = await verifyMontonioJwt<{
+    let claims: {
+      merchantReference?: string;
+      status?: string;
+      paymentStatus?: string;
+      uuid?: string;
+      shipment?: { trackingCode?: string; id?: string };
+    };
+    try {
+      claims = await verifyMontonioJwt<{
       merchantReference?: string;
       status?: string;
       paymentStatus?: string;
       uuid?: string;
       shipment?: { trackingCode?: string; id?: string };
     }>(token);
+    } catch (e) {
+      console.error("Montonio webhook: JWT verification failed:", (e as Error).message);
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
 
     const orderId = claims.merchantReference;
     const status = (claims.status ?? claims.paymentStatus ?? "").toUpperCase();
@@ -102,32 +117,39 @@ Deno.serve(async (req) => {
       update.status = "cancelled";
     }
 
-    await service.from("orders").update(update).eq("id", orderId);
+    // CRITICAL: persist the payment status. If this fails we must signal
+    // Montonio to retry — but anything AFTER this must never turn into a non-200.
+    try {
+      await service.from("orders").update(update).eq("id", orderId);
+    } catch (e) {
+      console.error("Montonio webhook: failed to update order:", (e as Error).message);
+      return new Response(JSON.stringify({ error: "DB update failed" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
 
-    // Record processed BEFORE side-effects to avoid duplicate emails on retry
-    await service
-      .from("processed_webhook_events")
-      .insert({ provider: "montonio", event_id: eventId, order_id: orderId });
+    // From here on, the order is marked paid — ALWAYS return 200 to Montonio.
+    try {
+      await service
+        .from("processed_webhook_events")
+        .insert({ provider: "montonio", event_id: eventId, order_id: orderId });
+    } catch (e) {
+      console.error("Failed to record processed webhook event:", (e as Error).message);
+    }
 
-    // Send confirmation email when payment is finalized
     if (status === "PAID" || status === "FINALIZED") {
       try {
-        // Auto-generate invoice PDF before sending email (for B2B attachment)
-        try {
-          await service.functions.invoke("generate-invoice", {
-            body: { order_id: orderId },
-          });
-        } catch (e) {
-          console.error("Failed to auto-generate invoice:", (e as Error).message);
-        }
-        // Create Zakeke order(s) for customised items
-        try {
-          await service.functions.invoke("zakeke-create-order", {
-            body: { order_id: orderId },
-          });
-        } catch (e) {
-          console.error("Failed to create Zakeke order:", (e as Error).message);
-        }
+        await service.functions.invoke("generate-invoice", { body: { order_id: orderId } });
+      } catch (e) {
+        console.error("Failed to auto-generate invoice:", (e as Error).message);
+      }
+      try {
+        await service.functions.invoke("zakeke-create-order", { body: { order_id: orderId } });
+      } catch (e) {
+        console.error("Failed to create Zakeke order:", (e as Error).message);
+      }
+      try {
         await service.functions.invoke("send-order-confirmation", {
           body: { order_id: orderId, lang: "lv" },
         });
@@ -141,10 +163,10 @@ Deno.serve(async (req) => {
       status: 200,
     });
   } catch (e) {
-    console.error("montonio-webhook error:", (e as Error).message);
+    console.error("montonio-webhook unexpected error:", (e as Error).message);
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 401,
+      status: 500,
     });
   }
 });
