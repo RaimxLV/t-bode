@@ -61,6 +61,15 @@ export interface CartItem {
   customizationPrice?: number;
   /** Original product base price (before customization), kept for reference/admin display. */
   basePrice?: number;
+  /**
+   * Bulk-order size breakdown (Option A workflow).
+   * Present only when the customer chose "Standardized logo size" and
+   * filled in the size matrix. Keys are size labels, values are quantities.
+   * When this is present, `quantity` equals the sum of all sizes and
+   * `isBulk` is true. The single line uses one Zakeke designId for all sizes.
+   */
+  selectedSizes?: Record<string, number>;
+  isBulk?: boolean;
 }
 
 interface CartContextType {
@@ -99,10 +108,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const qty = item.quantity ?? 1;
     setCartState((prev) => {
       const nextUpdatedAt = Date.now();
-      // Customized items (with a designId) are always treated as a unique cart line
-      // so multiple distinct designs of the same product/size/color don't get merged
-      // and lose their designId / thumbnail.
-      if (item.designId) {
+      // Customized items (with a designId) and bulk items are always treated as
+      // a unique cart line so multiple distinct designs / matrices of the same
+      // product/size/color don't get merged and lose their designId / breakdown.
+      if (item.designId || item.isBulk) {
         return {
           items: [...prev.items, { ...item, quantity: qty }],
           updatedAt: nextUpdatedAt,

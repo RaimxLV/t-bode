@@ -28,6 +28,20 @@ interface ZakekeDesignerProps {
   variantCodes?: { color?: string; size?: string };
   quantity: number;
   onClose: () => void;
+  /**
+   * When `bulkMode` is true, the designer does NOT add to cart on its own.
+   * Instead it calls `onBulkAddRequest(payload)` so the parent can open a
+   * size-matrix dialog and produce a single cart line with the same designId
+   * spread across multiple sizes.
+   */
+  bulkMode?: boolean;
+  onBulkAddRequest?: (payload: {
+    designId: string | null;
+    thumbnail: string;
+    previews: string[];
+    customizationPrice: number;
+    visitorCode: string | null;
+  }) => void;
 }
 
 declare global {
@@ -54,6 +68,8 @@ export const ZakekeDesigner = ({
   variantCodes,
   quantity,
   onClose,
+  bulkMode = false,
+  onBulkAddRequest,
 }: ZakekeDesignerProps) => {
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState<string>("");
@@ -242,6 +258,17 @@ export const ZakekeDesigner = ({
             const zakekeExtra =
               customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
+            if (bulkMode && onBulkAddRequest) {
+              onBulkAddRequest({
+                designId,
+                thumbnail,
+                previews,
+                customizationPrice: zakekeExtra || 0,
+                visitorCode: getVisitorCode(),
+              });
+              onClose();
+              return;
+            }
             addItem({
               productId,
               name: productName,
@@ -287,6 +314,17 @@ export const ZakekeDesigner = ({
             const zakekeExtra =
               customizationPriceRef.current ?? 0;
             const finalUnitPrice = productPrice + (zakekeExtra || 0);
+            if (bulkMode && onBulkAddRequest) {
+              onBulkAddRequest({
+                designId,
+                thumbnail,
+                previews,
+                customizationPrice: zakekeExtra || 0,
+                visitorCode: getVisitorCode(),
+              });
+              onClose();
+              return;
+            }
             addItem({
               productId,
               name: productName,

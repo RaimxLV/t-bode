@@ -1256,8 +1256,25 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                     )}
                                     <div className="flex-1 min-w-0 space-y-1">
                                       <p className="text-xs font-body font-semibold leading-tight break-words">{item.product_name}</p>
+                                      {item.zakeke_design_id && (
+                                        item.is_bulk ? (
+                                          <Badge className="bg-orange-100 text-orange-900 border-orange-300 text-[10px] py-0">
+                                            BULK: UNIFIED PRINT SIZE
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="text-[10px] py-0">
+                                            INDIVIDUAL: SCALED PER SIZE
+                                          </Badge>
+                                        )
+                                      )}
                                       <div className="flex flex-wrap gap-1">
-                                        {item.size && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Izmērs: {item.size}</span>}
+                                        {item.is_bulk && item.selected_sizes ? (
+                                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200 text-orange-900 font-medium">
+                                            Kopā: {item.quantity} gab · {Object.entries(item.selected_sizes as Record<string, number>).map(([s, n]) => `${n}×${s}`).join(", ")}
+                                          </span>
+                                        ) : (
+                                          item.size && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Izmērs: {item.size}</span>
+                                        )}
                                         {item.color && <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">Krāsa: {item.color}</span>}
                                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">×{item.quantity}</span>
                                       </div>
@@ -1302,6 +1319,17 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
+                                          {item.zakeke_design_id && (
+                                            item.is_bulk ? (
+                                              <Badge className="bg-orange-100 text-orange-900 border-orange-300 text-[10px] py-0 w-fit">
+                                                BULK: UNIFIED PRINT SIZE
+                                              </Badge>
+                                            ) : (
+                                              <Badge variant="outline" className="text-[10px] py-0 w-fit">
+                                                INDIVIDUAL: SCALED PER SIZE
+                                              </Badge>
+                                            )
+                                          )}
                                           <ZakekePrintFilesButton
                                             item={item}
                                             variant="inline"
@@ -1311,7 +1339,13 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         </div>
                                       </div>
                                     </TableCell>
-                                    <TableCell className="text-xs">{item.size || "—"}</TableCell>
+                                    <TableCell className="text-xs">
+                                      {item.is_bulk && item.selected_sizes ? (
+                                        <span className="font-medium text-orange-900">
+                                          {Object.entries(item.selected_sizes as Record<string, number>).map(([s, n]) => `${n}×${s}`).join(", ")}
+                                        </span>
+                                      ) : (item.size || "—")}
+                                    </TableCell>
                                     <TableCell className="text-xs">{item.color || "—"}</TableCell>
                                     <TableCell className="text-xs text-right">{item.quantity}</TableCell>
                                     <TableCell className="text-xs text-right font-medium">{item.unit_price.toFixed(2)} €</TableCell>

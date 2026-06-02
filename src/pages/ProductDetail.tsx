@@ -7,6 +7,9 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { BulkSizeMatrixDialog } from "@/components/BulkSizeMatrixDialog";
+import { Users, User as UserIcon } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useProductBySlug, getProductName, getProductDescription } from "@/hooks/useProducts";
 import { toast } from "sonner";
@@ -32,10 +35,27 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [designerOpen, setDesignerOpen] = useState(false);
+  const [workflowChoiceOpen, setWorkflowChoiceOpen] = useState(false);
+  const [designMode, setDesignMode] = useState<"individual" | "bulk">("individual");
+  const [bulkMatrixOpen, setBulkMatrixOpen] = useState(false);
+  const [pendingBulkDesign, setPendingBulkDesign] = useState<{
+    designId: string | null;
+    thumbnail: string;
+    previews: string[];
+    customizationPrice: number;
+    visitorCode: string | null;
+  } | null>(null);
   const { addItem } = useCart();
 
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
+
+  // Master baseline size for bulk workflow — prefer M, otherwise the middle size.
+  const masterSize = useMemo(() => {
+    if (sizes.length === 0) return "";
+    if (sizes.includes("M")) return "M";
+    return sizes[Math.floor(sizes.length / 2)];
+  }, [sizes]);
 
   // Set defaults when product loads
   useEffect(() => {
@@ -111,6 +131,55 @@ const ProductDetail = () => {
       image: displayImage || product.image_url || "", size: selectedSize, color: selectedColor, quantity, slug: product.slug,
     });
     toast.success(t("productDetail.addedToCart", { name: displayName }));
+  };
+
+  const openDesigner = (mode: "individual" | "bulk") => {
+    setDesignMode(mode);
+    setWorkflowChoiceOpen(false);
+    if (mode === "bulk" && masterSize) {
+      setSelectedSize(masterSize);
+    }
+    setDesignerOpen(true);
+  };
+
+  const handleBulkDesignReady = (payload: {
+    designId: string | null;
+    thumbnail: string;
+    previews: string[];
+    customizationPrice: number;
+    visitorCode: string | null;
+  }) => {
+    setPendingBulkDesign(payload);
+    setBulkMatrixOpen(true);
+  };
+
+  const handleBulkConfirm = (selectedSizes: Record<string, number>, totalQuantity: number) => {
+    if (!product || !pendingBulkDesign) return;
+    const breakdown = Object.entries(selectedSizes)
+      .map(([s, n]) => `${n}×${s}`)
+      .join(", ");
+    const unitPrice = product.price + (pendingBulkDesign.customizationPrice || 0);
+    addItem({
+      productId: product.id,
+      name: displayName,
+      price: unitPrice,
+      basePrice: product.price,
+      customizationPrice: pendingBulkDesign.customizationPrice || 0,
+      image: pendingBulkDesign.thumbnail || displayImage || product.image_url || "",
+      size: breakdown || "BULK",
+      color: selectedColor,
+      quantity: totalQuantity,
+      slug: product.slug,
+      designId: pendingBulkDesign.designId || undefined,
+      designThumbnail: pendingBulkDesign.thumbnail,
+      designPreviews: pendingBulkDesign.previews,
+      zakekeVisitorCode: pendingBulkDesign.visitorCode || undefined,
+      selectedSizes,
+      isBulk: true,
+    });
+    toast.success(t("productDetail.addedToCart", { name: displayName }));
+    setBulkMatrixOpen(false);
+    setPendingBulkDesign(null);
   };
 
   if (isLoading) {
@@ -225,7 +294,7 @@ const ProductDetail = () => {
                 </div>
                 {product.customizable && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setDesignerOpen(true); }}
+                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setWorkflowChoiceOpen(true); }}
                     disabled={!selectedSize || !selectedColor}
                     className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary/60 backdrop-blur-sm text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed z-10 shadow-lg"
                     title={t("productDetail.customizeDesign", "Personalizēt dizainu")}
@@ -359,7 +428,7 @@ const ProductDetail = () => {
                 <button
                   type="button"
                   disabled={!selectedSize || !selectedColor}
-                  onClick={() => setDesignerOpen(true)}
+                  onClick={() => setWorkflowChoiceOpen(true)}
                   onMouseEnter={prefetchZakeke}
                   onTouchStart={prefetchZakeke}
                   className="group relative mb-4 w-full overflow-hidden rounded-lg px-8 py-5 text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-personalize-pulse"
@@ -431,12 +500,84 @@ const ProductDetail = () => {
           productImage={displayImage || product.image_url || ""}
           selectedColor={selectedColor}
           selectedColorHex={selectedColorHex}
-          selectedSize={selectedSize}
+          selectedSize={designMode === "bulk" ? masterSize || selectedSize : selectedSize}
           availableColors={colors.map((color) => color.name)}
           availableSizes={sizes}
           variantCodes={zakekeVariantCodes}
-          quantity={quantity}
+          quantity={designMode === "bulk" ? 1 : quantity}
           onClose={() => setDesignerOpen(false)}
+          bulkMode={designMode === "bulk"}
+          onBulkAddRequest={handleBulkDesignReady}
+        />
+      )}
+
+      {/* Workflow choice — Bulk vs Individual */}
+      <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl">
+              {t("bulk.chooseWorkflowTitle", "Izvēlieties dizaina plūsmu")}
+            </DialogTitle>
+            <DialogDescription className="font-body">
+              {t(
+                "bulk.chooseWorkflowDescription",
+                "Kā vēlaties pielāgot logo izmēru dažādiem krekla izmēriem?"
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => openDesigner("bulk")}
+              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <Users className="w-7 h-7 mb-2 text-primary" />
+              <h3 className="font-display text-lg mb-1">
+                {t(
+                  "bulk.optionATitle",
+                  "Standartizēts logo izmērs (Apjomam / Komandām)"
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+                {t(
+                  "bulk.optionADescription",
+                  "Izveidojiet vienu dizainu uz viena krekla. Pēc tam ērtā tabulā norādiet daudzumus visiem nepieciešamajiem izmēriem (S, M, L, XL...). Logotipa fiziskais izmērs un izvietojums paliks pilnīgi vienāds uz visiem krekliem. Lielisks veids, kā saņemt apjoma atlaides."
+                )}
+              </p>
+            </button>
+            <button
+              onClick={() => openDesigner("individual")}
+              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+            >
+              <UserIcon className="w-7 h-7 mb-2 text-primary" />
+              <h3 className="font-display text-lg mb-1">
+                {t(
+                  "bulk.optionBTitle",
+                  "Individuāls mērogs katram izmēram (Mazumtirdzniecība)"
+                )}
+              </h3>
+              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+                {t(
+                  "bulk.optionBDescription",
+                  "Izvēlieties šo, ja vēlaties, lai uz mazākiem izmēriem logo būtu fiziski mazāks, bet uz lielākiem – lielāks. Jūs pielāgosiet dizainu katram izmēram atsevišķi. Grozā katrs izmērs parādīsies kā atsevišķa rinda."
+                )}
+              </p>
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk size matrix — opens after Zakeke designer closes in bulk mode */}
+      {bulkMatrixOpen && pendingBulkDesign && (
+        <BulkSizeMatrixDialog
+          open={bulkMatrixOpen}
+          onClose={() => {
+            setBulkMatrixOpen(false);
+            setPendingBulkDesign(null);
+          }}
+          productName={displayName}
+          unitPrice={product.price + (pendingBulkDesign.customizationPrice || 0)}
+          sizes={sizes}
+          onConfirm={handleBulkConfirm}
         />
       )}
     </div>

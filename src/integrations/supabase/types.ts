@@ -561,11 +561,13 @@ export type Database = {
           color: string | null
           created_at: string
           id: string
+          is_bulk: boolean
           order_id: string
           print_unit_price: number
           product_id: string
           product_name: string
           quantity: number
+          selected_sizes: Json | null
           size: string | null
           unit_price: number
           zakeke_design_id: string | null
@@ -583,11 +585,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          is_bulk?: boolean
           order_id: string
           print_unit_price?: number
           product_id: string
           product_name: string
           quantity?: number
+          selected_sizes?: Json | null
           size?: string | null
           unit_price: number
           zakeke_design_id?: string | null
@@ -605,11 +609,13 @@ export type Database = {
           color?: string | null
           created_at?: string
           id?: string
+          is_bulk?: boolean
           order_id?: string
           print_unit_price?: number
           product_id?: string
           product_name?: string
           quantity?: number
+          selected_sizes?: Json | null
           size?: string | null
           unit_price?: number
           zakeke_design_id?: string | null
