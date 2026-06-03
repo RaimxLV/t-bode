@@ -635,16 +635,20 @@ const ShirtShape = ({
 
 const IdenticalShirtSvg = ({ delay = 0 }: { delay?: number }) => (
   <div style={{ animationDelay: `${delay}ms` }}>
-    <ShirtShape fill="hsl(var(--card))">
-      <circle cx="30" cy="42" r="6" fill="hsl(var(--primary))" />
+    <ShirtShape fill="hsl(var(--cta-red) / 0.15)" stroke="hsl(var(--cta-red))">
+      <circle cx="30" cy="42" r="7" fill="hsl(var(--cta-red))" />
     </ShirtShape>
   </div>
 );
 
-const UniqueShirtSvg = ({ motif, highlight }: { motif: string; highlight?: boolean }) => (
+const UniqueShirtSvg = ({
+  motif,
+  highlight,
+  color,
+}: { motif: string; highlight?: boolean; color?: string }) => (
   <ShirtShape
-    fill={highlight ? "hsl(var(--primary) / 0.12)" : "hsl(var(--card))"}
-    stroke={highlight ? "hsl(var(--primary))" : "hsl(var(--border))"}
+    fill={highlight ? "hsl(var(--cta-red) / 0.18)" : color ? `${color}22` : "hsl(var(--card))"}
+    stroke={highlight ? "hsl(var(--cta-red))" : color ?? "hsl(var(--border))"}
   >
     <text
       x="30"
@@ -652,7 +656,7 @@ const UniqueShirtSvg = ({ motif, highlight }: { motif: string; highlight?: boole
       textAnchor="middle"
       fontSize="12"
       fontWeight="700"
-      fill={highlight ? "hsl(var(--primary))" : "hsl(var(--foreground))"}
+      fill={highlight ? "hsl(var(--cta-red))" : color ?? "hsl(var(--foreground))"}
       fontFamily="ui-sans-serif, system-ui, sans-serif"
     >
       {motif}
