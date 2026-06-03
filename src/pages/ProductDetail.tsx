@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2, Percent } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -616,3 +616,51 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
+
+/* ------------------------------------------------------------------ */
+/* Inline SVG illustrations for the workflow choice cards.            */
+/* ------------------------------------------------------------------ */
+
+const ShirtShape = ({
+  children,
+  fill = "hsl(var(--muted))",
+  stroke = "hsl(var(--border))",
+}: { children?: React.ReactNode; fill?: string; stroke?: string }) => (
+  <svg viewBox="0 0 60 70" className="w-14 h-16 transition-transform duration-500 group-hover:translate-y-[-2px]">
+    <path
+      d="M10 12 L22 4 Q30 10 38 4 L50 12 L56 22 L46 26 L46 64 Q46 68 42 68 L18 68 Q14 68 14 64 L14 26 L4 22 Z"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    {children}
+  </svg>
+);
+
+const IdenticalShirtSvg = ({ delay = 0 }: { delay?: number }) => (
+  <div style={{ animationDelay: `${delay}ms` }}>
+    <ShirtShape fill="hsl(var(--card))">
+      <circle cx="30" cy="42" r="6" fill="hsl(var(--primary))" />
+    </ShirtShape>
+  </div>
+);
+
+const UniqueShirtSvg = ({ motif, highlight }: { motif: string; highlight?: boolean }) => (
+  <ShirtShape
+    fill={highlight ? "hsl(var(--primary) / 0.12)" : "hsl(var(--card))"}
+    stroke={highlight ? "hsl(var(--primary))" : "hsl(var(--border))"}
+  >
+    <text
+      x="30"
+      y="46"
+      textAnchor="middle"
+      fontSize="12"
+      fontWeight="700"
+      fill={highlight ? "hsl(var(--primary))" : "hsl(var(--foreground))"}
+      fontFamily="ui-sans-serif, system-ui, sans-serif"
+    >
+      {motif}
+    </text>
+  </ShirtShape>
+);
