@@ -149,7 +149,9 @@
     "total": "Kopā",
     "checkout": "Noformēt pasūtījumu",
     "customized": "Personalizēts",
-    "openCart": "Atvērt grozu"
+    "openCart": "Atvērt grozu",
+    "subtotal": "Starpsumma",
+    "savings": "Apjoma atlaide"
   },
   "checkout": {
     "title": "Pasūtījuma noformēšana",
