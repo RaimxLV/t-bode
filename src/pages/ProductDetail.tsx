@@ -50,6 +50,20 @@ const ProductDetail = () => {
 
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
+  const sizes_sorted = useMemo(() => {
+    const order = ["XXS","XS","S","M","L","XL","XXL","XXXL","XXXXL","XXXXXL"];
+    const idx = (s: string) => {
+      const i = order.indexOf(s.toUpperCase());
+      return i === -1 ? 999 : i;
+    };
+    return [...sizes].sort((a, b) => {
+      const ai = idx(a), bi = idx(b);
+      if (ai !== 999 || bi !== 999) return ai - bi;
+      const na = parseInt(a), nb = parseInt(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      return a.localeCompare(b);
+    });
+  }, [sizes]);
 
   // The "Standard bulk vs Individual" workflow choice only makes sense when
   // a product has multiple sizes (apparel). Mugs, bags, accessories etc. go
