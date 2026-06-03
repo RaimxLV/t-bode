@@ -380,7 +380,7 @@ const ProductDetail = () => {
                       <span className="font-body font-semibold text-sm">{t("productDetail.size")}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {sizes.map((size) => (
+                      {sizes_sorted.map((size) => (
                         <button key={size} onClick={() => setSelectedSize(size)}
                           className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${selectedSize === size ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
                           {size}
@@ -430,7 +430,7 @@ const ProductDetail = () => {
                       <span className="font-body font-semibold text-sm">{t("productDetail.size")}</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {sizes.map((size) => (
+                      {sizes_sorted.map((size) => (
                         <button key={size} onClick={() => setSelectedSize(size)}
                           className={`px-3 py-1.5 rounded-md text-xs font-body font-medium border transition-all ${selectedSize === size ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"}`}>
                           {size}
