@@ -661,7 +661,13 @@ const ShirtShape = ({
 const IdenticalShirtSvg = ({ delay = 0 }: { delay?: number }) => (
   <div style={{ animationDelay: `${delay}ms` }}>
     <ShirtShape fill="hsl(var(--cta-red) / 0.15)" stroke="hsl(var(--cta-red))">
-      <circle cx="30" cy="42" r="7" fill="hsl(var(--cta-red))" />
+      {/* Small pocket logo (top-left chest) */}
+      <rect x="17" y="22" width="6" height="6" rx="1" fill="hsl(var(--cta-red))" opacity="0.9" />
+      <text x="20" y="27" textAnchor="middle" fontSize="5" fontWeight="800" fill="white" fontFamily="ui-sans-serif, system-ui, sans-serif">T</text>
+      {/* Central chest emblem */}
+      <circle cx="30" cy="46" r="9" fill="hsl(var(--cta-red))" />
+      <circle cx="30" cy="46" r="9" fill="none" stroke="white" strokeWidth="0.8" strokeDasharray="2 1.5" opacity="0.6" />
+      <text x="30" y="49" textAnchor="middle" fontSize="8" fontWeight="900" fill="white" fontFamily="ui-sans-serif, system-ui, sans-serif">★</text>
     </ShirtShape>
   </div>
 );
@@ -671,20 +677,54 @@ const UniqueShirtSvg = ({
   highlight,
   color,
 }: { motif: string; highlight?: boolean; color?: string }) => (
-  <ShirtShape
-    fill={highlight ? "hsl(var(--cta-red) / 0.18)" : color ? `${color}22` : "hsl(var(--card))"}
-    stroke={highlight ? "hsl(var(--cta-red))" : color ?? "hsl(var(--border))"}
-  >
-    <text
-      x="30"
-      y="46"
-      textAnchor="middle"
-      fontSize="12"
-      fontWeight="700"
-      fill={highlight ? "hsl(var(--cta-red))" : color ?? "hsl(var(--foreground))"}
-      fontFamily="ui-sans-serif, system-ui, sans-serif"
-    >
-      {motif}
-    </text>
-  </ShirtShape>
+  <svg viewBox="0 0 60 70" className="w-20 h-24 transition-transform duration-500 group-hover:translate-y-[-2px] drop-shadow-[0_6px_12px_hsl(var(--cta-red)/0.35)]">
+    <defs>
+      <linearGradient id="uniqShirtBody" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="hsl(var(--cta-red) / 0.35)" />
+        <stop offset="100%" stopColor="hsl(var(--cta-red) / 0.10)" />
+      </linearGradient>
+      <linearGradient id="uniqStarGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#FFD86B" />
+        <stop offset="100%" stopColor="hsl(var(--cta-red))" />
+      </linearGradient>
+      <radialGradient id="uniqGlow" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0%" stopColor="hsl(var(--cta-red) / 0.5)" />
+        <stop offset="100%" stopColor="hsl(var(--cta-red) / 0)" />
+      </radialGradient>
+    </defs>
+    {/* Glow halo */}
+    <circle cx="30" cy="44" r="22" fill="url(#uniqGlow)" />
+    {/* Shirt body */}
+    <path
+      d="M10 12 L22 4 Q30 10 38 4 L50 12 L56 22 L46 26 L46 64 Q46 68 42 68 L18 68 Q14 68 14 64 L14 26 L4 22 Z"
+      fill="url(#uniqShirtBody)"
+      stroke="hsl(var(--cta-red))"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    {/* Collar detail */}
+    <path d="M22 4 Q30 14 38 4" fill="none" stroke="hsl(var(--cta-red))" strokeWidth="1" opacity="0.55" />
+    {/* Sparkles */}
+    <g fill="#FFD86B">
+      <circle cx="14" cy="32" r="1.2" />
+      <circle cx="48" cy="36" r="1.5" />
+      <circle cx="20" cy="58" r="1" />
+      <circle cx="42" cy="58" r="1.2" />
+    </g>
+    {/* Central star emblem */}
+    <g transform="translate(30 44)">
+      <circle r="11" fill="white" opacity="0.95" />
+      <circle r="11" fill="none" stroke="hsl(var(--cta-red))" strokeWidth="1.2" />
+      <path
+        d="M0 -7 L2 -2 L7 -2 L3 1.5 L4.5 6.5 L0 3.5 L-4.5 6.5 L-3 1.5 L-7 -2 L-2 -2 Z"
+        fill="url(#uniqStarGrad)"
+        stroke="hsl(var(--cta-red))"
+        strokeWidth="0.6"
+        strokeLinejoin="round"
+      />
+    </g>
+    {/* Pocket logo */}
+    <rect x="16" y="22" width="7" height="7" rx="1.2" fill="hsl(var(--cta-red))" />
+    <text x="19.5" y="27.5" textAnchor="middle" fontSize="5.5" fontWeight="900" fill="white" fontFamily="ui-sans-serif, system-ui, sans-serif">★</text>
+  </svg>
 );
