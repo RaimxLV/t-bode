@@ -150,7 +150,9 @@
     "total": "Total",
     "checkout": "Checkout",
     "customized": "Customized",
-    "openCart": "Open cart"
+    "openCart": "Open cart",
+    "subtotal": "Subtotal",
+    "savings": "Volume discount"
   },
   "checkout": {
     "title": "Checkout",
@@ -496,5 +498,17 @@
     "removed": "Removed from wishlist",
     "remove": "Remove from wishlist",
     "add": "Add to wishlist"
+  },
+  "pricing": {
+    "explainer": {
+      "title": "How is your order priced?",
+      "baseTitle": "Product base price",
+      "baseDescription": "High-quality textile (t-shirt or hoodie).",
+      "printTitle": "Personalization",
+      "printDescription": "Print price is based on design size and complexity — you only pay for the area used.",
+      "volumeTitle": "Volume discount",
+      "volumeDescription": "Your savings grow with the order.",
+      "note": "Discounts apply only to personalized products and are calculated automatically in your cart."
+    }
   }
 }
