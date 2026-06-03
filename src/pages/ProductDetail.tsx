@@ -527,29 +527,29 @@ const ProductDetail = () => {
             {/* Card A — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="group relative text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
               <div className="absolute top-0 right-0 bg-cta-red text-white text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
                 👑 Līdz -30%
               </div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                 <Users className="w-5 h-5 text-cta-red" />
                 <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
                   {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                 </span>
               </div>
-              <div className="relative h-28 mb-4 flex items-end justify-start gap-2 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
                 {[0, 1, 2].map((i) => (
                   <IdenticalShirtSvg key={i} delay={i * 80} />
                 ))}
               </div>
-              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide min-h-[32px]">
                 STANDARTA PASŪTĪJUMS
               </h3>
-              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2 min-h-[18px]">
                 [ Viens dizains – visai komandai ]
               </p>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed flex-1">
                 Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
               </p>
             </button>
@@ -557,29 +557,29 @@ const ProductDetail = () => {
             {/* Card B — Individual designs */}
             <button
               onClick={() => openDesigner("individual")}
-              className="group relative text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
               <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
                 ⭐ Unikāli
               </div>
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                 <UserIcon className="w-5 h-5 text-cta-red" />
                 <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
-              <div className="relative h-28 mb-4 flex items-end justify-start gap-2 transition-transform duration-300 group-hover:scale-105">
-                <UniqueShirtSvg motif="#1" />
+              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
+                <UniqueShirtSvg motif="#1" color="#F59E0B" />
                 <UniqueShirtSvg motif="★" highlight />
-                <UniqueShirtSvg motif="ABC" />
+                <UniqueShirtSvg motif="ABC" color="#10B981" />
               </div>
-              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide min-h-[32px]">
                 INDIVIDUĀLS DIZAINS
               </h3>
-              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2 min-h-[18px]">
                 [ Katrs apģērbs ar savu odziņu ]
               </p>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed flex-1">
                 Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
               </p>
             </button>
