@@ -52,12 +52,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const orderId = claims.merchantReference;
+    const merchantReference = claims.merchantReference?.trim();
     const status = (claims.status ?? claims.paymentStatus ?? "").toUpperCase();
     const trackingCode = claims.shipment?.trackingCode ?? null;
     const shipmentId = claims.shipment?.id ?? null;
 
-    if (!orderId) {
+    if (!merchantReference) {
       return new Response(JSON.stringify({ error: "merchantReference missing in token" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -69,19 +69,33 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Validate that merchantReference matches an existing order before any update
-    const { data: existingOrder } = await service
-      .from("orders")
-      .select("id, status")
-      .eq("id", orderId)
-      .maybeSingle();
+    // Resolve both legacy UUID merchantReference and the newer human-readable
+    // order reference format (e.g. T-00042).
+    let existingOrder: { id: string; status: string } | null = null;
+    if (/^t-\d+$/i.test(merchantReference)) {
+      const orderNumber = Number(merchantReference.replace(/^t-/i, ""));
+      const { data } = await service
+        .from("orders")
+        .select("id, status")
+        .eq("order_number", orderNumber)
+        .maybeSingle();
+      existingOrder = data;
+    } else {
+      const { data } = await service
+        .from("orders")
+        .select("id, status")
+        .eq("id", merchantReference)
+        .maybeSingle();
+      existingOrder = data;
+    }
     if (!existingOrder) {
-      console.error(`Montonio webhook: orderId ${orderId} not found in DB`);
+      console.error(`Montonio webhook: merchantReference ${merchantReference} not found in DB`);
       return new Response(JSON.stringify({ error: "Unknown merchantReference" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 404,
       });
     }
+    const orderId = existingOrder.id;
 
     // Idempotency key: hash of the token (unique per Montonio event delivery)
     const tokenBuf = new TextEncoder().encode(token);
