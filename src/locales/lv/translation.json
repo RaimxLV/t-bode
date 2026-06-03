@@ -149,7 +149,9 @@
     "total": "Kopā",
     "checkout": "Noformēt pasūtījumu",
     "customized": "Personalizēts",
-    "openCart": "Atvērt grozu"
+    "openCart": "Atvērt grozu",
+    "subtotal": "Starpsumma",
+    "savings": "Apjoma atlaide"
   },
   "checkout": {
     "title": "Pasūtījuma noformēšana",
@@ -494,5 +496,17 @@
     "removed": "Noņemts no vēlmju saraksta",
     "remove": "Noņemt no vēlmju saraksta",
     "add": "Pievienot vēlmju sarakstam"
+  },
+  "pricing": {
+    "explainer": {
+      "title": "Kā veidojas Tava pasūtījuma cena?",
+      "baseTitle": "Produkta bāzes cena",
+      "baseDescription": "Augstas kvalitātes tekstila izstrādājums (T-krekls vai hūdijs).",
+      "printTitle": "Personalizācija",
+      "printDescription": "Drukas cena tiek rēķināta pēc dizaina izmēra un sarežģītības, nodrošinot godīgu samaksu tikai par izmantoto laukumu.",
+      "volumeTitle": "Apjoma atlaide",
+      "volumeDescription": "Tavs ietaupījums aug kopā ar pasūtījumu.",
+      "note": "Atlaides attiecas uz personalizētajiem produktiem un tiek piemērotas automātiski Tavā grozā."
+    }
   }
 }

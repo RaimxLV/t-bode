@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { useTranslation } from "react-i18next";
 
 export const CartSidebar = () => {
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalItems, totalPrice } = useCart();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalItems, totalPrice, subtotalPrice, totalSavings, getLineDiscount } = useCart();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -50,9 +50,26 @@ export const CartSidebar = () => {
                         {item.designId && <span className="ml-1 text-primary">✦ {t("cart.customized", "Personalizēts")}</span>}
                         {item.isBulk && <span className="ml-1 text-primary font-semibold">[BULK]</span>}
                       </p>
-                      <p className="text-sm font-bold font-body mt-1" style={{ color: "hsl(var(--primary))" }}>
-                        {(item.price * item.quantity).toFixed(2).replace(".", ",")} €
-                      </p>
+                      {(() => {
+                        const d = getLineDiscount(item);
+                        return d.percent > 0 ? (
+                          <div className="mt-1 flex items-center gap-2 flex-wrap">
+                            <span className="text-xs line-through text-muted-foreground font-body">
+                              {d.originalLineTotal.toFixed(2).replace(".", ",")} €
+                            </span>
+                            <span className="text-sm font-bold font-body" style={{ color: "hsl(var(--primary))" }}>
+                              {d.discountedLineTotal.toFixed(2).replace(".", ",")} €
+                            </span>
+                            <span className="text-[10px] font-bold font-body px-1.5 py-0.5 rounded bg-primary text-primary-foreground">
+                              −{d.percent}%
+                            </span>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-bold font-body mt-1" style={{ color: "hsl(var(--primary))" }}>
+                            {d.discountedLineTotal.toFixed(2).replace(".", ",")} €
+                          </p>
+                        );
+                      })()}
                       <div className="flex items-center gap-2 mt-2">
                         <button onClick={() => updateQuantity(item.productId, item.size, item.color, item.quantity - 1)} className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-secondary transition-colors">
                           <Minus className="w-3 h-3" />
@@ -74,6 +91,22 @@ export const CartSidebar = () => {
             <Separator />
 
             <SheetFooter className="flex-col gap-3 pt-4 sm:flex-col">
+              {totalSavings > 0 && (
+                <>
+                  <div className="flex items-center justify-between w-full text-sm font-body">
+                    <span className="text-muted-foreground">{t("cart.subtotal", "Starpsumma")}:</span>
+                    <span className="line-through text-muted-foreground">
+                      {subtotalPrice.toFixed(2).replace(".", ",")} €
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between w-full text-sm font-body">
+                    <span className="text-primary font-semibold">{t("cart.savings", "Apjoma atlaide")}:</span>
+                    <span className="text-primary font-semibold">
+                      −{totalSavings.toFixed(2).replace(".", ",")} €
+                    </span>
+                  </div>
+                </>
+              )}
               <div className="flex items-center justify-between w-full">
                 <span className="font-body font-semibold">{t("cart.total")}:</span>
                 <span className="text-xl font-bold font-body" style={{ color: "hsl(var(--primary))" }}>

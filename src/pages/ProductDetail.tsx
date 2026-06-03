@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2, Percent } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BulkSizeMatrixDialog } from "@/components/BulkSizeMatrixDialog";
 import { Users, User as UserIcon } from "lucide-react";
+import { PricingExplainer } from "@/components/PricingExplainer";
 import { useCart } from "@/context/CartContext";
 import { useProductBySlug, getProductName, getProductDescription } from "@/hooks/useProducts";
 import { toast } from "sonner";
@@ -513,7 +514,7 @@ const ProductDetail = () => {
 
       {/* Workflow choice — Bulk vs Individual */}
       <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl">
               {t("bulk.chooseWorkflowTitle", "Izvēlieties dizaina plūsmu")}
@@ -521,47 +522,77 @@ const ProductDetail = () => {
             <DialogDescription className="font-body">
               {t(
                 "bulk.chooseWorkflowDescription",
-                "Kā vēlaties pielāgot logo izmēru dažādiem krekla izmēriem?"
+                "Izvēlies, kā vēlies veidot savu pasūtījumu."
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid sm:grid-cols-2 gap-3">
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Card A — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+              className="group relative text-left p-5 rounded-xl border-2 border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
             >
-              <Users className="w-7 h-7 mb-2 text-primary" />
-              <h3 className="font-display text-lg mb-1">
-                {t(
-                  "bulk.optionATitle",
-                  "Standartizēts logo izmērs (Apjomam / Komandām)"
-                )}
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-5 h-5 text-primary" />
+                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-primary">
+                  {t("bulk.optionABadge", "Komandām / Pasākumiem")}
+                </span>
+              </div>
+              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
+                {[0, 1, 2].map((i) => (
+                  <IdenticalShirtSvg key={i} delay={i * 80} />
+                ))}
+              </div>
+              <h3 className="font-display text-xl mb-2 leading-tight">
+                {t("bulk.optionATitle", "Standarta pasūtījums")}
               </h3>
-              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
                 {t(
                   "bulk.optionADescription",
-                  "Izveidojiet vienu dizainu uz viena krekla. Pēc tam ērtā tabulā norādiet daudzumus visiem nepieciešamajiem izmēriem (S, M, L, XL...). Logotipa fiziskais izmērs un izvietojums paliks pilnīgi vienāds uz visiem krekliem. Lielisks veids, kā saņemt apjoma atlaides."
+                  "Viens dizains visām vienībām. Ideāli piemērots uzņēmumiem, sporta komandām un pasākumiem. Izvēloties šo plūsmu, Tu vari norādīt nepieciešamos izmērus (S, M, L, XL utt.) un saņemt apjoma atlaidi līdz pat 30%."
                 )}
               </p>
+              <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold font-body text-primary">
+                <Percent className="w-3 h-3" />
+                {t("bulk.optionADiscount", "Līdz −30% apjoma atlaide")}
+              </div>
             </button>
+
+            {/* Card B — Individual designs */}
             <button
               onClick={() => openDesigner("individual")}
-              className="text-left p-5 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all group"
+              className="group relative text-left p-5 rounded-xl border-2 border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
             >
-              <UserIcon className="w-7 h-7 mb-2 text-primary" />
-              <h3 className="font-display text-lg mb-1">
-                {t(
-                  "bulk.optionBTitle",
-                  "Individuāls mērogs katram izmēram (Mazumtirdzniecība)"
-                )}
+              <div className="flex items-center gap-2 mb-3">
+                <UserIcon className="w-5 h-5 text-primary" />
+                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-primary">
+                  {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
+                </span>
+              </div>
+              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
+                <UniqueShirtSvg motif="#1" />
+                <UniqueShirtSvg motif="★" highlight />
+                <UniqueShirtSvg motif="ABC" />
+              </div>
+              <h3 className="font-display text-xl mb-2 leading-tight">
+                {t("bulk.optionBTitle", "Individuāls dizains")}
               </h3>
-              <p className="text-xs text-muted-foreground font-body leading-relaxed">
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
                 {t(
                   "bulk.optionBDescription",
-                  "Izvēlieties šo, ja vēlaties, lai uz mazākiem izmēriem logo būtu fiziski mazāks, bet uz lielākiem – lielāks. Jūs pielāgosiet dizainu katram izmēram atsevišķi. Grozā katrs izmērs parādīsies kā atsevišķa rinda."
+                  "Katrs krekls ir unikāls mākslas darbs. Ideāli piemērots dāvanām vai ja katram komandas biedram nepieciešama personalizēta detaļa (piemēram, vārds vai numurs). Atlaide tiek rēķināta automātiski, bāzējoties uz kopējo preču skaitu."
                 )}
               </p>
+              <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold font-body text-primary">
+                <Sparkles className="w-3 h-3" />
+                {t("bulk.optionBDiscount", "Automātiska apjoma atlaide grozā")}
+              </div>
             </button>
+          </div>
+
+          {/* Pricing explainer */}
+          <div className="mt-5">
+            <PricingExplainer />
           </div>
         </DialogContent>
       </Dialog>
@@ -585,3 +616,51 @@ const ProductDetail = () => {
 };
 
 export default ProductDetail;
+
+/* ------------------------------------------------------------------ */
+/* Inline SVG illustrations for the workflow choice cards.            */
+/* ------------------------------------------------------------------ */
+
+const ShirtShape = ({
+  children,
+  fill = "hsl(var(--muted))",
+  stroke = "hsl(var(--border))",
+}: { children?: React.ReactNode; fill?: string; stroke?: string }) => (
+  <svg viewBox="0 0 60 70" className="w-14 h-16 transition-transform duration-500 group-hover:translate-y-[-2px]">
+    <path
+      d="M10 12 L22 4 Q30 10 38 4 L50 12 L56 22 L46 26 L46 64 Q46 68 42 68 L18 68 Q14 68 14 64 L14 26 L4 22 Z"
+      fill={fill}
+      stroke={stroke}
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    {children}
+  </svg>
+);
+
+const IdenticalShirtSvg = ({ delay = 0 }: { delay?: number }) => (
+  <div style={{ animationDelay: `${delay}ms` }}>
+    <ShirtShape fill="hsl(var(--card))">
+      <circle cx="30" cy="42" r="6" fill="hsl(var(--primary))" />
+    </ShirtShape>
+  </div>
+);
+
+const UniqueShirtSvg = ({ motif, highlight }: { motif: string; highlight?: boolean }) => (
+  <ShirtShape
+    fill={highlight ? "hsl(var(--primary) / 0.12)" : "hsl(var(--card))"}
+    stroke={highlight ? "hsl(var(--primary))" : "hsl(var(--border))"}
+  >
+    <text
+      x="30"
+      y="46"
+      textAnchor="middle"
+      fontSize="12"
+      fontWeight="700"
+      fill={highlight ? "hsl(var(--primary))" : "hsl(var(--foreground))"}
+      fontFamily="ui-sans-serif, system-ui, sans-serif"
+    >
+      {motif}
+    </text>
+  </ShirtShape>
+);
