@@ -4,6 +4,21 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.svg";
+import visaLogo from "@/assets/payments/visa.svg";
+import mastercardLogo from "@/assets/payments/mastercard.svg";
+import swedbankLogo from "@/assets/payments/swedbank.svg";
+import sebLogo from "@/assets/payments/seb.svg";
+import citadeleLogo from "@/assets/payments/citadele.png";
+import luminorLogo from "@/assets/payments/luminor.svg";
+
+const paymentLogos = [
+  { src: visaLogo, alt: "Visa" },
+  { src: mastercardLogo, alt: "Mastercard" },
+  { src: swedbankLogo, alt: "Swedbank" },
+  { src: sebLogo, alt: "SEB" },
+  { src: citadeleLogo, alt: "Citadele" },
+  { src: luminorLogo, alt: "Luminor" },
+];
 
 export const Footer = () => {
   const { t } = useTranslation();
@@ -157,7 +172,18 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-gray-800">
-        <div className="container mx-auto px-4 py-5 flex flex-col items-center gap-1 text-center text-xs text-gray-500 font-body">
+        <div className="container mx-auto px-4 py-6 flex flex-col items-center gap-4 text-center text-xs text-gray-500 font-body">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {paymentLogos.map((p) => (
+              <div
+                key={p.alt}
+                className="bg-white rounded-md px-3 h-8 flex items-center justify-center shadow-sm"
+                aria-label={p.alt}
+              >
+                <img src={p.src} alt={p.alt} className="h-4 sm:h-5 w-auto object-contain" loading="lazy" />
+              </div>
+            ))}
+          </div>
           <p>{t("footer.copyright")}</p>
         </div>
       </div>
