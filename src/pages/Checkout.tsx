@@ -24,6 +24,7 @@ import { useTranslation } from "react-i18next";
 import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
 import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
 import { Seo } from "@/components/Seo";
+import { computeLineDiscount } from "@/lib/volumeDiscount";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
@@ -324,13 +325,15 @@ const Checkout = () => {
       );
 
       const orderItems = items.map((item) => {
+        const ld = computeLineDiscount(item);
+        const effectiveUnit = ld.discountedUnitPrice;
         const dbBase = basePriceMap.get(item.productId);
         // Prefer DB base price (authoritative). Fall back to cart hints.
         let baseUnit = typeof dbBase === "number" && !isNaN(dbBase) ? dbBase : Number(item.basePrice ?? item.price);
         // Never let baseUnit exceed the actual unit price (would mean negative print).
-        if (baseUnit > item.price) baseUnit = item.price;
+        if (baseUnit > effectiveUnit) baseUnit = effectiveUnit;
         baseUnit = Math.max(0, Math.round(baseUnit * 100) / 100);
-        const printUnit = Math.max(0, Math.round((item.price - baseUnit) * 100) / 100);
+        const printUnit = Math.max(0, Math.round((effectiveUnit - baseUnit) * 100) / 100);
         return ({
         order_id: order.id,
         product_id: item.productId,
@@ -338,7 +341,7 @@ const Checkout = () => {
         size: item.size,
         color: item.color,
         quantity: item.quantity,
-        unit_price: item.price,
+        unit_price: effectiveUnit,
         base_unit_price: baseUnit,
         print_unit_price: printUnit,
         zakeke_design_id: item.designId || null,
@@ -355,10 +358,16 @@ const Checkout = () => {
       const { error: itemsError } = await checkoutClient.from("order_items").insert(orderItems);
       if (itemsError) throw itemsError;
 
-      const stripeItems = items.map((item) => ({
-        productId: item.productId, name: item.name, price: item.price, quantity: item.quantity,
-        size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
-      }));
+      const stripeItems = items.map((item) => {
+        const ld = computeLineDiscount(item);
+        return {
+          productId: item.productId,
+          name: ld.percent > 0 ? `${item.name} (−${ld.percent}%)` : item.name,
+          price: ld.discountedUnitPrice,
+          quantity: item.quantity,
+          size: item.size, color: item.color, image: item.image, shippingMethod, shippingCost,
+        };
+      });
 
       const promoPayload = promo
         ? {
