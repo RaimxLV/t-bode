@@ -14,8 +14,8 @@ export const PricingExplainer = ({ className = "", compact = false }: PricingExp
 
       <ul className="space-y-3 font-body text-[13px] sm:text-sm">
         <li className="flex gap-3 items-start">
-          <span className="text-xl leading-none">📦</span>
-          <div>
+          <span className="text-xl leading-none w-7 shrink-0 text-center">📦</span>
+          <div className="flex-1 min-w-0">
             <span className="font-bold text-foreground">Apģērba bāzes cena:</span>{" "}
             <span className="text-muted-foreground">
               Izstrādājuma cena atkarīga no izvēlētā modeļa.
@@ -23,8 +23,8 @@ export const PricingExplainer = ({ className = "", compact = false }: PricingExp
           </div>
         </li>
         <li className="flex gap-3 items-start">
-          <span className="text-xl leading-none">🖌️</span>
-          <div>
+          <span className="text-xl leading-none w-7 shrink-0 text-center">🖌️</span>
+          <div className="flex-1 min-w-0">
             <span className="font-bold text-foreground">Personalizācija (Druka):</span>{" "}
             <span className="text-muted-foreground">
               Drukas cena tiek rēķināta tikai par reāli izmantoto laukumu (cm²) un pievienotajiem elementiem.
@@ -32,14 +32,14 @@ export const PricingExplainer = ({ className = "", compact = false }: PricingExp
           </div>
         </li>
         <li className="flex gap-3 items-start">
-          <span className="text-xl leading-none">📈</span>
-          <div className="w-full">
+          <span className="text-xl leading-none w-7 shrink-0 text-center">📈</span>
+          <div className="flex-1 min-w-0">
             <span className="font-bold text-foreground">Apjoma atlaide:</span>{" "}
             <span className="text-muted-foreground">
               Tavs ietaupījums aug automātiski līdz ar preču skaitu grozā:
             </span>
             {!compact && (
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
                 <Tier qty="5+ gab." pct="-10%" emoji="💥" />
                 <Tier qty="10+ gab." pct="-15%" emoji="🚀" />
                 <Tier qty="20+ gab." pct="-30%" emoji="👑" highlight />
