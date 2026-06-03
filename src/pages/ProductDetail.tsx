@@ -514,27 +514,27 @@ const ProductDetail = () => {
 
       {/* Workflow choice — Bulk vs Individual */}
       <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background via-background to-cta-red/5">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl">
-              {t("bulk.chooseWorkflowTitle", "Izvēlieties dizaina plūsmu")}
+            <DialogTitle className="font-display text-2xl sm:text-3xl tracking-wide">
+              ✨ {t("bulk.chooseWorkflowTitle", "Izvēlies dizaina plūsmu")}
             </DialogTitle>
-            <DialogDescription className="font-body">
-              {t(
-                "bulk.chooseWorkflowDescription",
-                "Izvēlies, kā vēlies veidot savu pasūtījumu."
-              )}
+            <DialogDescription className="font-body text-sm">
+              Kā Tu vēlies veidot savu pasūtījumu? Izvēlies sev piemērotāko variantu.
             </DialogDescription>
           </DialogHeader>
           <div className="grid sm:grid-cols-2 gap-4">
             {/* Card A — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="group relative text-left p-5 rounded-xl border-2 border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+              className="group relative text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
+              <div className="absolute top-0 right-0 bg-cta-red text-white text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                👑 Līdz -30%
+              </div>
               <div className="flex items-center gap-2 mb-3">
-                <Users className="w-5 h-5 text-primary" />
-                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-primary">
+                <Users className="w-5 h-5 text-cta-red" />
+                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
                   {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                 </span>
               </div>
@@ -543,29 +543,28 @@ const ProductDetail = () => {
                   <IdenticalShirtSvg key={i} delay={i * 80} />
                 ))}
               </div>
-              <h3 className="font-display text-xl mb-2 leading-tight">
-                {t("bulk.optionATitle", "Standarta pasūtījums")}
+              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+                STANDARTA PASŪTĪJUMS
               </h3>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                {t(
-                  "bulk.optionADescription",
-                  "Viens dizains visām vienībām. Ideāli piemērots uzņēmumiem, sporta komandām un pasākumiem. Izvēloties šo plūsmu, Tu vari norādīt nepieciešamos izmērus (S, M, L, XL utt.) un saņemt apjoma atlaidi līdz pat 30%."
-                )}
+              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+                [ Viens dizains – visai komandai ]
               </p>
-              <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold font-body text-primary">
-                <Percent className="w-3 h-3" />
-                {t("bulk.optionADiscount", "Līdz −30% apjoma atlaide")}
-              </div>
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+                Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
+              </p>
             </button>
 
             {/* Card B — Individual designs */}
             <button
               onClick={() => openDesigner("individual")}
-              className="group relative text-left p-5 rounded-xl border-2 border-border bg-card hover:border-primary hover:bg-primary/5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden"
+              className="group relative text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
+              <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
+                ⭐ Unikāli
+              </div>
               <div className="flex items-center gap-2 mb-3">
-                <UserIcon className="w-5 h-5 text-primary" />
-                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-primary">
+                <UserIcon className="w-5 h-5 text-cta-red" />
+                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
@@ -574,19 +573,15 @@ const ProductDetail = () => {
                 <UniqueShirtSvg motif="★" highlight />
                 <UniqueShirtSvg motif="ABC" />
               </div>
-              <h3 className="font-display text-xl mb-2 leading-tight">
-                {t("bulk.optionBTitle", "Individuāls dizains")}
+              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+                INDIVIDUĀLS DIZAINS
               </h3>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                {t(
-                  "bulk.optionBDescription",
-                  "Katrs krekls ir unikāls mākslas darbs. Ideāli piemērots dāvanām vai ja katram komandas biedram nepieciešama personalizēta detaļa (piemēram, vārds vai numurs). Atlaide tiek rēķināta automātiski, bāzējoties uz kopējo preču skaitu."
-                )}
+              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+                [ Katrs apģērbs ar savu odziņu ]
               </p>
-              <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-bold font-body text-primary">
-                <Sparkles className="w-3 h-3" />
-                {t("bulk.optionBDiscount", "Automātiska apjoma atlaide grozā")}
-              </div>
+              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+                Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
+              </p>
             </button>
           </div>
 
