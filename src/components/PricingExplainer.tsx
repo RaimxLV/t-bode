@@ -18,7 +18,7 @@ export const PricingExplainer = ({ className = "", compact = false }: PricingExp
           <div>
             <span className="font-bold text-foreground">Apģērba bāzes cena:</span>{" "}
             <span className="text-muted-foreground">
-              Premium kvalitātes izstrādājuma cena (atkarībā no izvēlētā modeļa un krāsas).
+              Izstrādājuma cena atkarīga no izvēlētā modeļa.
             </span>
           </div>
         </li>
