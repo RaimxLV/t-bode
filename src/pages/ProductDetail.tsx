@@ -538,7 +538,7 @@ const ProductDetail = () => {
                   {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                 </span>
               </div>
-              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-28 mb-4 flex items-end justify-start gap-2 transition-transform duration-300 group-hover:scale-105">
                 {[0, 1, 2].map((i) => (
                   <IdenticalShirtSvg key={i} delay={i * 80} />
                 ))}
@@ -568,7 +568,7 @@ const ProductDetail = () => {
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
-              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-28 mb-4 flex items-end justify-start gap-2 transition-transform duration-300 group-hover:scale-105">
                 <UniqueShirtSvg motif="#1" />
                 <UniqueShirtSvg motif="★" highlight />
                 <UniqueShirtSvg motif="ABC" />
