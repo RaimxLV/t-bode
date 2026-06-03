@@ -16,7 +16,7 @@ interface SizeGroups {
 }
 
 function classifySizes(sizes: string[]): SizeGroups {
-  const adultOrder = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "2XL", "3XL", "4XL", "5XL"];
+  const adultOrder = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
   const adults: string[] = [];
   const kids: string[] = [];
   const baby: string[] = [];
