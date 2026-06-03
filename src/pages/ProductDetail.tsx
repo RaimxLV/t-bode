@@ -51,6 +51,11 @@ const ProductDetail = () => {
   const colors = product?.color_variants ?? [];
   const sizes = product?.sizes ?? [];
 
+  // The "Standard bulk vs Individual" workflow choice only makes sense when
+  // a product has multiple sizes (apparel). Mugs, bags, accessories etc. go
+  // straight into the individual designer.
+  const showWorkflowChoice = sizes.length > 1;
+
   // Master baseline size for bulk workflow — prefer M, otherwise the middle size.
   const masterSize = useMemo(() => {
     if (sizes.length === 0) return "";
@@ -295,7 +300,12 @@ const ProductDetail = () => {
                 </div>
                 {product.customizable && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (selectedSize && selectedColor) setWorkflowChoiceOpen(true); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!selectedSize || !selectedColor) return;
+                      if (showWorkflowChoice) setWorkflowChoiceOpen(true);
+                      else openDesigner("individual");
+                    }}
                     disabled={!selectedSize || !selectedColor}
                     className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary/60 backdrop-blur-sm text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed z-10 shadow-lg"
                     title={t("productDetail.customizeDesign", "Personalizēt dizainu")}
@@ -429,7 +439,10 @@ const ProductDetail = () => {
                 <button
                   type="button"
                   disabled={!selectedSize || !selectedColor}
-                  onClick={() => setWorkflowChoiceOpen(true)}
+                  onClick={() => {
+                    if (showWorkflowChoice) setWorkflowChoiceOpen(true);
+                    else openDesigner("individual");
+                  }}
                   onMouseEnter={prefetchZakeke}
                   onTouchStart={prefetchZakeke}
                   className="group relative mb-4 w-full overflow-hidden rounded-lg px-8 py-5 text-lg font-semibold font-body text-primary-foreground transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 animate-personalize-pulse"
@@ -514,7 +527,7 @@ const ProductDetail = () => {
 
       {/* Workflow choice — Bulk vs Individual */}
       <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background via-background to-cta-red/5">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background via-background to-cta-red/5">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl sm:text-3xl tracking-wide">
               ✨ {t("bulk.chooseWorkflowTitle", "Izvēlies dizaina plūsmu")}
