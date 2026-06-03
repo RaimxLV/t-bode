@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { computeLineDiscount, type LineDiscount } from "@/lib/volumeDiscount";
 
 const CART_STORAGE_KEY = "t-bode-cart";
 const CART_TTL_MS = 1000 * 60 * 60 * 24;
@@ -82,6 +83,12 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  /** Subtotal before any volume discounts. */
+  subtotalPrice: number;
+  /** Total savings from volume discounts. */
+  totalSavings: number;
+  /** Per-line discount details. */
+  getLineDiscount: (item: CartItem) => LineDiscount;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -160,10 +167,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = useCallback(() => setCartState(EMPTY_CART), []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const lineDiscounts = items.map((i) => computeLineDiscount(i));
+  const subtotalPrice = lineDiscounts.reduce((s, d) => s + d.originalLineTotal, 0);
+  const totalPrice = lineDiscounts.reduce((s, d) => s + d.discountedLineTotal, 0);
+  const totalSavings = Math.round((subtotalPrice - totalPrice) * 100) / 100;
+  const getLineDiscount = (item: CartItem) => computeLineDiscount(item);
 
   return (
-    <CartContext.Provider value={{ items, isOpen, setIsOpen, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ items, isOpen, setIsOpen, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, subtotalPrice, totalSavings, getLineDiscount }}>
       {children}
     </CartContext.Provider>
   );
