@@ -27,7 +27,7 @@ export const PricingExplainer = ({ className = "", compact = false }: PricingExp
           <div>
             <span className="font-bold text-foreground">Personalizācija (Druka):</span>{" "}
             <span className="text-muted-foreground">
-              Drukas cena tiek rēķināta tikai par reāli izmantoto laukumu (cm²) un pievienotajiem elementiem, nevis mistiskām standarta likmēm.
+              Drukas cena tiek rēķināta tikai par reāli izmantoto laukumu (cm²) un pievienotajiem elementiem.
             </span>
           </div>
         </li>
