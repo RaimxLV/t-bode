@@ -75,10 +75,12 @@ Deno.serve(async (req) => {
       .select("order_number")
       .eq("id", order_id)
       .maybeSingle();
-    const orderNumber = orderRow?.order_number;
-    const orderRef = orderNumber ? `T-${orderNumber}` : order_id.slice(0, 8).toUpperCase();
-    // merchantReference MUST stay as the order UUID — the webhook looks orders up by id.
-    const merchantReference = order_id;
+    const orderNumber = typeof orderRow?.order_number === "number" ? orderRow.order_number : null;
+    const orderRef = orderNumber ? `T-${String(orderNumber).padStart(5, "0")}` : order_id.slice(0, 8).toUpperCase();
+    // Use a human-readable merchant reference for customer-facing banking
+    // surfaces. The webhook resolves both this order number format and the raw
+    // UUID fallback so existing orders keep working.
+    const merchantReference = orderNumber ? orderRef : order_id;
     const methodCode = payment_method === "cardPayments" ? "cardPayments" : "paymentInitiation";
     const methodDisplay = methodCode === "cardPayments" ? "Pay by card" : "Pay with your bank";
 
