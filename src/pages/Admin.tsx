@@ -34,7 +34,7 @@ const EmailPreview = lazy(() => import("@/components/admin/EmailPreview").then(m
 const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ default: m.EmailLog })));
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
-const BulkStudio = lazy(() => import("@/components/admin/BulkStudio").then(m => ({ default: m.BulkStudio })));
+// BulkStudio removed from admin per request
 
 const TabFallback = () => (
   <div className="flex items-center justify-center py-16">
@@ -353,7 +353,6 @@ const Admin = () => {
           <TabsList className="hidden sm:flex flex-wrap h-auto mb-6 w-full max-w-full justify-start gap-1 p-1">
             <TabsTrigger value="design" className="gap-1.5 text-sm"><Brush className="w-4 h-4" /> Dizains<Badge variant="secondary" className="ml-1 text-xs">{designProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="collection" className="gap-1.5 text-sm"><ShoppingBag className="w-4 h-4" /> Kolekcija<Badge variant="secondary" className="ml-1 text-xs">{collectionProducts.length}</Badge></TabsTrigger>
-            <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEdit className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="orders" className="gap-1.5 text-sm"><Package className="w-4 h-4" /> Pasūtījumi{activeOrdersCount > 0 && <Badge variant="secondary" className="ml-1 text-xs">{activeOrdersCount}</Badge>}</TabsTrigger>
             <TabsTrigger value="faq" className="gap-1.5 text-sm"><HelpCircle className="w-4 h-4" /> FAQ<Badge variant="secondary" className="ml-1 text-xs">{faqs.length}</Badge></TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5 text-sm"><BarChart3 className="w-4 h-4" /> Statistika</TabsTrigger>
@@ -365,7 +364,6 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
-            <TabsTrigger value="bulk" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Bulk Studio</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
