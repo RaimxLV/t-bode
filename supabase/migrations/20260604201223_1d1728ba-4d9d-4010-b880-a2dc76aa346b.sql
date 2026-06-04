@@ -1,0 +1,1 @@
+ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS brief JSONB; ALTER TYPE public.campaign_status ADD VALUE IF NOT EXISTS 'ready_for_review'; ALTER TYPE public.campaign_status ADD VALUE IF NOT EXISTS 'failed';
