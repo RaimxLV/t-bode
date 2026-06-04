@@ -151,10 +151,12 @@ const slugify = (s: string): string =>
     .slice(0, 40) || "fails";
 
 const normalizeSizeLabel = (size: string): string => {
-  const cleaned = size
-    .trim()
-    .replace(/^\d+\s*[x×]\s*/i, "")
-    .replace(/^2xl$/i, "XXL");
+  const raw = size.trim();
+  const compact = raw.replace(/[\s-_]+/g, "");
+  const normalizedBase = /^(xs|s|m|l|xl|xxl|xxxl|xxxxl|xxxxxl|\d+xl|\d+ml)$/i.test(compact)
+    ? compact
+    : raw.replace(/^\d+\s*[-_ ]*[x×]\s*/i, "").replace(/[\s-_]+/g, "");
+  const cleaned = normalizedBase.replace(/^([2345])xl$/i, (_, digits: string) => "X".repeat(Number(digits)) + "L");
   return slugify(cleaned).toUpperCase();
 };
 
@@ -404,9 +406,29 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
   }
 };
 
-const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
+const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string) => {
   try {
-    const res = await fetch(f.url);
+    let res: Response;
+    if (orderItemId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (token && projectUrl) {
+        const url = `${projectUrl}/functions/v1/zakeke-print-files?order_item_id=${encodeURIComponent(orderItemId)}&download_url=${encodeURIComponent(f.url)}&download_name=${encodeURIComponent(friendlyName)}`;
+        res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          res = await fetch(f.url);
+        }
+      } else {
+        res = await fetch(f.url);
+      }
+    } else {
+      res = await fetch(f.url);
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     // If we couldn't determine the extension up front (ended in .bin), use
@@ -623,7 +645,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 onClick={async () => {
                   setDownloadingUrl(f.url);
                   try {
-                    await triggerDownload(f, friendlyName);
+                    await triggerDownload(f, friendlyName, item.id);
                     // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
                     // "ready for production". Mockup previews don't.
                     if (f.kind === "print") {

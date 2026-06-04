@@ -5,21 +5,42 @@ import { Mail, Truck } from "lucide-react";
 import {
   renderOrderConfirmationHtml,
   renderTrackingHtml,
+  renderPickupReadyHtml,
+  renderBankInstructionsHtml,
+  renderPaymentReminderHtml,
+  renderOrderCancelledHtml,
+  renderContactReplyHtml,
   SAMPLE_ORDER,
   SAMPLE_ITEMS,
 } from "@/lib/email-previews/templates";
 
-type EmailKind = "confirmation" | "tracking";
+type EmailKind = "confirmation" | "tracking" | "pickupReady" | "bankInstructions" | "paymentReminder" | "cancelled" | "contactReply";
 type Lang = "lv" | "en";
 
 export const EmailPreview = () => {
   const [kind, setKind] = useState<EmailKind>("confirmation");
   const [lang, setLang] = useState<Lang>("lv");
 
-  const html =
-    kind === "confirmation"
-      ? renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang)
-      : renderTrackingHtml(SAMPLE_ORDER);
+  const html = (() => {
+    switch (kind) {
+      case "confirmation":
+        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang);
+      case "tracking":
+        return renderTrackingHtml(SAMPLE_ORDER);
+      case "pickupReady":
+        return renderPickupReadyHtml(SAMPLE_ORDER);
+      case "bankInstructions":
+        return renderBankInstructionsHtml(SAMPLE_ORDER);
+      case "paymentReminder":
+        return renderPaymentReminderHtml(SAMPLE_ORDER);
+      case "cancelled":
+        return renderOrderCancelledHtml(SAMPLE_ORDER);
+      case "contactReply":
+        return renderContactReplyHtml(SAMPLE_ORDER.shipping_name);
+      default:
+        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang);
+    }
+  })();
 
   return (
     <div className="space-y-4">
@@ -49,9 +70,24 @@ export const EmailPreview = () => {
             >
               <Truck className="w-4 h-4" /> Pasūtījums nosūtīts
             </Button>
+            <Button size="sm" variant={kind === "pickupReady" ? "default" : "outline"} onClick={() => setKind("pickupReady")} className="gap-1.5">
+              <Mail className="w-4 h-4" /> Gatavs saņemšanai
+            </Button>
+            <Button size="sm" variant={kind === "bankInstructions" ? "default" : "outline"} onClick={() => setKind("bankInstructions")} className="gap-1.5">
+              <Mail className="w-4 h-4" /> Bankas rekvizīti
+            </Button>
+            <Button size="sm" variant={kind === "paymentReminder" ? "default" : "outline"} onClick={() => setKind("paymentReminder")} className="gap-1.5">
+              <Mail className="w-4 h-4" /> Apmaksas atgādinājums
+            </Button>
+            <Button size="sm" variant={kind === "cancelled" ? "default" : "outline"} onClick={() => setKind("cancelled")} className="gap-1.5">
+              <Mail className="w-4 h-4" /> Pasūtījums atcelts
+            </Button>
+            <Button size="sm" variant={kind === "contactReply" ? "default" : "outline"} onClick={() => setKind("contactReply")} className="gap-1.5">
+              <Mail className="w-4 h-4" /> Atbilde uz kontaktu
+            </Button>
           </div>
 
-          {kind === "confirmation" && (
+          {(kind === "confirmation") && (
             <div className="flex gap-2">
               <Button
                 size="sm"
