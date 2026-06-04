@@ -179,10 +179,10 @@ export function renderTrackingHtml(order: SampleOrder, settings?: EmailSettings 
 </html>`;
 }
 
-export function renderPickupReadyHtml(order: SampleOrder): string {
+export function renderPickupReadyHtml(order: SampleOrder, settings?: EmailSettings | null): string {
+  const c = cfg(settings);
   const orderNum = String(order.order_number).padStart(5, "0");
   const name = order.shipping_name || "";
-  const office = "T-Bode birojs, Braslas iela 29, Ieeja D, Rīga, LV-1084";
 
   return `<!DOCTYPE html>
 <html>
@@ -195,22 +195,30 @@ export function renderPickupReadyHtml(order: SampleOrder): string {
       <h2 style="color:#111;margin:0 0 16px;line-height:1.3;">Tavs pasūtījums ir gatavs saņemšanai! 🎉</h2>
       <p style="color:#444;line-height:1.6;">Sveiks${name ? `, ${name}` : ""}!</p>
       <p style="color:#444;line-height:1.6;">
-        Tavs pasūtījums <strong>#${orderNum}</strong> ir izgatavots un gaida Tevi mūsu birojā.
+        Pasūtījums <strong>#${orderNum}</strong>. ${nl2br(c.pickup_intro_lv)}
       </p>
       <div style="background:#f9f9f9;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
         <p style="margin:0;color:#666;font-size:13px;">Saņemšanas vieta:</p>
-        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${office}</p>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${nl2br(c.office_address_lv)}</p>
       </div>
       <div style="background:#fff5f5;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
         <p style="margin:0;color:#666;font-size:13px;">Biroja darba laiks:</p>
-        <p style="margin:6px 0 0;color:#111;line-height:1.7;">
-          Pirmdiena–ceturtdiena: <strong>9:00–17:30</strong><br>
-          Piektdiena: <strong>9:00–16:00</strong><br>
-          Sestdiena, svētdiena: <strong>slēgts</strong>
-        </p>
+        <p style="margin:6px 0 0;color:#111;line-height:1.7;">${nl2br(c.office_hours_lv)}</p>
+      </div>
+      <hr style="border:none;border-top:1px solid #eee;margin:32px 0;">
+      <h3 style="color:#111;margin:0 0 12px;font-size:16px;">Your order is ready for pickup! 🎉</h3>
+      <p style="color:#444;line-height:1.6;">Hi${name ? `, ${name}` : ""}!</p>
+      <p style="color:#444;line-height:1.6;">Order <strong>#${orderNum}</strong>. ${nl2br(c.pickup_intro_en)}</p>
+      <div style="background:#f9f9f9;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
+        <p style="margin:0;color:#666;font-size:13px;">Pickup location:</p>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${nl2br(c.office_address_en)}</p>
+      </div>
+      <div style="background:#fff5f5;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
+        <p style="margin:0;color:#666;font-size:13px;">Office hours:</p>
+        <p style="margin:6px 0 0;color:#111;line-height:1.7;">${nl2br(c.office_hours_en)}</p>
       </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;margin-top:24px;">
-        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
+        Jautājumi / Questions? <a href="mailto:${c.support_email}" style="color:#DC2626;">${c.support_email}</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
@@ -221,7 +229,7 @@ export function renderPickupReadyHtml(order: SampleOrder): string {
 </html>`;
 }
 
-export function renderBankInstructionsHtml(order: SampleOrder): string {
+export function renderBankInstructionsHtml(order: SampleOrder, _settings?: EmailSettings | null): string {
   const ref = `#${String(order.order_number).padStart(5, "0")}`;
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
@@ -249,7 +257,7 @@ export function renderBankInstructionsHtml(order: SampleOrder): string {
 </body></html>`;
 }
 
-export function renderPaymentReminderHtml(order: SampleOrder): string {
+export function renderPaymentReminderHtml(order: SampleOrder, _settings?: EmailSettings | null): string {
   const ref = `#${String(order.order_number).padStart(5, "0")}`;
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
@@ -276,7 +284,8 @@ export function renderPaymentReminderHtml(order: SampleOrder): string {
 </body></html>`;
 }
 
-export function renderOrderCancelledHtml(order: SampleOrder): string {
+export function renderOrderCancelledHtml(order: SampleOrder, settings?: EmailSettings | null): string {
+  const c = cfg(settings);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
@@ -288,13 +297,14 @@ export function renderOrderCancelledHtml(order: SampleOrder): string {
     <p style="margin:0 0 12px;line-height:1.5;">Diemžēl Tavs pasūtījums ir atcelts.</p>
     <p style="margin:0 0 16px;"><strong>Pasūtījuma Nr.</strong> #${String(order.order_number).padStart(5, "0")}</p>
     <p style="margin:0 0 16px;line-height:1.5;color:#444;">Ja maksājums jau bija veikts, atmaksa tiks veikta uz to pašu kontu 5–10 darba dienu laikā.</p>
-    <p style="margin:24px 0 8px;color:#555;">Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>.</p>
+    <p style="margin:24px 0 8px;color:#555;">Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz <a href="mailto:${c.support_email}" style="color:#DC2626;">${c.support_email}</a>.</p>
     <p style="margin:0;color:#555;">— T-Bode komanda</p>
   </div>
 </body></html>`;
 }
 
-export function renderContactReplyHtml(name = "Jānis"): string {
+export function renderContactReplyHtml(name = "Jānis", settings?: EmailSettings | null): string {
+  const c = cfg(settings);
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
@@ -308,7 +318,7 @@ export function renderContactReplyHtml(name = "Jānis"): string {
       <p style="margin:0 0 6px;font-weight:bold;text-transform:uppercase;color:#555;font-size:12px;">Tava ziņa:</p>
       <p style="margin:0;line-height:1.5;">Sveiki! Gribēju pajautāt par apdrukas termiņiem.</p>
     </div>
-    <p style="margin:24px 0 8px;color:#555;">Steidzami jautājumi? Raksti mums uz info@t-bode.lv.</p>
+    <p style="margin:24px 0 8px;color:#555;">Steidzami jautājumi? Raksti mums uz ${c.support_email}.</p>
     <p style="margin:0;color:#555;">— T-Bode komanda</p>
   </div>
 </body></html>`;
