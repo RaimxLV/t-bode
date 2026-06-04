@@ -2,6 +2,39 @@ const LOGO_URL = "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/pub
 
 type Lang = "lv" | "en";
 
+export interface EmailSettings {
+  office_address_lv?: string | null;
+  office_address_en?: string | null;
+  office_hours_lv?: string | null;
+  office_hours_en?: string | null;
+  support_email?: string | null;
+  pickup_intro_lv?: string | null;
+  pickup_intro_en?: string | null;
+}
+
+const DEFAULTS = {
+  office_address_lv: "Braslas iela 29, Ieeja D, Rīga, LV-1084",
+  office_address_en: "Braslas iela 29, Entrance D, Riga, LV-1084",
+  office_hours_lv: "Pirmdiena–ceturtdiena: 9:00–17:30\nPiektdiena: 9:00–16:00\nSestdiena, svētdiena: slēgts",
+  office_hours_en: "Monday–Thursday: 9:00–17:30\nFriday: 9:00–16:00\nSaturday, Sunday: closed",
+  support_email: "info@t-bode.lv",
+  pickup_intro_lv: "Tavs pasūtījums ir izgatavots un gaida Tevi mūsu birojā. Iepriekšēja saskaņošana nav nepieciešama — vienkārši ieej biroja darba laikā.",
+  pickup_intro_en: "Your order is ready and waiting at our office. No appointment needed — just drop by during office hours.",
+};
+
+const cfg = (s: EmailSettings | null | undefined) => ({
+  office_address_lv: s?.office_address_lv || DEFAULTS.office_address_lv,
+  office_address_en: s?.office_address_en || DEFAULTS.office_address_en,
+  office_hours_lv: s?.office_hours_lv || DEFAULTS.office_hours_lv,
+  office_hours_en: s?.office_hours_en || DEFAULTS.office_hours_en,
+  support_email: s?.support_email || DEFAULTS.support_email,
+  pickup_intro_lv: s?.pickup_intro_lv || DEFAULTS.pickup_intro_lv,
+  pickup_intro_en: s?.pickup_intro_en || DEFAULTS.pickup_intro_en,
+});
+
+const escapeHtml = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const nl2br = (s: string) => escapeHtml(s).replace(/\n/g, "<br>");
+
 const t = (lang: Lang) => ({
   subject: lang === "lv" ? "Pasūtījums apstiprināts" : "Order confirmed",
   hi: lang === "lv" ? "Sveiki" : "Hi",
@@ -56,7 +89,7 @@ export const SAMPLE_ITEMS: SampleItem[] = [
   { product_name: "Krūze 'T-Bode'", quantity: 2, unit_price: 10.5 },
 ];
 
-export function renderOrderConfirmationHtml(order: SampleOrder, items: SampleItem[], lang: Lang): string {
+export function renderOrderConfirmationHtml(order: SampleOrder, items: SampleItem[], lang: Lang, _settings?: EmailSettings | null): string {
   const tr = t(lang);
   const itemsRows = items
     .map(
@@ -108,7 +141,8 @@ export function renderOrderConfirmationHtml(order: SampleOrder, items: SampleIte
 </body></html>`;
 }
 
-export function renderTrackingHtml(order: SampleOrder): string {
+export function renderTrackingHtml(order: SampleOrder, settings?: EmailSettings | null): string {
+  const c = cfg(settings);
   const trackingUrl = `https://www.omniva.lv/private/track-and-trace?barcode=${order.omniva_barcode}`;
   const orderNum = String(order.order_number).padStart(5, "0");
   const name = order.shipping_name || "";
@@ -134,7 +168,7 @@ export function renderTrackingHtml(order: SampleOrder): string {
         <a href="${trackingUrl}" style="background:#DC2626;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;display:inline-block;">Sekot sūtījumam</a>
       </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;">
-        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;">info@t-bode.lv</a>
+        Jautājumi? Raksti mums: <a href="mailto:${c.support_email}" style="color:#DC2626;">${c.support_email}</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
