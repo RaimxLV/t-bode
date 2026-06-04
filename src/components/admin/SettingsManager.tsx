@@ -185,6 +185,13 @@ export const SettingsManager = () => {
         payment_instructions_en: rest.payment_instructions_en ?? "",
         logo_url: rest.logo_url ?? null,
         stamp_url: rest.stamp_url ?? null,
+        office_address_lv: rest.office_address_lv ?? "",
+        office_address_en: rest.office_address_en ?? "",
+        office_hours_lv: rest.office_hours_lv ?? "",
+        office_hours_en: rest.office_hours_en ?? "",
+        support_email: rest.support_email ?? "",
+        pickup_intro_lv: rest.pickup_intro_lv ?? "",
+        pickup_intro_en: rest.pickup_intro_en ?? "",
       })
       .eq("id", id);
     setSaving(false);
