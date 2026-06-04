@@ -77,6 +77,62 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          author_id: string | null
+          campaign_id: string | null
+          content: string | null
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string | null
+          id: string
+          published_at: string | null
+          scheduled_for: string | null
+          slug: string
+          status: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          campaign_id?: string | null
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_for?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["content_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          campaign_id?: string | null
+          content?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          published_at?: string | null
+          scheduled_for?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["content_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_posts_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_generation_jobs: {
         Row: {
           completed: number
@@ -109,6 +165,100 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      campaign_designs: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          generation_error: string | null
+          id: string
+          image_url: string | null
+          is_primary: boolean
+          prompt: string
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          generation_error?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean
+          prompt: string
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          generation_error?: string | null
+          id?: string
+          image_url?: string | null
+          is_primary?: boolean
+          prompt?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_designs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ends_at: string | null
+          holiday_id: string | null
+          id: string
+          published_at: string | null
+          starts_at: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          title: string
+          type: Database["public"]["Enums"]["campaign_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          holiday_id?: string | null
+          id?: string
+          published_at?: string | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          title: string
+          type?: Database["public"]["Enums"]["campaign_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ends_at?: string | null
+          holiday_id?: string | null
+          id?: string
+          published_at?: string | null
+          starts_at?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["campaign_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_holiday_id_fkey"
+            columns: ["holiday_id"]
+            isOneToOne: false
+            referencedRelation: "holidays"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
@@ -432,6 +582,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      holidays: {
+        Row: {
+          created_at: string
+          day: number
+          id: string
+          is_active: boolean
+          lead_days: number
+          month: number
+          name_en: string | null
+          name_lv: string
+          prompt_theme: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day: number
+          id?: string
+          is_active?: boolean
+          lead_days?: number
+          month: number
+          name_en?: string | null
+          name_lv: string
+          prompt_theme: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day?: number
+          id?: string
+          is_active?: boolean
+          lead_days?: number
+          month?: number
+          name_en?: string | null
+          name_lv?: string
+          prompt_theme?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       invoice_sequences: {
         Row: {
@@ -871,6 +1060,8 @@ export type Database = {
           description: string | null
           description_en: string | null
           description_lv: string | null
+          expires_at: string | null
+          holiday_id: string | null
           id: string
           image_url: string | null
           in_stock: boolean
@@ -881,6 +1072,7 @@ export type Database = {
           price: number
           sizes: string[] | null
           slug: string
+          status: Database["public"]["Enums"]["product_status"]
           updated_at: string
           zakeke_model_code: string | null
         }
@@ -893,6 +1085,8 @@ export type Database = {
           description?: string | null
           description_en?: string | null
           description_lv?: string | null
+          expires_at?: string | null
+          holiday_id?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean
@@ -903,6 +1097,7 @@ export type Database = {
           price: number
           sizes?: string[] | null
           slug: string
+          status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
           zakeke_model_code?: string | null
         }
@@ -915,6 +1110,8 @@ export type Database = {
           description?: string | null
           description_en?: string | null
           description_lv?: string | null
+          expires_at?: string | null
+          holiday_id?: string | null
           id?: string
           image_url?: string | null
           in_stock?: boolean
@@ -925,10 +1122,19 @@ export type Database = {
           price?: number
           sizes?: string[] | null
           slug?: string
+          status?: Database["public"]["Enums"]["product_status"]
           updated_at?: string
           zakeke_model_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_holiday_id_fkey"
+            columns: ["holiday_id"]
+            isOneToOne: false
+            referencedRelation: "holidays"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1281,6 +1487,9 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "worker"
+      campaign_status: "draft" | "planned" | "active" | "completed" | "archived"
+      campaign_type: "holiday" | "collection" | "blog"
+      content_status: "draft" | "scheduled" | "published" | "archived"
       order_status:
         | "pending"
         | "confirmed"
@@ -1288,6 +1497,7 @@ export type Database = {
         | "shipped"
         | "delivered"
         | "cancelled"
+      product_status: "draft" | "published" | "archived"
       promo_discount_type: "percentage" | "fixed" | "free_shipping"
     }
     CompositeTypes: {
@@ -1417,6 +1627,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user", "worker"],
+      campaign_status: ["draft", "planned", "active", "completed", "archived"],
+      campaign_type: ["holiday", "collection", "blog"],
+      content_status: ["draft", "scheduled", "published", "archived"],
       order_status: [
         "pending",
         "confirmed",
@@ -1425,6 +1638,7 @@ export const Constants = {
         "delivered",
         "cancelled",
       ],
+      product_status: ["draft", "published", "archived"],
       promo_discount_type: ["percentage", "fixed", "free_shipping"],
     },
   },
