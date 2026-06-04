@@ -40,7 +40,10 @@ Deno.serve(async (req) => {
 
     const orderNum = String(order.order_number).padStart(5, "0");
     const name = order.shipping_name || "";
-    const office = (order.omniva_pickup_point || "BIROJS").replace(/^BIROJS:?\s*/i, "") || "T-Bode birojs";
+    // Pickup-ready email is ALWAYS about office pickup at Braslas iela 29.
+    // Never display an Omniva parcel-machine address here (e.g. "Akropole, Maskavas iela 257"),
+    // even if the order's omniva_pickup_point still holds that value.
+    const office = "T-Bode birojs, Braslas iela 29, Ieeja D, Rīga, LV-1084";
 
     const html = `<!DOCTYPE html>
 <html>

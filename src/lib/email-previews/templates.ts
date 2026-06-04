@@ -148,7 +148,7 @@ export function renderTrackingHtml(order: SampleOrder): string {
 export function renderPickupReadyHtml(order: SampleOrder): string {
   const orderNum = String(order.order_number).padStart(5, "0");
   const name = order.shipping_name || "";
-  const office = order.omniva_pickup_point || "T-Bode birojs, Braslas iela 29, Ieeja D, Rīga, LV-1084";
+  const office = "T-Bode birojs, Braslas iela 29, Ieeja D, Rīga, LV-1084";
 
   return `<!DOCTYPE html>
 <html>
