@@ -380,37 +380,6 @@ const Admin = () => {
             {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
           </TabsContent>
 
-          <TabsContent value="drafts">
-            <div className="mb-3 sm:mb-4 p-3 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xs sm:text-sm text-muted-foreground font-body">
-                Melnraksti ir redzami tikai šeit, admin panelī. Klienti tos neredz veikalā. Kad kartiņa ir gatava, nospied <strong>Publicēt</strong>, lai produkts parādītos veikalā.
-              </p>
-            </div>
-            {loadingProducts ? (
-              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
-            ) : draftProducts.length === 0 ? (
-              <div className="text-center py-12 sm:py-20">
-                <p className="text-muted-foreground font-body">Nav neviena melnraksta.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                {draftProducts.map((p) => (
-                  <div key={p.id} className="relative rounded-xl border-2 border-dashed border-amber-400/60 bg-amber-50/30 p-2">
-                    <div className="absolute top-3 left-3 z-10 px-2 py-0.5 rounded bg-amber-500 text-white text-[10px] font-body font-bold uppercase">Melnraksts</div>
-                    <ProductCard product={p} onEdit={openEditDialog} onDelete={handleDelete} />
-                    <Button
-                      onClick={() => handlePublishDraft(p.id)}
-                      className="w-full mt-2 bg-green-600 hover:bg-green-700 text-white"
-                      size="sm"
-                    >
-                      <Eye className="w-4 h-4 mr-1.5" /> Publicēt veikalā
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-
           <TabsContent value="orders">
             <Suspense fallback={<TabFallback />}>
               <OrdersList orders={orders} orderItems={orderItems} loading={loadingOrders} onRefresh={loadOrders} />
@@ -521,11 +490,6 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="bulk">
-            <Suspense fallback={<TabFallback />}>
-              <BulkStudio />
-            </Suspense>
-          </TabsContent>
         </Tabs>
       </main>
 
@@ -556,7 +520,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "drafts", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "bulk"].includes(activeTab)
+                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -574,7 +538,6 @@ const Admin = () => {
                 {[
                   { value: "customers", icon: Users, label: "Klienti" },
                   { value: "categories", icon: FolderTree, label: "Kategorijas" },
-                  { value: "drafts", icon: FileEdit, label: "Melnraksti" },
                   { value: "faq", icon: HelpCircle, label: "FAQ" },
                   { value: "access", icon: UserCheck, label: "Piekļuve" },
                   { value: "settings", icon: SettingsIcon, label: "Iestatījumi" },
@@ -582,7 +545,6 @@ const Admin = () => {
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
-                  { value: "bulk", icon: Wand2, label: "Bulk Studio" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
