@@ -153,8 +153,10 @@ const slugify = (s: string): string =>
 const normalizeSizeLabel = (size: string): string => {
   const cleaned = size
     .trim()
-    .replace(/^\d+\s*[x×]\s*/i, "")
-    .replace(/^2xl$/i, "XXL");
+    .replace(/^\d+\s*[-_ ]*[x×]\s*/i, "")
+    .replace(/^2xl$/i, "XXL")
+    .replace(/^x([slm]|xl|xs|xxl|xxxl)$/i, "$1")
+    .replace(/^([2345])xl$/i, (_, digits: string) => "X".repeat(Number(digits)) + "L");
   return slugify(cleaned).toUpperCase();
 };
 
@@ -404,9 +406,39 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
   }
 };
 
-const triggerDownload = async (f: NormalizedFile, friendlyName: string) => {
+const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string) => {
   try {
-    const res = await fetch(f.url);
+    let res: Response;
+    if (orderItemId) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      const projectUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (token && projectUrl) {
+        const url = `${projectUrl}/functions/v1/zakeke-print-files?order_item_id=${encodeURIComponent(orderItemId)}`;
+        const payload = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (payload.ok) {
+          const json = await payload.json().catch(() => null);
+          const match = Array.isArray(json?.files)
+            ? json.files.find((candidate: any) => String(candidate?.url ?? "") === f.url)
+            : null;
+          if (match?.url) {
+            res = await fetch(String(match.url));
+          } else {
+            res = await fetch(f.url);
+          }
+        } else {
+          res = await fetch(f.url);
+        }
+      } else {
+        res = await fetch(f.url);
+      }
+    } else {
+      res = await fetch(f.url);
+    }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
     // If we couldn't determine the extension up front (ended in .bin), use
@@ -623,7 +655,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 onClick={async () => {
                   setDownloadingUrl(f.url);
                   try {
-                    await triggerDownload(f, friendlyName);
+                    await triggerDownload(f, friendlyName, item.id);
                     // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
                     // "ready for production". Mockup previews don't.
                     if (f.kind === "print") {
