@@ -586,7 +586,18 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 : FileText;
           const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
           const isDownloading = downloadingUrl === f.url;
-          const friendlyName = buildFriendlyName(f, { orderNumber, clientName }, i);
+          const friendlyName = buildFriendlyName(
+            f,
+            {
+              orderNumber,
+              clientName,
+              quantity: item.quantity,
+              size: item.size,
+              isBulk: item.is_bulk,
+              selectedSizes: item.selected_sizes,
+            },
+            i,
+          );
           const isDownloaded = f.kind === "print" && !!downloadedAt;
           return (
             <div
