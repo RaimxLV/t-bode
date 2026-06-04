@@ -87,13 +87,14 @@ export const AutopilotDashboard = () => {
     setStarting(holiday.id);
     try {
       const placeholder = `${holiday.name_lv} ${year}`;
-      const { data: inserted, error } = await supabase.from("campaigns" as any).insert({
+      const { data: insertedRaw, error } = await supabase.from("campaigns" as any).insert({
         holiday_id: holiday.id,
         year,
         status: "generating",
         title: placeholder,
       }).select("id").maybeSingle();
       if (error) throw error;
+      const inserted = insertedRaw as { id: string } | null;
       toast.success(`Kampaņa "${placeholder}" izveidota. AI ģenerē brief'u…`);
       await load();
       if (inserted?.id) {
