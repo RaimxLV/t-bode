@@ -61,13 +61,14 @@ export const Navbar = () => {
 
         <div className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
-            <button
+            <a
               key={link.label}
-              onClick={() => handleNavClick(link.href)}
+              href={link.href}
+              onClick={(e) => { e.preventDefault(); handleNavClick(link.href); }}
               className="text-sm font-medium text-white/70 hover:text-white transition-colors bg-transparent border-none cursor-pointer"
             >
               {link.label}
-            </button>
+            </a>
           ))}
         </div>
 
