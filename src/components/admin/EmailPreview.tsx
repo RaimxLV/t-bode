@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Truck } from "lucide-react";
+import { Mail, Truck, Pencil } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   renderOrderConfirmationHtml,
   renderTrackingHtml,
@@ -12,6 +14,7 @@ import {
   renderContactReplyHtml,
   SAMPLE_ORDER,
   SAMPLE_ITEMS,
+  type EmailSettings,
 } from "@/lib/email-previews/templates";
 
 type EmailKind = "confirmation" | "tracking" | "pickupReady" | "bankInstructions" | "paymentReminder" | "cancelled" | "contactReply";
@@ -20,25 +23,34 @@ type Lang = "lv" | "en";
 export const EmailPreview = () => {
   const [kind, setKind] = useState<EmailKind>("confirmation");
   const [lang, setLang] = useState<Lang>("lv");
+  const [settings, setSettings] = useState<EmailSettings | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.rpc("get_public_settings");
+      const row = Array.isArray(data) ? data[0] : data;
+      if (row) setSettings(row as EmailSettings);
+    })();
+  }, []);
 
   const html = (() => {
     switch (kind) {
       case "confirmation":
-        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang);
+        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang, settings);
       case "tracking":
-        return renderTrackingHtml(SAMPLE_ORDER);
+        return renderTrackingHtml(SAMPLE_ORDER, settings);
       case "pickupReady":
-        return renderPickupReadyHtml(SAMPLE_ORDER);
+        return renderPickupReadyHtml(SAMPLE_ORDER, settings);
       case "bankInstructions":
-        return renderBankInstructionsHtml(SAMPLE_ORDER);
+        return renderBankInstructionsHtml(SAMPLE_ORDER, settings);
       case "paymentReminder":
-        return renderPaymentReminderHtml(SAMPLE_ORDER);
+        return renderPaymentReminderHtml(SAMPLE_ORDER, settings);
       case "cancelled":
-        return renderOrderCancelledHtml(SAMPLE_ORDER);
+        return renderOrderCancelledHtml(SAMPLE_ORDER, settings);
       case "contactReply":
-        return renderContactReplyHtml(SAMPLE_ORDER.shipping_name);
+        return renderContactReplyHtml(SAMPLE_ORDER.shipping_name, settings);
       default:
-        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang);
+        return renderOrderConfirmationHtml(SAMPLE_ORDER, SAMPLE_ITEMS, lang, settings);
     }
   })();
 
@@ -49,7 +61,8 @@ export const EmailPreview = () => {
           <div>
             <h3 className="text-base sm:text-lg font-display mb-1">E-pastu priekšskatījums</h3>
             <p className="text-xs sm:text-sm text-muted-foreground font-body">
-              Pārbaudi, kā izskatīsies e-pasti klientiem pirms sūtīšanas. Dati ir paraugdati.
+              Pārbaudi, kā izskatīsies e-pasti klientiem. Lai mainītu biroja adresi, darba laiku, atbalsta e-pastu vai ievadtekstus —
+              dodies uz <strong>Iestatījumi → E-pasta saturs (biroja info)</strong>.
             </p>
           </div>
 
