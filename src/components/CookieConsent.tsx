@@ -50,9 +50,9 @@ export const CookieConsent = () => {
                 <Cookie className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-display text-base sm:text-lg mb-1">
+                <div role="heading" aria-level={2} className="font-display text-base sm:text-lg mb-1">
                   {t("cookies.title")}
-                </h3>
+                </div>
                 <p className="text-xs sm:text-sm text-muted-foreground font-body leading-relaxed mb-3 sm:mb-4">
                   {t("cookies.description")}{" "}
                   <Link
