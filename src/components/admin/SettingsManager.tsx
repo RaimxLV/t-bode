@@ -409,6 +409,74 @@ export const SettingsManager = () => {
         </div>
       </Section>
 
+      <Section icon={Mail} title="E-pasta saturs (biroja info)">
+        <p className="text-xs text-muted-foreground -mt-2">
+          Šie lauki tiek izmantoti klientu e-pastos (piem. "Pasūtījums gatavs saņemšanai"). Izmaiņas stājas spēkā uzreiz nākamajiem sūtījumiem.
+        </p>
+        <Field
+          label="Atbalsta e-pasts (kontaktiem e-pasta apakšā)"
+          value={settings.support_email ?? ""}
+          onChange={(v) => update({ support_email: v })}
+          placeholder="info@t-bode.lv"
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Biroja adrese (LV)</Label>
+            <Input
+              value={settings.office_address_lv ?? ""}
+              onChange={(e) => update({ office_address_lv: e.target.value })}
+              placeholder="Braslas iela 29, Ieeja D, Rīga, LV-1084"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Office address (EN)</Label>
+            <Input
+              value={settings.office_address_en ?? ""}
+              onChange={(e) => update({ office_address_en: e.target.value })}
+              placeholder="Braslas iela 29, Entrance D, Riga, LV-1084"
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Darba laiks (LV) — katra rinda parādās jaunā rindā</Label>
+            <Textarea
+              rows={4}
+              value={settings.office_hours_lv ?? ""}
+              onChange={(e) => update({ office_hours_lv: e.target.value })}
+              placeholder={"Pirmdiena–ceturtdiena: 9:00–17:30\nPiektdiena: 9:00–16:00\nSestdiena, svētdiena: slēgts"}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs sm:text-sm">Office hours (EN)</Label>
+            <Textarea
+              rows={4}
+              value={settings.office_hours_en ?? ""}
+              onChange={(e) => update({ office_hours_en: e.target.value })}
+              placeholder={"Monday–Thursday: 9:00–17:30\nFriday: 9:00–16:00\nSaturday, Sunday: closed"}
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs sm:text-sm">"Gatavs saņemšanai" ievadteksts (LV)</Label>
+          <Textarea
+            rows={3}
+            value={settings.pickup_intro_lv ?? ""}
+            onChange={(e) => update({ pickup_intro_lv: e.target.value })}
+            placeholder="Tavs pasūtījums ir izgatavots un gaida Tevi mūsu birojā..."
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs sm:text-sm">"Ready for pickup" intro text (EN)</Label>
+          <Textarea
+            rows={3}
+            value={settings.pickup_intro_en ?? ""}
+            onChange={(e) => update({ pickup_intro_en: e.target.value })}
+            placeholder="Your order is ready and waiting at our office..."
+          />
+        </div>
+      </Section>
+
       <div className="sticky bottom-20 sm:bottom-4 flex justify-end">
         <Button onClick={handleSave} disabled={saving || !!ibanError || !!swiftError || !!regError || !!vatError} className="bg-primary text-primary-foreground shadow-lg">
           <Save className="w-4 h-4 mr-2" />
