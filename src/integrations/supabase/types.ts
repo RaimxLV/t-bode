@@ -1062,9 +1062,16 @@ export type Database = {
           company_vat_number: string | null
           id: string
           logo_url: string | null
+          office_address_en: string | null
+          office_address_lv: string | null
+          office_hours_en: string | null
+          office_hours_lv: string | null
           payment_instructions_en: string | null
           payment_instructions_lv: string | null
+          pickup_intro_en: string | null
+          pickup_intro_lv: string | null
           stamp_url: string | null
+          support_email: string | null
           updated_at: string
         }
         Insert: {
@@ -1078,9 +1085,16 @@ export type Database = {
           company_vat_number?: string | null
           id?: string
           logo_url?: string | null
+          office_address_en?: string | null
+          office_address_lv?: string | null
+          office_hours_en?: string | null
+          office_hours_lv?: string | null
           payment_instructions_en?: string | null
           payment_instructions_lv?: string | null
+          pickup_intro_en?: string | null
+          pickup_intro_lv?: string | null
           stamp_url?: string | null
+          support_email?: string | null
           updated_at?: string
         }
         Update: {
@@ -1094,9 +1108,16 @@ export type Database = {
           company_vat_number?: string | null
           id?: string
           logo_url?: string | null
+          office_address_en?: string | null
+          office_address_lv?: string | null
+          office_hours_en?: string | null
+          office_hours_lv?: string | null
           payment_instructions_en?: string | null
           payment_instructions_lv?: string | null
+          pickup_intro_en?: string | null
+          pickup_intro_lv?: string | null
           stamp_url?: string | null
+          support_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1205,8 +1226,15 @@ export type Database = {
           company_name: string
           company_reg_number: string
           company_vat_number: string
+          office_address_en: string
+          office_address_lv: string
+          office_hours_en: string
+          office_hours_lv: string
           payment_instructions_en: string
           payment_instructions_lv: string
+          pickup_intro_en: string
+          pickup_intro_lv: string
+          support_email: string
         }[]
       }
       has_role: {
