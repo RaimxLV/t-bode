@@ -94,7 +94,7 @@ export const AutopilotDashboard = () => {
         title: placeholder,
       }).select("id").maybeSingle();
       if (error) throw error;
-      const inserted = insertedRaw as { id: string } | null;
+      const inserted = insertedRaw as unknown as { id: string } | null;
       toast.success(`Kampaņa "${placeholder}" izveidota. AI ģenerē brief'u…`);
       await load();
       if (inserted?.id) {
