@@ -154,8 +154,6 @@ const normalizeSizeLabel = (size: string): string => {
   const cleaned = size
     .trim()
     .replace(/^\d+\s*[-_ ]*[x×]\s*/i, "")
-    .replace(/^2xl$/i, "XXL")
-    .replace(/^x([slm]|xl|xs|xxl|xxxl)$/i, "$1")
     .replace(/^([2345])xl$/i, (_, digits: string) => "X".repeat(Number(digits)) + "L");
   return slugify(cleaned).toUpperCase();
 };
