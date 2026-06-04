@@ -79,16 +79,22 @@ Deno.serve(async (req) => {
     let orderItemId: string | null = null;
     let zakekeOrderId: string | null = null;
     let wantZip = false;
+    let downloadUrl: string | null = null;
+    let downloadName: string | null = null;
     if (req.method === "GET") {
       const u = new URL(req.url);
       orderItemId = u.searchParams.get("order_item_id");
       zakekeOrderId = u.searchParams.get("zakeke_order_id");
       wantZip = u.searchParams.get("zip") === "1";
+      downloadUrl = u.searchParams.get("download_url");
+      downloadName = u.searchParams.get("download_name");
     } else {
       const body = await req.json().catch(() => ({}));
       orderItemId = body?.order_item_id ?? null;
       zakekeOrderId = body?.zakeke_order_id ?? null;
       wantZip = body?.zip === true || body?.zip === "1";
+      downloadUrl = body?.download_url ?? null;
+      downloadName = body?.download_name ?? null;
     }
 
     if (!orderItemId && !zakekeOrderId) {
@@ -179,6 +185,36 @@ Deno.serve(async (req) => {
       }
     } else if (zakekeOrderId) {
       files = await getZakekeOrderOutputFiles(zakekeOrderId);
+    }
+
+    if (downloadUrl) {
+      const allowed = files.find((f: any) => String(f?.url ?? "") === downloadUrl);
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "requested file not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const remote = await fetch(downloadUrl);
+      if (!remote.ok) {
+        return new Response(JSON.stringify({ error: `download failed: HTTP ${remote.status}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const contentType = remote.headers.get("content-type") || "application/octet-stream";
+      const fallbackName = String(allowed?.name || "print-file").replace(/[^a-z0-9._-]+/gi, "-");
+      const safeName = String(downloadName || fallbackName).replace(/["\r\n]+/g, "").trim() || fallbackName;
+      return new Response(remote.body, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": contentType,
+          "Content-Disposition": `attachment; filename="${safeName}"`,
+        },
+      });
     }
 
     if (wantZip) {
