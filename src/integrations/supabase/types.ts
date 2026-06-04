@@ -221,6 +221,7 @@ export type Database = {
           title: string
           type: Database["public"]["Enums"]["campaign_type"]
           updated_at: string
+          year: number
         }
         Insert: {
           created_at?: string
@@ -235,6 +236,7 @@ export type Database = {
           title: string
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
+          year?: number
         }
         Update: {
           created_at?: string
@@ -249,6 +251,7 @@ export type Database = {
           title?: string
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
+          year?: number
         }
         Relationships: [
           {

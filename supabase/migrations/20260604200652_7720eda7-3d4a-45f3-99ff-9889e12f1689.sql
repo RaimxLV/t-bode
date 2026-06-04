@@ -1,0 +1,1 @@
+ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS year INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM now())::INTEGER; CREATE UNIQUE INDEX IF NOT EXISTS campaigns_holiday_year_unique ON public.campaigns(holiday_id, year);
