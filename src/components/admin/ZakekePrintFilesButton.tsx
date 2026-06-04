@@ -24,6 +24,10 @@ interface Item {
   zakeke_preview_urls?: string[] | null;
   zakeke_print_files?: any;
   zakeke_files_downloaded_at?: string | null;
+  quantity?: number | null;
+  size?: string | null;
+  is_bulk?: boolean | null;
+  selected_sizes?: Record<string, number> | null;
 }
 
 interface Props {
@@ -159,7 +163,14 @@ const sideSlug = (f: NormalizedFile, fallbackIndex?: number): string => {
 
 const buildFriendlyName = (
   f: NormalizedFile,
-  ctx: { orderNumber?: number | null; clientName?: string | null },
+  ctx: {
+    orderNumber?: number | null;
+    clientName?: string | null;
+    quantity?: number | null;
+    size?: string | null;
+    isBulk?: boolean | null;
+    selectedSizes?: Record<string, number> | null;
+  },
   fallbackIndex?: number,
 ): string => {
   const parts: string[] = [];
@@ -168,6 +179,24 @@ const buildFriendlyName = (
   }
   if (ctx.clientName) parts.push(slugify(ctx.clientName));
   parts.push(sideSlug(f, fallbackIndex));
+  // Append quantity info so the print worker sees how many copies to print.
+  if (f.kind === "print") {
+    if (ctx.isBulk && ctx.selectedSizes && Object.keys(ctx.selectedSizes).length > 0) {
+      const breakdown = Object.entries(ctx.selectedSizes)
+        .filter(([, n]) => Number(n) > 0)
+        .map(([s, n]) => `${n}x${slugify(s)}`)
+        .join("-");
+      const total = Object.values(ctx.selectedSizes).reduce(
+        (sum, n) => sum + (Number(n) || 0),
+        0,
+      );
+      if (breakdown) parts.push(breakdown);
+      if (total > 0) parts.push(`${total}gab`);
+    } else if (ctx.quantity != null && ctx.quantity > 0) {
+      if (ctx.size) parts.push(`${ctx.quantity}x${slugify(ctx.size)}`);
+      parts.push(`${ctx.quantity}gab`);
+    }
+  }
   const ext = f.ext || "bin";
   return `${parts.join("_")}.${ext}`;
 };
@@ -557,7 +586,18 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 : FileText;
           const isMockup = f.kind === "mockup" && ["png", "jpg", "jpeg", "webp"].includes(f.ext);
           const isDownloading = downloadingUrl === f.url;
-          const friendlyName = buildFriendlyName(f, { orderNumber, clientName }, i);
+          const friendlyName = buildFriendlyName(
+            f,
+            {
+              orderNumber,
+              clientName,
+              quantity: item.quantity,
+              size: item.size,
+              isBulk: item.is_bulk,
+              selectedSizes: item.selected_sizes,
+            },
+            i,
+          );
           const isDownloaded = f.kind === "print" && !!downloadedAt;
           return (
             <div
