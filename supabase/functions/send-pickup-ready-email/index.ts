@@ -40,10 +40,19 @@ Deno.serve(async (req) => {
 
     const orderNum = String(order.order_number).padStart(5, "0");
     const name = order.shipping_name || "";
-    // Pickup-ready email is ALWAYS about office pickup at Braslas iela 29.
-    // Never display an Omniva parcel-machine address here (e.g. "Akropole, Maskavas iela 257"),
-    // even if the order's omniva_pickup_point still holds that value.
-    const office = "T-Bode birojs, Braslas iela 29, Ieeja D, Rīga, LV-1084";
+
+    // Load editable e-mail content from site settings (admin can change in the panel).
+    const { data: settingsRows } = await supabase.rpc("get_public_settings");
+    const settings = Array.isArray(settingsRows) ? settingsRows[0] : settingsRows;
+    const officeLv = settings?.office_address_lv || "Braslas iela 29, Ieeja D, Rīga, LV-1084";
+    const officeEn = settings?.office_address_en || "Braslas iela 29, Entrance D, Riga, LV-1084";
+    const hoursLv = settings?.office_hours_lv || "Pirmdiena–ceturtdiena: 9:00–17:30\nPiektdiena: 9:00–16:00\nSestdiena, svētdiena: slēgts";
+    const hoursEn = settings?.office_hours_en || "Monday–Thursday: 9:00–17:30\nFriday: 9:00–16:00\nSaturday, Sunday: closed";
+    const introLv = settings?.pickup_intro_lv || "Tavs pasūtījums ir izgatavots un gaida Tevi mūsu birojā. Iepriekšēja saskaņošana nav nepieciešama — vienkārši ieej biroja darba laikā.";
+    const introEn = settings?.pickup_intro_en || "Your order is ready and waiting at our office. No appointment needed — just drop by during office hours.";
+    const supportEmail = settings?.support_email || "info@t-bode.lv";
+
+    const nl2br = (s: string) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
 
     const html = `<!DOCTYPE html>
 <html>
@@ -56,22 +65,30 @@ Deno.serve(async (req) => {
       <h2 style="color:#111;margin:0 0 16px;line-height:1.3;">Tavs pasūtījums ir gatavs saņemšanai! 🎉</h2>
       <p style="color:#444;line-height:1.6;">Sveiks${name ? `, ${name}` : ""}!</p>
       <p style="color:#444;line-height:1.6;">
-        Tavs pasūtījums <strong>#${orderNum}</strong> ir izgatavots un gaida Tevi mūsu birojā.
+        Pasūtījums <strong>#${orderNum}</strong>. ${nl2br(introLv)}
       </p>
       <div style="background:#f9f9f9;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
         <p style="margin:0;color:#666;font-size:13px;">Saņemšanas vieta:</p>
-        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${office}</p>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${nl2br(officeLv)}</p>
       </div>
       <div style="background:#fff5f5;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
         <p style="margin:0;color:#666;font-size:13px;">Biroja darba laiks:</p>
-        <p style="margin:6px 0 0;color:#111;line-height:1.7;">
-          Pirmdiena–ceturtdiena: <strong>9:00–17:30</strong><br>
-          Piektdiena: <strong>9:00–16:00</strong><br>
-          Sestdiena, svētdiena: <strong>slēgts</strong>
-        </p>
+        <p style="margin:6px 0 0;color:#111;line-height:1.7;">${nl2br(hoursLv)}</p>
+      </div>
+      <hr style="border:none;border-top:1px solid #eee;margin:32px 0;">
+      <h3 style="color:#111;margin:0 0 12px;font-size:16px;">Your order is ready for pickup! 🎉</h3>
+      <p style="color:#444;line-height:1.6;">Hi${name ? `, ${name}` : ""}!</p>
+      <p style="color:#444;line-height:1.6;">Order <strong>#${orderNum}</strong>. ${nl2br(introEn)}</p>
+      <div style="background:#f9f9f9;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
+        <p style="margin:0;color:#666;font-size:13px;">Pickup location:</p>
+        <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${nl2br(officeEn)}</p>
+      </div>
+      <div style="background:#fff5f5;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
+        <p style="margin:0;color:#666;font-size:13px;">Office hours:</p>
+        <p style="margin:6px 0 0;color:#111;line-height:1.7;">${nl2br(hoursEn)}</p>
       </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;margin-top:24px;">
-        Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>
+        Jautājumi / Questions? <a href="mailto:${supportEmail}" style="color:#DC2626;white-space:nowrap;">${supportEmail}</a>
       </p>
     </div>
     <div style="background:#111;padding:16px;text-align:center;color:#888;font-size:12px;">
