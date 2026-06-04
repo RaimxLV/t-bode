@@ -184,7 +184,7 @@ const buildFriendlyName = (
     if (ctx.isBulk && ctx.selectedSizes && Object.keys(ctx.selectedSizes).length > 0) {
       const breakdown = Object.entries(ctx.selectedSizes)
         .filter(([, n]) => Number(n) > 0)
-        .map(([s, n]) => `${n}x${slugify(s)}`)
+        .map(([s, n]) => `${n}${slugify(s).toUpperCase()}`)
         .join("-");
       const total = Object.values(ctx.selectedSizes).reduce(
         (sum, n) => sum + (Number(n) || 0),
@@ -193,7 +193,10 @@ const buildFriendlyName = (
       if (breakdown) parts.push(breakdown);
       if (total > 0) parts.push(`${total}gab`);
     } else if (ctx.quantity != null && ctx.quantity > 0) {
-      if (ctx.size) parts.push(`${ctx.quantity}x${slugify(ctx.size)}`);
+      if (ctx.size) {
+        const sz = slugify(ctx.size).toUpperCase();
+        parts.push(ctx.quantity > 1 ? `${ctx.quantity}${sz}` : sz);
+      }
       parts.push(`${ctx.quantity}gab`);
     }
   }
