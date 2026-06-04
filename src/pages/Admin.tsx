@@ -365,6 +365,7 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
+            <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -488,6 +489,12 @@ const Admin = () => {
               <div className="relative mx-[calc(50%-50vw)] w-screen px-3 sm:px-4">
                 <AccountingSpreadsheet />
               </div>
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="autopilot">
+            <Suspense fallback={<TabFallback />}>
+              <AutopilotDashboard />
             </Suspense>
           </TabsContent>
 
