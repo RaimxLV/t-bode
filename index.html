@@ -22,6 +22,23 @@
     <!-- Preconnect to Supabase storage (used by product images) -->
     <link rel="preconnect" href="https://nkqwhiqrljwvzrivhqyh.supabase.co" crossorigin />
 
+    <!-- AI crawler hints: this site is open for indexing by generative engines. -->
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="GPTBot" content="index, follow" />
+    <meta name="PerplexityBot" content="index, follow" />
+    <meta name="ClaudeBot" content="index, follow" />
+    <meta name="rating" content="general" />
+    <meta name="geo.region" content="LV-RIX" />
+    <meta name="geo.placename" content="Rīga" />
+    <meta name="geo.position" content="56.9496;24.1052" />
+    <meta name="ICBM" content="56.9496, 24.1052" />
+
+    <!-- Hreflang alternates so AI/search engines understand bilingual coverage -->
+    <link rel="alternate" hreflang="lv" href="https://www.t-bode.lv/" />
+    <link rel="alternate" hreflang="en" href="https://www.t-bode.lv/" />
+    <link rel="alternate" hreflang="x-default" href="https://www.t-bode.lv/" />
+
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.t-bode.lv/" />
     <meta property="og:site_name" content="T-Bode" />
@@ -81,6 +98,26 @@
         }
       ],
       "priceRange": "€€",
+      "paymentAccepted": "Credit Card, Debit Card, Bank Transfer, Apple Pay, Google Pay",
+      "currenciesAccepted": "EUR",
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "email": "info@t-bode.lv",
+        "areaServed": ["LV","EE","LT"],
+        "availableLanguage": ["Latvian","English","Russian"]
+      }],
+      "sameAs": [
+        "https://www.facebook.com/tbode.lv",
+        "https://www.instagram.com/tbode.lv"
+      ],
+      "makesOffer": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "DTF apdruka uz t-krekliem", "serviceType": "DTF printing" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hūdiju apdruka ar savu dizainu", "serviceType": "Apparel printing" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Krūžu apdruka", "serviceType": "Mug printing" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Somu apdruka", "serviceType": "Bag printing" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Online dizaina rīks — izveido savu kreklu", "serviceType": "Online apparel designer" } }
+      ],
       "keywords": "tkrekli, t-krekli, tkreklu apdruka, t-kreklu apdruka, kreklu apdruka Rīgā, krekli ar savu dizainu, DTF apdruka, hūdiju apdruka, krūžu apdruka, somu apdruka, tbode, t-bode"
     }
     </script>
@@ -95,6 +132,74 @@
         "@type": "SearchAction",
         "target": "https://www.t-bode.lv/collection?q={search_term_string}",
         "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "@id": "https://www.t-bode.lv/#organization",
+      "name": "T-Bode",
+      "legalName": "SIA Ervitex",
+      "url": "https://www.t-bode.lv",
+      "logo": "https://www.t-bode.lv/assets/logo.svg",
+      "email": "info@t-bode.lv",
+      "foundingLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "Riga", "addressCountry": "LV" } },
+      "knowsAbout": [
+        "DTF apdruka",
+        "T-kreklu apdruka",
+        "Hūdiju apdruka",
+        "Krūžu apdruka",
+        "Somu apdruka",
+        "Online apģērbu dizaina rīks",
+        "Custom apparel printing",
+        "Direct-to-Film printing"
+      ],
+      "sameAs": [
+        "https://www.facebook.com/tbode.lv",
+        "https://www.instagram.com/tbode.lv"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "@id": "https://www.t-bode.lv/#service-dtf",
+      "serviceType": "DTF (Direct-to-Film) apparel printing",
+      "name": "Kreklu apdruka Rīgā — DTF tehnoloģija",
+      "description": "Profesionāla DTF apdruka uz t-krekliem, hūdijiem, krūzēm un somām ar tava dizainu. Ražojam Rīgā, Braslas ielā 29. Pasūtījums tiek izgatavots parasti 2–5 darba dienu laikā.",
+      "provider": { "@id": "https://www.t-bode.lv/#organization" },
+      "areaServed": [
+        { "@type": "City", "name": "Rīga" },
+        { "@type": "Country", "name": "Latvija" },
+        { "@type": "Country", "name": "Igaunija" },
+        { "@type": "Country", "name": "Lietuva" }
+      ],
+      "availableChannel": {
+        "@type": "ServiceChannel",
+        "serviceUrl": "https://www.t-bode.lv/design",
+        "name": "Tiešsaistes dizaina konstruktors"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "9.90",
+        "highPrice": "59.90",
+        "offerCount": "20"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "T-Bode apdrukas pakalpojumi",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "T-kreklu apdruka ar savu dizainu" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Hūdiju apdruka" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Krūžu apdruka (300ml, 450ml, magic, gold/silver)" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Somu apdruka (kokvilnas, lina)" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Bērnu apģērba apdruka" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Korporatīvie pasūtījumi un komandas formas" } }
+        ]
       }
     }
     </script>
