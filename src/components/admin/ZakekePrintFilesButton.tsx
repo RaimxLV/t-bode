@@ -24,6 +24,10 @@ interface Item {
   zakeke_preview_urls?: string[] | null;
   zakeke_print_files?: any;
   zakeke_files_downloaded_at?: string | null;
+  quantity?: number | null;
+  size?: string | null;
+  is_bulk?: boolean | null;
+  selected_sizes?: Record<string, number> | null;
 }
 
 interface Props {
