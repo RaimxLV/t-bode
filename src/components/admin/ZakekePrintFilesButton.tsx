@@ -150,6 +150,14 @@ const slugify = (s: string): string =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 40) || "fails";
 
+const normalizeSizeLabel = (size: string): string => {
+  const cleaned = size
+    .trim()
+    .replace(/^\d+\s*[x×]\s*/i, "")
+    .replace(/^2xl$/i, "XXL");
+  return slugify(cleaned).toUpperCase();
+};
+
 const sideSlug = (f: NormalizedFile, fallbackIndex?: number): string => {
   const label = sideLabel(f, fallbackIndex).toLowerCase();
   if (label.includes("priekš")) return "priekspuse";
@@ -184,7 +192,7 @@ const buildFriendlyName = (
     if (ctx.isBulk && ctx.selectedSizes && Object.keys(ctx.selectedSizes).length > 0) {
       const breakdown = Object.entries(ctx.selectedSizes)
         .filter(([, n]) => Number(n) > 0)
-        .map(([s, n]) => `${n}${slugify(s).toUpperCase()}`)
+        .map(([s, n]) => `${n}${normalizeSizeLabel(s)}`)
         .join("-");
       const total = Object.values(ctx.selectedSizes).reduce(
         (sum, n) => sum + (Number(n) || 0),
@@ -194,7 +202,7 @@ const buildFriendlyName = (
       if (total > 0) parts.push(`${total}gab`);
     } else if (ctx.quantity != null && ctx.quantity > 0) {
       if (ctx.size) {
-        const sz = slugify(ctx.size).toUpperCase();
+        const sz = normalizeSizeLabel(ctx.size);
         parts.push(ctx.quantity > 1 ? `${ctx.quantity}${sz}` : sz);
       }
       parts.push(`${ctx.quantity}gab`);
