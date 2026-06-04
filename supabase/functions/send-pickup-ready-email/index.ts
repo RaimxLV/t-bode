@@ -53,15 +53,20 @@ Deno.serve(async (req) => {
       <h2 style="color:#111;margin:0 0 16px;line-height:1.3;">Tavs pasūtījums ir gatavs saņemšanai! 🎉</h2>
       <p style="color:#444;line-height:1.6;">Sveiks${name ? `, ${name}` : ""}!</p>
       <p style="color:#444;line-height:1.6;">
-        Tavs pasūtījums <strong>#${orderNum}</strong> ir izgatavots un gaida tevi birojā.
+        Tavs pasūtījums <strong>#${orderNum}</strong> ir izgatavots un gaida Tevi mūsu birojā.
       </p>
       <div style="background:#f9f9f9;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
         <p style="margin:0;color:#666;font-size:13px;">Saņemšanas vieta:</p>
         <p style="margin:4px 0 0;font-size:15px;font-weight:bold;color:#111;">${office}</p>
       </div>
-      <p style="color:#444;line-height:1.6;">
-        Lūdzu, pirms ierašanās sazinies ar mums, lai saskaņotu laiku.
-      </p>
+      <div style="background:#fff5f5;border-left:4px solid #DC2626;padding:16px;margin:24px 0;">
+        <p style="margin:0;color:#666;font-size:13px;">Biroja darba laiks:</p>
+        <p style="margin:6px 0 0;color:#111;line-height:1.7;">
+          Pirmdiena–ceturtdiena: <strong>9:00–17:30</strong><br>
+          Piektdiena: <strong>9:00–16:00</strong><br>
+          Sestdiena, svētdiena: <strong>slēgts</strong>
+        </p>
+      </div>
       <p style="color:#888;font-size:13px;line-height:1.6;text-align:center;margin-top:24px;">
         Jautājumi? Raksti mums: <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>
       </p>
