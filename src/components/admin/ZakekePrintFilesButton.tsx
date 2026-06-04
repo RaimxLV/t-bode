@@ -414,23 +414,13 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
       const token = sessionData.session?.access_token;
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
       if (token && projectUrl) {
-        const url = `${projectUrl}/functions/v1/zakeke-print-files?order_item_id=${encodeURIComponent(orderItemId)}`;
-        const payload = await fetch(url, {
+        const url = `${projectUrl}/functions/v1/zakeke-print-files?order_item_id=${encodeURIComponent(orderItemId)}&download_url=${encodeURIComponent(f.url)}&download_name=${encodeURIComponent(friendlyName)}`;
+        res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        if (payload.ok) {
-          const json = await payload.json().catch(() => null);
-          const match = Array.isArray(json?.files)
-            ? json.files.find((candidate: any) => String(candidate?.url ?? "") === f.url)
-            : null;
-          if (match?.url) {
-            res = await fetch(String(match.url));
-          } else {
-            res = await fetch(f.url);
-          }
-        } else {
+        if (!res.ok) {
           res = await fetch(f.url);
         }
       } else {
