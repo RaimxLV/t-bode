@@ -209,6 +209,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          brief: Json | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -224,6 +225,7 @@ export type Database = {
           year: number
         }
         Insert: {
+          brief?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -239,6 +241,7 @@ export type Database = {
           year?: number
         }
         Update: {
+          brief?: Json | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1498,6 +1501,8 @@ export type Database = {
         | "archived"
         | "generating"
         | "ready"
+        | "ready_for_review"
+        | "failed"
       campaign_type: "holiday" | "collection" | "blog"
       content_status: "draft" | "scheduled" | "published" | "archived"
       order_status:
@@ -1645,6 +1650,8 @@ export const Constants = {
         "archived",
         "generating",
         "ready",
+        "ready_for_review",
+        "failed",
       ],
       campaign_type: ["holiday", "collection", "blog"],
       content_status: ["draft", "scheduled", "published", "archived"],
