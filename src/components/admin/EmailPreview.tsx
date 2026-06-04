@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, Truck, Pencil } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Mail, Truck } from "lucide-react";
 import {
   renderOrderConfirmationHtml,
   renderTrackingHtml,
