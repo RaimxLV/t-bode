@@ -151,10 +151,12 @@ const slugify = (s: string): string =>
     .slice(0, 40) || "fails";
 
 const normalizeSizeLabel = (size: string): string => {
-  const cleaned = size
-    .trim()
-    .replace(/^\d+\s*[-_ ]*[x×]\s*/i, "")
-    .replace(/^([2345])xl$/i, (_, digits: string) => "X".repeat(Number(digits)) + "L");
+  const raw = size.trim();
+  const compact = raw.replace(/[\s-_]+/g, "");
+  const normalizedBase = /^(xs|s|m|l|xl|xxl|xxxl|xxxxl|xxxxxl|\d+xl|\d+ml)$/i.test(compact)
+    ? compact
+    : raw.replace(/^\d+\s*[-_ ]*[x×]\s*/i, "").replace(/[\s-_]+/g, "");
+  const cleaned = normalizedBase.replace(/^([2345])xl$/i, (_, digits: string) => "X".repeat(Number(digits)) + "L");
   return slugify(cleaned).toUpperCase();
 };
 
