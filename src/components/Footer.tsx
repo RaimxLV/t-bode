@@ -114,7 +114,7 @@ export const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                <a href="mailto:info@t-bode.lv" className="text-gray-400 hover:text-white transition-colors whitespace-nowrap">info@t‑bode.lv</a>
+                <a href="mailto:info@t-bode.lv" className="text-gray-400 hover:text-white transition-colors whitespace-nowrap">info@t-bode.lv</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gray-500 flex-shrink-0" />
