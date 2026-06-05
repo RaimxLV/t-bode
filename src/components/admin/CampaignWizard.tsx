@@ -691,7 +691,7 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
 }
 
 function StepDesigns({
-  campaign, designs, signedUrls, availableBases, selectedBases, campProducts,
+  campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
 }: any) {
@@ -800,68 +800,30 @@ function StepDesigns({
       {campProducts.length > 0 && (
         <section className="border-t pt-4">
           <h4 className="font-semibold text-sm mb-2">Kampaņas produkti ({campProducts.length})</h4>
-          <div className="space-y-2">
-            {campProducts.map((p: CampProduct) => (
-              <div key={p.id} className="border rounded p-3 space-y-3">
-                <div className="flex items-start gap-3">
-                  {p.image_url && (
-                    <img
-                      src={getOptimizedSrc(p.image_url, 320, 80)}
-                      loading="lazy"
-                      alt=""
-                      className="w-28 h-28 sm:w-36 sm:h-36 rounded object-cover border bg-muted"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-body truncate">{p.name_lv || p.name}</div>
-                    <div className="text-[10px] text-muted-foreground">{p.color_variants.length} krāsas</div>
-                    <div className="mt-2 grid grid-cols-1 gap-2 text-[11px]">
-                      <label className="space-y-1">
-                        <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span></div>
-                        <input type="range" min={-0.3} max={0.3} step={0.01} defaultValue={p.print_offset_y ?? 0}
-                          onChange={(e) => onUpdatePrintAdj(p.id, { print_offset_y: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                      </label>
-                      <label className="space-y-1">
-                        <div className="flex justify-between"><span>Mērogs</span><span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span></div>
-                        <input type="range" min={0.4} max={1.4} step={0.02} defaultValue={p.print_scale ?? 1}
-                          onChange={(e) => onUpdatePrintAdj(p.id, { print_scale: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                      </label>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(p.id)} title="Izslēgt no kampaņas">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-                {p.color_variants.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {p.color_variants.map((c) => (
-                      <button
-                        key={c.name}
-                        type="button"
-                        onClick={() => confirm(`Noņemt krāsu "${c.name}"?`) && onRemoveColor(p.id, c.name)}
-                        className="group flex items-center gap-1 border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive"
-                        title={`Noņemt ${c.name}`}
-                      >
-                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
-                        <span className="text-[10px]">{c.name}</span>
-                        <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <div className="flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy === ("regen-" + p.id)}
-                    onClick={() => onRegenerateMockups(p.id)}
-                  >
-                    {busy === ("regen-" + p.id) ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
-                    Pārģenerēt ar šiem iestatījumiem
-                  </Button>
-                </div>
-              </div>
-            ))}
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Velc dizainu ar peli vai pirkstu, lai pārvietotu uz augšu/leju. Lieto ritenīti vai sažņaudz ar 2 pirkstiem, lai mainītu izmēru. Saglabājas automātiski.
+          </p>
+          <div className="space-y-3">
+            {campProducts.map((p: CampProduct) => {
+              const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
+              const designRow =
+                designs.find((d: DesignRow) => d.product_id === p.id && d.image_url) ||
+                designs.find((d: DesignRow) => d.is_primary && d.image_url);
+              const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
+              return (
+                <ProductTuneRow
+                  key={p.id}
+                  product={p}
+                  baseInfo={baseInfo}
+                  designUrl={designUrl}
+                  busyKey={busy}
+                  onUpdatePrintAdj={onUpdatePrintAdj}
+                  onRegenerate={onRegenerateMockups}
+                  onRemoveColor={onRemoveColor}
+                  onExcludeProduct={onExcludeProduct}
+                />
+              );
+            })}
           </div>
         </section>
       )}
