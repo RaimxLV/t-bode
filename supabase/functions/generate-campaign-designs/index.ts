@@ -196,28 +196,39 @@ function buildPrompt(
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
   const base = rawPrompt.trim();
+  const slogan = opts.slogan?.trim();
+  const bgHint = transparent
+    ? "Isolated on a plain solid background that can be cleanly removed. No shadows touching edges."
+    : "Centered composition isolated on a pure white background.";
+  const frameRule = opts.fitInFrame
+    ? `CRITICAL FRAMING: the ENTIRE composition must fit completely inside the canvas with at least 10% safe padding on every side. Nothing touches the edges — this is a DTF print file.`
+    : `Centered composition.`;
+
+  // ===== Slogan / typography-led design (routed to Ideogram) =====
+  if (slogan) {
+    return (
+      `Vintage typographic t-shirt print design. The HERO of the artwork is the exact phrase "${slogan}" rendered as LARGE, BOLD, DISTRESSED VINTAGE TYPOGRAPHY that fills most of the canvas — like a screen-printed beer/biker/retro apparel graphic. ` +
+      `The text MUST be the dominant visual element, perfectly spelled, stacked on multiple lines if needed, with ornamental flourishes, banners, ribbons, or decorative frames around it. ` +
+      `Theme/illustration context (use as supporting decoration around the text, NOT as the main subject): ${base}. ` +
+      `Style: hand-drawn vintage screen-print, distressed texture, monochrome or 2-3 color limited palette, woodcut/letterpress feel. ` +
+      `${bgHint} ${frameRule} ` +
+      `STRICT: do NOT render the text as a caption below or beside the illustration — the text IS the design. ` +
+      `Do NOT show a t-shirt, hoodie, mug, garment, mockup, person, hanger, or fabric. Output ONLY the standalone print artwork. ` +
+      `No watermark, no extra text beyond "${slogan}".`
+    );
+  }
+
+  // ===== No slogan — pure illustration (Recraft) =====
   const styleHint = isVector
     ? "Bold flat vector artwork, clean geometric shapes, screen-print ready, limited palette."
     : isIllustration
     ? "Bold illustrated artwork with rich detail, centered composition, screen-print ready."
     : "Bold artwork suitable for screen-printing on apparel.";
-  const bgHint = transparent
-    ? "Isolated on a plain solid background that can be cleanly removed. No shadows touching edges."
-    : "Centered composition isolated on a pure white background.";
-  const slogan = opts.slogan?.trim();
-  const textRule = slogan
-    ? `MUST include the exact text "${slogan}" as bold, legible, perfectly spelled typography integrated into the artwork as a key design element. No other text, no watermark.`
-    : `No text, no letters, no watermark.`;
-  const frameRule = opts.fitInFrame
-    ? `CRITICAL FRAMING: the ENTIRE artwork must fit completely inside the canvas with at least 10% safe padding on every side. Nothing may touch or be cropped by the canvas edges — this is a DTF print file. Compose tightly within the safe area.`
-    : `Centered composition.`;
   return (
-    `${base}. ${styleHint} ` +
-    `${bgHint} ` +
-    `${frameRule} ` +
+    `${base}. ${styleHint} ${bgHint} ${frameRule} ` +
     `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person model, hanger, or fabric. ` +
     `Output ONLY the standalone design artwork itself — like a sticker or print file. ` +
-    `${textRule} No shadows, no photo, no background scene.`
+    `No text, no letters, no watermark. No shadows, no photo, no background scene.`
   );
 }
 
