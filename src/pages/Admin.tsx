@@ -367,6 +367,8 @@ const Admin = () => {
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
             <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
+            <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
+            <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
