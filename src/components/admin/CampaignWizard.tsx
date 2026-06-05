@@ -760,7 +760,14 @@ function StepDesigns({
                   className={`relative border-2 rounded-lg overflow-hidden text-left transition ${sel ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"}`}
                 >
                   <div className="aspect-square bg-muted">
-                    {thumb ? <img src={thumb} alt="" className="w-full h-full object-cover" /> : <Package className="w-8 h-8 m-auto" />}
+                    {thumb ? (
+                      <img
+                        src={getOptimizedSrc(thumb, 400, 70)}
+                        loading="lazy"
+                        alt=""
+                        className="w-full h-full object-contain"
+                      />
+                    ) : <Package className="w-8 h-8 m-auto" />}
                   </div>
                   <div className="p-1.5">
                     <p className="text-xs font-body line-clamp-1">{p.name_lv || p.name}</p>
