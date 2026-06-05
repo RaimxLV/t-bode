@@ -59,7 +59,11 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
-      const fullPrompt = `${idea.prompt}. Style: clean t-shirt print design, centered composition on plain white background, no text, no watermark, vector-like illustration suitable for apparel printing.`;
+      const fullPrompt =
+        `Flat 2D graphic artwork for screen-printing on apparel. Subject: ${idea.prompt}. ` +
+        `Style: bold vector-style illustration, clean lines, limited color palette, centered composition, fully isolated on a pure white background. ` +
+        `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person, model, hanger, or fabric. ` +
+        `Output ONLY the standalone design artwork itself — as if it were a sticker or print file. No text, no letters, no watermark, no shadows, no 3D rendering, no photo, no background scene.`;
 
       try {
         const imgRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
