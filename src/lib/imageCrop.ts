@@ -156,6 +156,7 @@ export async function composeMockup(opts: {
   printArea: { x: number; y: number; w: number; h: number };
   maxWidth?: number; // output max width in px (default 1200)
   quality?: number;  // jpeg quality
+  baseColorHex?: string; // optional hex of the garment color — drives blend mode
 }): Promise<Blob> {
   const [mock, design] = await Promise.all([urlToImage(opts.mockupUrl), urlToImage(opts.designUrl)]);
   const maxW = opts.maxWidth ?? 1200;
@@ -179,12 +180,40 @@ export async function composeMockup(opts: {
   if (dh > rh) { dh = rh; dw = rh * aspect; }
   const dx = rx + (rw - dw) / 2;
   const dy = ry + (rh - dh) / 2;
+
+  // Pick blend mode based on garment lightness so the print follows the fabric:
+  //   light shirt → multiply (dark areas of print darken the fabric, white = transparent feel)
+  //   dark shirt  → screen   (light areas of print lighten the fabric, black = transparent feel)
+  //   mid-tone    → source-over with slight opacity
+  const lightness = opts.baseColorHex ? hexLightness(opts.baseColorHex) : 0.5;
+  let blend: GlobalCompositeOperation = "source-over";
+  let alpha = 1;
+  if (lightness > 0.75) { blend = "multiply"; alpha = 0.95; }
+  else if (lightness < 0.25) { blend = "screen"; alpha = 0.9; }
+  else { blend = "source-over"; alpha = 0.95; }
+
+  ctx.save();
+  ctx.globalCompositeOperation = blend;
+  ctx.globalAlpha = alpha;
   ctx.drawImage(design, dx, dy, dw, dh);
+  ctx.restore();
+
   const blob = await new Promise<Blob | null>((res) =>
     canvas.toBlob(res, "image/jpeg", opts.quality ?? 0.9)
   );
   if (!blob) throw new Error("Failed to render mockup");
   return blob;
+}
+
+function hexLightness(hex: string): number {
+  const m = hex.replace("#", "").trim();
+  if (m.length !== 6 && m.length !== 3) return 0.5;
+  const full = m.length === 3 ? m.split("").map((c) => c + c).join("") : m;
+  const r = parseInt(full.slice(0, 2), 16) / 255;
+  const g = parseInt(full.slice(2, 4), 16) / 255;
+  const b = parseInt(full.slice(4, 6), 16) / 255;
+  // perceptual luminance
+  return 0.299 * r + 0.587 * g + 0.114 * b;
 }
 
 async function trimCanvas(img: HTMLImageElement, alphaThreshold = 8): Promise<Blob | null> {
