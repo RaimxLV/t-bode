@@ -174,6 +174,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_primary: boolean
+          product_id: string | null
           prompt: string
           updated_at: string
         }
@@ -184,6 +185,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_primary?: boolean
+          product_id?: string | null
           prompt: string
           updated_at?: string
         }
@@ -194,6 +196,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_primary?: boolean
+          product_id?: string | null
           prompt?: string
           updated_at?: string
         }
@@ -1505,6 +1508,8 @@ export type Database = {
         | "failed"
         | "generating_designs"
         | "designs_ready"
+        | "products_ready"
+        | "blog_ready"
       campaign_type: "holiday" | "collection" | "blog"
       content_status: "draft" | "scheduled" | "published" | "archived"
       order_status:
@@ -1656,6 +1661,8 @@ export const Constants = {
         "failed",
         "generating_designs",
         "designs_ready",
+        "products_ready",
+        "blog_ready",
       ],
       campaign_type: ["holiday", "collection", "blog"],
       content_status: ["draft", "scheduled", "published", "archived"],

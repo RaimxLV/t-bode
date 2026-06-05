@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2 } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2, Star, Package, FileText, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,7 +28,7 @@ type Campaign = {
   id: string;
   holiday_id: string;
   year: number;
-  status: "draft" | "generating" | "ready_for_review" | "generating_designs" | "designs_ready" | "ready" | "active" | "completed" | "published" | "archived" | "failed" | "planned";
+  status: "draft" | "generating" | "ready_for_review" | "generating_designs" | "designs_ready" | "products_ready" | "blog_ready" | "ready" | "active" | "completed" | "published" | "archived" | "failed" | "planned";
   title: string | null;
   description: string | null;
   brief: Brief | null;
@@ -51,6 +51,7 @@ type DesignRow = {
   prompt: string;
   generation_error: string | null;
   is_primary: boolean;
+  product_id: string | null;
 };
 
 const MONTHS_LV = ["Janv.", "Febr.", "Marts", "Apr.", "Maijs", "Jūn.", "Jūl.", "Aug.", "Sept.", "Okt.", "Nov.", "Dec."];
@@ -77,13 +78,16 @@ export const AutopilotDashboard = () => {
   const [designs, setDesigns] = useState<DesignRow[]>([]);
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
   const [generatingDesigns, setGeneratingDesigns] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const [bloggingId, setBloggingId] = useState<string | null>(null);
+  const [togglingDesign, setTogglingDesign] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
     const [hRes, cRes, dRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
-      supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary"),
+      supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
@@ -179,6 +183,61 @@ export const AutopilotDashboard = () => {
     }
   };
 
+  const toggleDesignApproval = async (design: DesignRow) => {
+    setTogglingDesign(design.id);
+    try {
+      const { error } = await supabase
+        .from("campaign_designs" as any)
+        .update({ is_primary: !design.is_primary })
+        .eq("id", design.id);
+      if (error) throw error;
+      setDesigns((prev) =>
+        prev.map((d) => (d.id === design.id ? { ...d, is_primary: !d.is_primary } : d)),
+      );
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setTogglingDesign(null);
+    }
+  };
+
+  const runPublishProducts = async (campaignId: string) => {
+    setPublishing(campaignId);
+    try {
+      const { data, error } = await supabase.functions.invoke("publish-campaign-products", {
+        body: { campaign_id: campaignId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const results = (data as any)?.results ?? [];
+      const okCount = results.filter((r: any) => r.ok).length;
+      toast.success(`Izveidoti ${okCount}/${results.length} produkti (melnraksts, paslēpti veikalā)`);
+      await load();
+    } catch (e: any) {
+      toast.error("Produktu publicēšana neizdevās: " + (e.message ?? "nezināma kļūda"));
+    } finally {
+      setPublishing(null);
+    }
+  };
+
+  const runBlogGeneration = async (campaignId: string) => {
+    setBloggingId(campaignId);
+    toast.info("AI raksta blog ierakstu…");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-blog", {
+        body: { campaign_id: campaignId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Blog raksts gatavs! (melnraksts)");
+      await load();
+    } catch (e: any) {
+      toast.error("Blog ģenerēšana neizdevās: " + (e.message ?? "nezināma kļūda"));
+    } finally {
+      setBloggingId(null);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -230,6 +289,8 @@ export const AutopilotDashboard = () => {
                       {camp.status === "generating" && <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Ģenerē brief'u</>}
                       {camp.status === "generating_designs" && <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Ģenerē dizainus</>}
                       {camp.status === "designs_ready" && <><ImageIcon className="w-3 h-3 mr-1" />Dizaini gatavi</>}
+                      {camp.status === "products_ready" && <><Package className="w-3 h-3 mr-1" />Produkti gatavi</>}
+                      {camp.status === "blog_ready" && <><FileText className="w-3 h-3 mr-1" />Blogs gatavs</>}
                       {camp.status === "published" && "Publicēta"}
                       {camp.status === "failed" && "Kļūda"}
                       {camp.status === "archived" && "Arhivēta"}
@@ -300,13 +361,35 @@ export const AutopilotDashboard = () => {
                   </Button>
                 )}
 
-                {camp && (camp.status === "designs_ready" || camp.status === "generating_designs") && (
+                {camp && (camp.status === "designs_ready" || camp.status === "generating_designs" || camp.status === "products_ready" || camp.status === "blog_ready") && (
                   <>
                     <div className="grid grid-cols-2 gap-2">
                       {designs.filter((d) => d.campaign_id === camp.id).map((d) => (
-                        <div key={d.id} className="aspect-square rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center">
+                        <div key={d.id} className="relative group aspect-square rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center">
                           {d.image_url && signedUrls[d.image_url] ? (
-                            <img src={signedUrls[d.image_url]} alt={d.prompt.slice(0, 40)} className="w-full h-full object-cover" />
+                            <>
+                              <img src={signedUrls[d.image_url]} alt={d.prompt.slice(0, 40)} className="w-full h-full object-cover" />
+                              {camp.status === "designs_ready" && (
+                                <button
+                                  type="button"
+                                  disabled={togglingDesign === d.id}
+                                  onClick={() => toggleDesignApproval(d)}
+                                  className={`absolute top-1 right-1 p-1 rounded-full transition-colors ${
+                                    d.is_primary
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-background/80 text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-background"
+                                  }`}
+                                  title={d.is_primary ? "Noņemt apstiprinājumu" : "Apstiprināt šo dizainu"}
+                                >
+                                  <Star className={`w-3.5 h-3.5 ${d.is_primary ? "fill-current" : ""}`} />
+                                </button>
+                              )}
+                              {d.product_id && (
+                                <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-emerald-600/90 text-white text-[9px] flex items-center gap-1">
+                                  <Package className="w-2.5 h-2.5" /> produkts
+                                </div>
+                              )}
+                            </>
                           ) : d.generation_error ? (
                             <div className="p-2 text-[10px] text-destructive text-center">⚠ {d.generation_error}</div>
                           ) : (
@@ -316,6 +399,44 @@ export const AutopilotDashboard = () => {
                       ))}
                     </div>
                     {camp.status === "designs_ready" && (
+                      <>
+                        <p className="text-[11px] text-muted-foreground">
+                          Atzīmē ★ vienu vai vairākus dizainus, kurus pārvērst par produktiem.
+                        </p>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          disabled={
+                            publishing === camp.id ||
+                            !designs.some((d) => d.campaign_id === camp.id && d.is_primary && d.image_url)
+                          }
+                          onClick={() => runPublishProducts(camp.id)}
+                        >
+                          {publishing === camp.id ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Publicē produktus…</>
+                          ) : (
+                            <><Package className="w-4 h-4 mr-2" />Publicēt produktus (melnraksti)</>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                    {(camp.status === "products_ready" || camp.status === "blog_ready") && (
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        variant={camp.status === "blog_ready" ? "outline" : "default"}
+                        disabled={bloggingId === camp.id}
+                        onClick={() => runBlogGeneration(camp.id)}
+                      >
+                        {bloggingId === camp.id ? (
+                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Raksta blogu…</>
+                        ) : camp.status === "blog_ready" ? (
+                          <><RefreshCw className="w-4 h-4 mr-2" />Pārģenerēt blog rakstu</>
+                        ) : (
+                          <><FileText className="w-4 h-4 mr-2" />Ģenerēt blog rakstu</>
+                        )}
+                      </Button>
+                    )}
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1" onClick={() => setViewing(camp)}>
                           <Eye className="w-3.5 h-3.5 mr-1.5" /> Brief
@@ -334,7 +455,6 @@ export const AutopilotDashboard = () => {
                           )}
                         </Button>
                       </div>
-                    )}
                   </>
                 )}
 
