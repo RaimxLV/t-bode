@@ -1065,6 +1065,9 @@ function StepDesigns({
         <p className="text-[11px] text-muted-foreground mb-2 mt-2">
           Iestatījumi tiek pielietoti visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar ↻ pogu uz kartītes.
         </p>
+        <div className="rounded-md border border-primary/30 bg-primary/5 text-[11px] p-2 mb-2 leading-snug">
+          <b>AI modelis tiek izvēlēts automātiski.</b> Ja dizainam pievieno sauklis/tekstu (↻ → laukā "Sauklis"), tiek izmantots <b>Ideogram</b> (labi zīmē burtus). Bez teksta — <b>Recraft</b> ar izvēlēto stilu augšā. Stila sarakstā <i>nav</i> jāmeklē "Ideogram".
+        </div>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
             Vēl nav dizainu. Spied "Pārģenerēt dizainus".
