@@ -102,24 +102,12 @@ export const BlogManager = () => {
     setLinkBusy(false);
   };
 
-  const searchProducts = async (q: string) => {
-    setLinkSearch(q);
-    if (!q.trim()) { setSearchResults([]); return; }
-    const { data } = await supabase
-      .from("products")
-      .select("id,name,name_lv,image_url")
-      .or(`name.ilike.%${q}%,name_lv.ilike.%${q}%`)
-      .limit(8);
-    setSearchResults(data || []);
-  };
-
   const addLink = async (productId: string) => {
     if (!productsTab) return;
     const { error } = await supabase.from("blog_post_products" as any).insert({
       blog_post_id: productsTab.id, product_id: productId, source: "manual",
     });
     if (error) { toast.error(error.message); return; }
-    setLinkSearch(""); setSearchResults([]);
     await loadLinked(productsTab);
   };
 
@@ -382,7 +370,7 @@ export const BlogManager = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!productsTab} onOpenChange={(o) => { if (!o) { setProductsTab(null); setLinked([]); setLinkSearch(""); setSearchResults([]); } }}>
+      <Dialog open={!!productsTab} onOpenChange={(o) => { if (!o) { setProductsTab(null); setLinked([]); } }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {productsTab && (
             <>
