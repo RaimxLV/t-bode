@@ -1,77 +1,110 @@
+# Plāns: Campaign Wizard refaktorings
+
 ## Mērķis
+Apvienot `AutopilotDashboard` + ar kampaņām saistīto `BlogManager` loģiku vienā lineārā 3-soļu vednī. Atstāt `BlogManager` tikai manuāliem rakstiem un arhīvam.
 
-1. **Salabot mockup**: izmantot reālos T-Bode katalog produktus (customizable=true, 12 dizainpiemēroti produkti) kā mockup bāzi, nevis manuāli augšupielādētus PNG failus `base_products` tabulā.
-2. **Autopilot automatizācija**: pg_cron darbs, kas reizi dienā automātiski palaiž nākamo soli katrai kampaņai (brief → dizaini → blogs → mockup-produkti), apstājoties pirms publiskošanas, lai admin var apstiprināt.
+## Jaunā struktūra
 
----
+### Faili
+- **Jauns** `src/components/admin/CampaignWizard.tsx` — galvenais 3-soļu vednis (atver no kampaņas kartītes).
+- **Jauns** `src/components/admin/campaign-wizard/StepIdea.tsx` — Solis 1.
+- **Jauns** `src/components/admin/campaign-wizard/StepDesigns.tsx` — Solis 2 (dizaini + bāzes produktu vizuālās kartītes + inline tuning).
+- **Jauns** `src/components/admin/campaign-wizard/StepBlog.tsx` — Solis 3 (blog editors + expiration + "Mūsu kolekcija" checkbox + PUBLICĒT VISU).
+- **Jauns** `src/components/admin/campaign-wizard/PublishSuccess.tsx` — pēc-publicēšanas ekrāns.
+- **Atjaunots** `AutopilotDashboard.tsx` — saraksts ar kampaņām + cilvēkam draudzīgi statusi, "Atvērt vedni" poga, sarkanais aplītis pie kampaņām, kas gaida pārskatīšanu.
+- **Atjaunots** `BlogManager.tsx` — noņem kampaņu saistīto produkta picker / color-chip / sliders UI; atstāj tikai manuāla raksta CRUD + publicēto rakstu arhīva tabulu. Manuāliem rakstiem `campaign_id IS NULL`.
+- **Jauns** `src/hooks/useCampaignReviewBadge.ts` — atgriež skaitu kampaņām statusā `ready_for_review`/`designs_ready`/`blog_ready`, lai parādītu sarkano punktu Admin tab navigācijā un toast pēc login.
 
-## Daļa 1 — Mockup uz reāliem katalog krekliem
+### Statusu kartējums (UI tekstā)
+```
+generating              -> "Ģenerē idejas…"
+ready_for_review        -> "Gaida tavu apstiprinājumu" (1. solis)
+generating_designs      -> "Ģenerē dizainus…"
+designs_ready           -> "Gaida tavu apstiprinājumu" (2. solis)
+products_ready          -> "Gatavs publicēšanai" (3. solis)
+blog_ready              -> "Gatavs publicēšanai" (3. solis)
+published / active      -> "Publicēta"
+failed                  -> "Kļūda — pārstartē soli"
+```
 
-### Datu modelis
-- Pievienot kolonnu `products.print_area JSONB` (default `{"x":0.3,"y":0.25,"w":0.4,"h":0.45}`).
-- Šī kolonna tiek lietota tikai customizable=true produktiem (krekli, hūdiji u.c. ar dizaina iespēju).
-- Esošo `base_products` tabulu paturam (Bulk Studio joprojām strādā), bet autopilot to vairs neizmanto.
+### Soļu plūsma
+```
+[Autopilot dashboard] - kampaņas kartītes ar statusa nosaukumu + "Atvērt"
+        |
+        v
+[CampaignWizard dialog/page] -- progress bar 1/2/3
+   |
+   +-- Step 1: Idejas
+   |     - brief.title_lv, tagline, description
+   |     - color palette swatches (no brief.color_palette)
+   |     - [Pārģenerēt ideju] -> generate-campaign-brief
+   |     - [Saglabāt un turpināt vēlāk] [Tālāk ->]
+   |
+   +-- Step 2: Dizaini un Produkti
+   |     - 4-8 AI dizaini grid ar ★ toggle
+   |     - [Pārģenerēt dizainus] -> generate-campaign-designs
+   |     - Bāzes produkti = vizuālas kartītes (color_variants[0].images[0] thumbnail)
+   |     - [Veidot mockup] -> esošā composeMockup loģika; pēc tam zem kartiņas:
+   |         * krāsu chip ar X (color_variants noņemšana)
+   |         * Y offset slider + scale slider (print_offset_y, print_scale)
+   |         * "Izslēgt no kampaņas" toggle (is_draft remain + show_in_collection=false vai delete)
+   |     - [Atjaunot šo soli no jauna] -> dzēš campaign_designs un campaign produktus
+   |     - [Atpakaļ] [Tālāk ->]
+   |
+   +-- Step 3: Blogs un Publicēšana
+         - Tiptap RichTextEditor (esošais) priekš blog_posts.content
+         - Title / excerpt / slug inputs
+         - cover_image_url auto = pirmais ★ dizains (signed URL)
+         - [Pārģenerēt blogu] -> generate-campaign-blog
+         - Expiration date picker (default: holiday_date - 1 day)
+         - [x] Pievienot pie "Mūsu kolekcija" ar "Jaunums" zīmīti
+         - [Priekšskatīt klienta skatā] -> /blog/{slug}?preview=1
+         - [PUBLICĒT VISU] - viens transaction:
+             * blog_posts: status='published', published_at=now()
+             * products (campaign_id=X): is_draft=false, status='published',
+               show_in_collection=<checkbox>, expires_at=<picker>,
+               available_from=now()
+             * campaigns.status='published', published_at=now()
+         - Pēc publicēšanas -> PublishSuccess ekrāns
+```
 
-### Admin UI — Print zonas redaktors
-- Jauns tab `Admin.tsx` → "Print zonas" (vai pievienojam esošajam Bulk Studio "Bāzes" sadaļā saiti).
-- Saraksts ar visiem `customizable=true` produktiem. Katram rāda primāro bildi un pogu "Rediģēt print zonu" — atver esošo `PrintAreaEditor` modāli, saglabā `products.print_area`.
-- Bez print_area produkts joprojām strādā (lieto default centrēto zonu).
+### PublishSuccess
+"Kampaņa palaista! Aktīvi: N produkti, 1 bloga raksts. Pieejami līdz [Datums]." + linki uz `/blog/{slug}` un "Mūsu kolekcija".
 
-### Autopilot plūsma — pārstrādāta `runPublishProducts`
-- "Bāzes produktu" izvēles saraksts vairs nerāda `base_products`, bet gan `products WHERE customizable=true AND is_draft=false` ar krāsu pogām.
-- Katram izvēletam bāzes produktam:
-  - Iterējam `color_variants[]`, ņemam pirmo bildi katrai krāsai (`images[0]`).
-  - `composeMockup({ mockupUrl: variantImage, designUrl, printArea: product.print_area })` → JPG.
-  - Augšupielādējam `generated-mockups` bucket.
-  - Saglabājam jauno krāsas variantu ar to pašu krāsas vārdu un hex no oriģinālā produkta.
-- Izveido jaunu melnraksta produktu ar sastādītajiem `color_variants`, kopējot `category`, `sizes`, `description` no bāzes produkta.
+### Notifikāciju UX
+- `useCampaignReviewBadge` query (5 min refetch) atgriež `pending_count`.
+- `Admin.tsx`: pie "Autopilot" tab pievienot sarkanu punktu, ja `pending_count > 0`.
+- Pēc login `AuthContext` initial load -> ja admin un pending_count>0 -> `toast.info("{title} kampaņa ir gatava pārskatīšanai 2. solī!")`. Lai netraucē, glabāt `sessionStorage` flag.
 
-### Compositing uzlabojumi (`composeMockup` `imageCrop.ts`)
-- Pievienot `globalCompositeOperation = "multiply"` dizaina zīmēšanai uz gaišiem krekliem (auto-detekcija pēc krāsas hex spilgtuma) — uz tumšiem krekliem paliek normal blend ar `screen` opciju.
-- Tā dizains seko auduma krāsai un izskatās dabīgāks (līdzīgi kā Printful/Printify).
-- Pievienot mazu lighten/darken filtru atkarībā no krekla krāsas, lai melni dizaini neapšaubāmi nepazūd uz melna krekla — ja krekla spilgtums un dizaina spilgtums abi <0.3 vai abi >0.7, lietojam tikai opacity bez blend.
+### State retention
+- Soļi automātiski saglabājas DB (kā šobrīd) — nav atsevišķa wizard state tabula.
+- "Saglabāt un turpināt vēlāk" = vienkārši aizver dialogu.
+- "Atjaunot šo soli no jauna":
+   * Step 1 -> dzēš brief, set status='generating', re-run generate-campaign-brief
+   * Step 2 -> dzēš campaign_designs un products kur campaign_id=X un is_draft=true
+   * Step 3 -> dzēš blog_posts kur campaign_id=X un status!='published'
 
-### Skartie faili
-- migration: `ALTER TABLE products ADD COLUMN print_area JSONB`
-- `src/lib/imageCrop.ts` — uzlabot `composeMockup` ar blend modes
-- `src/components/admin/AutopilotDashboard.tsx` — bāzes picker no `products`, runPublishProducts pārrakstīt
-- `src/components/admin/PrintZonesManager.tsx` (jauns) — admin UI print zonu rediģēšanai
-- `src/pages/Admin.tsx` — pievienot "Print zonas" tab
+### Blog Manager izmaiņas
+- Noņemt: product picker dialog, color variant chip removal, print_offset_y/print_scale slideri, publish workflow ar campaign products.
+- Paturēt: title, slug, excerpt, content (Tiptap), cover_image_url upload, status, scheduled_for, manuāla blog_post_products saite (vienkāršs select).
+- Filtrs: rādīt tikai `campaign_id IS NULL` rakstus + tab "Arhīvs" = visi published.
 
----
+## Tehniskās detaļas
 
-## Daļa 2 — Autopilot cron automatizācija
+### DB izmaiņas
+Nav jaunas tabulas vai kolonnas. Visas vajadzīgās jau ir (`campaign_id`, `show_in_collection`, `print_offset_y`, `print_scale`, `expires_at`, `available_from`, `holiday_id`).
 
-### Jauna edge funkcija `autopilot-tick`
-- Bez auth (`verify_jwt = false`, čeko `cron-secret` headeri).
-- Loģika:
-  1. Iet cauri visiem aktīviem `holidays`. Atrod `next_occurrence`; ja `days_until <= lead_days` un nav esošas kampaņas šim gadam → izveido kampaņu ar status `generating`, izsauc `generate-campaign-brief`.
-  2. Iet cauri kampaņām status `ready_for_review` (brief gatavs) ar `auto_advance=true` → izsauc `generate-campaign-designs`.
-  3. Iet cauri kampaņām status `designs_ready` un `auto_advance=true` → automātiski atzīmē pirmos 2 dizainus ar ★, izsauc `generate-campaign-blog`.
-  4. Apstājas pirms `runPublishProducts` — produktu publicēšana vienmēr prasa admin apstiprinājumu (jo vajag izvēlēties bāzes kreklus).
-- Atgriež JSON ar visu darbību sarakstu.
+### Edge functions
+Bez izmaiņām — turpinām saukt esošos `generate-campaign-brief`, `generate-campaign-designs`, `generate-campaign-blog`, `publish-campaign-products` (vai inline logic, kā šobrīd `runPublishProducts`). Pievienosim vienu DB UPDATE batch priekš atomic publish.
 
-### Datu modelis
-- Pievienot `campaigns.auto_advance BOOLEAN DEFAULT true` — admin var izslēgt konkrētai kampaņai.
-- Pievienot `campaigns.auto_started_at TIMESTAMPTZ` — uzskaita, kad sistēma sākusi.
+### Izpildes plāns
+1. Izveidot `CampaignWizard.tsx` + 3 step komponentes + `PublishSuccess.tsx`.
+2. Pārveidot `AutopilotDashboard.tsx` — saraksts + status badge mapping + "Atvērt vedni" poga.
+3. Sagatavot `useCampaignReviewBadge` hook + integrēt `Admin.tsx` tab dot + login toast.
+4. Sašaurināt `BlogManager.tsx` — noņemt kampaņu-specific UI, filtrēt `campaign_id IS NULL`.
+5. Manuāli iziet cauri katram solim preview, pārbaudīt build.
 
-### pg_cron schedule
-- Iespējot `pg_cron`, `pg_net`.
-- Cron darbs ik dienas 06:00 UTC (08:00 LV): izsauc `autopilot-tick` ar cron-secret.
-- Pievienot `CRON_SECRET` secret.
+## Apjoms
+~6 jauni faili, 3 esošo failu atjauninājumi. Tā nav triviāla izmaiņa — apmēram 800-1000 jaunu rindu, ~400 rindu noņemtas no BlogManager.
 
-### Admin UI
-- AutopilotDashboard katrai kampaņai pievienot Switch "Auto" (kontrolē `auto_advance`).
-- Pievienot info bloku augšā: "Cron strādā katru dienu plkst. 08:00 — pārbauda gaidāmos svētkus un virza kampaņas līdz produktu izveides solim."
-
-### Skartie faili
-- migration: pievienot `auto_advance`, `auto_started_at` kolonnas; iespējot pg_cron/pg_net; insert cron darbu (caur insert tool, lai nesabojātu remix).
-- `supabase/functions/autopilot-tick/index.ts` (jauns)
-- `supabase/config.toml` — `verify_jwt = false` autopilot-tick funkcijai
-- `src/components/admin/AutopilotDashboard.tsx` — auto switch + cron info
-
----
-
-## Secība
-1. Vispirms Daļa 1 (mockup fix) — testēt vienu publicēšanu, redzēt īstu kreklu ar dizainu produkta kartiņā.
-2. Tad Daļa 2 (cron) — kad mockup strādā un katrai kampaņai redzam ka rezultāts ir labs.
+Vai apstiprini, ka eju šajā virzienā? Pēc apstiprinājuma sākšu būvēt.
