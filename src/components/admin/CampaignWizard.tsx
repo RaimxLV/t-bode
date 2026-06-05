@@ -720,11 +720,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[calc(100vw-0.75rem)] sm:w-full max-h-[95dvh] sm:max-h-[92vh] overflow-y-auto p-3 sm:p-6 rounded-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            {headerTitle}
+          <DialogTitle className="font-display text-base sm:text-xl flex items-center gap-2 pr-8">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+            <span className="truncate">{headerTitle}</span>
           </DialogTitle>
         </DialogHeader>
 
