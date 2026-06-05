@@ -605,6 +605,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onUpdatePrintAdj={updatePrintAdj}
                 onExcludeProduct={excludeProduct}
                 onRegenerateMockups={regenerateProductMockups}
+                onSetCoverColor={setCoverColor}
                 onReset={resetStep2}
                 onBack={() => setStep(1)}
                 onNext={() => setStep(3)}
