@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response;
+
     const { campaign_id }: Body = await req.json();
     if (!campaign_id) {
       return new Response(JSON.stringify({ error: "campaign_id required" }), {
