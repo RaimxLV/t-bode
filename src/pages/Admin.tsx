@@ -501,6 +501,24 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="blog">
+            <Suspense fallback={<TabFallback />}>
+              <BlogManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="drafts">
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
+            ) : draftProducts.length === 0 ? (
+              <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
+                Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām.
+              </CardContent></Card>
+            ) : (
+              renderProductGrid(draftProducts, false)
+            )}
+          </TabsContent>
+
         </Tabs>
       </main>
 
