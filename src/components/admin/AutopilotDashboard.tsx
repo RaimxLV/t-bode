@@ -243,22 +243,149 @@ export const AutopilotDashboard = () => {
     }
   };
 
-  const runPublishProducts = async (campaignId: string) => {
+  const toggleBaseFor = (campaignId: string, productId: string) => {
+    setSelectedBases((prev) => {
+      const cur = new Set(prev[campaignId] ?? []);
+      cur.has(productId) ? cur.delete(productId) : cur.add(productId);
+      return { ...prev, [campaignId]: cur };
+    });
+  };
+
+  const basesByProduct = (() => {
+    const m = new Map<string, BaseRow[]>();
+    for (const b of bases) {
+      if (!b.product_id) continue;
+      const arr = m.get(b.product_id) ?? [];
+      arr.push(b); m.set(b.product_id, arr);
+    }
+    return m;
+  })();
+
+  const availableBaseProducts = baseInfos.filter((p) => basesByProduct.has(p.id));
+
+  const runPublishProducts = async (campaign: Campaign) => {
+    const campaignId = campaign.id;
+    const starred = designs.filter(
+      (d) => d.campaign_id === campaignId && d.is_primary && d.image_url && !d.product_id,
+    );
+    if (!starred.length) { toast.error("Atzīmē vismaz vienu ★ dizainu"); return; }
+    const selectedSet = selectedBases[campaignId] ?? new Set<string>();
+    const selectedProducts = availableBaseProducts.filter((p) => selectedSet.has(p.id));
+    if (!selectedProducts.length) { toast.error("Izvēlies vismaz vienu bāzes kreklu"); return; }
+
     setPublishing(campaignId);
+    const totalSteps = starred.length * selectedProducts.reduce(
+      (sum, p) => sum + (basesByProduct.get(p.id)?.length ?? 0), 0,
+    );
+    setPublishProgress({ done: 0, total: totalSteps });
+    let done = 0;
+    let createdCount = 0;
+    const brief: any = campaign.brief ?? {};
+    const baseTitle = brief.title_lv ?? campaign.title ?? "Kampaņas produkts";
+
     try {
-      const { data, error } = await supabase.functions.invoke("publish-campaign-products", {
-        body: { campaign_id: campaignId },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const results = (data as any)?.results ?? [];
-      const okCount = results.filter((r: any) => r.ok).length;
-      toast.success(`Izveidoti ${okCount}/${results.length} produkti (melnraksts, paslēpti veikalā)`);
+      for (let di = 0; di < starred.length; di++) {
+        const design = starred[di];
+        const designSignedUrl = signedUrls[design.image_url!];
+        if (!designSignedUrl) {
+          toast.error(`Dizainam ${di + 1} nav pieejams URL`);
+          continue;
+        }
+
+        for (const baseProduct of selectedProducts) {
+          const items = basesByProduct.get(baseProduct.id) ?? [];
+          const variants: { name: string; hex: string; images: string[] }[] = [];
+
+          for (const b of items) {
+            try {
+              const mockupPublic = supabase.storage.from("mockup-templates").getPublicUrl(b.mockup_path).data.publicUrl;
+              const blob = await composeMockup({
+                mockupUrl: mockupPublic,
+                designUrl: designSignedUrl,
+                printArea: b.print_area,
+                maxWidth: 1400,
+              });
+              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${b.id}.jpg`;
+              const up = await supabase.storage.from("generated-mockups").upload(path, blob, {
+                contentType: "image/jpeg", upsert: true,
+              });
+              if (up.error) throw up.error;
+              const publicUrl = supabase.storage.from("generated-mockups").getPublicUrl(path).data.publicUrl;
+              variants.push({
+                name: b.color_name,
+                hex: b.color_hex || "#888888",
+                images: [publicUrl],
+              });
+            } catch (e: any) {
+              console.error("Mockup failed", b.id, e);
+              toast.error(`${baseProduct.name} (${b.color_name}): mockup neizdevās`);
+            }
+            done++; setPublishProgress({ done, total: totalSteps });
+          }
+
+          if (variants.length === 0) continue;
+
+          const baseName = baseProduct.name_lv || baseProduct.name;
+          const productName = starred.length > 1
+            ? `${baseTitle} — ${baseName} #${di + 1}`
+            : `${baseTitle} — ${baseName}`;
+          const slug = `${slugify(baseTitle)}-${slugify(baseName)}-${campaign.year}-${di + 1}-${Date.now().toString(36)}`;
+
+          const payload: any = {
+            name: productName,
+            name_lv: productName,
+            name_en: null,
+            slug,
+            description: baseProduct.description ?? brief.description_lv ?? null,
+            description_lv: baseProduct.description_lv ?? brief.description_lv ?? null,
+            description_en: null,
+            price: 24.99,
+            category: baseProduct.category,
+            sizes: baseProduct.sizes ?? ["S", "M", "L", "XL"],
+            colors: variants.map((v) => v.name),
+            customizable: false,
+            color_variants: variants,
+            image_url: variants[0].images[0],
+            in_stock: true,
+            is_draft: true,
+            status: "draft",
+            holiday_id: (campaign as any).holiday_id,
+          };
+
+          const { data: product, error } = await supabase
+            .from("products")
+            .insert(payload)
+            .select("id")
+            .maybeSingle();
+
+          if (error || !product) {
+            console.error("Insert product failed", error);
+            toast.error(`${baseName}: produkts neizveidojās`);
+          } else {
+            createdCount++;
+            // Link first base product back to the design (one design can spawn many products,
+            // we just mark the design as "used")
+            if (!design.product_id) {
+              await supabase
+                .from("campaign_designs" as any)
+                .update({ product_id: (product as any).id })
+                .eq("id", design.id);
+            }
+          }
+        }
+      }
+
+      if (createdCount > 0) {
+        await supabase.from("campaigns" as any).update({ status: "products_ready" }).eq("id", campaignId);
+      }
+      toast.success(`Izveidoti ${createdCount} melnraksta produkti ar mockup`);
       await load();
     } catch (e: any) {
-      toast.error("Produktu publicēšana neizdevās: " + (e.message ?? "nezināma kļūda"));
+      console.error(e);
+      toast.error("Publicēšana neizdevās: " + (e?.message ?? "nezināma kļūda"));
     } finally {
       setPublishing(null);
+      setPublishProgress(null);
     }
   };
 
