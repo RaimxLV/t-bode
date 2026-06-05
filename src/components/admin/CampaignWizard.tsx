@@ -890,6 +890,8 @@ function StepDesigns({
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
   onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice, onChangeStyle,
+  transparentBg, onChangeTransparentBg, customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
@@ -899,25 +901,27 @@ function StepDesigns({
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h4 className="font-semibold text-sm">AI dizaini ({designs.length})</h4>
-          <div className="flex items-center gap-2">
-            <select
-              value={styleChoice}
-              onChange={(e) => onChangeStyle(e.target.value)}
-              className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
-              title="Ģenerēšanas stils"
-            >
-              {STYLE_PRESETS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-            <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
-              {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
-              Pārģenerēt visus
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
+            {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
+            Pārģenerēt visus
+          </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground mb-2">
-          Stils tiek pielietots visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar zīmuļa pogu uz kartītes.
+
+        <GenerationSettings
+          styleChoice={styleChoice}
+          onChangeStyle={onChangeStyle}
+          transparentBg={transparentBg}
+          onChangeTransparentBg={onChangeTransparentBg}
+          customStyleId={customStyleId}
+          onChangeCustomStyleId={onChangeCustomStyleId}
+          imageSize={imageSize}
+          onChangeImageSize={onChangeImageSize}
+          preferredColors={preferredColors}
+          onChangePreferredColors={onChangePreferredColors}
+        />
+
+        <p className="text-[11px] text-muted-foreground mb-2 mt-2">
+          Iestatījumi tiek pielietoti visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar ↻ pogu uz kartītes.
         </p>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
