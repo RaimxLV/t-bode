@@ -37,6 +37,7 @@ const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSp
 const AutopilotDashboard = lazy(() => import("@/components/admin/AutopilotDashboard").then(m => ({ default: m.AutopilotDashboard })));
 const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m => ({ default: m.BlogManager })));
 const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManager").then(m => ({ default: m.PrintZonesManager })));
+const DesignsToProducts = lazy(() => import("@/components/admin/DesignsToProducts").then(m => ({ default: m.DesignsToProducts })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
