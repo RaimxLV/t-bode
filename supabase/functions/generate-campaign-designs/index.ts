@@ -19,6 +19,8 @@ interface Body {
   colors?: { r: number; g: number; b: number }[];
   /** Strip background after generation (Bria). */
   transparent_bg?: boolean;
+  /** Per-design slogan text to weave into the artwork (auto-routes to Ideogram). */
+  slogan_override?: string;
 }
 
 /** Allowed Recraft V3 styles (full list from fal.ai schema). */
@@ -265,6 +267,8 @@ Deno.serve(async (req) => {
     const campSize: string = (campaign as any).image_size || "square_hd";
     const campColors: { r: number; g: number; b: number }[] = (campaign as any).preferred_colors ?? [];
     const campTransparent: boolean = !!(campaign as any).transparent_bg;
+    const campBrief: any = (campaign as any).brief ?? {};
+    const campFitInFrame: boolean = !!campBrief.fit_in_frame;
 
     const useCustomId = (custom_style_id !== undefined ? custom_style_id : campCustomId) || undefined;
     const useSize = image_size || campSize;
@@ -286,12 +290,17 @@ Deno.serve(async (req) => {
       }
       const rawPrompt = (prompt_override?.trim() || (existing as any).prompt || "").trim();
       const useStyle = bodyStyle || (existing as any).style || campaignStyle;
-      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent);
+      // Find slogan from brief by matching prompt, or use override
+      const ideas: any[] = Array.isArray(campBrief.design_ideas) ? campBrief.design_ideas : [];
+      const matched = ideas.find((i) => (i?.prompt ?? "") === (existing as any).prompt);
+      const slogan = (body.slogan_override ?? matched?.slogan ?? "").toString().trim();
+      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
 
       try {
         const { bytes } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
+          slogan,
         });
         const path = `${campaign_id}/${design_id}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage
@@ -327,7 +336,7 @@ Deno.serve(async (req) => {
 
     /* ===== FULL CAMPAIGN GENERATION ===== */
     const brief: any = (campaign as any).brief;
-    const ideas: { title: string; prompt: string }[] = brief?.design_ideas ?? [];
+    const ideas: { title: string; prompt: string; slogan?: string }[] = brief?.design_ideas ?? [];
     if (!ideas.length) {
       return new Response(JSON.stringify({ error: "No design_ideas in brief" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -351,11 +360,13 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
-      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent);
+      const slogan = (idea.slogan ?? "").trim();
+      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
         const { bytes } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
+          slogan,
         });
         const path = `${campaign_id}/${i}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage
