@@ -278,12 +278,36 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setBusy("designs");
     toast.info("AI ģenerē dizainus (1-2 min)…");
     try {
-      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", { body: { campaign_id: campaign.id } });
+      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
+        body: { campaign_id: campaign.id, style: styleChoice },
+      });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
       toast.success("Dizaini pārģenerēti");
       await load();
     } catch (e: any) { toast.error("Neizdevās: " + e.message); }
     finally { setBusy(null); }
+  };
+
+  const regenSingleDesign = async (designId: string, newPrompt: string, newStyle?: string) => {
+    if (!campaign) return;
+    setRegenSingleId(designId);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
+        body: {
+          campaign_id: campaign.id,
+          design_id: designId,
+          prompt_override: newPrompt,
+          style: newStyle || styleChoice,
+        },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
+      toast.success("Dizains pārģenerēts");
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setRegenSingleId(null);
+    }
   };
 
   const toggleStar = async (d: DesignRow) => {
