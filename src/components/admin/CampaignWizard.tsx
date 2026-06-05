@@ -150,7 +150,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     try {
       const { data: campRaw } = await supabase
         .from("campaigns" as any)
-        .select("id, holiday_id, year, status, title, description, brief")
+        .select("id, holiday_id, year, status, title, description, brief, style")
         .eq("id", campaignId)
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
@@ -176,7 +176,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Designs
       const { data: dRaw } = await supabase.from("campaign_designs" as any)
-        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id")
+        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id, style")
         .eq("campaign_id", campaignId)
         .order("created_at");
       const drows = (dRaw as unknown as DesignRow[]) ?? [];
