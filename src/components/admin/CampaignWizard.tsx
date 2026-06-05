@@ -760,6 +760,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 campaign={campaign}
                 busy={busy}
                 onRegen={regenBrief}
+                onSaveBrief={saveBrief}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
