@@ -14,6 +14,7 @@ type DesignItem = {
   url: string;
   source: "library" | "campaign";
   createdAt: string;
+  campaignId?: string | null;
 };
 
 type ColorVariant = { name: string; hex: string; images: string[] };
@@ -72,7 +73,7 @@ export function DesignsToProducts() {
     try {
       const [{ data: lib }, { data: camp }, { data: prods }] = await Promise.all([
         supabase.from("design_library").select("id,name,file_path,created_at").order("created_at", { ascending: false }),
-        supabase.from("campaign_designs" as any).select("id,prompt,image_url,created_at,product_id").order("created_at", { ascending: false }),
+        supabase.from("campaign_designs" as any).select("id,prompt,image_url,created_at,product_id,campaign_id").order("created_at", { ascending: false }),
         supabase
           .from("products")
           .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,print_area")
@@ -104,6 +105,7 @@ export function DesignsToProducts() {
           url,
           source: "campaign",
           createdAt: r.created_at,
+          campaignId: r.campaign_id ?? null,
         });
       }
 
@@ -235,6 +237,7 @@ export function DesignsToProducts() {
           print_scale: scale,
           available_from: new Date().toISOString(),
           always_available: false,
+          campaign_id: selectedDesign.campaignId ?? null,
         };
         const { error } = await supabase.from("products").insert(payload);
         if (error) {
