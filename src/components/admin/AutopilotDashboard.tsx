@@ -599,12 +599,12 @@ export const AutopilotDashboard = () => {
                           </div>
                           {availableBaseProducts.length === 0 ? (
                             <p className="text-[11px] text-muted-foreground">
-                              Nav pieejamu bāzu — pievieno tās <strong>Bulk Studio → Bāzes krekli</strong>.
+                              Nav customizable produktu ar krāsu bildēm.
                             </p>
                           ) : (
                             <div className="space-y-1 max-h-40 overflow-y-auto">
                               {availableBaseProducts.map((p) => {
-                                const items = basesByProduct.get(p.id) ?? [];
+                                const items = p.color_variants.filter((cv) => cv.images?.[0]);
                                 const sel = selectedBases[camp.id]?.has(p.id) ?? false;
                                 return (
                                   <button
@@ -618,11 +618,13 @@ export const AutopilotDashboard = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="text-xs truncate">{p.name_lv || p.name}</div>
-                                      <div className="text-[9px] text-muted-foreground">{items.length} krāsas</div>
+                                      <div className="text-[9px] text-muted-foreground">
+                                        {items.length} krāsas{p.print_area ? "" : " · print zona nav uzstādīta"}
+                                      </div>
                                     </div>
                                     <div className="flex -space-x-1">
-                                      {items.slice(0, 5).map((b) => (
-                                        <div key={b.id} className="w-3 h-3 rounded-full border border-background" style={{ background: b.color_hex || "#888" }} title={b.color_name} />
+                                      {items.slice(0, 5).map((cv, i) => (
+                                        <div key={i} className="w-3 h-3 rounded-full border border-background" style={{ background: cv.hex || "#888" }} title={cv.name} />
                                       ))}
                                     </div>
                                   </button>
