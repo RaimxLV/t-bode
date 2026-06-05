@@ -720,16 +720,16 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl w-[calc(100vw-0.75rem)] sm:w-full max-h-[95dvh] sm:max-h-[92vh] overflow-y-auto p-3 sm:p-6 rounded-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-base sm:text-xl flex items-center gap-2 pr-8">
+      <DialogContent className="block max-w-[100vw] sm:max-w-5xl w-screen sm:w-full max-h-[100dvh] sm:max-h-[92vh] h-[100dvh] sm:h-auto overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
+        <DialogHeader className="min-w-0">
+          <DialogTitle className="font-display text-base sm:text-xl flex items-center gap-2 pr-8 min-w-0">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
             <span className="truncate">{headerTitle}</span>
           </DialogTitle>
         </DialogHeader>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between gap-2 py-2 border-b border-border">
+        <div className="flex items-center justify-between gap-2 py-2 border-b border-border mt-3 min-w-0">
           <StepDot n={1} label="Idejas" />
           <div className="flex-1 h-px bg-border mx-1" />
           <StepDot n={2} label="Dizaini & produkti" />
@@ -742,7 +742,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         ) : success ? (
           <PublishSuccess success={success} onClose={closeAndRefresh} />
         ) : (
-          <div className="py-3 space-y-4">
+          <div className="py-3 space-y-4 min-w-0">
             {step === 1 && (
               <StepIdea
                 campaign={campaign}
