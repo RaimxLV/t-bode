@@ -570,7 +570,29 @@ export const AutopilotDashboard = () => {
                     {camp.status === "designs_ready" && (
                       <>
                         <p className="text-[11px] text-muted-foreground">
-                          1) Atzīmē ★ vienu vai vairākus dizainus. 2) Izvēlies bāzes kreklus zemāk. 3) Publicē.
+                          1) Atzīmē ★ vienu vai vairākus dizainus (★ kļūs par blog raksta vāku). 2) Ģenerē blog rakstu. 3) Pēc tam publicē produktus ar mockup.
+                        </p>
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          disabled={
+                            bloggingId === camp.id ||
+                            !designs.some((d) => d.campaign_id === camp.id && d.is_primary && d.image_url)
+                          }
+                          onClick={() => runBlogGeneration(camp.id)}
+                        >
+                          {bloggingId === camp.id ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Raksta blogu…</>
+                          ) : (
+                            <><FileText className="w-4 h-4 mr-2" />Ģenerēt blog rakstu</>
+                          )}
+                        </Button>
+                      </>
+                    )}
+                    {camp.status === "blog_ready" && (
+                      <>
+                        <p className="text-[11px] text-muted-foreground">
+                          Blog raksts gatavs (melnraksts). Tagad izvēlies bāzes kreklus un publicē produktus ar mockup.
                         </p>
 
                         {/* Base products picker */}
@@ -656,24 +678,25 @@ export const AutopilotDashboard = () => {
                             <><Package className="w-4 h-4 mr-2" />Publicēt ar mockup (melnraksts)</>
                           )}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          disabled={bloggingId === camp.id}
+                          onClick={() => runBlogGeneration(camp.id)}
+                        >
+                          {bloggingId === camp.id ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Raksta blogu…</>
+                          ) : (
+                            <><RefreshCw className="w-4 h-4 mr-2" />Pārģenerēt blog rakstu</>
+                          )}
+                        </Button>
                       </>
                     )}
-                    {(camp.status === "products_ready" || camp.status === "blog_ready") && (
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        variant={camp.status === "blog_ready" ? "outline" : "default"}
-                        disabled={bloggingId === camp.id}
-                        onClick={() => runBlogGeneration(camp.id)}
-                      >
-                        {bloggingId === camp.id ? (
-                          <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Raksta blogu…</>
-                        ) : camp.status === "blog_ready" ? (
-                          <><RefreshCw className="w-4 h-4 mr-2" />Pārģenerēt blog rakstu</>
-                        ) : (
-                          <><FileText className="w-4 h-4 mr-2" />Ģenerēt blog rakstu</>
-                        )}
-                      </Button>
+                    {camp.status === "products_ready" && (
+                      <div className="text-[11px] text-muted-foreground text-center p-2 border rounded bg-muted/30">
+                        ✓ Blog raksts un produkti izveidoti (melnraksti). Pārbaudi tos sadaļās Blogs un Produkti.
+                      </div>
                     )}
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" className="flex-1" onClick={() => setViewing(camp)}>
