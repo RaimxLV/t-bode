@@ -35,6 +35,9 @@ type LinkedProduct = {
   available_from: string | null;
   expires_at: string | null;
   always_available: boolean;
+  color_variants: Array<{ name: string; hex: string; images?: string[] }> | null;
+  print_offset_y: number | null;
+  print_scale: number | null;
   source: "auto" | "manual";
 };
 
