@@ -93,7 +93,7 @@ const STYLE_PRESETS: { value: string; label: string; hint: string }[] = [
   { value: "digital_illustration", label: "Ilustrācija (jaukta)", hint: "Krāsaina digitāla māksla" },
   { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)", hint: "Bold plakāta stils" },
   { value: "digital_illustration/hand_drawn", label: "Roku zīmēts", hint: "Skicei līdzīgs" },
-  { value: "digital_illustration/grain": label: "Tekstūrēts" as any, hint: "Grain efekts" } as any,
+  { value: "digital_illustration/grain", label: "Tekstūrēts", hint: "Grain efekts" },
   { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)", hint: "Klasiska gravīra" },
   { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums", hint: "Tikai līnijas" },
   { value: "vector_illustration", label: "Vektors (klasisks)", hint: "Flat dizains, tīras līnijas" },
