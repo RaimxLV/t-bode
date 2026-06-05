@@ -77,6 +77,48 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_post_products: {
+        Row: {
+          blog_post_id: string
+          created_at: string
+          id: string
+          product_id: string
+          sort_order: number
+          source: string
+        }
+        Insert: {
+          blog_post_id: string
+          created_at?: string
+          id?: string
+          product_id: string
+          sort_order?: number
+          source?: string
+        }
+        Update: {
+          blog_post_id?: string
+          created_at?: string
+          id?: string
+          product_id?: string
+          sort_order?: number
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blog_post_products_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_post_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author_id: string | null
@@ -1067,6 +1109,9 @@ export type Database = {
       }
       products: {
         Row: {
+          always_available: boolean
+          available_from: string | null
+          campaign_id: string | null
           category: string
           color_variants: Json
           colors: string[] | null
@@ -1086,6 +1131,8 @@ export type Database = {
           name_lv: string | null
           price: number
           print_area: Json | null
+          print_offset_y: number | null
+          print_scale: number | null
           sizes: string[] | null
           slug: string
           status: Database["public"]["Enums"]["product_status"]
@@ -1093,6 +1140,9 @@ export type Database = {
           zakeke_model_code: string | null
         }
         Insert: {
+          always_available?: boolean
+          available_from?: string | null
+          campaign_id?: string | null
           category: string
           color_variants?: Json
           colors?: string[] | null
@@ -1112,6 +1162,8 @@ export type Database = {
           name_lv?: string | null
           price: number
           print_area?: Json | null
+          print_offset_y?: number | null
+          print_scale?: number | null
           sizes?: string[] | null
           slug: string
           status?: Database["public"]["Enums"]["product_status"]
@@ -1119,6 +1171,9 @@ export type Database = {
           zakeke_model_code?: string | null
         }
         Update: {
+          always_available?: boolean
+          available_from?: string | null
+          campaign_id?: string | null
           category?: string
           color_variants?: Json
           colors?: string[] | null
@@ -1138,6 +1193,8 @@ export type Database = {
           name_lv?: string | null
           price?: number
           print_area?: Json | null
+          print_offset_y?: number | null
+          print_scale?: number | null
           sizes?: string[] | null
           slug?: string
           status?: Database["public"]["Enums"]["product_status"]
