@@ -717,7 +717,12 @@ function StepDesigns({
               <div key={d.id} className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
                 {d.image_url && signedUrls[d.image_url] ? (
                   <>
-                    <img src={signedUrls[d.image_url]} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+                      loading="lazy"
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       onClick={() => onToggleStar(d)}
                       className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
