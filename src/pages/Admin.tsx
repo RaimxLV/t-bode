@@ -371,6 +371,7 @@ const Admin = () => {
             <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
+            <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
