@@ -34,6 +34,7 @@ type Campaign = {
   title: string | null;
   description: string | null;
   brief: Brief | null;
+  style?: string | null;
 };
 
 type DesignRow = {
@@ -44,6 +45,7 @@ type DesignRow = {
   generation_error: string | null;
   is_primary: boolean;
   product_id: string | null;
+  style?: string | null;
 };
 
 type ColorVariant = { name: string; hex: string; images: string[] };
