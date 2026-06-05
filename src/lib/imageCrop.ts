@@ -157,6 +157,10 @@ export async function composeMockup(opts: {
   maxWidth?: number; // output max width in px (default 1200)
   quality?: number;  // jpeg quality
   baseColorHex?: string; // optional hex of the garment color — drives blend mode
+  /** Vertical offset of the design inside the print area, normalized to print area height. e.g. -0.15..0.15 */
+  offsetY?: number;
+  /** Scale multiplier applied to the contain-fit size. 1 = default, 0.6..1.2 typical. */
+  scale?: number;
 }): Promise<Blob> {
   const [mock, design] = await Promise.all([urlToImage(opts.mockupUrl), urlToImage(opts.designUrl)]);
   const maxW = opts.maxWidth ?? 1200;
@@ -178,8 +182,10 @@ export async function composeMockup(opts: {
   const aspect = design.naturalWidth / design.naturalHeight;
   let dw = rw, dh = rw / aspect;
   if (dh > rh) { dh = rh; dw = rh * aspect; }
+  const scale = opts.scale ?? 1;
+  dw *= scale; dh *= scale;
   const dx = rx + (rw - dw) / 2;
-  const dy = ry + (rh - dh) / 2;
+  const dy = ry + (rh - dh) / 2 + (opts.offsetY ?? 0) * rh;
 
   // Pick blend mode based on garment lightness so the print follows the fabric:
   //   light shirt → multiply (dark areas of print darken the fabric, white = transparent feel)
