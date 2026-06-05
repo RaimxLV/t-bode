@@ -51,6 +51,7 @@ type DesignRow = {
   is_primary: boolean;
   product_id: string | null;
   style?: string | null;
+  slogan?: string | null;
 };
 
 type ColorVariant = { name: string; hex: string; images: string[] };
