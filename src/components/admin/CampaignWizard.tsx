@@ -365,6 +365,22 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next } : x));
   };
 
+  const setCoverColor = async (productId: string, colorName: string) => {
+    const p = campProducts.find((x) => x.id === productId);
+    if (!p) return;
+    const idx = p.color_variants.findIndex((c) => c.name === colorName);
+    if (idx <= 0) return;
+    const next = [p.color_variants[idx], ...p.color_variants.filter((_, i) => i !== idx)];
+    const newCover = next[0]?.images?.[0] ?? p.image_url;
+    const { error } = await supabase.from("products").update({
+      color_variants: next as any,
+      image_url: newCover,
+    }).eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next, image_url: newCover } : x));
+    toast.success(`Kartītes krāsa: ${colorName}`);
+  };
+
   const updatePrintAdj = async (productId: string, patch: { print_offset_y?: number; print_scale?: number }) => {
     const { error } = await supabase.from("products").update(patch).eq("id", productId);
     if (error) { toast.error(error.message); return; }
