@@ -1549,8 +1549,12 @@ function DesignCard({
             onChange={(e) => setDraftStyle(e.target.value)}
             className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
           >
-            {STYLE_PRESETS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+            {STYLE_GROUPS.map((g) => (
+              <optgroup key={g.group} label={g.group}>
+                {g.options.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <div className="flex gap-1">
@@ -1565,6 +1569,146 @@ function DesignCard({
             <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setEditing(false)}>
               <X className="w-3 h-3" />
             </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ------------ Generation settings panel (fal.ai Recraft V3) ------------ */
+function GenerationSettings({
+  styleChoice, onChangeStyle,
+  transparentBg, onChangeTransparentBg,
+  customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize,
+  preferredColors, onChangePreferredColors,
+}: {
+  styleChoice: string;
+  onChangeStyle: (v: string) => void;
+  transparentBg: boolean;
+  onChangeTransparentBg: (v: boolean) => void;
+  customStyleId: string;
+  onChangeCustomStyleId: (v: string) => void;
+  imageSize: string;
+  onChangeImageSize: (v: string) => void;
+  preferredColors: { r: number; g: number; b: number }[];
+  onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [newColor, setNewColor] = useState("#dc2626");
+  const usingCustom = customStyleId.trim().length > 0;
+
+  const addColor = () => {
+    const rgb = hexToRgb(newColor);
+    if (!rgb || preferredColors.length >= 5) return;
+    onChangePreferredColors([...preferredColors, rgb]);
+  };
+  const removeColor = (idx: number) =>
+    onChangePreferredColors(preferredColors.filter((_, i) => i !== idx));
+
+  return (
+    <div className="rounded border bg-muted/20">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold"
+      >
+        <span>Ģenerēšanas iestatījumi {open ? "▾" : "▸"}</span>
+        <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
+          {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
+          {transparentBg ? " · caurspīdīgs" : ""}
+        </span>
+      </button>
+      {open && (
+        <div className="px-3 pb-3 space-y-3 border-t pt-3">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stils</label>
+            <select
+              value={styleChoice}
+              onChange={(e) => onChangeStyle(e.target.value)}
+              disabled={usingCustom}
+              className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body disabled:opacity-50"
+            >
+              {STYLE_GROUPS.map((g) => (
+                <optgroup key={g.group} label={g.group}>
+                  {g.options.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Pielāgots Recraft stila ID
+            </label>
+            <Input
+              value={customStyleId}
+              onChange={(e) => onChangeCustomStyleId(e.target.value)}
+              placeholder="piem. 5e8c7f48-…"
+              className="mt-1 h-8 text-xs"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Iztrenē savu stilu vietnē recraft.ai un ielīmē UUID. Pārraksta izvēlēto stilu.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Izmērs</label>
+            <select
+              value={imageSize}
+              onChange={(e) => onChangeImageSize(e.target.value)}
+              className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
+            >
+              {IMAGE_SIZES.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={transparentBg}
+              onChange={(e) => onChangeTransparentBg(e.target.checked)}
+              className="rounded"
+            />
+            <span className="text-xs">Caurspīdīgs fons (auto-noņemšana)</span>
+          </label>
+
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Vēlamās krāsas (līdz 5)
+            </label>
+            <div className="flex flex-wrap gap-1.5 items-center mt-1">
+              {preferredColors.map((c, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => removeColor(i)}
+                  title="Noņemt"
+                  className="w-7 h-7 rounded border relative group"
+                  style={{ backgroundColor: rgbToHex(c) }}
+                >
+                  <X className="w-3 h-3 absolute inset-0 m-auto text-white drop-shadow opacity-0 group-hover:opacity-100" />
+                </button>
+              ))}
+              {preferredColors.length < 5 && (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="color"
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    className="w-7 h-7 rounded border cursor-pointer"
+                  />
+                  <Button type="button" size="sm" variant="outline" className="h-7 text-[11px]" onClick={addColor}>
+                    + Pievienot
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
