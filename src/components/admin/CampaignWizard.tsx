@@ -1022,6 +1022,7 @@ function ProductTuneRow({
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const lastSaved = useRef<{ y: number; s: number }>({ y: offsetY, s: scale });
 
