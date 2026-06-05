@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ const EmailLog = lazy(() => import("@/components/admin/EmailLog").then(m => ({ d
 const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager").then(m => ({ default: m.PromoCodeManager })));
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
 const AutopilotDashboard = lazy(() => import("@/components/admin/AutopilotDashboard").then(m => ({ default: m.AutopilotDashboard })));
+const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m => ({ default: m.BlogManager })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
@@ -366,6 +367,8 @@ const Admin = () => {
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
             <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
+            <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
+            <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -496,6 +499,24 @@ const Admin = () => {
             <Suspense fallback={<TabFallback />}>
               <AutopilotDashboard />
             </Suspense>
+          </TabsContent>
+
+          <TabsContent value="blog">
+            <Suspense fallback={<TabFallback />}>
+              <BlogManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="drafts">
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
+            ) : draftProducts.length === 0 ? (
+              <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
+                Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām.
+              </CardContent></Card>
+            ) : (
+              renderProductGrid(draftProducts, false)
+            )}
           </TabsContent>
 
         </Tabs>
