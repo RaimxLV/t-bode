@@ -385,7 +385,12 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
-            <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
+            <TabsTrigger value="autopilot" className="gap-1.5 text-sm relative">
+              <Sparkles className="w-4 h-4" /> Autopilot
+              {pendingCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
