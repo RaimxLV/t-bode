@@ -335,10 +335,17 @@ export const BlogManager = () => {
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" onClick={() => publish(p)} disabled={busy === p.id} className="gap-1.5">
-                      {busy === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      Publicēt
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" asChild className="gap-1.5">
+                        <a href={`/blog/${p.slug}?preview=1`} target="_blank" rel="noreferrer">
+                          <Eye className="w-3.5 h-3.5" /> Priekšskatīt
+                        </a>
+                      </Button>
+                      <Button size="sm" onClick={() => publish(p)} disabled={busy === p.id} className="gap-1.5">
+                        {busy === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        Publicēt
+                      </Button>
+                    </>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => remove(p)} disabled={busy === p.id} className="text-destructive">
                     <Trash2 className="w-3.5 h-3.5" />
