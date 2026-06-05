@@ -1310,12 +1310,12 @@ function ProductTuneRow({
   const dyRel = printArea.y + (printArea.h - dhRel) / 2 + offsetY * printArea.h;
 
   return (
-    <div className="border rounded p-3 space-y-3">
-      <div className="flex items-start gap-3">
+    <div className="border rounded p-2 sm:p-3 space-y-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-40 h-40 sm:w-56 sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
