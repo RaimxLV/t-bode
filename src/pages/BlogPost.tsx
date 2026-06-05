@@ -83,6 +83,7 @@ const BlogPost = () => {
           title={post.title}
           description={post.excerpt || post.title}
           image={post.cover_image_url || undefined}
+          noindex
         />
       )}
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
