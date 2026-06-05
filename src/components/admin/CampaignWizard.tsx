@@ -34,6 +34,7 @@ type Campaign = {
   title: string | null;
   description: string | null;
   brief: Brief | null;
+  style?: string | null;
 };
 
 type DesignRow = {
@@ -44,6 +45,7 @@ type DesignRow = {
   generation_error: string | null;
   is_primary: boolean;
   product_id: string | null;
+  style?: string | null;
 };
 
 type ColorVariant = { name: string; hex: string; images: string[] };
@@ -86,6 +88,21 @@ type BlogPost = {
 
 const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
+/** Recraft V3 style presets (fal.ai). */
+const STYLE_PRESETS: { value: string; label: string; hint: string }[] = [
+  { value: "digital_illustration", label: "Ilustrācija (jaukta)", hint: "Krāsaina digitāla māksla" },
+  { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)", hint: "Bold plakāta stils" },
+  { value: "digital_illustration/hand_drawn", label: "Roku zīmēts", hint: "Skicei līdzīgs" },
+  { value: "digital_illustration/grain", label: "Tekstūrēts", hint: "Grain efekts" },
+  { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)", hint: "Klasiska gravīra" },
+  { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums", hint: "Tikai līnijas" },
+  { value: "vector_illustration", label: "Vektors (klasisks)", hint: "Flat dizains, tīras līnijas" },
+  { value: "vector_illustration/line_art", label: "Line Art", hint: "Tikai vektora kontūras" },
+  { value: "vector_illustration/linocut", label: "Linogrievums", hint: "Linocut stils" },
+  { value: "vector_illustration/line_circuit", label: "Tehno līnijas", hint: "Circuit-style" },
+  { value: "realistic_image", label: "Reālistisks", hint: "Foto-līdzīgs" },
+];
+
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
@@ -126,6 +143,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [addToCollection, setAddToCollection] = useState(true);
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [success, setSuccess] = useState<{ products: number; blogSlug: string | null; expires: string | null } | null>(null);
+  const [styleChoice, setStyleChoice] = useState<string>("digital_illustration");
+  const [regenSingleId, setRegenSingleId] = useState<string | null>(null);
 
   const load = async () => {
     if (!campaignId) return;
@@ -133,11 +152,12 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     try {
       const { data: campRaw } = await supabase
         .from("campaigns" as any)
-        .select("id, holiday_id, year, status, title, description, brief")
+        .select("id, holiday_id, year, status, title, description, brief, style")
         .eq("id", campaignId)
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
       setCampaign(camp);
+      if (camp?.style) setStyleChoice(camp.style);
 
       // Decide step from status
       if (camp) {
@@ -159,7 +179,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Designs
       const { data: dRaw } = await supabase.from("campaign_designs" as any)
-        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id")
+        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id, style")
         .eq("campaign_id", campaignId)
         .order("created_at");
       const drows = (dRaw as unknown as DesignRow[]) ?? [];
@@ -258,12 +278,36 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setBusy("designs");
     toast.info("AI ģenerē dizainus (1-2 min)…");
     try {
-      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", { body: { campaign_id: campaign.id } });
+      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
+        body: { campaign_id: campaign.id, style: styleChoice },
+      });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
       toast.success("Dizaini pārģenerēti");
       await load();
     } catch (e: any) { toast.error("Neizdevās: " + e.message); }
     finally { setBusy(null); }
+  };
+
+  const regenSingleDesign = async (designId: string, newPrompt: string, newStyle?: string) => {
+    if (!campaign) return;
+    setRegenSingleId(designId);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
+        body: {
+          campaign_id: campaign.id,
+          design_id: designId,
+          prompt_override: newPrompt,
+          style: newStyle || styleChoice,
+        },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
+      toast.success("Dizains pārģenerēts");
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setRegenSingleId(null);
+    }
   };
 
   const toggleStar = async (d: DesignRow) => {
@@ -600,6 +644,10 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 busy={busy}
                 onToggleStar={toggleStar}
                 onRegenDesigns={regenDesigns}
+                onRegenSingleDesign={regenSingleDesign}
+                regenSingleId={regenSingleId}
+                styleChoice={styleChoice}
+                onChangeStyle={setStyleChoice}
                 onToggleBase={toggleBase}
                 onBuildMockups={buildMockups}
                 onRemoveColor={removeColor}
@@ -712,7 +760,7 @@ function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
-  onSetCoverColor,
+  onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice, onChangeStyle,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
@@ -720,13 +768,28 @@ function StepDesigns({
     <div className="space-y-5">
       {/* Designs grid */}
       <section>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h4 className="font-semibold text-sm">AI dizaini ({designs.length})</h4>
-          <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
-            {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
-            Pārģenerēt dizainus
-          </Button>
+          <div className="flex items-center gap-2">
+            <select
+              value={styleChoice}
+              onChange={(e) => onChangeStyle(e.target.value)}
+              className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
+              title="Ģenerēšanas stils"
+            >
+              {STYLE_PRESETS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
+              {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
+              Pārģenerēt visus
+            </Button>
+          </div>
         </div>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Stils tiek pielietots visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar zīmuļa pogu uz kartītes.
+        </p>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
             Vēl nav dizainu. Spied "Pārģenerēt dizainus".
@@ -734,28 +797,15 @@ function StepDesigns({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {designs.map((d: DesignRow) => (
-              <div key={d.id} className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
-                {d.image_url && signedUrls[d.image_url] ? (
-                  <>
-                    <img
-                      src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
-                      loading="lazy"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => onToggleStar(d)}
-                      className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
-                    >
-                      <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
-                    </button>
-                  </>
-                ) : d.generation_error ? (
-                  <div className="p-2 text-[10px] text-destructive flex items-center justify-center h-full text-center">⚠ {d.generation_error}</div>
-                ) : (
-                  <div className="flex items-center justify-center h-full"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-                )}
-              </div>
+              <DesignCard
+                key={d.id}
+                d={d}
+                signedUrls={signedUrls}
+                regenSingleId={regenSingleId}
+                styleChoice={styleChoice}
+                onToggleStar={onToggleStar}
+                onRegenSingleDesign={onRegenSingleDesign}
+              />
             ))}
           </div>
         )}
@@ -1277,6 +1327,113 @@ function ProductTuneRow({
         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
           <Loader2 className="w-3 h-3 animate-spin" /> Atjauno visu krāsu mockups…
         </p>
+      )}
+    </div>
+  );
+}
+
+/* ------------ Single design card with prompt-edit + regenerate ------------ */
+function DesignCard({
+  d,
+  signedUrls,
+  regenSingleId,
+  styleChoice,
+  onToggleStar,
+  onRegenSingleDesign,
+}: {
+  d: DesignRow;
+  signedUrls: Record<string, string>;
+  regenSingleId: string | null;
+  styleChoice: string;
+  onToggleStar: (d: DesignRow) => void;
+  onRegenSingleDesign: (id: string, prompt: string, style?: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
+  const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
+
+  const busy = regenSingleId === d.id;
+
+  return (
+    <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
+      {d.image_url && signedUrls[d.image_url] ? (
+        <>
+          <img
+            src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+            loading="lazy"
+            alt=""
+            className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
+          />
+          <button
+            onClick={() => onToggleStar(d)}
+            className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
+            title={d.is_primary ? "Noņemt ★" : "Atzīmēt ★"}
+          >
+            <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
+          </button>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            className="absolute top-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
+            title="Mainīt promptu un pārģenerēt"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </>
+      ) : d.generation_error ? (
+        <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
+          <span>⚠ {d.generation_error}</span>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            className="underline text-foreground"
+          >
+            Mēģināt vēlreiz
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {busy && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      )}
+
+      {editing && (
+        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5">
+          <p className="text-[10px] font-semibold">Mainīt promptu</p>
+          <Textarea
+            value={draftPrompt}
+            onChange={(e) => setDraftPrompt(e.target.value)}
+            rows={4}
+            className="text-[11px] min-h-0 flex-1 resize-none"
+            placeholder="Piem. minimālistisks zaķis ar morkām…"
+          />
+          <select
+            value={draftStyle}
+            onChange={(e) => setDraftStyle(e.target.value)}
+            className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
+          >
+            {STYLE_PRESETS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="flex-1 h-7 text-[11px]"
+              disabled={!draftPrompt.trim() || busy}
+              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle); }}
+            >
+              <Wand2 className="w-3 h-3 mr-1" /> Ģenerēt
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setEditing(false)}>
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
