@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -578,6 +578,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 availableBases={availableBases}
                 selectedBases={selectedBases}
                 campProducts={campProducts}
+                catalog={catalog}
                 publishProgress={publishProgress}
                 busy={busy}
                 onToggleStar={toggleStar}
@@ -690,7 +691,7 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
 }
 
 function StepDesigns({
-  campaign, designs, signedUrls, availableBases, selectedBases, campProducts,
+  campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
 }: any) {
@@ -799,68 +800,30 @@ function StepDesigns({
       {campProducts.length > 0 && (
         <section className="border-t pt-4">
           <h4 className="font-semibold text-sm mb-2">Kampaņas produkti ({campProducts.length})</h4>
-          <div className="space-y-2">
-            {campProducts.map((p: CampProduct) => (
-              <div key={p.id} className="border rounded p-3 space-y-3">
-                <div className="flex items-start gap-3">
-                  {p.image_url && (
-                    <img
-                      src={getOptimizedSrc(p.image_url, 320, 80)}
-                      loading="lazy"
-                      alt=""
-                      className="w-28 h-28 sm:w-36 sm:h-36 rounded object-cover border bg-muted"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-body truncate">{p.name_lv || p.name}</div>
-                    <div className="text-[10px] text-muted-foreground">{p.color_variants.length} krāsas</div>
-                    <div className="mt-2 grid grid-cols-1 gap-2 text-[11px]">
-                      <label className="space-y-1">
-                        <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span></div>
-                        <input type="range" min={-0.3} max={0.3} step={0.01} defaultValue={p.print_offset_y ?? 0}
-                          onChange={(e) => onUpdatePrintAdj(p.id, { print_offset_y: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                      </label>
-                      <label className="space-y-1">
-                        <div className="flex justify-between"><span>Mērogs</span><span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span></div>
-                        <input type="range" min={0.4} max={1.4} step={0.02} defaultValue={p.print_scale ?? 1}
-                          onChange={(e) => onUpdatePrintAdj(p.id, { print_scale: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                      </label>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(p.id)} title="Izslēgt no kampaņas">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-                {p.color_variants.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {p.color_variants.map((c) => (
-                      <button
-                        key={c.name}
-                        type="button"
-                        onClick={() => confirm(`Noņemt krāsu "${c.name}"?`) && onRemoveColor(p.id, c.name)}
-                        className="group flex items-center gap-1 border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive"
-                        title={`Noņemt ${c.name}`}
-                      >
-                        <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
-                        <span className="text-[10px]">{c.name}</span>
-                        <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <div className="flex justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={busy === ("regen-" + p.id)}
-                    onClick={() => onRegenerateMockups(p.id)}
-                  >
-                    {busy === ("regen-" + p.id) ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
-                    Pārģenerēt ar šiem iestatījumiem
-                  </Button>
-                </div>
-              </div>
-            ))}
+          <p className="text-[11px] text-muted-foreground mb-2">
+            Velc dizainu ar peli vai pirkstu, lai pārvietotu uz augšu/leju. Lieto ritenīti vai sažņaudz ar 2 pirkstiem, lai mainītu izmēru. Saglabājas automātiski.
+          </p>
+          <div className="space-y-3">
+            {campProducts.map((p: CampProduct) => {
+              const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
+              const designRow =
+                designs.find((d: DesignRow) => d.product_id === p.id && d.image_url) ||
+                designs.find((d: DesignRow) => d.is_primary && d.image_url);
+              const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
+              return (
+                <ProductTuneRow
+                  key={p.id}
+                  product={p}
+                  baseInfo={baseInfo}
+                  designUrl={designUrl}
+                  busyKey={busy}
+                  onUpdatePrintAdj={onUpdatePrintAdj}
+                  onRegenerate={onRegenerateMockups}
+                  onRemoveColor={onRemoveColor}
+                  onExcludeProduct={onExcludeProduct}
+                />
+              );
+            })}
           </div>
         </section>
       )}
@@ -1017,6 +980,225 @@ function PublishSuccess({ success, onClose }: { success: { products: number; blo
         </Button>
         <Button onClick={onClose}>Aizvērt</Button>
       </div>
+    </div>
+  );
+}
+
+/* -------- Live print preview + tuning row -------- */
+function ProductTuneRow({
+  product, baseInfo, designUrl, busyKey,
+  onUpdatePrintAdj, onRegenerate, onRemoveColor, onExcludeProduct,
+}: {
+  product: CampProduct;
+  baseInfo: CatalogProduct | null;
+  designUrl: string | null;
+  busyKey: string | null;
+  onUpdatePrintAdj: (id: string, patch: { print_offset_y?: number; print_scale?: number }) => void;
+  onRegenerate: (id: string) => void;
+  onRemoveColor: (id: string, name: string) => void;
+  onExcludeProduct: (id: string) => void;
+}) {
+  const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
+  const [scale, setScale] = useState<number>(product.print_scale ?? 1);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const saveTimer = useRef<number | null>(null);
+  const lastSaved = useRef<{ y: number; s: number }>({ y: offsetY, s: scale });
+
+  // Reset local state when product changes (e.g. after regen reload)
+  useEffect(() => {
+    setOffsetY(product.print_offset_y ?? 0);
+    setScale(product.print_scale ?? 1);
+    lastSaved.current = { y: product.print_offset_y ?? 0, s: product.print_scale ?? 1 };
+  }, [product.id, product.print_offset_y, product.print_scale]);
+
+  const scheduleSave = (y: number, s: number) => {
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(async () => {
+      if (lastSaved.current.y === y && lastSaved.current.s === s) return;
+      setAutoSaving(true);
+      try {
+        await onUpdatePrintAdj(product.id, { print_offset_y: y, print_scale: s });
+        lastSaved.current = { y, s };
+        await onRegenerate(product.id);
+      } finally {
+        setAutoSaving(false);
+      }
+    }, 1500);
+  };
+
+  const updateOffset = (v: number) => {
+    const clamped = Math.max(-0.3, Math.min(0.3, v));
+    setOffsetY(clamped);
+    scheduleSave(clamped, scale);
+  };
+  const updateScale = (v: number) => {
+    const clamped = Math.max(0.4, Math.min(1.4, v));
+    setScale(clamped);
+    scheduleSave(offsetY, clamped);
+  };
+
+  // Pointer/touch drag (vertical → offsetY) + pinch (2-finger → scale)
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const dragStart = useRef<{ y: number; startOffset: number; pinchDist: number; startScale: number } | null>(null);
+  const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
+  const baseImg = baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0] ?? product.image_url;
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 1) {
+      dragStart.current = { y: e.clientY, startOffset: offsetY, pinchDist: 0, startScale: scale };
+    } else if (pointers.current.size === 2) {
+      const pts = Array.from(pointers.current.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      dragStart.current = { y: 0, startOffset: offsetY, pinchDist: dist, startScale: scale };
+    }
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!pointers.current.has(e.pointerId)) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const rect = previewRef.current?.getBoundingClientRect();
+    if (!rect || !dragStart.current) return;
+    if (pointers.current.size === 1) {
+      const dy = (e.clientY - dragStart.current.y) / (rect.height * printArea.h);
+      updateOffset(dragStart.current.startOffset + dy);
+    } else if (pointers.current.size >= 2) {
+      const pts = Array.from(pointers.current.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      if (dragStart.current.pinchDist > 0) {
+        updateScale(dragStart.current.startScale * (dist / dragStart.current.pinchDist));
+      }
+    }
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    if (pointers.current.size === 0) dragStart.current = null;
+  };
+  const onWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = -e.deltaY * 0.0015;
+    updateScale(scale + delta);
+  };
+
+  // Compute design aspect for overlay sizing
+  const [designAspect, setDesignAspect] = useState<number>(1);
+  useEffect(() => {
+    if (!designUrl) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setDesignAspect(img.naturalWidth / img.naturalHeight || 1);
+    img.src = designUrl;
+  }, [designUrl]);
+
+  // Contain-fit inside print area, then user scale
+  const areaAspect = printArea.w / printArea.h;
+  let dwRel = printArea.w, dhRel = printArea.w / designAspect;
+  if (designAspect < areaAspect) { dhRel = printArea.h; dwRel = printArea.h * designAspect; }
+  dwRel *= scale; dhRel *= scale;
+  const dxRel = printArea.x + (printArea.w - dwRel) / 2;
+  const dyRel = printArea.y + (printArea.h - dhRel) / 2 + offsetY * printArea.h;
+
+  return (
+    <div className="border rounded p-3 space-y-3">
+      <div className="flex items-start gap-3">
+        {/* Live preview */}
+        <div
+          ref={previewRef}
+          className="relative w-40 h-40 sm:w-56 sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          onWheel={onWheel}
+          style={{ cursor: "grab" }}
+        >
+          {baseImg && (
+            <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
+          )}
+          {/* Print area outline */}
+          <div
+            className="absolute border border-dashed border-primary/60 pointer-events-none"
+            style={{
+              left: `${printArea.x * 100}%`,
+              top: `${printArea.y * 100}%`,
+              width: `${printArea.w * 100}%`,
+              height: `${printArea.h * 100}%`,
+            }}
+          />
+          {/* Design overlay */}
+          {designUrl && (
+            <img
+              src={designUrl}
+              alt=""
+              draggable={false}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${dxRel * 100}%`,
+                top: `${dyRel * 100}%`,
+                width: `${dwRel * 100}%`,
+                height: `${dhRel * 100}%`,
+                objectFit: "contain",
+              }}
+            />
+          )}
+          {autoSaving && (
+            <div className="absolute bottom-1 left-1 right-1 text-[10px] bg-background/80 rounded px-1.5 py-0.5 flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" /> Saglabājas…
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-body truncate">{product.name_lv || product.name}</div>
+          <div className="text-[10px] text-muted-foreground">{product.color_variants.length} krāsas</div>
+          <div className="mt-2 grid grid-cols-1 gap-2 text-[11px]">
+            <label className="space-y-1">
+              <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(offsetY * 100).toFixed(0)}%</span></div>
+              <input
+                type="range" min={-0.3} max={0.3} step={0.005}
+                value={offsetY}
+                onChange={(e) => updateOffset(parseFloat(e.target.value))}
+                className="w-full accent-primary"
+              />
+            </label>
+            <label className="space-y-1">
+              <div className="flex justify-between"><span>Mērogs</span><span className="text-muted-foreground">{(scale * 100).toFixed(0)}%</span></div>
+              <input
+                type="range" min={0.4} max={1.4} step={0.01}
+                value={scale}
+                onChange={(e) => updateScale(parseFloat(e.target.value))}
+                className="w-full accent-primary"
+              />
+            </label>
+          </div>
+        </div>
+        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(product.id)} title="Izslēgt no kampaņas">
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+      {product.color_variants.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {product.color_variants.map((c) => (
+            <button
+              key={c.name}
+              type="button"
+              onClick={() => confirm(`Noņemt krāsu "${c.name}"?`) && onRemoveColor(product.id, c.name)}
+              className="group flex items-center gap-1 border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive"
+              title={`Noņemt ${c.name}`}
+            >
+              <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
+              <span className="text-[10px]">{c.name}</span>
+              <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
+            </button>
+          ))}
+        </div>
+      )}
+      {busyKey === ("regen-" + product.id) && !autoSaving && (
+        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+          <Loader2 className="w-3 h-3 animate-spin" /> Atjauno visu krāsu mockups…
+        </p>
+      )}
     </div>
   );
 }
