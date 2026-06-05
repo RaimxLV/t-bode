@@ -164,6 +164,26 @@ export const BlogManager = () => {
     setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, ...patch } as any : p));
   };
 
+  const removeColorVariant = async (productId: string, colorName: string) => {
+    const product = linked.find((p) => p.id === productId);
+    if (!product?.color_variants) return;
+    const next = product.color_variants.filter((c) => c.name !== colorName);
+    if (next.length === product.color_variants.length) return;
+    const { error } = await supabase
+      .from("products")
+      .update({ color_variants: next as any })
+      .eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, color_variants: next } : p));
+    toast.success(`Krāsa "${colorName}" noņemta`);
+  };
+
+  const updatePrintAdjust = async (productId: string, patch: { print_offset_y?: number; print_scale?: number }) => {
+    const { error } = await supabase.from("products").update(patch).eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, ...patch } : p));
+  };
+
   const toIsoDate = (s: string | null) => s ? s.slice(0, 10) : "";
   const fromIsoDate = (s: string) => s ? new Date(s).toISOString() : null;
 
