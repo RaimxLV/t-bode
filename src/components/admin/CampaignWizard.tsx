@@ -1383,7 +1383,7 @@ function ProductTuneRow({
             </label>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex sm:flex-col gap-1 justify-end">
           <Button
             size="sm"
             variant="outline"
