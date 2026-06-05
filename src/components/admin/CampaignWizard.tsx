@@ -839,6 +839,7 @@ function StepDesigns({
                   onRegenerate={onRegenerateMockups}
                   onRemoveColor={onRemoveColor}
                   onExcludeProduct={onExcludeProduct}
+                  onSetCoverColor={onSetCoverColor}
                 />
               );
             })}
