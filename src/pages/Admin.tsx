@@ -21,6 +21,7 @@ import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
 import { Seo } from "@/components/Seo";
+import { useCampaignReviewBadge } from "@/hooks/useCampaignReviewBadge";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -93,6 +94,22 @@ const Admin = () => {
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
   const { data: allCategories = [] } = useCategories();
+  const { data: pendingCampaigns = [] } = useCampaignReviewBadge();
+  const pendingCount = pendingCampaigns.length;
+
+  // One-shot toast after login if there are pending review campaigns.
+  useEffect(() => {
+    if (!isAdmin || pendingCount === 0) return;
+    const key = "campaign-review-toast-shown";
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const first = pendingCampaigns[0];
+    if (first) {
+      toast.info(`${first.title ?? "Kampaņa"} ir gatava pārskatīšanai ${first.step}. solī!`, {
+        action: { label: "Atvērt", onClick: () => setActiveTab("autopilot") },
+      });
+    }
+  }, [isAdmin, pendingCount, pendingCampaigns]);
 
   const publishedProducts = products.filter((p) => !(p as any).is_draft);
   const draftProducts = products.filter((p) => (p as any).is_draft);
