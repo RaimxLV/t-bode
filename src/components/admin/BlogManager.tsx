@@ -35,6 +35,9 @@ type LinkedProduct = {
   available_from: string | null;
   expires_at: string | null;
   always_available: boolean;
+  color_variants: Array<{ name: string; hex: string; images?: string[] }> | null;
+  print_offset_y: number | null;
+  print_scale: number | null;
   source: "auto" | "manual";
 };
 
@@ -91,7 +94,7 @@ export const BlogManager = () => {
     if (allIds.length === 0) { setLinked([]); setLinkBusy(false); return; }
     const { data: prods } = await supabase
       .from("products")
-      .select("id,name,name_lv,image_url,available_from,expires_at,always_available")
+      .select("id,name,name_lv,image_url,available_from,expires_at,always_available,color_variants,print_offset_y,print_scale")
       .in("id", allIds);
     const byId = new Map((prods || []).map((p: any) => [p.id, p]));
     const ordered: LinkedProduct[] = [
@@ -126,12 +129,13 @@ export const BlogManager = () => {
     setPickerSelected(new Set());
     setPickerLoading(true);
     const linkedIds = new Set(linked.map((l) => l.id));
+    // Show DRAFT products (campaign-generated cards waiting for review/link).
     const { data } = await supabase
       .from("products")
-      .select("id,name,name_lv,image_url,price,category,holiday_id")
-      .eq("is_draft", false)
+      .select("id,name,name_lv,image_url,price,category,holiday_id,is_draft,campaign_id")
+      .eq("is_draft", true)
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(300);
     setPickerProducts((data || []).filter((p: any) => !linkedIds.has(p.id)));
     setPickerLoading(false);
   };
@@ -158,6 +162,26 @@ export const BlogManager = () => {
     const { error } = await supabase.from("products").update(payload).eq("id", productId);
     if (error) { toast.error(error.message); return; }
     setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, ...patch } as any : p));
+  };
+
+  const removeColorVariant = async (productId: string, colorName: string) => {
+    const product = linked.find((p) => p.id === productId);
+    if (!product?.color_variants) return;
+    const next = product.color_variants.filter((c) => c.name !== colorName);
+    if (next.length === product.color_variants.length) return;
+    const { error } = await supabase
+      .from("products")
+      .update({ color_variants: next as any })
+      .eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, color_variants: next } : p));
+    toast.success(`Krāsa "${colorName}" noņemta`);
+  };
+
+  const updatePrintAdjust = async (productId: string, patch: { print_offset_y?: number; print_scale?: number }) => {
+    const { error } = await supabase.from("products").update(patch).eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setLinked((prev) => prev.map((p) => p.id === productId ? { ...p, ...patch } : p));
   };
 
   const toIsoDate = (s: string | null) => s ? s.slice(0, 10) : "";
@@ -311,10 +335,17 @@ export const BlogManager = () => {
                       </Button>
                     </>
                   ) : (
-                    <Button size="sm" onClick={() => publish(p)} disabled={busy === p.id} className="gap-1.5">
-                      {busy === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                      Publicēt
-                    </Button>
+                    <>
+                      <Button size="sm" variant="outline" asChild className="gap-1.5">
+                        <a href={`/blog/${p.slug}?preview=1`} target="_blank" rel="noreferrer">
+                          <Eye className="w-3.5 h-3.5" /> Priekšskatīt
+                        </a>
+                      </Button>
+                      <Button size="sm" onClick={() => publish(p)} disabled={busy === p.id} className="gap-1.5">
+                        {busy === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        Publicēt
+                      </Button>
+                    </>
                   )}
                   <Button size="sm" variant="ghost" onClick={() => remove(p)} disabled={busy === p.id} className="text-destructive">
                     <Trash2 className="w-3.5 h-3.5" />
@@ -436,6 +467,76 @@ export const BlogManager = () => {
                             />
                             <span className="text-xs font-body flex items-center gap-1"><InfinityIcon className="w-3 h-3" /> Vienmēr pieejams</span>
                           </label>
+                        </div>
+
+                        {/* Color variants — remove unwanted colors */}
+                        {p.color_variants && p.color_variants.length > 0 && (
+                          <div className="pt-2 border-t border-border">
+                            <div className="text-[11px] text-muted-foreground mb-1.5 font-body">
+                              Krāsas redzamas kartītē ({p.color_variants.length}). Klikšķini × lai noņemtu.
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {p.color_variants.map((c) => (
+                                <button
+                                  key={c.name}
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`Noņemt krāsu "${c.name}" no šī produkta?`)) {
+                                      removeColorVariant(p.id, c.name);
+                                    }
+                                  }}
+                                  className="group flex items-center gap-1 border border-border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive transition-colors"
+                                  title={`Noņemt ${c.name}`}
+                                >
+                                  <span
+                                    className="w-4 h-4 rounded-full border border-border"
+                                    style={{ backgroundColor: c.hex }}
+                                  />
+                                  <span className="text-[10px] font-body">{c.name}</span>
+                                  <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Print position adjustment */}
+                        <div className="pt-2 border-t border-border space-y-2">
+                          <div className="text-[11px] text-muted-foreground font-body">
+                            Drukas pozīcija (saglabājas pārģenerēšanai cilnē "Dizaini → Krekli")
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-[11px]">
+                            <label className="space-y-1">
+                              <div className="flex justify-between">
+                                <span>Vertikāli</span>
+                                <span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={-0.15}
+                                max={0.15}
+                                step={0.01}
+                                value={p.print_offset_y ?? 0}
+                                onChange={(e) => updatePrintAdjust(p.id, { print_offset_y: parseFloat(e.target.value) })}
+                                className="w-full accent-primary"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <div className="flex justify-between">
+                                <span>Mērogs</span>
+                                <span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0.6}
+                                max={1.2}
+                                step={0.02}
+                                value={p.print_scale ?? 1}
+                                onChange={(e) => updatePrintAdjust(p.id, { print_scale: parseFloat(e.target.value) })}
+                                className="w-full accent-primary"
+                              />
+                            </label>
+                          </div>
                         </div>
                       </div>
                     ))}
