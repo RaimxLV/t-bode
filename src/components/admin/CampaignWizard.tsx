@@ -1203,20 +1203,45 @@ function ProductTuneRow({
         </Button>
       </div>
       {product.color_variants.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {product.color_variants.map((c) => (
-            <button
-              key={c.name}
-              type="button"
-              onClick={() => confirm(`Noņemt krāsu "${c.name}"?`) && onRemoveColor(product.id, c.name)}
-              className="group flex items-center gap-1 border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive"
-              title={`Noņemt ${c.name}`}
-            >
-              <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
-              <span className="text-[10px]">{c.name}</span>
-              <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
-            </button>
-          ))}
+        <div className="space-y-1">
+          <p className="text-[10px] text-muted-foreground">
+            Klikšķini uz krāsas, lai uzliktu to kā kartītes bildi blogā. ✕ noņem krāsu.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {product.color_variants.map((c, idx) => {
+              const isCover = idx === 0;
+              return (
+                <div
+                  key={c.name}
+                  className={`flex items-center gap-1 border rounded-full pl-1 pr-1 py-0.5 ${
+                    isCover ? "border-primary bg-primary/10 ring-1 ring-primary" : "hover:border-foreground/40"
+                  }`}
+                  title={isCover ? `${c.name} (kartītes krāsa)` : `Uzlikt ${c.name} kā kartītes krāsu`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onSetCoverColor(product.id, c.name)}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
+                    <span className="text-[10px]">{c.name}</span>
+                    {isCover && <span className="text-[9px] text-primary font-semibold">★</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Noņemt krāsu "${c.name}"?`)) onRemoveColor(product.id, c.name);
+                    }}
+                    className="text-muted-foreground hover:text-destructive ml-0.5"
+                    title={`Noņemt ${c.name}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       {busyKey === ("regen-" + product.id) && !autoSaving && (
