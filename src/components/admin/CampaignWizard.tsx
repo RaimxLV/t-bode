@@ -144,12 +144,14 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       }
 
       // Holiday
+      let hData: Holiday | null = null;
       if (camp?.holiday_id) {
         const { data: hRaw } = await supabase.from("holidays" as any)
           .select("id, name_lv, month, day")
           .eq("id", camp.holiday_id)
           .maybeSingle();
-        setHoliday(hRaw as unknown as Holiday | null);
+        hData = (hRaw as unknown as Holiday | null);
+        setHoliday(hData);
       }
 
       // Designs
@@ -200,7 +202,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Defaults
       if (camp && !expiresAt) {
-        const iso = holidayExpiryISO(hRaw as unknown as Holiday | null, camp.year);
+        const iso = holidayExpiryISO(hData, camp.year);
         if (iso) setExpiresAt(iso.slice(0, 10));
       }
     } finally {
