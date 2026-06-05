@@ -37,6 +37,7 @@ const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSp
 const AutopilotDashboard = lazy(() => import("@/components/admin/AutopilotDashboard").then(m => ({ default: m.AutopilotDashboard })));
 const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m => ({ default: m.BlogManager })));
 const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManager").then(m => ({ default: m.PrintZonesManager })));
+const DesignsToProducts = lazy(() => import("@/components/admin/DesignsToProducts").then(m => ({ default: m.DesignsToProducts })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
@@ -370,6 +371,7 @@ const Admin = () => {
             <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
+            <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
@@ -515,6 +517,12 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="designstoproducts">
+            <Suspense fallback={<TabFallback />}>
+              <DesignsToProducts />
+            </Suspense>
+          </TabsContent>
+
           <TabsContent value="drafts">
             {loadingProducts ? (
               <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
@@ -583,6 +591,7 @@ const Admin = () => {
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
                   { value: "autopilot", icon: Sparkles, label: "Autopilot" },
+                  { value: "designstoproducts", icon: Wand2, label: "Dizaini → Krekli" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
