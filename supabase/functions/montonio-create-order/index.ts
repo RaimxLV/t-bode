@@ -128,10 +128,10 @@ Deno.serve(async (req) => {
         country: "LV",
         postalCode: "-",
       },
-      lineItems: items.map((it: any) => ({
-        name: it.name,
+      lineItems: dbItems.map((it: any) => ({
+        name: it.product_name,
         quantity: Number(it.quantity || 1),
-        finalPrice: Number(it.price),
+        finalPrice: Number(it.unit_price),
       })),
     };
 
