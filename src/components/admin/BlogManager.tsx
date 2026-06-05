@@ -468,6 +468,76 @@ export const BlogManager = () => {
                             <span className="text-xs font-body flex items-center gap-1"><InfinityIcon className="w-3 h-3" /> Vienmēr pieejams</span>
                           </label>
                         </div>
+
+                        {/* Color variants — remove unwanted colors */}
+                        {p.color_variants && p.color_variants.length > 0 && (
+                          <div className="pt-2 border-t border-border">
+                            <div className="text-[11px] text-muted-foreground mb-1.5 font-body">
+                              Krāsas redzamas kartītē ({p.color_variants.length}). Klikšķini × lai noņemtu.
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {p.color_variants.map((c) => (
+                                <button
+                                  key={c.name}
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`Noņemt krāsu "${c.name}" no šī produkta?`)) {
+                                      removeColorVariant(p.id, c.name);
+                                    }
+                                  }}
+                                  className="group flex items-center gap-1 border border-border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive transition-colors"
+                                  title={`Noņemt ${c.name}`}
+                                >
+                                  <span
+                                    className="w-4 h-4 rounded-full border border-border"
+                                    style={{ backgroundColor: c.hex }}
+                                  />
+                                  <span className="text-[10px] font-body">{c.name}</span>
+                                  <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Print position adjustment */}
+                        <div className="pt-2 border-t border-border space-y-2">
+                          <div className="text-[11px] text-muted-foreground font-body">
+                            Drukas pozīcija (saglabājas pārģenerēšanai cilnē "Dizaini → Krekli")
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-[11px]">
+                            <label className="space-y-1">
+                              <div className="flex justify-between">
+                                <span>Vertikāli</span>
+                                <span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={-0.15}
+                                max={0.15}
+                                step={0.01}
+                                value={p.print_offset_y ?? 0}
+                                onChange={(e) => updatePrintAdjust(p.id, { print_offset_y: parseFloat(e.target.value) })}
+                                className="w-full accent-primary"
+                              />
+                            </label>
+                            <label className="space-y-1">
+                              <div className="flex justify-between">
+                                <span>Mērogs</span>
+                                <span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span>
+                              </div>
+                              <input
+                                type="range"
+                                min={0.6}
+                                max={1.2}
+                                step={0.02}
+                                value={p.print_scale ?? 1}
+                                onChange={(e) => updatePrintAdjust(p.id, { print_scale: parseFloat(e.target.value) })}
+                                className="w-full accent-primary"
+                              />
+                            </label>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
