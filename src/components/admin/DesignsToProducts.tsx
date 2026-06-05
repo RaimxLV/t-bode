@@ -33,6 +33,18 @@ type CatalogProduct = {
 const DEFAULT_PRINT_AREA = { x: 0.32, y: 0.18, w: 0.36, h: 0.3 };
 const DEFAULT_PRICE = 25;
 
+function adjustPrintArea(
+  base: { x: number; y: number; w: number; h: number },
+  offsetY: number,
+  scale: number,
+) {
+  const w = Math.min(1, Math.max(0.05, base.w * scale));
+  const h = Math.min(1, Math.max(0.05, base.h * scale));
+  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2));
+  const y = Math.min(1 - h, Math.max(0, base.y + (base.h - h) / 2 + offsetY));
+  return { x, y, w, h };
+}
+
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
