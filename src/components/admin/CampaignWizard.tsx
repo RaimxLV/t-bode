@@ -10,6 +10,7 @@ import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, 
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
+import { getOptimizedSrc } from "@/lib/imageOptimization";
 
 /* ------------ Types ------------ */
 type Holiday = { id: string; name_lv: string; month: number; day: number };
@@ -67,6 +68,7 @@ type CampProduct = {
   color_variants: ColorVariant[];
   print_offset_y: number | null;
   print_scale: number | null;
+  base_product_id: string | null;
 };
 
 type BlogPost = {
@@ -175,7 +177,12 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const { data: catRaw } = await supabase.from("products")
         .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,image_url,print_area")
         .eq("customizable", true).eq("is_draft", false).order("name");
-      setCatalog(((catRaw as any[]) ?? []).map((p) => ({
+      const EXCLUDED_CATEGORIES = new Set(["mugs", "bags"]);
+      const EXCLUDED_NAME_RE = /bodij/i; // kids bodysuit
+      const filteredCat = ((catRaw as any[]) ?? []).filter(
+        (p) => !EXCLUDED_CATEGORIES.has((p.category ?? "").toLowerCase()) && !EXCLUDED_NAME_RE.test(p.name ?? "")
+      );
+      setCatalog(filteredCat.map((p) => ({
         ...p,
         color_variants: Array.isArray(p.color_variants) ? p.color_variants : [],
         print_area: p.print_area ?? null,
@@ -183,7 +190,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Campaign products
       const { data: cpRaw } = await supabase.from("products")
-        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale")
+        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id")
         .eq("campaign_id", campaignId)
         .order("created_at");
       setCampProducts(((cpRaw as any[]) ?? []).map((p) => ({
