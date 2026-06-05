@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
     if (design_id) {
       const { data: existing, error: dErr } = await admin
         .from("campaign_designs")
-        .select("id, prompt, style")
+        .select("id, prompt, style, slogan")
         .eq("id", design_id)
         .eq("campaign_id", campaign_id)
         .maybeSingle();
@@ -290,10 +290,12 @@ Deno.serve(async (req) => {
       }
       const rawPrompt = (prompt_override?.trim() || (existing as any).prompt || "").trim();
       const useStyle = bodyStyle || (existing as any).style || campaignStyle;
-      // Find slogan from brief by matching prompt, or use override
-      const ideas: any[] = Array.isArray(campBrief.design_ideas) ? campBrief.design_ideas : [];
-      const matched = ideas.find((i) => (i?.prompt ?? "") === (existing as any).prompt);
-      const slogan = (body.slogan_override ?? matched?.slogan ?? "").toString().trim();
+      // Slogan: prefer explicit override, else the value stored on the design row.
+      const slogan = (
+        body.slogan_override !== undefined
+          ? body.slogan_override
+          : ((existing as any).slogan ?? "")
+      ).toString().trim();
       const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
 
       try {
@@ -314,6 +316,7 @@ Deno.serve(async (req) => {
             prompt: rawPrompt,
             style: useStyle,
             image_url: path,
+            slogan: slogan || null,
             generation_error: null,
           })
           .eq("id", design_id);
@@ -377,6 +380,7 @@ Deno.serve(async (req) => {
         const { error: insErr } = await admin.from("campaign_designs").insert({
           campaign_id,
           prompt: idea.prompt,
+          slogan: slogan || null,
           style: useStyle,
           image_url: path,
           is_primary: i === 0,
@@ -388,6 +392,7 @@ Deno.serve(async (req) => {
         await admin.from("campaign_designs").insert({
           campaign_id,
           prompt: idea.prompt,
+          slogan: (idea.slogan ?? "").trim() || null,
           style: useStyle,
           generation_error: e.message ?? String(e),
         });
