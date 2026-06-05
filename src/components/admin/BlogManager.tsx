@@ -446,6 +446,78 @@ export const BlogManager = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Visual product picker */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">Izvēlies produktus</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder="Meklēt…"
+            value={pickerSearch}
+            onChange={(e) => setPickerSearch(e.target.value)}
+            className="mb-3"
+          />
+          {pickerLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                {pickerProducts
+                  .filter((p) => {
+                    const q = pickerSearch.trim().toLowerCase();
+                    if (!q) return true;
+                    return (p.name_lv || p.name || "").toLowerCase().includes(q);
+                  })
+                  .map((p) => {
+                    const selected = pickerSelected.has(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          const next = new Set(pickerSelected);
+                          if (selected) next.delete(p.id); else next.add(p.id);
+                          setPickerSelected(next);
+                        }}
+                        className={`relative border-2 rounded-lg overflow-hidden text-left transition-all ${
+                          selected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"
+                        }`}
+                      >
+                        <div className="aspect-square bg-muted">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="w-8 h-8" /></div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="text-xs font-body line-clamp-2 leading-tight">{p.name_lv || p.name}</p>
+                          <p className="text-xs font-semibold mt-0.5">{Number(p.price).toFixed(2)} €</p>
+                        </div>
+                        {selected && (
+                          <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">✓</div>
+                        )}
+                      </button>
+                    );
+                  })}
+                {pickerProducts.length === 0 && (
+                  <p className="col-span-full text-center py-8 text-sm text-muted-foreground font-body">
+                    Visi produkti jau pievienoti.
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                <Button variant="outline" onClick={() => setPickerOpen(false)}>Atcelt</Button>
+                <Button onClick={confirmPicker} disabled={pickerSelected.size === 0}>
+                  Pievienot ({pickerSelected.size})
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
