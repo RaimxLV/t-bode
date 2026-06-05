@@ -21,6 +21,7 @@ import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
 import { Seo } from "@/components/Seo";
+import { useCampaignReviewBadge } from "@/hooks/useCampaignReviewBadge";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -93,6 +94,22 @@ const Admin = () => {
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
   const { data: allCategories = [] } = useCategories();
+  const { data: pendingCampaigns = [] } = useCampaignReviewBadge();
+  const pendingCount = pendingCampaigns.length;
+
+  // One-shot toast after login if there are pending review campaigns.
+  useEffect(() => {
+    if (!isAdmin || pendingCount === 0) return;
+    const key = "campaign-review-toast-shown";
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    const first = pendingCampaigns[0];
+    if (first) {
+      toast.info(`${first.title ?? "Kampaņa"} ir gatava pārskatīšanai ${first.step}. solī!`, {
+        action: { label: "Atvērt", onClick: () => setActiveTab("autopilot") },
+      });
+    }
+  }, [isAdmin, pendingCount, pendingCampaigns]);
 
   const publishedProducts = products.filter((p) => !(p as any).is_draft);
   const draftProducts = products.filter((p) => (p as any).is_draft);
@@ -368,7 +385,12 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
-            <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
+            <TabsTrigger value="autopilot" className="gap-1.5 text-sm relative">
+              <Sparkles className="w-4 h-4" /> Autopilot
+              {pendingCount > 0 && (
+                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
