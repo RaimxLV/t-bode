@@ -711,6 +711,7 @@ function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
+  onSetCoverColor,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
