@@ -59,12 +59,11 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
 }
 
 async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_draft", false)
-    .maybeSingle();
+  const params = new URLSearchParams(window.location.search);
+  const preview = params.get("preview") === "1";
+  let q = supabase.from("products").select("*").eq("slug", slug);
+  if (!preview) q = q.eq("is_draft", false);
+  const { data, error } = await q.maybeSingle();
   if (error) throw error;
   if (!data) return null;
   return {
