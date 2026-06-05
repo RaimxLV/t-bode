@@ -35,6 +35,10 @@ type Campaign = {
   description: string | null;
   brief: Brief | null;
   style?: string | null;
+  custom_style_id?: string | null;
+  image_size?: string | null;
+  preferred_colors?: { r: number; g: number; b: number }[] | null;
+  transparent_bg?: boolean | null;
 };
 
 type DesignRow = {
@@ -88,20 +92,116 @@ type BlogPost = {
 
 const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
-/** Recraft V3 style presets (fal.ai). */
-const STYLE_PRESETS: { value: string; label: string; hint: string }[] = [
-  { value: "digital_illustration", label: "Ilustrācija (jaukta)", hint: "Krāsaina digitāla māksla" },
-  { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)", hint: "Bold plakāta stils" },
-  { value: "digital_illustration/hand_drawn", label: "Roku zīmēts", hint: "Skicei līdzīgs" },
-  { value: "digital_illustration/grain", label: "Tekstūrēts", hint: "Grain efekts" },
-  { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)", hint: "Klasiska gravīra" },
-  { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums", hint: "Tikai līnijas" },
-  { value: "vector_illustration", label: "Vektors (klasisks)", hint: "Flat dizains, tīras līnijas" },
-  { value: "vector_illustration/line_art", label: "Line Art", hint: "Tikai vektora kontūras" },
-  { value: "vector_illustration/linocut", label: "Linogrievums", hint: "Linocut stils" },
-  { value: "vector_illustration/line_circuit", label: "Tehno līnijas", hint: "Circuit-style" },
-  { value: "realistic_image", label: "Reālistisks", hint: "Foto-līdzīgs" },
+/** Recraft V3 style presets (fal.ai) — full catalog, grouped. */
+type StyleOpt = { value: string; label: string };
+const STYLE_GROUPS: { group: string; options: StyleOpt[] }[] = [
+  { group: "Vektors", options: [
+    { value: "vector_illustration", label: "Vektors (klasisks)" },
+    { value: "vector_illustration/line_art", label: "Line Art" },
+    { value: "vector_illustration/linocut", label: "Linogrievums" },
+    { value: "vector_illustration/line_circuit", label: "Tehno līnijas" },
+    { value: "vector_illustration/bold_stroke", label: "Treknas līnijas" },
+    { value: "vector_illustration/cutout", label: "Izgriezums" },
+    { value: "vector_illustration/engraving", label: "Gravīra" },
+    { value: "vector_illustration/editorial", label: "Editorial" },
+    { value: "vector_illustration/emotional_flat", label: "Emocionāls flat" },
+    { value: "vector_illustration/infographical", label: "Infografika" },
+    { value: "vector_illustration/marker_outline", label: "Markeris" },
+    { value: "vector_illustration/mosaic", label: "Mozaīka" },
+    { value: "vector_illustration/naivector", label: "Naivs vektors" },
+    { value: "vector_illustration/roundish_flat", label: "Apaļš flat" },
+    { value: "vector_illustration/segmented_colors", label: "Segmentētas krāsas" },
+    { value: "vector_illustration/sharp_contrast", label: "Asa kontrasta" },
+    { value: "vector_illustration/thin", label: "Tievas līnijas" },
+    { value: "vector_illustration/vivid_shapes", label: "Spilgtas formas" },
+    { value: "vector_illustration/contour_pop_art", label: "Contour Pop Art" },
+    { value: "vector_illustration/cosmics", label: "Cosmics" },
+    { value: "vector_illustration/chemistry", label: "Ķīmija" },
+    { value: "vector_illustration/colored_stencil", label: "Krāsains šablons" },
+    { value: "vector_illustration/depressive", label: "Drūms" },
+  ] },
+  { group: "Ilustrācija", options: [
+    { value: "digital_illustration", label: "Ilustrācija (jaukta)" },
+    { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)" },
+    { value: "digital_illustration/2d_art_poster_2", label: "Plakāts (2D) v2" },
+    { value: "digital_illustration/hand_drawn", label: "Roku zīmēts" },
+    { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums" },
+    { value: "digital_illustration/pixel_art", label: "Pixel Art" },
+    { value: "digital_illustration/grain", label: "Tekstūrēts (grain)" },
+    { value: "digital_illustration/infantile_sketch", label: "Bērnišķīga skice" },
+    { value: "digital_illustration/handmade_3d", label: "Roku 3D" },
+    { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)" },
+    { value: "digital_illustration/antiquarian", label: "Antikvariāts" },
+    { value: "digital_illustration/bold_fantasy", label: "Fantāzija" },
+    { value: "digital_illustration/child_book", label: "Bērnu grāmata" },
+    { value: "digital_illustration/cover", label: "Vāks" },
+    { value: "digital_illustration/crosshatch", label: "Crosshatch" },
+    { value: "digital_illustration/digital_engraving", label: "Digitāla gravīra" },
+    { value: "digital_illustration/expressionism", label: "Ekspresionisms" },
+    { value: "digital_illustration/freehand_details", label: "Freehand detaļas" },
+    { value: "digital_illustration/graphic_intensity", label: "Grafiska intensitāte" },
+    { value: "digital_illustration/hard_comics", label: "Komiksi" },
+    { value: "digital_illustration/long_shadow", label: "Long Shadow" },
+    { value: "digital_illustration/modern_folk", label: "Mūsdienu folkloras" },
+    { value: "digital_illustration/multicolor", label: "Daudzkrāsains" },
+    { value: "digital_illustration/neon_calm", label: "Neona miers" },
+    { value: "digital_illustration/noir", label: "Noir" },
+    { value: "digital_illustration/nostalgic_pastel", label: "Nostalģisks pastelis" },
+    { value: "digital_illustration/outline_details", label: "Kontūras + detaļas" },
+    { value: "digital_illustration/pastel_gradient", label: "Pastelis gradients" },
+    { value: "digital_illustration/pastel_sketch", label: "Pastelis skice" },
+    { value: "digital_illustration/pop_art", label: "Pop Art" },
+    { value: "digital_illustration/pop_renaissance", label: "Pop Renesanse" },
+    { value: "digital_illustration/street_art", label: "Street Art" },
+    { value: "digital_illustration/tablet_sketch", label: "Planšetes skice" },
+    { value: "digital_illustration/urban_glow", label: "Urban Glow" },
+    { value: "digital_illustration/urban_sketching", label: "Urban skice" },
+    { value: "digital_illustration/vanilla_dreams", label: "Vanilla sapņi" },
+    { value: "digital_illustration/young_adult_book", label: "Jaunatnes grāmata" },
+  ] },
+  { group: "Reālistisks", options: [
+    { value: "realistic_image", label: "Reālistisks (klasisks)" },
+    { value: "realistic_image/b_and_w", label: "Melnbalts" },
+    { value: "realistic_image/hard_flash", label: "Cietā zibspuldze" },
+    { value: "realistic_image/hdr", label: "HDR" },
+    { value: "realistic_image/natural_light", label: "Dabiska gaisma" },
+    { value: "realistic_image/studio_portrait", label: "Studijas portrets" },
+    { value: "realistic_image/enterprise", label: "Enterprise" },
+    { value: "realistic_image/motion_blur", label: "Kustības blur" },
+    { value: "realistic_image/evening_light", label: "Vakara gaisma" },
+    { value: "realistic_image/faded_nostalgia", label: "Izbalējusi nostalģija" },
+    { value: "realistic_image/forest_life", label: "Meža dzīve" },
+    { value: "realistic_image/mystic_naturalism", label: "Mistisks naturalisms" },
+    { value: "realistic_image/natural_tones", label: "Dabiskie toņi" },
+    { value: "realistic_image/organic_calm", label: "Organisks miers" },
+    { value: "realistic_image/real_life_glow", label: "Real life glow" },
+    { value: "realistic_image/retro_realism", label: "Retro reālisms" },
+    { value: "realistic_image/retro_snapshot", label: "Retro foto" },
+    { value: "realistic_image/urban_drama", label: "Urbānā drāma" },
+    { value: "realistic_image/village_realism", label: "Lauku reālisms" },
+    { value: "realistic_image/warm_folk", label: "Silts folks" },
+  ] },
 ];
+const STYLE_PRESETS: StyleOpt[] = STYLE_GROUPS.flatMap((g) => g.options);
+
+const IMAGE_SIZES: { value: string; label: string }[] = [
+  { value: "square_hd", label: "Kvadrāts HD" },
+  { value: "square", label: "Kvadrāts" },
+  { value: "portrait_4_3", label: "Portrets 4:3" },
+  { value: "portrait_16_9", label: "Portrets 16:9" },
+  { value: "landscape_4_3", label: "Ainava 4:3" },
+  { value: "landscape_16_9", label: "Ainava 16:9" },
+];
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const m = /^#?([a-f0-9]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function rgbToHex(c: { r: number; g: number; b: number }): string {
+  return "#" + [c.r, c.g, c.b].map((v) => v.toString(16).padStart(2, "0")).join("");
+}
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
