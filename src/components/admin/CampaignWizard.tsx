@@ -1331,3 +1331,110 @@ function ProductTuneRow({
     </div>
   );
 }
+
+/* ------------ Single design card with prompt-edit + regenerate ------------ */
+function DesignCard({
+  d,
+  signedUrls,
+  regenSingleId,
+  styleChoice,
+  onToggleStar,
+  onRegenSingleDesign,
+}: {
+  d: DesignRow;
+  signedUrls: Record<string, string>;
+  regenSingleId: string | null;
+  styleChoice: string;
+  onToggleStar: (d: DesignRow) => void;
+  onRegenSingleDesign: (id: string, prompt: string, style?: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
+  const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
+
+  const busy = regenSingleId === d.id;
+
+  return (
+    <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
+      {d.image_url && signedUrls[d.image_url] ? (
+        <>
+          <img
+            src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+            loading="lazy"
+            alt=""
+            className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
+          />
+          <button
+            onClick={() => onToggleStar(d)}
+            className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
+            title={d.is_primary ? "Noņemt ★" : "Atzīmēt ★"}
+          >
+            <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
+          </button>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            className="absolute top-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
+            title="Mainīt promptu un pārģenerēt"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </>
+      ) : d.generation_error ? (
+        <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
+          <span>⚠ {d.generation_error}</span>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            className="underline text-foreground"
+          >
+            Mēģināt vēlreiz
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {busy && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      )}
+
+      {editing && (
+        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5">
+          <p className="text-[10px] font-semibold">Mainīt promptu</p>
+          <Textarea
+            value={draftPrompt}
+            onChange={(e) => setDraftPrompt(e.target.value)}
+            rows={4}
+            className="text-[11px] min-h-0 flex-1 resize-none"
+            placeholder="Piem. minimālistisks zaķis ar morkām…"
+          />
+          <select
+            value={draftStyle}
+            onChange={(e) => setDraftStyle(e.target.value)}
+            className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
+          >
+            {STYLE_PRESETS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              className="flex-1 h-7 text-[11px]"
+              disabled={!draftPrompt.trim() || busy}
+              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle); }}
+            >
+              <Wand2 className="w-3 h-3 mr-1" /> Ģenerēt
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setEditing(false)}>
+              <X className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
