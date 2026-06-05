@@ -870,14 +870,14 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen}>
+      <div className="flex flex-wrap gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-          Pārģenerēt ideju
+          Pārģenerēt
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" disabled={!brief.title_lv} onClick={onNext}>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <div className="hidden sm:block flex-1" />
+        <Button size="sm" disabled={!brief.title_lv} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
       </div>
@@ -1031,14 +1031,14 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset}>
+      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" disabled={campProducts.length === 0} onClick={onNext}>
+        <div className="hidden sm:block flex-1" />
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button size="sm" disabled={campProducts.length === 0} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
       </div>
@@ -1142,15 +1142,15 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave}>
+      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" className="bg-primary" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <div className="hidden sm:block flex-1" />
+        <Button size="sm" className="bg-primary w-full sm:w-auto" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
           {busy === "publish" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
           PUBLICĒT VISU
         </Button>
