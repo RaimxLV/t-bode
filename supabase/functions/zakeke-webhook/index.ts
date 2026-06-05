@@ -34,15 +34,20 @@ Deno.serve(async (req) => {
 
   try {
     const expected = (Deno.env.get("ZAKEKE_WEBHOOK_SECRET") ?? "").trim();
-    if (expected) {
-      const got = req.headers.get("x-zakeke-signature") ?? "";
-      if (got !== expected) {
-        console.warn("zakeke-webhook: bad signature");
-        return new Response(JSON.stringify({ error: "Invalid signature" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (!expected) {
+      console.error("zakeke-webhook: ZAKEKE_WEBHOOK_SECRET not configured");
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const got = req.headers.get("x-zakeke-signature") ?? "";
+    if (got !== expected) {
+      console.warn("zakeke-webhook: bad signature");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.json().catch(() => ({} as any));
