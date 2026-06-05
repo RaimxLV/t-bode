@@ -58,6 +58,22 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
   }));
 }
 
+async function fetchCollectionProducts(): Promise<DBProduct[]> {
+  // Non-customizable products PLUS any campaign/blog products explicitly flagged
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("is_draft", false)
+    .or("customizable.eq.false,show_in_collection.eq.true")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((p) => ({
+    ...p,
+    color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
+    zakeke_model_code: (p as any).zakeke_model_code ?? null,
+  }));
+}
+
 async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
   const params = new URLSearchParams(window.location.search);
   const preview = params.get("preview") === "1";
@@ -83,7 +99,7 @@ export function useDesignProducts() {
 export function useCollectionProducts() {
   return useQuery({
     queryKey: ["products", "collection"],
-    queryFn: () => fetchProducts(false),
+    queryFn: () => fetchCollectionProducts(),
   });
 }
 
