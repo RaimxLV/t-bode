@@ -1,3 +1,5 @@
+import { requireAdmin } from "../_shared/admin-auth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -22,13 +24,24 @@ Deno.serve(async (req) => {
     let visitorCode = "";
     let customerCode = "";
     let accessType = "C2S";
+    let requestedAccessType = "C2S";
     try {
       const reqBody = await req.json();
       visitorCode = reqBody?.visitorCode || "";
       customerCode = reqBody?.customerCode || "";
-      accessType = reqBody?.accessType === "S2S" ? "S2S" : "C2S";
+      requestedAccessType = reqBody?.accessType === "S2S" ? "S2S" : "C2S";
     } catch {
       // no body
+    }
+
+    // S2S tokens grant privileged Zakeke API access — require admin auth.
+    // C2S tokens are used by the public designer in the browser and stay open.
+    if (requestedAccessType === "S2S") {
+      const auth = await requireAdmin(req, corsHeaders);
+      if (!auth.ok) return auth.response;
+      accessType = "S2S";
+    } else {
+      accessType = "C2S";
     }
 
     const basicAuth = btoa(`${clientId}:${clientSecret}`);
