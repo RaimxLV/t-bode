@@ -88,6 +88,21 @@ type BlogPost = {
 
 const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
+/** Recraft V3 style presets (fal.ai). */
+const STYLE_PRESETS: { value: string; label: string; hint: string }[] = [
+  { value: "digital_illustration", label: "Ilustrācija (jaukta)", hint: "Krāsaina digitāla māksla" },
+  { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)", hint: "Bold plakāta stils" },
+  { value: "digital_illustration/hand_drawn", label: "Roku zīmēts", hint: "Skicei līdzīgs" },
+  { value: "digital_illustration/grain": label: "Tekstūrēts" as any, hint: "Grain efekts" } as any,
+  { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)", hint: "Klasiska gravīra" },
+  { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums", hint: "Tikai līnijas" },
+  { value: "vector_illustration", label: "Vektors (klasisks)", hint: "Flat dizains, tīras līnijas" },
+  { value: "vector_illustration/line_art", label: "Line Art", hint: "Tikai vektora kontūras" },
+  { value: "vector_illustration/linocut", label: "Linogrievums", hint: "Linocut stils" },
+  { value: "vector_illustration/line_circuit", label: "Tehno līnijas", hint: "Circuit-style" },
+  { value: "realistic_image", label: "Reālistisks", hint: "Foto-līdzīgs" },
+];
+
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
