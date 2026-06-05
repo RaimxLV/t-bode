@@ -570,21 +570,90 @@ export const AutopilotDashboard = () => {
                     {camp.status === "designs_ready" && (
                       <>
                         <p className="text-[11px] text-muted-foreground">
-                          Atzīmē ★ vienu vai vairākus dizainus, kurus pārvērst par produktiem.
+                          1) Atzīmē ★ vienu vai vairākus dizainus. 2) Izvēlies bāzes kreklus zemāk. 3) Publicē.
                         </p>
+
+                        {/* Base products picker */}
+                        <div className="border rounded-md p-2 space-y-2 bg-muted/20">
+                          <div className="flex items-center gap-2">
+                            <Shirt className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs font-semibold">Bāzes krekli</span>
+                            <Badge variant="secondary" className="ml-auto text-[10px]">
+                              {(selectedBases[camp.id]?.size ?? 0)} izvēlēti
+                            </Badge>
+                          </div>
+                          {availableBaseProducts.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground">
+                              Nav pieejamu bāzu — pievieno tās <strong>Bulk Studio → Bāzes krekli</strong>.
+                            </p>
+                          ) : (
+                            <div className="space-y-1 max-h-40 overflow-y-auto">
+                              {availableBaseProducts.map((p) => {
+                                const items = basesByProduct.get(p.id) ?? [];
+                                const sel = selectedBases[camp.id]?.has(p.id) ?? false;
+                                return (
+                                  <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => toggleBaseFor(camp.id, p.id)}
+                                    className={`w-full flex items-center gap-2 text-left rounded border p-1.5 transition ${sel ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 bg-card"}`}
+                                  >
+                                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${sel ? "bg-primary border-primary" : "border-border"}`}>
+                                      {sel && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-xs truncate">{p.name_lv || p.name}</div>
+                                      <div className="text-[9px] text-muted-foreground">{items.length} krāsas</div>
+                                    </div>
+                                    <div className="flex -space-x-1">
+                                      {items.slice(0, 5).map((b) => (
+                                        <div key={b.id} className="w-3 h-3 rounded-full border border-background" style={{ background: b.color_hex || "#888" }} title={b.color_name} />
+                                      ))}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground">AI mockup (drīzumā)</span>
+                            </div>
+                            <Switch
+                              checked={useAiMockup[camp.id] ?? false}
+                              onCheckedChange={(v) => setUseAiMockup((prev) => ({ ...prev, [camp.id]: v }))}
+                              disabled
+                            />
+                          </div>
+                        </div>
+
+                        {publishProgress && publishing === camp.id && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-muted-foreground">
+                              <span>Ģenerē mockup…</span>
+                              <span>{publishProgress.done}/{publishProgress.total}</span>
+                            </div>
+                            <div className="h-1 bg-muted rounded overflow-hidden">
+                              <div className="h-full bg-primary transition-all" style={{ width: `${(publishProgress.done / Math.max(1, publishProgress.total)) * 100}%` }} />
+                            </div>
+                          </div>
+                        )}
                         <Button
                           size="sm"
                           className="w-full"
                           disabled={
                             publishing === camp.id ||
+                            !(selectedBases[camp.id]?.size) ||
                             !designs.some((d) => d.campaign_id === camp.id && d.is_primary && d.image_url)
                           }
-                          onClick={() => runPublishProducts(camp.id)}
+                          onClick={() => runPublishProducts(camp)}
                         >
                           {publishing === camp.id ? (
                             <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Publicē produktus…</>
                           ) : (
-                            <><Package className="w-4 h-4 mr-2" />Publicēt produktus (melnraksti)</>
+                            <><Package className="w-4 h-4 mr-2" />Publicēt ar mockup (melnraksts)</>
                           )}
                         </Button>
                       </>
