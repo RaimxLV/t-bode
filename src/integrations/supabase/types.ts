@@ -262,15 +262,19 @@ export type Database = {
           brief: Json | null
           created_at: string
           created_by: string | null
+          custom_style_id: string | null
           description: string | null
           ends_at: string | null
           holiday_id: string | null
           id: string
+          image_size: string
+          preferred_colors: Json
           published_at: string | null
           starts_at: string | null
           status: Database["public"]["Enums"]["campaign_status"]
           style: string | null
           title: string
+          transparent_bg: boolean
           type: Database["public"]["Enums"]["campaign_type"]
           updated_at: string
           year: number
@@ -281,15 +285,19 @@ export type Database = {
           brief?: Json | null
           created_at?: string
           created_by?: string | null
+          custom_style_id?: string | null
           description?: string | null
           ends_at?: string | null
           holiday_id?: string | null
           id?: string
+          image_size?: string
+          preferred_colors?: Json
           published_at?: string | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           style?: string | null
           title: string
+          transparent_bg?: boolean
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
           year?: number
@@ -300,15 +308,19 @@ export type Database = {
           brief?: Json | null
           created_at?: string
           created_by?: string | null
+          custom_style_id?: string | null
           description?: string | null
           ends_at?: string | null
           holiday_id?: string | null
           id?: string
+          image_size?: string
+          preferred_colors?: Json
           published_at?: string | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           style?: string | null
           title?: string
+          transparent_bg?: boolean
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
           year?: number
