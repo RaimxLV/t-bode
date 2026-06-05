@@ -8,6 +8,86 @@ const corsHeaders = {
 
 interface Body {
   campaign_id: string;
+  /** If provided, only this single design is regenerated (rest untouched). */
+  design_id?: string;
+  /** Optional custom prompt override (replaces the brief idea prompt). */
+  prompt_override?: string;
+  /** Optional style preset, e.g. "vector_illustration" or "digital_illustration/2d_art_poster". */
+  style?: string;
+}
+
+/** Allowed Recraft V3 styles. */
+const ALLOWED_STYLES = new Set([
+  "any",
+  "realistic_image",
+  "digital_illustration",
+  "digital_illustration/pixel_art",
+  "digital_illustration/hand_drawn",
+  "digital_illustration/grain",
+  "digital_illustration/infantile_sketch",
+  "digital_illustration/2d_art_poster",
+  "digital_illustration/2d_art_poster_2",
+  "digital_illustration/handmade_3d",
+  "digital_illustration/hand_drawn_outline",
+  "digital_illustration/engraving_color",
+  "vector_illustration",
+  "vector_illustration/engraving",
+  "vector_illustration/line_art",
+  "vector_illustration/line_circuit",
+  "vector_illustration/linocut",
+]);
+
+async function generateWithFal(opts: {
+  falKey: string;
+  prompt: string;
+  style: string;
+}): Promise<Uint8Array> {
+  const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
+
+  // fal.ai Recraft V3 — supports vector + illustration styles, transparent-friendly,
+  // perfect for apparel print designs.
+  const res = await fetch("https://fal.run/fal-ai/recraft-v3", {
+    method: "POST",
+    headers: {
+      Authorization: `Key ${opts.falKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      prompt: opts.prompt,
+      style: styleSafe,
+      image_size: "square_hd",
+    }),
+  });
+
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`fal.ai ${res.status}: ${t.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const url: string | undefined = data?.images?.[0]?.url;
+  if (!url) throw new Error("fal.ai: no image url in response");
+
+  const imgRes = await fetch(url);
+  if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
+  return new Uint8Array(await imgRes.arrayBuffer());
+}
+
+function buildPrompt(rawPrompt: string, style: string): string {
+  const isVector = style.startsWith("vector_illustration");
+  const isIllustration = style.startsWith("digital_illustration");
+  const base = rawPrompt.trim();
+  const styleHint = isVector
+    ? "Bold flat vector artwork, clean geometric shapes, screen-print ready, limited palette."
+    : isIllustration
+    ? "Bold illustrated artwork with rich detail, centered composition, screen-print ready."
+    : "Bold artwork suitable for screen-printing on apparel.";
+  return (
+    `${base}. ${styleHint} ` +
+    `Centered composition isolated on a pure white background. ` +
+    `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person, model, hanger, or fabric. ` +
+    `Output ONLY the standalone design artwork itself — like a sticker or print file. ` +
+    `No text, no letters, no watermark, no shadows, no photo, no background scene.`
+  );
 }
 
 Deno.serve(async (req) => {
@@ -17,18 +97,19 @@ Deno.serve(async (req) => {
     const auth = await requireAdmin(req, corsHeaders);
     if (!auth.ok) return auth.response;
 
-    const { campaign_id }: Body = await req.json();
+    const body: Body = await req.json();
+    const { campaign_id, design_id, prompt_override, style: bodyStyle } = body;
     if (!campaign_id) {
       return new Response(JSON.stringify({ error: "campaign_id required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const FAL_KEY = Deno.env.get("FAL_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    if (!FAL_KEY) {
+      return new Response(JSON.stringify({ error: "FAL_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -37,7 +118,7 @@ Deno.serve(async (req) => {
 
     const { data: campaign, error: cErr } = await admin
       .from("campaigns")
-      .select("id, brief, holidays(name_lv)")
+      .select("id, brief, style, holidays(name_lv)")
       .eq("id", campaign_id)
       .maybeSingle();
 
@@ -47,6 +128,60 @@ Deno.serve(async (req) => {
       });
     }
 
+    const campaignStyle: string = (campaign as any).style || "digital_illustration";
+
+    /* ===== SINGLE-DESIGN REGENERATION ===== */
+    if (design_id) {
+      const { data: existing, error: dErr } = await admin
+        .from("campaign_designs")
+        .select("id, prompt, style")
+        .eq("id", design_id)
+        .eq("campaign_id", campaign_id)
+        .maybeSingle();
+      if (dErr || !existing) {
+        return new Response(JSON.stringify({ error: "Design not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const rawPrompt = (prompt_override?.trim() || (existing as any).prompt || "").trim();
+      const useStyle = bodyStyle || (existing as any).style || campaignStyle;
+      const finalPrompt = buildPrompt(rawPrompt, useStyle);
+
+      try {
+        const bytes = await generateWithFal({ falKey: FAL_KEY, prompt: finalPrompt, style: useStyle });
+        const path = `${campaign_id}/${design_id}-${Date.now()}.png`;
+        const { error: upErr } = await admin.storage
+          .from("campaign-assets")
+          .upload(path, bytes, { contentType: "image/png", upsert: true });
+        if (upErr) throw upErr;
+
+        const { error: updErr } = await admin
+          .from("campaign_designs")
+          .update({
+            prompt: rawPrompt,
+            style: useStyle,
+            image_url: path,
+            generation_error: null,
+          })
+          .eq("id", design_id);
+        if (updErr) throw updErr;
+
+        return new Response(JSON.stringify({ ok: true, path }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (e: any) {
+        console.error("single regen failed:", e);
+        await admin
+          .from("campaign_designs")
+          .update({ generation_error: e.message ?? String(e) })
+          .eq("id", design_id);
+        return new Response(JSON.stringify({ error: e.message ?? String(e) }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    /* ===== FULL CAMPAIGN GENERATION ===== */
     const brief: any = (campaign as any).brief;
     const ideas: { title: string; prompt: string }[] = brief?.design_ideas ?? [];
     if (!ideas.length) {
@@ -55,7 +190,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Clear previous designs (regenerate flow)
+    // Persist any new campaign-level style choice
+    if (bodyStyle && bodyStyle !== campaignStyle) {
+      await admin.from("campaigns").update({ style: bodyStyle }).eq("id", campaign_id);
+    }
+    const useStyle = bodyStyle || campaignStyle;
+
     await admin.from("campaign_designs").delete().eq("campaign_id", campaign_id);
     await admin.from("campaigns").update({ status: "generating_designs" }).eq("id", campaign_id);
 
@@ -63,47 +203,10 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
-      const fullPrompt =
-        `Flat 2D graphic artwork for screen-printing on apparel. Subject: ${idea.prompt}. ` +
-        `Style: bold vector-style illustration, clean lines, limited color palette, centered composition, fully isolated on a pure white background. ` +
-        `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person, model, hanger, or fabric. ` +
-        `Output ONLY the standalone design artwork itself — as if it were a sticker or print file. No text, no letters, no watermark, no shadows, no 3D rendering, no photo, no background scene.`;
-
+      const finalPrompt = buildPrompt(idea.prompt, useStyle);
       try {
-        const imgRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash-image",
-            messages: [{ role: "user", content: fullPrompt }],
-            modalities: ["image", "text"],
-          }),
-        });
-
-        if (imgRes.status === 429) throw new Error("AI rate limit");
-        if (imgRes.status === 402) throw new Error("AI credits exhausted");
-        if (!imgRes.ok) {
-          const t = await imgRes.text();
-          console.error("Image gen failed:", imgRes.status, t);
-          throw new Error(`AI error ${imgRes.status}`);
-        }
-
-        const data = await imgRes.json();
-        const imageUrl: string | undefined =
-          data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-        if (!imageUrl?.startsWith("data:image")) {
-          console.error("No image in response:", JSON.stringify(data).slice(0, 500));
-          throw new Error("No image returned");
-        }
-
-        // data:image/png;base64,...
-        const base64 = imageUrl.split(",")[1];
-        const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+        const bytes = await generateWithFal({ falKey: FAL_KEY, prompt: finalPrompt, style: useStyle });
         const path = `${campaign_id}/${i}-${Date.now()}.png`;
-
         const { error: upErr } = await admin.storage
           .from("campaign-assets")
           .upload(path, bytes, { contentType: "image/png", upsert: true });
@@ -112,17 +215,18 @@ Deno.serve(async (req) => {
         const { error: insErr } = await admin.from("campaign_designs").insert({
           campaign_id,
           prompt: idea.prompt,
+          style: useStyle,
           image_url: path,
           is_primary: i === 0,
         });
         if (insErr) throw insErr;
-
         results.push({ ok: true, idea: idea.title, path });
       } catch (e: any) {
         console.error(`Idea ${i} failed:`, e);
         await admin.from("campaign_designs").insert({
           campaign_id,
           prompt: idea.prompt,
+          style: useStyle,
           generation_error: e.message ?? String(e),
         });
         results.push({ ok: false, idea: idea.title, error: e.message });
