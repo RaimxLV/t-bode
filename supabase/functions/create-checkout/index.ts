@@ -224,8 +224,15 @@ Deno.serve(async (req) => {
       };
     });
 
-    const shippingCost = items[0]?.shippingCost;
-    if (shippingCost) {
+    // Shipping cost from DB (orders.shipping_cost), not client.
+    const { data: orderRow } = await serviceClient
+      .from("orders")
+      .select("shipping_cost")
+      .eq("id", order_id)
+      .maybeSingle();
+    const shippingCost =
+      promo?.discount_type === "free_shipping" ? 0 : Number(orderRow?.shipping_cost ?? 0);
+    if (shippingCost > 0) {
       line_items.push({
         price_data: {
           currency: "eur",
