@@ -245,6 +245,10 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [success, setSuccess] = useState<{ products: number; blogSlug: string | null; expires: string | null } | null>(null);
   const [styleChoice, setStyleChoice] = useState<string>("digital_illustration");
   const [regenSingleId, setRegenSingleId] = useState<string | null>(null);
+  const [transparentBg, setTransparentBg] = useState<boolean>(false);
+  const [customStyleId, setCustomStyleId] = useState<string>("");
+  const [imageSize, setImageSize] = useState<string>("square_hd");
+  const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
 
   const load = async () => {
     if (!campaignId) return;
@@ -252,12 +256,18 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     try {
       const { data: campRaw } = await supabase
         .from("campaigns" as any)
-        .select("id, holiday_id, year, status, title, description, brief, style")
+        .select("id, holiday_id, year, status, title, description, brief, style, custom_style_id, image_size, preferred_colors, transparent_bg")
         .eq("id", campaignId)
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
       setCampaign(camp);
       if (camp?.style) setStyleChoice(camp.style);
+      if (camp) {
+        setTransparentBg(!!camp.transparent_bg);
+        setCustomStyleId(camp.custom_style_id || "");
+        setImageSize(camp.image_size || "square_hd");
+        setPreferredColors(Array.isArray(camp.preferred_colors) ? camp.preferred_colors : []);
+      }
 
       // Decide step from status
       if (camp) {
@@ -379,7 +389,14 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     toast.info("AI ģenerē dizainus (1-2 min)…");
     try {
       const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
-        body: { campaign_id: campaign.id, style: styleChoice },
+        body: {
+          campaign_id: campaign.id,
+          style: styleChoice,
+          custom_style_id: customStyleId.trim() || null,
+          image_size: imageSize,
+          colors: preferredColors,
+          transparent_bg: transparentBg,
+        },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
       toast.success("Dizaini pārģenerēti");
@@ -398,6 +415,10 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           design_id: designId,
           prompt_override: newPrompt,
           style: newStyle || styleChoice,
+          custom_style_id: customStyleId.trim() || null,
+          image_size: imageSize,
+          colors: preferredColors,
+          transparent_bg: transparentBg,
         },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
