@@ -129,12 +129,14 @@ export const BlogManager = () => {
     setPickerSelected(new Set());
     setPickerLoading(true);
     const linkedIds = new Set(linked.map((l) => l.id));
+    // Show DRAFT products first (campaign-generated cards waiting to be linked),
+    // then any other published items as fallback.
     const { data } = await supabase
       .from("products")
-      .select("id,name,name_lv,image_url,price,category,holiday_id")
-      .eq("is_draft", false)
+      .select("id,name,name_lv,image_url,price,category,holiday_id,is_draft,campaign_id")
+      .order("is_draft", { ascending: false })
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(300);
     setPickerProducts((data || []).filter((p: any) => !linkedIds.has(p.id)));
     setPickerLoading(false);
   };
