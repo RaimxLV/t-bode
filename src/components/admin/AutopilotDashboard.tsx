@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2, Star, Package, FileText, ExternalLink } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2, Star, Package, FileText, ExternalLink, Shirt, Check } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { composeMockup } from "@/lib/imageCrop";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +56,32 @@ type DesignRow = {
   product_id: string | null;
 };
 
+type BaseRow = {
+  id: string;
+  product_id: string | null;
+  name: string;
+  color_name: string;
+  color_hex: string | null;
+  mockup_path: string;
+  print_area: { x: number; y: number; w: number; h: number };
+  is_active: boolean;
+};
+
+type BaseProductInfo = {
+  id: string;
+  name: string;
+  name_lv: string | null;
+  category: string;
+  sizes: string[] | null;
+  description: string | null;
+  description_lv: string | null;
+};
+
+function slugify(s: string) {
+  return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
+}
+
 const MONTHS_LV = ["Janv.", "Febr.", "Marts", "Apr.", "Maijs", "Jūn.", "Jūl.", "Aug.", "Sept.", "Okt.", "Nov.", "Dec."];
 
 function nextOccurrence(month: number, day: number): Date {
@@ -81,13 +109,20 @@ export const AutopilotDashboard = () => {
   const [publishing, setPublishing] = useState<string | null>(null);
   const [bloggingId, setBloggingId] = useState<string | null>(null);
   const [togglingDesign, setTogglingDesign] = useState<string | null>(null);
+  const [bases, setBases] = useState<BaseRow[]>([]);
+  const [baseInfos, setBaseInfos] = useState<BaseProductInfo[]>([]);
+  const [selectedBases, setSelectedBases] = useState<Record<string, Set<string>>>({});
+  const [useAiMockup, setUseAiMockup] = useState<Record<string, boolean>>({});
+  const [publishProgress, setPublishProgress] = useState<{ done: number; total: number } | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [hRes, cRes, dRes] = await Promise.all([
+    const [hRes, cRes, dRes, bRes, bpRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
       supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id"),
+      supabase.from("base_products").select("*").eq("is_active", true).order("sort_order"),
+      supabase.from("products").select("id,name,name_lv,category,sizes,description,description_lv"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
@@ -109,6 +144,13 @@ export const AutopilotDashboard = () => {
         setSignedUrls(map);
       }
     }
+    if (!bRes.error) {
+      setBases(((bRes.data as any[]) || []).map((x) => ({
+        ...x,
+        print_area: x.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+      })));
+    }
+    if (!bpRes.error) setBaseInfos((bpRes.data as any) || []);
     setLoading(false);
   };
 
