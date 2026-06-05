@@ -383,6 +383,17 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     finally { setBusy(null); }
   };
 
+  const saveBrief = async (newBrief: Brief) => {
+    if (!campaign) return;
+    const { error } = await supabase
+      .from("campaigns" as any)
+      .update({ brief: newBrief as any })
+      .eq("id", campaign.id);
+    if (error) { toast.error("Nesaglabājās: " + error.message); return; }
+    setCampaign({ ...campaign, brief: newBrief });
+    toast.success("Saglabāts");
+  };
+
   /* -------- Step 2 actions -------- */
   const regenDesigns = async () => {
     if (!campaign) return;
