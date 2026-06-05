@@ -45,9 +45,12 @@ export const BlogManager = () => {
   const [editing, setEditing] = useState<Post | null>(null);
   const [productsTab, setProductsTab] = useState<Post | null>(null);
   const [linked, setLinked] = useState<LinkedProduct[]>([]);
-  const [linkSearch, setLinkSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [linkBusy, setLinkBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerProducts, setPickerProducts] = useState<any[]>([]);
+  const [pickerSelected, setPickerSelected] = useState<Set<string>>(new Set());
+  const [pickerSearch, setPickerSearch] = useState("");
+  const [pickerLoading, setPickerLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -99,24 +102,12 @@ export const BlogManager = () => {
     setLinkBusy(false);
   };
 
-  const searchProducts = async (q: string) => {
-    setLinkSearch(q);
-    if (!q.trim()) { setSearchResults([]); return; }
-    const { data } = await supabase
-      .from("products")
-      .select("id,name,name_lv,image_url")
-      .or(`name.ilike.%${q}%,name_lv.ilike.%${q}%`)
-      .limit(8);
-    setSearchResults(data || []);
-  };
-
   const addLink = async (productId: string) => {
     if (!productsTab) return;
     const { error } = await supabase.from("blog_post_products" as any).insert({
       blog_post_id: productsTab.id, product_id: productId, source: "manual",
     });
     if (error) { toast.error(error.message); return; }
-    setLinkSearch(""); setSearchResults([]);
     await loadLinked(productsTab);
   };
 
@@ -126,6 +117,36 @@ export const BlogManager = () => {
       .delete()
       .eq("blog_post_id", productsTab.id)
       .eq("product_id", productId);
+    await loadLinked(productsTab);
+  };
+
+  const openPicker = async () => {
+    if (!productsTab) return;
+    setPickerOpen(true);
+    setPickerSelected(new Set());
+    setPickerLoading(true);
+    const linkedIds = new Set(linked.map((l) => l.id));
+    const { data } = await supabase
+      .from("products")
+      .select("id,name,name_lv,image_url,price,category,holiday_id")
+      .eq("is_draft", false)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setPickerProducts((data || []).filter((p: any) => !linkedIds.has(p.id)));
+    setPickerLoading(false);
+  };
+
+  const confirmPicker = async () => {
+    if (!productsTab || pickerSelected.size === 0) { setPickerOpen(false); return; }
+    const rows = Array.from(pickerSelected).map((product_id) => ({
+      blog_post_id: productsTab.id,
+      product_id,
+      source: "manual",
+    }));
+    const { error } = await supabase.from("blog_post_products" as any).insert(rows);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Pievienoti ${rows.length} produkti`);
+    setPickerOpen(false);
     await loadLinked(productsTab);
   };
 
@@ -144,13 +165,69 @@ export const BlogManager = () => {
 
   const publish = async (p: Post) => {
     setBusy(p.id);
-    const { error } = await supabase
-      .from("blog_posts")
-      .update({ status: "published", published_at: new Date().toISOString() })
-      .eq("id", p.id);
-    setBusy(null);
-    if (error) toast.error("Neizdevās publicēt: " + error.message);
-    else { toast.success("Raksts publicēts"); load(); }
+    try {
+      // 1. Collect all related products (manual links + campaign auto)
+      const { data: links } = await supabase
+        .from("blog_post_products" as any)
+        .select("product_id")
+        .eq("blog_post_id", p.id);
+      const manualIds: string[] = (links || []).map((l: any) => l.product_id);
+      let autoIds: string[] = [];
+      let expiresAt: string | null = null;
+      if (p.campaign_id) {
+        const { data: byCampaign } = await supabase
+          .from("products")
+          .select("id")
+          .eq("campaign_id", p.campaign_id);
+        autoIds = (byCampaign || []).map((r: any) => r.id);
+
+        // Compute holiday-based expiry: 1 day before holiday
+        const { data: c } = await supabase
+          .from("campaigns")
+          .select("year, holidays(month, day)")
+          .eq("id", p.campaign_id)
+          .maybeSingle();
+        const h: any = (c as any)?.holidays;
+        if (h?.month && h?.day) {
+          const year = (c as any).year ?? new Date().getFullYear();
+          const holiday = new Date(Date.UTC(year, h.month - 1, h.day, 0, 0, 0));
+          const expiry = new Date(holiday.getTime() - 24 * 60 * 60 * 1000);
+          expiresAt = expiry.toISOString();
+        }
+      }
+
+      const allIds = Array.from(new Set([...manualIds, ...autoIds]));
+
+      // 2. Flip products live + flag for collection
+      if (allIds.length > 0) {
+        const patch: any = {
+          is_draft: false,
+          status: "published",
+          show_in_collection: true,
+          available_from: new Date().toISOString(),
+        };
+        if (expiresAt) patch.expires_at = expiresAt;
+        const { error: upErr } = await supabase
+          .from("products")
+          .update(patch)
+          .in("id", allIds);
+        if (upErr) throw upErr;
+      }
+
+      // 3. Publish blog post
+      const { error } = await supabase
+        .from("blog_posts")
+        .update({ status: "published", published_at: new Date().toISOString() })
+        .eq("id", p.id);
+      if (error) throw error;
+
+      toast.success(`Raksts publicēts un ${allIds.length} produkti redzami kolekcijā`);
+      load();
+    } catch (e: any) {
+      toast.error("Neizdevās publicēt: " + (e.message || e));
+    } finally {
+      setBusy(null);
+    }
   };
 
   const unpublish = async (p: Post) => {
@@ -293,7 +370,7 @@ export const BlogManager = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!productsTab} onOpenChange={(o) => { if (!o) { setProductsTab(null); setLinked([]); setLinkSearch(""); setSearchResults([]); } }}>
+      <Dialog open={!!productsTab} onOpenChange={(o) => { if (!o) { setProductsTab(null); setLinked([]); } }}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {productsTab && (
             <>
@@ -301,29 +378,9 @@ export const BlogManager = () => {
                 <DialogTitle className="font-display">Saistītie produkti — {productsTab.title}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold">Pievienot produktu</label>
-                  <Input
-                    value={linkSearch}
-                    onChange={(e) => searchProducts(e.target.value)}
-                    placeholder="Meklēt pēc nosaukuma…"
-                  />
-                  {searchResults.length > 0 && (
-                    <div className="border border-border rounded divide-y divide-border max-h-48 overflow-y-auto">
-                      {searchResults.map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => addLink(r.id)}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left"
-                        >
-                          {r.image_url && <img src={r.image_url} alt="" className="w-8 h-8 rounded object-cover" />}
-                          <span className="flex-1 text-sm font-body truncate">{r.name_lv || r.name}</span>
-                          <Plus className="w-4 h-4 text-primary" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Button variant="outline" size="sm" onClick={openPicker} className="gap-1.5 w-full sm:w-auto">
+                  <Plus className="w-4 h-4" /> Pievienot produktus no galerijas
+                </Button>
 
                 {linkBusy ? (
                   <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
@@ -384,6 +441,78 @@ export const BlogManager = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Visual product picker */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">Izvēlies produktus</DialogTitle>
+          </DialogHeader>
+          <Input
+            placeholder="Meklēt…"
+            value={pickerSearch}
+            onChange={(e) => setPickerSearch(e.target.value)}
+            className="mb-3"
+          />
+          {pickerLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-[60vh] overflow-y-auto p-1">
+                {pickerProducts
+                  .filter((p) => {
+                    const q = pickerSearch.trim().toLowerCase();
+                    if (!q) return true;
+                    return (p.name_lv || p.name || "").toLowerCase().includes(q);
+                  })
+                  .map((p) => {
+                    const selected = pickerSelected.has(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          const next = new Set(pickerSelected);
+                          if (selected) next.delete(p.id); else next.add(p.id);
+                          setPickerSelected(next);
+                        }}
+                        className={`relative border-2 rounded-lg overflow-hidden text-left transition-all ${
+                          selected ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"
+                        }`}
+                      >
+                        <div className="aspect-square bg-muted">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground"><Package className="w-8 h-8" /></div>
+                          )}
+                        </div>
+                        <div className="p-2">
+                          <p className="text-xs font-body line-clamp-2 leading-tight">{p.name_lv || p.name}</p>
+                          <p className="text-xs font-semibold mt-0.5">{Number(p.price).toFixed(2)} €</p>
+                        </div>
+                        {selected && (
+                          <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">✓</div>
+                        )}
+                      </button>
+                    );
+                  })}
+                {pickerProducts.length === 0 && (
+                  <p className="col-span-full text-center py-8 text-sm text-muted-foreground font-body">
+                    Visi produkti jau pievienoti.
+                  </p>
+                )}
+              </div>
+              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-border">
+                <Button variant="outline" onClick={() => setPickerOpen(false)}>Atcelt</Button>
+                <Button onClick={confirmPicker} disabled={pickerSelected.size === 0}>
+                  Pievienot ({pickerSelected.size})
+                </Button>
               </div>
             </>
           )}

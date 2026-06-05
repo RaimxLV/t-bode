@@ -45,6 +45,14 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const isAdmin = !!(onEdit || onDelete);
 
+  // "Jaunums" badge for campaign/holiday products that are still active
+  const isNew = (() => {
+    const p: any = product;
+    if (!p.holiday_id && !p.show_in_collection && !p.campaign_id) return false;
+    if (p.expires_at && new Date(p.expires_at) < new Date()) return false;
+    return true;
+  })();
+
   const allImages = useMemo(() => {
     const imgs: string[] = [];
     if (product.image_url) imgs.push(product.image_url);
@@ -141,6 +149,12 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         {!product.in_stock && (
           <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-[10px] font-bold font-body px-2 py-0.5 rounded">
             {t("products.outOfStock", "Nav noliktavā")}
+          </div>
+        )}
+
+        {isNew && product.in_stock && (
+          <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-bold font-body px-2 py-0.5 rounded uppercase tracking-wide">
+            {i18n.language === "en" ? "New" : "Jaunums"}
           </div>
         )}
 
