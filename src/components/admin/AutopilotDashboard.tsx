@@ -266,7 +266,7 @@ export const AutopilotDashboard = () => {
 
     setPublishing(campaignId);
     const totalSteps = starred.length * selectedProducts.reduce(
-      (sum, p) => sum + (basesByProduct.get(p.id)?.length ?? 0), 0,
+      (sum, p) => sum + p.color_variants.filter((cv) => cv.images?.[0]).length, 0,
     );
     setPublishProgress({ done: 0, total: totalSteps });
     let done = 0;
@@ -284,32 +284,34 @@ export const AutopilotDashboard = () => {
         }
 
         for (const baseProduct of selectedProducts) {
-          const items = basesByProduct.get(baseProduct.id) ?? [];
-          const variants: { name: string; hex: string; images: string[] }[] = [];
+          const printArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
+          const variants: ColorVariant[] = [];
+          const eligibleVariants = baseProduct.color_variants.filter((cv) => cv.images?.[0]);
 
-          for (const b of items) {
+          for (let vi = 0; vi < eligibleVariants.length; vi++) {
+            const cv = eligibleVariants[vi];
             try {
-              const mockupPublic = supabase.storage.from("mockup-templates").getPublicUrl(b.mockup_path).data.publicUrl;
               const blob = await composeMockup({
-                mockupUrl: mockupPublic,
+                mockupUrl: cv.images[0],
                 designUrl: designSignedUrl,
-                printArea: b.print_area,
+                printArea,
+                baseColorHex: cv.hex,
                 maxWidth: 1400,
               });
-              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${b.id}.jpg`;
+              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${vi}-${slugify(cv.name)}.jpg`;
               const up = await supabase.storage.from("generated-mockups").upload(path, blob, {
                 contentType: "image/jpeg", upsert: true,
               });
               if (up.error) throw up.error;
               const publicUrl = supabase.storage.from("generated-mockups").getPublicUrl(path).data.publicUrl;
               variants.push({
-                name: b.color_name,
-                hex: b.color_hex || "#888888",
+                name: cv.name,
+                hex: cv.hex || "#888888",
                 images: [publicUrl],
               });
             } catch (e: any) {
-              console.error("Mockup failed", b.id, e);
-              toast.error(`${baseProduct.name} (${b.color_name}): mockup neizdevās`);
+              console.error("Mockup failed", baseProduct.id, cv.name, e);
+              toast.error(`${baseProduct.name} (${cv.name}): mockup neizdevās`);
             }
             done++; setPublishProgress({ done, total: totalSteps });
           }
