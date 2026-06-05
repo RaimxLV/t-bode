@@ -760,7 +760,7 @@ function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
-  onSetCoverColor,
+  onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice, onChangeStyle,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
@@ -768,13 +768,28 @@ function StepDesigns({
     <div className="space-y-5">
       {/* Designs grid */}
       <section>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h4 className="font-semibold text-sm">AI dizaini ({designs.length})</h4>
-          <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
-            {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
-            Pārģenerēt dizainus
-          </Button>
+          <div className="flex items-center gap-2">
+            <select
+              value={styleChoice}
+              onChange={(e) => onChangeStyle(e.target.value)}
+              className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
+              title="Ģenerēšanas stils"
+            >
+              {STYLE_PRESETS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
+              {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
+              Pārģenerēt visus
+            </Button>
+          </div>
         </div>
+        <p className="text-[11px] text-muted-foreground mb-2">
+          Stils tiek pielietots visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar zīmuļa pogu uz kartītes.
+        </p>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
             Vēl nav dizainu. Spied "Pārģenerēt dizainus".
@@ -782,28 +797,15 @@ function StepDesigns({
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
             {designs.map((d: DesignRow) => (
-              <div key={d.id} className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
-                {d.image_url && signedUrls[d.image_url] ? (
-                  <>
-                    <img
-                      src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
-                      loading="lazy"
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => onToggleStar(d)}
-                      className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
-                    >
-                      <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
-                    </button>
-                  </>
-                ) : d.generation_error ? (
-                  <div className="p-2 text-[10px] text-destructive flex items-center justify-center h-full text-center">⚠ {d.generation_error}</div>
-                ) : (
-                  <div className="flex items-center justify-center h-full"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-                )}
-              </div>
+              <DesignCard
+                key={d.id}
+                d={d}
+                signedUrls={signedUrls}
+                regenSingleId={regenSingleId}
+                styleChoice={styleChoice}
+                onToggleStar={onToggleStar}
+                onRegenSingleDesign={onRegenSingleDesign}
+              />
             ))}
           </div>
         )}
