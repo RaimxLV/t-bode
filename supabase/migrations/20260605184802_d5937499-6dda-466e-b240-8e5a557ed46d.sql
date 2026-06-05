@@ -1,0 +1,1 @@
+ALTER TABLE public.campaign_designs ADD COLUMN IF NOT EXISTS slogan text;

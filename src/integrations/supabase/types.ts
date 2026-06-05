@@ -218,6 +218,7 @@ export type Database = {
           is_primary: boolean
           product_id: string | null
           prompt: string
+          slogan: string | null
           style: string | null
           updated_at: string
         }
@@ -230,6 +231,7 @@ export type Database = {
           is_primary?: boolean
           product_id?: string | null
           prompt: string
+          slogan?: string | null
           style?: string | null
           updated_at?: string
         }
@@ -242,6 +244,7 @@ export type Database = {
           is_primary?: boolean
           product_id?: string | null
           prompt?: string
+          slogan?: string | null
           style?: string | null
           updated_at?: string
         }
