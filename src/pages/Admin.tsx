@@ -517,6 +517,12 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="designstoproducts">
+            <Suspense fallback={<TabFallback />}>
+              <DesignsToProducts />
+            </Suspense>
+          </TabsContent>
+
           <TabsContent value="drafts">
             {loadingProducts ? (
               <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
