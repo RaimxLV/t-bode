@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -28,7 +28,7 @@ type Campaign = {
   id: string;
   holiday_id: string;
   year: number;
-  status: "draft" | "generating" | "ready_for_review" | "ready" | "active" | "completed" | "published" | "archived" | "failed" | "planned";
+  status: "draft" | "generating" | "ready_for_review" | "generating_designs" | "designs_ready" | "ready" | "active" | "completed" | "published" | "archived" | "failed" | "planned";
   title: string | null;
   description: string | null;
   brief: Brief | null;
@@ -42,6 +42,15 @@ type Brief = {
   color_palette?: string[];
   design_ideas?: { title: string; prompt: string }[];
   product_types?: string[];
+};
+
+type DesignRow = {
+  id: string;
+  campaign_id: string;
+  image_url: string | null;
+  prompt: string;
+  generation_error: string | null;
+  is_primary: boolean;
 };
 
 const MONTHS_LV = ["Janv.", "Febr.", "Marts", "Apr.", "Maijs", "Jūn.", "Jūl.", "Aug.", "Sept.", "Okt.", "Nov.", "Dec."];
@@ -65,17 +74,37 @@ export const AutopilotDashboard = () => {
   const [starting, setStarting] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Campaign | null>(null);
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [designs, setDesigns] = useState<DesignRow[]>([]);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
+  const [generatingDesigns, setGeneratingDesigns] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [hRes, cRes] = await Promise.all([
+    const [hRes, cRes, dRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
+      supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
     if (cRes.error) toast.error("Neizdevās ielādēt kampaņas");
     else setCampaigns((cRes.data as any) || []);
+    if (!dRes.error) {
+      const rows = (dRes.data as any as DesignRow[]) || [];
+      setDesigns(rows);
+      // Sign URLs for any with image_url
+      const paths = rows.filter((r) => r.image_url).map((r) => r.image_url as string);
+      if (paths.length) {
+        const { data: signed } = await supabase.storage
+          .from("campaign-assets")
+          .createSignedUrls(paths, 60 * 60);
+        const map: Record<string, string> = {};
+        (signed || []).forEach((s, i) => {
+          if (s.signedUrl) map[paths[i]] = s.signedUrl;
+        });
+        setSignedUrls(map);
+      }
+    }
     setLoading(false);
   };
 
@@ -129,6 +158,27 @@ export const AutopilotDashboard = () => {
     }
   };
 
+  const runDesignGeneration = async (campaignId: string) => {
+    setGeneratingDesigns(campaignId);
+    toast.info("AI ģenerē dizainus… tas var aizņemt 1–2 minūtes");
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-designs", {
+        body: { campaign_id: campaignId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const results = (data as any)?.results ?? [];
+      const okCount = results.filter((r: any) => r.ok).length;
+      toast.success(`Izveidoti ${okCount}/${results.length} dizaini`);
+      await load();
+    } catch (e: any) {
+      toast.error("Dizainu ģenerēšana neizdevās: " + (e.message ?? "nezināma kļūda"));
+      await load();
+    } finally {
+      setGeneratingDesigns(null);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -178,6 +228,8 @@ export const AutopilotDashboard = () => {
                     <Badge variant="secondary" className="shrink-0">
                       {camp.status === "ready_for_review" && <><CheckCircle2 className="w-3 h-3 mr-1" />Brief gatavs</>}
                       {camp.status === "generating" && <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Ģenerē brief'u</>}
+                      {camp.status === "generating_designs" && <><Loader2 className="w-3 h-3 mr-1 animate-spin" />Ģenerē dizainus</>}
+                      {camp.status === "designs_ready" && <><ImageIcon className="w-3 h-3 mr-1" />Dizaini gatavi</>}
                       {camp.status === "published" && "Publicēta"}
                       {camp.status === "failed" && "Kļūda"}
                       {camp.status === "archived" && "Arhivēta"}
@@ -231,6 +283,59 @@ export const AutopilotDashboard = () => {
                       )}
                     </Button>
                   </div>
+                )}
+
+                {camp && camp.status === "ready_for_review" && (
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    disabled={generatingDesigns === camp.id}
+                    onClick={() => runDesignGeneration(camp.id)}
+                  >
+                    {generatingDesigns === camp.id ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Ģenerē dizainus…</>
+                    ) : (
+                      <><Wand2 className="w-4 h-4 mr-2" />Ģenerēt dizainus</>
+                    )}
+                  </Button>
+                )}
+
+                {camp && (camp.status === "designs_ready" || camp.status === "generating_designs") && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2">
+                      {designs.filter((d) => d.campaign_id === camp.id).map((d) => (
+                        <div key={d.id} className="aspect-square rounded-md border bg-muted/30 overflow-hidden flex items-center justify-center">
+                          {d.image_url && signedUrls[d.image_url] ? (
+                            <img src={signedUrls[d.image_url]} alt={d.prompt.slice(0, 40)} className="w-full h-full object-cover" />
+                          ) : d.generation_error ? (
+                            <div className="p-2 text-[10px] text-destructive text-center">⚠ {d.generation_error}</div>
+                          ) : (
+                            <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {camp.status === "designs_ready" && (
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" className="flex-1" onClick={() => setViewing(camp)}>
+                          <Eye className="w-3.5 h-3.5 mr-1.5" /> Brief
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={generatingDesigns === camp.id}
+                          onClick={() => runDesignGeneration(camp.id)}
+                          title="Ģenerēt dizainus no jauna"
+                        >
+                          {generatingDesigns === camp.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {camp && camp.status === "generating" && (
