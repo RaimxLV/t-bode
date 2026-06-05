@@ -365,6 +365,22 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next } : x));
   };
 
+  const setCoverColor = async (productId: string, colorName: string) => {
+    const p = campProducts.find((x) => x.id === productId);
+    if (!p) return;
+    const idx = p.color_variants.findIndex((c) => c.name === colorName);
+    if (idx <= 0) return;
+    const next = [p.color_variants[idx], ...p.color_variants.filter((_, i) => i !== idx)];
+    const newCover = next[0]?.images?.[0] ?? p.image_url;
+    const { error } = await supabase.from("products").update({
+      color_variants: next as any,
+      image_url: newCover,
+    }).eq("id", productId);
+    if (error) { toast.error(error.message); return; }
+    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next, image_url: newCover } : x));
+    toast.success(`Kartītes krāsa: ${colorName}`);
+  };
+
   const updatePrintAdj = async (productId: string, patch: { print_offset_y?: number; print_scale?: number }) => {
     const { error } = await supabase.from("products").update(patch).eq("id", productId);
     if (error) { toast.error(error.message); return; }
@@ -589,6 +605,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onUpdatePrintAdj={updatePrintAdj}
                 onExcludeProduct={excludeProduct}
                 onRegenerateMockups={regenerateProductMockups}
+                onSetCoverColor={setCoverColor}
                 onReset={resetStep2}
                 onBack={() => setStep(1)}
                 onNext={() => setStep(3)}
@@ -694,6 +711,7 @@ function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
+  onSetCoverColor,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
@@ -821,6 +839,7 @@ function StepDesigns({
                   onRegenerate={onRegenerateMockups}
                   onRemoveColor={onRemoveColor}
                   onExcludeProduct={onExcludeProduct}
+                  onSetCoverColor={onSetCoverColor}
                 />
               );
             })}
@@ -987,7 +1006,7 @@ function PublishSuccess({ success, onClose }: { success: { products: number; blo
 /* -------- Live print preview + tuning row -------- */
 function ProductTuneRow({
   product, baseInfo, designUrl, busyKey,
-  onUpdatePrintAdj, onRegenerate, onRemoveColor, onExcludeProduct,
+  onUpdatePrintAdj, onRegenerate, onRemoveColor, onExcludeProduct, onSetCoverColor,
 }: {
   product: CampProduct;
   baseInfo: CatalogProduct | null;
@@ -997,6 +1016,7 @@ function ProductTuneRow({
   onRegenerate: (id: string) => void;
   onRemoveColor: (id: string, name: string) => void;
   onExcludeProduct: (id: string) => void;
+  onSetCoverColor: (id: string, name: string) => void;
 }) {
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
@@ -1042,7 +1062,12 @@ function ProductTuneRow({
   const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   const dragStart = useRef<{ y: number; startOffset: number; pinchDist: number; startScale: number } | null>(null);
   const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
-  const baseImg = baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0] ?? product.image_url;
+  // Show the currently selected cover color's base mockup in the live preview
+  const coverColorName = product.color_variants[0]?.name;
+  const baseImg =
+    baseInfo?.color_variants?.find((cv) => cv.name === coverColorName && cv.images?.[0])?.images?.[0]
+    ?? baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0]
+    ?? product.image_url;
 
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -1178,20 +1203,45 @@ function ProductTuneRow({
         </Button>
       </div>
       {product.color_variants.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {product.color_variants.map((c) => (
-            <button
-              key={c.name}
-              type="button"
-              onClick={() => confirm(`Noņemt krāsu "${c.name}"?`) && onRemoveColor(product.id, c.name)}
-              className="group flex items-center gap-1 border rounded-full pl-1 pr-2 py-0.5 hover:border-destructive"
-              title={`Noņemt ${c.name}`}
-            >
-              <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
-              <span className="text-[10px]">{c.name}</span>
-              <X className="w-3 h-3 text-muted-foreground group-hover:text-destructive" />
-            </button>
-          ))}
+        <div className="space-y-1">
+          <p className="text-[10px] text-muted-foreground">
+            Klikšķini uz krāsas, lai uzliktu to kā kartītes bildi blogā. ✕ noņem krāsu.
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {product.color_variants.map((c, idx) => {
+              const isCover = idx === 0;
+              return (
+                <div
+                  key={c.name}
+                  className={`flex items-center gap-1 border rounded-full pl-1 pr-1 py-0.5 ${
+                    isCover ? "border-primary bg-primary/10 ring-1 ring-primary" : "hover:border-foreground/40"
+                  }`}
+                  title={isCover ? `${c.name} (kartītes krāsa)` : `Uzlikt ${c.name} kā kartītes krāsu`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onSetCoverColor(product.id, c.name)}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="w-4 h-4 rounded-full border" style={{ backgroundColor: c.hex }} />
+                    <span className="text-[10px]">{c.name}</span>
+                    {isCover && <span className="text-[9px] text-primary font-semibold">★</span>}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Noņemt krāsu "${c.name}"?`)) onRemoveColor(product.id, c.name);
+                    }}
+                    className="text-muted-foreground hover:text-destructive ml-0.5"
+                    title={`Noņemt ${c.name}`}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       {busyKey === ("regen-" + product.id) && !autoSaving && (
