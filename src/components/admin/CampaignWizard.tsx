@@ -1624,11 +1624,12 @@ function DesignCard({
   regenSingleId: string | null;
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
-  onRegenSingleDesign: (id: string, prompt: string, style?: string) => void;
+  onRegenSingleDesign: (id: string, prompt: string, style?: string, slogan?: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
   const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
+  const [draftSlogan, setDraftSlogan] = useState<string>(d.slogan || "");
 
   const busy = regenSingleId === d.id;
 
@@ -1642,6 +1643,11 @@ function DesignCard({
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
           />
+          {d.slogan && (
+            <div className="absolute bottom-1 left-1 right-1 text-[9px] px-1.5 py-0.5 rounded bg-background/85 truncate font-mono" title={d.slogan}>
+              T: {d.slogan}
+            </div>
+          )}
           <button
             onClick={() => onToggleStar(d)}
             className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
@@ -1650,7 +1656,7 @@ function DesignCard({
             <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
           </button>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
             className="absolute top-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
             title="Mainīt promptu un pārģenerēt"
           >
@@ -1661,7 +1667,7 @@ function DesignCard({
         <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
           <span>⚠ {d.generation_error}</span>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setEditing(true); }}
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
             className="underline text-foreground"
           >
             Mēģināt vēlreiz
@@ -1680,19 +1686,35 @@ function DesignCard({
       )}
 
       {editing && (
-        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5">
+        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5 overflow-y-auto">
           <p className="text-[10px] font-semibold">Mainīt promptu</p>
           <Textarea
             value={draftPrompt}
             onChange={(e) => setDraftPrompt(e.target.value)}
-            rows={4}
-            className="text-[11px] min-h-0 flex-1 resize-none"
+            rows={3}
+            className="text-[11px] min-h-0 resize-none"
             placeholder="Piem. minimālistisks zaķis ar morkām…"
           />
+          <div>
+            <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
+              Sauklis / teksts zīmējumā
+            </label>
+            <Input
+              value={draftSlogan}
+              onChange={(e) => setDraftSlogan(e.target.value)}
+              placeholder='piem. "Kur Janka, tur pjanka"'
+              className="h-7 text-[11px]"
+            />
+            {draftSlogan.trim() && (
+              <p className="text-[9px] text-primary mt-0.5">→ izmantos Ideogram (labi zīmē burtus)</p>
+            )}
+          </div>
           <select
             value={draftStyle}
             onChange={(e) => setDraftStyle(e.target.value)}
             className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
+            disabled={!!draftSlogan.trim()}
+            title={draftSlogan.trim() ? "Ar tekstu vienmēr tiek izmantots Ideogram" : ""}
           >
             {STYLE_GROUPS.map((g) => (
               <optgroup key={g.group} label={g.group}>
@@ -1707,7 +1729,7 @@ function DesignCard({
               size="sm"
               className="flex-1 h-7 text-[11px]"
               disabled={!draftPrompt.trim() || busy}
-              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle); }}
+              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle, draftSlogan); }}
             >
               <Wand2 className="w-3 h-3 mr-1" /> Ģenerēt
             </Button>
