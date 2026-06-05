@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2 } from "lucide-react";
+import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download } from "lucide-react";
+import { downloadPrintReadyPng } from "@/lib/printFile";
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
@@ -1021,6 +1022,7 @@ function ProductTuneRow({
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
   const [autoSaving, setAutoSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const lastSaved = useRef<{ y: number; s: number }>({ y: offsetY, s: scale });
 
@@ -1198,9 +1200,36 @@ function ProductTuneRow({
             </label>
           </div>
         </div>
-        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(product.id)} title="Izslēgt no kampaņas">
-          <Trash2 className="w-3.5 h-3.5" />
-        </Button>
+        <div className="flex flex-col gap-1">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!designUrl || downloading}
+            onClick={async () => {
+              if (!designUrl) return;
+              setDownloading(true);
+              try {
+                const safe = (product.name_lv || product.name || "drukas-fails")
+                  .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+                await downloadPrintReadyPng({
+                  imageUrl: designUrl,
+                  fileName: `${safe}-460dpi.png`,
+                });
+                toast.success("Drukas fails lejupielādēts");
+              } catch (e: any) {
+                toast.error(e?.message || "Neizdevās sagatavot drukas failu");
+              } finally {
+                setDownloading(false);
+              }
+            }}
+            title="Lejuplādēt 460 DPI PNG ar caurspīdīgu fonu"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+          </Button>
+          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(product.id)} title="Izslēgt no kampaņas">
+            <Trash2 className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
       {product.color_variants.length > 0 && (
         <div className="space-y-1">
