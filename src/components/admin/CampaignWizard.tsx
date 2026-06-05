@@ -720,11 +720,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl w-[calc(100vw-0.75rem)] sm:w-full max-h-[95dvh] sm:max-h-[92vh] overflow-y-auto p-3 sm:p-6 rounded-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
-            {headerTitle}
+          <DialogTitle className="font-display text-base sm:text-xl flex items-center gap-2 pr-8">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
+            <span className="truncate">{headerTitle}</span>
           </DialogTitle>
         </DialogHeader>
 
@@ -870,14 +870,14 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen}>
+      <div className="flex flex-wrap gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
-          Pārģenerēt ideju
+          Pārģenerēt
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" disabled={!brief.title_lv} onClick={onNext}>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <div className="hidden sm:block flex-1" />
+        <Button size="sm" disabled={!brief.title_lv} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
       </div>
@@ -1031,14 +1031,14 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset}>
+      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" disabled={campProducts.length === 0} onClick={onNext}>
+        <div className="hidden sm:block flex-1" />
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button size="sm" disabled={campProducts.length === 0} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
       </div>
@@ -1142,15 +1142,15 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t">
-        <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave}>
+      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt
         </Button>
-        <div className="flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose}>Saglabāt un turpināt vēlāk</Button>
-        <Button size="sm" className="bg-primary" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <div className="hidden sm:block flex-1" />
+        <Button size="sm" className="bg-primary w-full sm:w-auto" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
           {busy === "publish" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
           PUBLICĒT VISU
         </Button>
@@ -1310,12 +1310,12 @@ function ProductTuneRow({
   const dyRel = printArea.y + (printArea.h - dhRel) / 2 + offsetY * printArea.h;
 
   return (
-    <div className="border rounded p-3 space-y-3">
-      <div className="flex items-start gap-3">
+    <div className="border rounded p-2 sm:p-3 space-y-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-40 h-40 sm:w-56 sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -1383,7 +1383,7 @@ function ProductTuneRow({
             </label>
           </div>
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex sm:flex-col gap-1 justify-end">
           <Button
             size="sm"
             variant="outline"
