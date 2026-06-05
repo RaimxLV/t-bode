@@ -56,18 +56,9 @@ type DesignRow = {
   product_id: string | null;
 };
 
-type BaseRow = {
-  id: string;
-  product_id: string | null;
-  name: string;
-  color_name: string;
-  color_hex: string | null;
-  mockup_path: string;
-  print_area: { x: number; y: number; w: number; h: number };
-  is_active: boolean;
-};
+type ColorVariant = { name: string; hex: string; images: string[] };
 
-type BaseProductInfo = {
+type CatalogProduct = {
   id: string;
   name: string;
   name_lv: string | null;
@@ -75,7 +66,12 @@ type BaseProductInfo = {
   sizes: string[] | null;
   description: string | null;
   description_lv: string | null;
+  color_variants: ColorVariant[];
+  image_url: string | null;
+  print_area: { x: number; y: number; w: number; h: number } | null;
 };
+
+const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -109,20 +105,23 @@ export const AutopilotDashboard = () => {
   const [publishing, setPublishing] = useState<string | null>(null);
   const [bloggingId, setBloggingId] = useState<string | null>(null);
   const [togglingDesign, setTogglingDesign] = useState<string | null>(null);
-  const [bases, setBases] = useState<BaseRow[]>([]);
-  const [baseInfos, setBaseInfos] = useState<BaseProductInfo[]>([]);
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [selectedBases, setSelectedBases] = useState<Record<string, Set<string>>>({});
   const [useAiMockup, setUseAiMockup] = useState<Record<string, boolean>>({});
   const [publishProgress, setPublishProgress] = useState<{ done: number; total: number } | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [hRes, cRes, dRes, bRes, bpRes] = await Promise.all([
+    const [hRes, cRes, dRes, bpRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
       supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id"),
-      supabase.from("base_products").select("*").eq("is_active", true).order("sort_order"),
-      supabase.from("products").select("id,name,name_lv,category,sizes,description,description_lv"),
+      supabase
+        .from("products")
+        .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,image_url,print_area")
+        .eq("customizable", true)
+        .eq("is_draft", false)
+        .order("name"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
@@ -144,13 +143,13 @@ export const AutopilotDashboard = () => {
         setSignedUrls(map);
       }
     }
-    if (!bRes.error) {
-      setBases(((bRes.data as any[]) || []).map((x) => ({
-        ...x,
-        print_area: x.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+    if (!bpRes.error) {
+      setCatalog(((bpRes.data as any[]) || []).map((p) => ({
+        ...p,
+        color_variants: Array.isArray(p.color_variants) ? p.color_variants : [],
+        print_area: p.print_area ?? null,
       })));
     }
-    if (!bpRes.error) setBaseInfos((bpRes.data as any) || []);
     setLoading(false);
   };
 
