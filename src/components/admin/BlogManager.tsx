@@ -292,6 +292,103 @@ export const BlogManager = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!productsTab} onOpenChange={(o) => { if (!o) { setProductsTab(null); setLinked([]); setLinkSearch(""); setSearchResults([]); } }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {productsTab && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display">Saistītie produkti — {productsTab.title}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold">Pievienot produktu</label>
+                  <Input
+                    value={linkSearch}
+                    onChange={(e) => searchProducts(e.target.value)}
+                    placeholder="Meklēt pēc nosaukuma…"
+                  />
+                  {searchResults.length > 0 && (
+                    <div className="border border-border rounded divide-y divide-border max-h-48 overflow-y-auto">
+                      {searchResults.map((r) => (
+                        <button
+                          key={r.id}
+                          onClick={() => addLink(r.id)}
+                          className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left"
+                        >
+                          {r.image_url && <img src={r.image_url} alt="" className="w-8 h-8 rounded object-cover" />}
+                          <span className="flex-1 text-sm font-body truncate">{r.name_lv || r.name}</span>
+                          <Plus className="w-4 h-4 text-primary" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {linkBusy ? (
+                  <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+                ) : linked.length === 0 ? (
+                  <p className="text-sm text-muted-foreground font-body text-center py-6">
+                    Nav saistītu produktu. {productsTab.campaign_id ? "Kampaņas produkti pievienosies automātiski." : ""}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {linked.map((p) => (
+                      <div key={p.id} className="border border-border rounded p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          {p.image_url && <img src={p.image_url} alt="" className="w-10 h-10 rounded object-cover" />}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-body truncate">{p.name_lv || p.name}</div>
+                            <Badge variant={p.source === "auto" ? "secondary" : "default"} className="text-[9px] mt-0.5">
+                              {p.source === "auto" ? "Auto no kampaņas" : "Manuāls"}
+                            </Badge>
+                          </div>
+                          {p.source === "manual" && (
+                            <Button size="sm" variant="ghost" onClick={() => removeLink(p.id)} className="text-destructive">
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                          <label className="space-y-1">
+                            <div className="flex items-center gap-1 text-muted-foreground"><Calendar className="w-3 h-3" /> Pieejams no</div>
+                            <Input
+                              type="date"
+                              value={toIsoDate(p.available_from)}
+                              disabled={p.always_available}
+                              onChange={(e) => updateAvailability(p.id, { available_from: fromIsoDate(e.target.value) })}
+                              className="h-8 text-xs"
+                            />
+                          </label>
+                          <label className="space-y-1">
+                            <div className="flex items-center gap-1 text-muted-foreground"><Calendar className="w-3 h-3" /> Pieejams līdz</div>
+                            <Input
+                              type="date"
+                              value={toIsoDate(p.expires_at)}
+                              disabled={p.always_available}
+                              onChange={(e) => updateAvailability(p.id, { expires_at: fromIsoDate(e.target.value) })}
+                              className="h-8 text-xs"
+                            />
+                          </label>
+                          <label className="flex items-end gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={p.always_available}
+                              onChange={(e) => updateAvailability(p.id, { always_available: e.target.checked })}
+                              className="w-4 h-4 accent-primary"
+                            />
+                            <span className="text-xs font-body flex items-center gap-1"><InfinityIcon className="w-3 h-3" /> Vienmēr pieejams</span>
+                          </label>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
