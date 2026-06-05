@@ -1,3 +1,5 @@
+import { requireAdmin } from "../_shared/admin-auth.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -16,6 +18,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response;
+
     const { text, from, to, isHtml }: TranslateRequest = await req.json();
 
     if (!text || !from || !to) {

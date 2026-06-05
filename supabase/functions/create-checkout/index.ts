@@ -65,13 +65,25 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // SECURITY: Recompute line items from DB. The client may send `items` for
+    // metadata (image, shippingCost), but unit prices MUST come from DB.
+    const { data: dbItems, error: dbItemsErr } = await serviceClient
+      .from("order_items")
+      .select("id, product_id, product_name, quantity, unit_price, size, color")
+      .eq("order_id", order_id);
+    if (dbItemsErr || !dbItems || dbItems.length === 0) {
+      throw new Error("Order items not found");
+    }
+
     // Atomically redeem the promo code (re-validates server-side and increments usage).
     // Returns the actual discount amount; if validation fails we abort the checkout.
     let appliedDiscount = 0;
     let appliedPromoCode: string | null = null;
     if (promo?.code) {
-      const orderTotalForValidation =
-        items.reduce((sum: number, it: any) => sum + Number(it.price) * Number(it.quantity), 0);
+      const orderTotalForValidation = dbItems.reduce(
+        (sum: number, it: any) => sum + Number(it.unit_price) * Number(it.quantity),
+        0,
+      );
       const { data: redeemed, error: redeemErr } = await serviceClient.rpc("redeem_promo_code", {
         _code: promo.code,
         _order_id: order_id,
@@ -186,25 +198,41 @@ Deno.serve(async (req) => {
       customerId = newCustomer.id;
     }
 
-    const line_items = items.map((item: any) => ({
-      price_data: {
-        currency: "eur",
-        product_data: {
-          name: item.name,
-          ...(item.image ? { images: [item.image] } : {}),
-          metadata: {
-            product_id: item.productId,
-            size: item.size || "",
-            color: item.color || "",
+    // Build line items from DB-authoritative prices. Image (display only) may
+    // come from the matching client item by product_id.
+    const clientImageByProduct = new Map<string, string>();
+    for (const it of items as any[]) {
+      if (it?.productId && it?.image) clientImageByProduct.set(it.productId, it.image);
+    }
+    const line_items = dbItems.map((item: any) => {
+      const image = item.product_id ? clientImageByProduct.get(item.product_id) : undefined;
+      return {
+        price_data: {
+          currency: "eur",
+          product_data: {
+            name: item.product_name,
+            ...(image ? { images: [image] } : {}),
+            metadata: {
+              product_id: item.product_id ?? "",
+              size: item.size || "",
+              color: item.color || "",
+            },
           },
+          unit_amount: Math.round(Number(item.unit_price) * 100),
         },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }));
+        quantity: Number(item.quantity),
+      };
+    });
 
-    const shippingCost = items[0]?.shippingCost;
-    if (shippingCost) {
+    // Shipping cost from DB (orders.shipping_cost), not client.
+    const { data: orderRow } = await serviceClient
+      .from("orders")
+      .select("shipping_cost")
+      .eq("id", order_id)
+      .maybeSingle();
+    const shippingCost =
+      promo?.discount_type === "free_shipping" ? 0 : Number(orderRow?.shipping_cost ?? 0);
+    if (shippingCost > 0) {
       line_items.push({
         price_data: {
           currency: "eur",
