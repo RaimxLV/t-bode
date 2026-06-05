@@ -19,6 +19,8 @@ interface Body {
   colors?: { r: number; g: number; b: number }[];
   /** Strip background after generation (Bria). */
   transparent_bg?: boolean;
+  /** Per-design slogan text to weave into the artwork (auto-routes to Ideogram). */
+  slogan_override?: string;
 }
 
 /** Allowed Recraft V3 styles (full list from fal.ai schema). */
@@ -65,6 +67,44 @@ const ALLOWED_SIZES = new Set([
   "square_hd","square","portrait_4_3","portrait_16_9","landscape_4_3","landscape_16_9",
 ]);
 
+/** Map fal image_size to Ideogram aspect_ratio. */
+function sizeToAspect(size: string): string {
+  switch (size) {
+    case "portrait_4_3": return "3:4";
+    case "portrait_16_9": return "9:16";
+    case "landscape_4_3": return "4:3";
+    case "landscape_16_9": return "16:9";
+    default: return "1:1";
+  }
+}
+
+async function generateWithIdeogram(opts: {
+  falKey: string;
+  prompt: string;
+  imageSize?: string;
+}): Promise<{ bytes: Uint8Array; url: string }> {
+  const res = await fetch("https://fal.run/fal-ai/ideogram/v2", {
+    method: "POST",
+    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt: opts.prompt,
+      aspect_ratio: sizeToAspect(opts.imageSize ?? "square_hd"),
+      style: "design",
+      expand_prompt: false,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`ideogram ${res.status}: ${t.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const url: string | undefined = data?.images?.[0]?.url ?? data?.image?.url;
+  if (!url) throw new Error("ideogram: no image url");
+  const imgRes = await fetch(url);
+  if (!imgRes.ok) throw new Error(`ideogram download ${imgRes.status}`);
+  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
+}
+
 async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
   const res = await fetch("https://fal.run/fal-ai/bria/background/remove", {
     method: "POST",
@@ -88,7 +128,22 @@ async function generateWithFal(opts: {
   imageSize?: string;
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
+  slogan?: string;
 }): Promise<{ bytes: Uint8Array; url: string }> {
+  // Auto-route: if a slogan/text is required, use Ideogram (much better at legible text).
+  if (opts.slogan && opts.slogan.trim()) {
+    const { bytes, url } = await generateWithIdeogram({
+      falKey: opts.falKey,
+      prompt: opts.prompt,
+      imageSize: opts.imageSize,
+    });
+    if (opts.transparentBg) {
+      const stripped = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });
+      return { bytes: stripped, url };
+    }
+    return { bytes, url };
+  }
+
   const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
   const sizeSafe = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd";
 
@@ -132,7 +187,12 @@ async function generateWithFal(opts: {
   return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
 }
 
-function buildPrompt(rawPrompt: string, style: string, transparent: boolean): string {
+function buildPrompt(
+  rawPrompt: string,
+  style: string,
+  transparent: boolean,
+  opts: { slogan?: string; fitInFrame?: boolean } = {},
+): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
   const base = rawPrompt.trim();
@@ -144,12 +204,20 @@ function buildPrompt(rawPrompt: string, style: string, transparent: boolean): st
   const bgHint = transparent
     ? "Isolated on a plain solid background that can be cleanly removed. No shadows touching edges."
     : "Centered composition isolated on a pure white background.";
+  const slogan = opts.slogan?.trim();
+  const textRule = slogan
+    ? `MUST include the exact text "${slogan}" as bold, legible, perfectly spelled typography integrated into the artwork as a key design element. No other text, no watermark.`
+    : `No text, no letters, no watermark.`;
+  const frameRule = opts.fitInFrame
+    ? `CRITICAL FRAMING: the ENTIRE artwork must fit completely inside the canvas with at least 10% safe padding on every side. Nothing may touch or be cropped by the canvas edges — this is a DTF print file. Compose tightly within the safe area.`
+    : `Centered composition.`;
   return (
     `${base}. ${styleHint} ` +
     `${bgHint} ` +
-    `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person, model, hanger, or fabric. ` +
+    `${frameRule} ` +
+    `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person model, hanger, or fabric. ` +
     `Output ONLY the standalone design artwork itself — like a sticker or print file. ` +
-    `No text, no letters, no watermark, no shadows, no photo, no background scene.`
+    `${textRule} No shadows, no photo, no background scene.`
   );
 }
 
@@ -199,6 +267,8 @@ Deno.serve(async (req) => {
     const campSize: string = (campaign as any).image_size || "square_hd";
     const campColors: { r: number; g: number; b: number }[] = (campaign as any).preferred_colors ?? [];
     const campTransparent: boolean = !!(campaign as any).transparent_bg;
+    const campBrief: any = (campaign as any).brief ?? {};
+    const campFitInFrame: boolean = !!campBrief.fit_in_frame;
 
     const useCustomId = (custom_style_id !== undefined ? custom_style_id : campCustomId) || undefined;
     const useSize = image_size || campSize;
@@ -220,12 +290,17 @@ Deno.serve(async (req) => {
       }
       const rawPrompt = (prompt_override?.trim() || (existing as any).prompt || "").trim();
       const useStyle = bodyStyle || (existing as any).style || campaignStyle;
-      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent);
+      // Find slogan from brief by matching prompt, or use override
+      const ideas: any[] = Array.isArray(campBrief.design_ideas) ? campBrief.design_ideas : [];
+      const matched = ideas.find((i) => (i?.prompt ?? "") === (existing as any).prompt);
+      const slogan = (body.slogan_override ?? matched?.slogan ?? "").toString().trim();
+      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
 
       try {
         const { bytes } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
+          slogan,
         });
         const path = `${campaign_id}/${design_id}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage
@@ -261,7 +336,7 @@ Deno.serve(async (req) => {
 
     /* ===== FULL CAMPAIGN GENERATION ===== */
     const brief: any = (campaign as any).brief;
-    const ideas: { title: string; prompt: string }[] = brief?.design_ideas ?? [];
+    const ideas: { title: string; prompt: string; slogan?: string }[] = brief?.design_ideas ?? [];
     if (!ideas.length) {
       return new Response(JSON.stringify({ error: "No design_ideas in brief" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -285,11 +360,13 @@ Deno.serve(async (req) => {
 
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
-      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent);
+      const slogan = (idea.slogan ?? "").trim();
+      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
         const { bytes } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
+          slogan,
         });
         const path = `${campaign_id}/${i}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage
