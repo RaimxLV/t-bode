@@ -33,7 +33,13 @@ export function PrintZonesManager() {
       .eq("is_draft", false)
       .order("name");
     if (error) toast.error(error.message);
-    setRows(((data as any[]) ?? []).map((r) => ({
+    const filtered = ((data as any[]) ?? []).filter((r) => {
+      if (r.category === "mugs") return false;
+      const n = `${r.name ?? ""} ${r.name_lv ?? ""}`.toLowerCase();
+      if (n.includes("bodij")) return false; // bērnu bodijs
+      return true;
+    });
+    setRows(filtered.map((r) => ({
       ...r,
       color_variants: Array.isArray(r.color_variants) ? r.color_variants : [],
       print_area: r.print_area ?? null,
