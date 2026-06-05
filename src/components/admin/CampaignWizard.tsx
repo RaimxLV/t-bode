@@ -1006,7 +1006,7 @@ function PublishSuccess({ success, onClose }: { success: { products: number; blo
 /* -------- Live print preview + tuning row -------- */
 function ProductTuneRow({
   product, baseInfo, designUrl, busyKey,
-  onUpdatePrintAdj, onRegenerate, onRemoveColor, onExcludeProduct,
+  onUpdatePrintAdj, onRegenerate, onRemoveColor, onExcludeProduct, onSetCoverColor,
 }: {
   product: CampProduct;
   baseInfo: CatalogProduct | null;
@@ -1016,6 +1016,7 @@ function ProductTuneRow({
   onRegenerate: (id: string) => void;
   onRemoveColor: (id: string, name: string) => void;
   onExcludeProduct: (id: string) => void;
+  onSetCoverColor: (id: string, name: string) => void;
 }) {
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
