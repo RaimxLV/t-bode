@@ -832,54 +832,166 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
 /* -------------------- Sub-components -------------------- */
 
-function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
-  const brief: Brief = campaign.brief ?? {};
+function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any) {
+  const initial: Brief = campaign.brief ?? {};
+  const [draft, setDraft] = useState<Brief>(initial);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setDraft(campaign.brief ?? {}); }, [campaign.id, campaign.brief]);
+
+  const ideas = draft.design_ideas ?? [];
+  const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
+
+  const updateIdea = (idx: number, patch: Partial<{ title: string; prompt: string; slogan: string }>) => {
+    const next = [...ideas];
+    next[idx] = { ...next[idx], ...patch };
+    setDraft({ ...draft, design_ideas: next });
+  };
+  const removeIdea = (idx: number) => {
+    setDraft({ ...draft, design_ideas: ideas.filter((_, i) => i !== idx) });
+  };
+  const addIdea = () => {
+    setDraft({ ...draft, design_ideas: [...ideas, { title: "Jauna ideja", prompt: "", slogan: "" }] });
+  };
+  const save = async () => {
+    setSaving(true);
+    try { await onSaveBrief(draft); } finally { setSaving(false); }
+  };
+
   return (
     <div className="space-y-4">
-      {!brief.title_lv && (
+      {!draft.title_lv && (
         <div className="rounded border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Vēl nav uzģenerētas idejas. Spied pogu zemāk.
+          Vēl nav uzģenerētas idejas. Spied "Pārģenerēt" zemāk.
         </div>
       )}
-      {brief.title_lv && (
+
+      {draft.title_lv && (
         <>
           <div>
-            <h3 className="font-display text-2xl">{brief.title_lv}</h3>
-            {brief.tagline_lv && <p className="italic text-muted-foreground mt-1">"{brief.tagline_lv}"</p>}
+            <Input
+              value={draft.title_lv ?? ""}
+              onChange={(e) => setDraft({ ...draft, title_lv: e.target.value })}
+              className="font-display text-xl h-auto py-2"
+            />
+            <Input
+              value={draft.tagline_lv ?? ""}
+              onChange={(e) => setDraft({ ...draft, tagline_lv: e.target.value })}
+              placeholder="Sauklis"
+              className="italic text-sm mt-2"
+            />
           </div>
-          {brief.description_lv && (
-            <section>
-              <h4 className="font-semibold text-xs uppercase tracking-wider mb-1 text-muted-foreground">Apraksts</h4>
-              <p className="text-sm">{brief.description_lv}</p>
-            </section>
-          )}
-          {brief.target_audience && (
-            <section>
-              <h4 className="font-semibold text-xs uppercase tracking-wider mb-1 text-muted-foreground">Mērķauditorija</h4>
-              <p className="text-sm">{brief.target_audience}</p>
-            </section>
-          )}
-          {!!brief.color_palette?.length && (
+
+          <section>
+            <h4 className="font-semibold text-xs uppercase tracking-wider mb-1 text-muted-foreground">Apraksts</h4>
+            <Textarea
+              value={draft.description_lv ?? ""}
+              onChange={(e) => setDraft({ ...draft, description_lv: e.target.value })}
+              rows={2}
+            />
+          </section>
+
+          <section>
+            <h4 className="font-semibold text-xs uppercase tracking-wider mb-1 text-muted-foreground">Mērķauditorija</h4>
+            <Input
+              value={draft.target_audience ?? ""}
+              onChange={(e) => setDraft({ ...draft, target_audience: e.target.value })}
+            />
+          </section>
+
+          {!!draft.color_palette?.length && (
             <section>
               <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-muted-foreground">Krāsu palete</h4>
               <div className="flex gap-2 flex-wrap">
-                {brief.color_palette.map((c) => (
+                {draft.color_palette.map((c) => (
                   <div key={c} className="flex flex-col items-center gap-1">
-                    <div className="w-14 h-14 rounded-md border" style={{ backgroundColor: c }} />
+                    <div className="w-12 h-12 rounded-md border" style={{ backgroundColor: c }} />
                     <span className="text-[10px] font-mono text-muted-foreground">{c}</span>
                   </div>
                 ))}
               </div>
             </section>
           )}
-          {!!brief.design_ideas?.length && (
-            <section>
-              <h4 className="font-semibold text-xs uppercase tracking-wider mb-1 text-muted-foreground">Dizainu idejas</h4>
-              <ul className="text-sm space-y-1 list-disc list-inside">
-                {brief.design_ideas.map((i, idx) => <li key={idx}><strong>{i.title}</strong> — <span className="text-muted-foreground">{i.prompt}</span></li>)}
-              </ul>
-            </section>
-          )}
+
+          <section className="rounded-md border border-border bg-card/40 p-3">
+            <label className="flex items-start gap-2 cursor-pointer">
+              <Checkbox
+                checked={!!draft.fit_in_frame}
+                onCheckedChange={(v) => setDraft({ ...draft, fit_in_frame: !!v })}
+                className="mt-0.5"
+              />
+              <div className="text-sm">
+                <div className="font-medium">Bilde pilnībā ietilpst rāmī (DTF druka)</div>
+                <div className="text-xs text-muted-foreground">
+                  Liek AI ar drošu malu (≥8%) iederēt visu zīmējumu kadrā — nekas netiek nogriezts.
+                </div>
+              </div>
+            </label>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">
+                Dizainu idejas ({ideas.length})
+              </h4>
+              <Button type="button" size="sm" variant="outline" onClick={addIdea}>
+                + Pievienot ideju
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {ideas.map((idea, idx) => (
+                <div key={idx} className="rounded-md border border-border p-3 space-y-2 bg-card/40">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs font-mono text-muted-foreground pt-2">#{idx + 1}</span>
+                    <Input
+                      value={idea.title}
+                      onChange={(e) => updateIdea(idx, { title: e.target.value })}
+                      placeholder="Nosaukums"
+                      className="font-semibold"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => removeIdea(idx)}
+                      className="shrink-0 h-9 w-9 text-destructive hover:text-destructive"
+                      title="Dzēst ideju"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider text-muted-foreground">Prompts (EN)</label>
+                    <Textarea
+                      value={idea.prompt}
+                      onChange={(e) => updateIdea(idx, { prompt: e.target.value })}
+                      rows={3}
+                      placeholder="Detailed English prompt for the AI image"
+                      className="text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Sauklis / teksts zīmējumā (nav obligāts)
+                    </label>
+                    <Input
+                      value={idea.slogan ?? ""}
+                      onChange={(e) => updateIdea(idx, { slogan: e.target.value })}
+                      placeholder='piem. "Kur Janka, tur pjanka"'
+                    />
+                    <div className="text-[10px] text-muted-foreground mt-1">
+                      Ja ievadi tekstu, automātiski izmanto AI modeli, kas labi zīmē burtus (Ideogram).
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {ideas.length === 0 && (
+                <div className="text-sm text-muted-foreground italic text-center py-4">
+                  Nav neviena dizaina idejas. Pievieno vismaz vienu.
+                </div>
+              )}
+            </div>
+          </section>
         </>
       )}
 
@@ -888,9 +1000,19 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          disabled={!dirty || saving}
+          onClick={save}
+          className="flex-1 sm:flex-initial"
+        >
+          {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
+          Saglabāt izmaiņas
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Aizvērt</Button>
         <div className="hidden sm:block flex-1" />
-        <Button size="sm" disabled={!brief.title_lv} onClick={onNext} className="flex-1 sm:flex-initial">
+        <Button size="sm" disabled={!draft.title_lv || dirty} onClick={onNext} className="flex-1 sm:flex-initial" title={dirty ? "Vispirms saglabā izmaiņas" : undefined}>
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
       </div>
