@@ -212,6 +212,8 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          auto_advance: boolean
+          auto_started_at: string | null
           brief: Json | null
           created_at: string
           created_by: string | null
@@ -228,6 +230,8 @@ export type Database = {
           year: number
         }
         Insert: {
+          auto_advance?: boolean
+          auto_started_at?: string | null
           brief?: Json | null
           created_at?: string
           created_by?: string | null
@@ -244,6 +248,8 @@ export type Database = {
           year?: number
         }
         Update: {
+          auto_advance?: boolean
+          auto_started_at?: string | null
           brief?: Json | null
           created_at?: string
           created_by?: string | null
@@ -1079,6 +1085,7 @@ export type Database = {
           name_en: string | null
           name_lv: string | null
           price: number
+          print_area: Json | null
           sizes: string[] | null
           slug: string
           status: Database["public"]["Enums"]["product_status"]
@@ -1104,6 +1111,7 @@ export type Database = {
           name_en?: string | null
           name_lv?: string | null
           price: number
+          print_area?: Json | null
           sizes?: string[] | null
           slug: string
           status?: Database["public"]["Enums"]["product_status"]
@@ -1129,6 +1137,7 @@ export type Database = {
           name_en?: string | null
           name_lv?: string | null
           price?: number
+          print_area?: Json | null
           sizes?: string[] | null
           slug?: string
           status?: Database["public"]["Enums"]["product_status"]

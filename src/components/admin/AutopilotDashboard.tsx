@@ -56,18 +56,9 @@ type DesignRow = {
   product_id: string | null;
 };
 
-type BaseRow = {
-  id: string;
-  product_id: string | null;
-  name: string;
-  color_name: string;
-  color_hex: string | null;
-  mockup_path: string;
-  print_area: { x: number; y: number; w: number; h: number };
-  is_active: boolean;
-};
+type ColorVariant = { name: string; hex: string; images: string[] };
 
-type BaseProductInfo = {
+type CatalogProduct = {
   id: string;
   name: string;
   name_lv: string | null;
@@ -75,7 +66,12 @@ type BaseProductInfo = {
   sizes: string[] | null;
   description: string | null;
   description_lv: string | null;
+  color_variants: ColorVariant[];
+  image_url: string | null;
+  print_area: { x: number; y: number; w: number; h: number } | null;
 };
+
+const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -109,20 +105,23 @@ export const AutopilotDashboard = () => {
   const [publishing, setPublishing] = useState<string | null>(null);
   const [bloggingId, setBloggingId] = useState<string | null>(null);
   const [togglingDesign, setTogglingDesign] = useState<string | null>(null);
-  const [bases, setBases] = useState<BaseRow[]>([]);
-  const [baseInfos, setBaseInfos] = useState<BaseProductInfo[]>([]);
+  const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [selectedBases, setSelectedBases] = useState<Record<string, Set<string>>>({});
   const [useAiMockup, setUseAiMockup] = useState<Record<string, boolean>>({});
   const [publishProgress, setPublishProgress] = useState<{ done: number; total: number } | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [hRes, cRes, dRes, bRes, bpRes] = await Promise.all([
+    const [hRes, cRes, dRes, bpRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
       supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id"),
-      supabase.from("base_products").select("*").eq("is_active", true).order("sort_order"),
-      supabase.from("products").select("id,name,name_lv,category,sizes,description,description_lv"),
+      supabase
+        .from("products")
+        .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,image_url,print_area")
+        .eq("customizable", true)
+        .eq("is_draft", false)
+        .order("name"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
@@ -144,13 +143,13 @@ export const AutopilotDashboard = () => {
         setSignedUrls(map);
       }
     }
-    if (!bRes.error) {
-      setBases(((bRes.data as any[]) || []).map((x) => ({
-        ...x,
-        print_area: x.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+    if (!bpRes.error) {
+      setCatalog(((bpRes.data as any[]) || []).map((p) => ({
+        ...p,
+        color_variants: Array.isArray(p.color_variants) ? p.color_variants : [],
+        print_area: p.print_area ?? null,
       })));
     }
-    if (!bpRes.error) setBaseInfos((bpRes.data as any) || []);
     setLoading(false);
   };
 
@@ -251,17 +250,9 @@ export const AutopilotDashboard = () => {
     });
   };
 
-  const basesByProduct = (() => {
-    const m = new Map<string, BaseRow[]>();
-    for (const b of bases) {
-      if (!b.product_id) continue;
-      const arr = m.get(b.product_id) ?? [];
-      arr.push(b); m.set(b.product_id, arr);
-    }
-    return m;
-  })();
-
-  const availableBaseProducts = baseInfos.filter((p) => basesByProduct.has(p.id));
+  const availableBaseProducts = catalog.filter(
+    (p) => p.color_variants.length > 0 && p.color_variants.some((cv) => cv.images?.[0]),
+  );
 
   const runPublishProducts = async (campaign: Campaign) => {
     const campaignId = campaign.id;
@@ -275,7 +266,7 @@ export const AutopilotDashboard = () => {
 
     setPublishing(campaignId);
     const totalSteps = starred.length * selectedProducts.reduce(
-      (sum, p) => sum + (basesByProduct.get(p.id)?.length ?? 0), 0,
+      (sum, p) => sum + p.color_variants.filter((cv) => cv.images?.[0]).length, 0,
     );
     setPublishProgress({ done: 0, total: totalSteps });
     let done = 0;
@@ -293,32 +284,34 @@ export const AutopilotDashboard = () => {
         }
 
         for (const baseProduct of selectedProducts) {
-          const items = basesByProduct.get(baseProduct.id) ?? [];
-          const variants: { name: string; hex: string; images: string[] }[] = [];
+          const printArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
+          const variants: ColorVariant[] = [];
+          const eligibleVariants = baseProduct.color_variants.filter((cv) => cv.images?.[0]);
 
-          for (const b of items) {
+          for (let vi = 0; vi < eligibleVariants.length; vi++) {
+            const cv = eligibleVariants[vi];
             try {
-              const mockupPublic = supabase.storage.from("mockup-templates").getPublicUrl(b.mockup_path).data.publicUrl;
               const blob = await composeMockup({
-                mockupUrl: mockupPublic,
+                mockupUrl: cv.images[0],
                 designUrl: designSignedUrl,
-                printArea: b.print_area,
+                printArea,
+                baseColorHex: cv.hex,
                 maxWidth: 1400,
               });
-              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${b.id}.jpg`;
+              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${vi}-${slugify(cv.name)}.jpg`;
               const up = await supabase.storage.from("generated-mockups").upload(path, blob, {
                 contentType: "image/jpeg", upsert: true,
               });
               if (up.error) throw up.error;
               const publicUrl = supabase.storage.from("generated-mockups").getPublicUrl(path).data.publicUrl;
               variants.push({
-                name: b.color_name,
-                hex: b.color_hex || "#888888",
+                name: cv.name,
+                hex: cv.hex || "#888888",
                 images: [publicUrl],
               });
             } catch (e: any) {
-              console.error("Mockup failed", b.id, e);
-              toast.error(`${baseProduct.name} (${b.color_name}): mockup neizdevās`);
+              console.error("Mockup failed", baseProduct.id, cv.name, e);
+              toast.error(`${baseProduct.name} (${cv.name}): mockup neizdevās`);
             }
             done++; setPublishProgress({ done, total: totalSteps });
           }
@@ -606,12 +599,12 @@ export const AutopilotDashboard = () => {
                           </div>
                           {availableBaseProducts.length === 0 ? (
                             <p className="text-[11px] text-muted-foreground">
-                              Nav pieejamu bāzu — pievieno tās <strong>Bulk Studio → Bāzes krekli</strong>.
+                              Nav customizable produktu ar krāsu bildēm.
                             </p>
                           ) : (
                             <div className="space-y-1 max-h-40 overflow-y-auto">
                               {availableBaseProducts.map((p) => {
-                                const items = basesByProduct.get(p.id) ?? [];
+                                const items = p.color_variants.filter((cv) => cv.images?.[0]);
                                 const sel = selectedBases[camp.id]?.has(p.id) ?? false;
                                 return (
                                   <button
@@ -625,11 +618,13 @@ export const AutopilotDashboard = () => {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="text-xs truncate">{p.name_lv || p.name}</div>
-                                      <div className="text-[9px] text-muted-foreground">{items.length} krāsas</div>
+                                      <div className="text-[9px] text-muted-foreground">
+                                        {items.length} krāsas{p.print_area ? "" : " · print zona nav uzstādīta"}
+                                      </div>
                                     </div>
                                     <div className="flex -space-x-1">
-                                      {items.slice(0, 5).map((b) => (
-                                        <div key={b.id} className="w-3 h-3 rounded-full border border-background" style={{ background: b.color_hex || "#888" }} title={b.color_name} />
+                                      {items.slice(0, 5).map((cv, i) => (
+                                        <div key={i} className="w-3 h-3 rounded-full border border-background" style={{ background: cv.hex || "#888" }} title={cv.name} />
                                       ))}
                                     </div>
                                   </button>

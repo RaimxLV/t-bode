@@ -36,6 +36,7 @@ const PromoCodeManager = lazy(() => import("@/components/admin/PromoCodeManager"
 const AccountingSpreadsheet = lazy(() => import("@/components/admin/AccountingSpreadsheet").then(m => ({ default: m.AccountingSpreadsheet })));
 const AutopilotDashboard = lazy(() => import("@/components/admin/AutopilotDashboard").then(m => ({ default: m.AutopilotDashboard })));
 const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m => ({ default: m.BlogManager })));
+const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManager").then(m => ({ default: m.PrintZonesManager })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
@@ -368,6 +369,7 @@ const Admin = () => {
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
             <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Autopilot</TabsTrigger>
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
+            <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
@@ -504,6 +506,12 @@ const Admin = () => {
           <TabsContent value="blog">
             <Suspense fallback={<TabFallback />}>
               <BlogManager />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="printzones">
+            <Suspense fallback={<TabFallback />}>
+              <PrintZonesManager />
             </Suspense>
           </TabsContent>
 
