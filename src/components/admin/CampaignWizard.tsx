@@ -22,8 +22,9 @@ type Brief = {
   description_lv?: string;
   target_audience?: string;
   color_palette?: string[];
-  design_ideas?: { title: string; prompt: string }[];
+  design_ideas?: { title: string; prompt: string; slogan?: string }[];
   product_types?: string[];
+  fit_in_frame?: boolean;
 };
 
 type Campaign = {
