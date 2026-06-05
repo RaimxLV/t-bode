@@ -250,17 +250,9 @@ export const AutopilotDashboard = () => {
     });
   };
 
-  const basesByProduct = (() => {
-    const m = new Map<string, BaseRow[]>();
-    for (const b of bases) {
-      if (!b.product_id) continue;
-      const arr = m.get(b.product_id) ?? [];
-      arr.push(b); m.set(b.product_id, arr);
-    }
-    return m;
-  })();
-
-  const availableBaseProducts = baseInfos.filter((p) => basesByProduct.has(p.id));
+  const availableBaseProducts = catalog.filter(
+    (p) => p.color_variants.length > 0 && p.color_variants.some((cv) => cv.images?.[0]),
+  );
 
   const runPublishProducts = async (campaign: Campaign) => {
     const campaignId = campaign.id;
