@@ -1,0 +1,2 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS show_in_collection boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_products_show_in_collection ON public.products(show_in_collection) WHERE show_in_collection = true;
