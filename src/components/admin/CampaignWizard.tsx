@@ -379,6 +379,72 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     toast.success("Izslēgts");
   };
 
+  const regenerateProductMockups = async (productId: string) => {
+    if (!campaign) return;
+    const p = campProducts.find((x) => x.id === productId);
+    if (!p) return;
+    if (!p.base_product_id) {
+      toast.error("Šim produktam trūkst bāzes atsauces — atjauno 2. soli un ģenerē no jauna.");
+      return;
+    }
+    // Find the design assigned to this product (or first starred)
+    let designRow = designs.find((d) => d.product_id === productId && d.image_url);
+    if (!designRow) designRow = designs.find((d) => d.is_primary && d.image_url);
+    if (!designRow?.image_url) { toast.error("Nav saistīta dizaina"); return; }
+    const designSigned = signedUrls[designRow.image_url];
+    if (!designSigned) { toast.error("Dizaina URL trūkst"); return; }
+
+    // Find the base catalog row for print_area
+    const { data: baseRow } = await supabase.from("products")
+      .select("id, print_area, color_variants")
+      .eq("id", p.base_product_id).maybeSingle();
+    if (!baseRow) { toast.error("Bāzes produkts nav atrasts"); return; }
+    const printArea = (baseRow.print_area as any) ?? DEFAULT_PRINT_AREA;
+    const baseVariants = Array.isArray(baseRow.color_variants) ? (baseRow.color_variants as ColorVariant[]) : [];
+
+    setBusy("regen-" + productId);
+    try {
+      const newVariants: ColorVariant[] = [];
+      for (let i = 0; i < p.color_variants.length; i++) {
+        const cv = p.color_variants[i];
+        const baseCv = baseVariants.find((b) => b.name === cv.name) ?? baseVariants[0];
+        if (!baseCv?.images?.[0]) continue;
+        try {
+          const blob = await composeMockup({
+            mockupUrl: baseCv.images[0],
+            designUrl: designSigned,
+            printArea,
+            baseColorHex: cv.hex,
+            maxWidth: 1400,
+            offsetY: p.print_offset_y ?? 0,
+            scale: p.print_scale ?? 1,
+          });
+          const path = `campaigns/${campaign.id}/${designRow.id}/${p.base_product_id}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
+          const up = await supabase.storage.from("product-images").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+          if (up.error) throw up.error;
+          const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+          newVariants.push({ name: cv.name, hex: cv.hex, images: [publicUrl] });
+        } catch (e: any) {
+          console.error(e); toast.error(`${cv.name}: ${e.message}`);
+        }
+      }
+      if (!newVariants.length) { toast.error("Neizdevās izveidot nevienu mockup"); return; }
+      const { error } = await supabase.from("products").update({
+        color_variants: newVariants as any,
+        image_url: newVariants[0].images[0],
+      }).eq("id", productId);
+      if (error) throw error;
+      setCampProducts((prev) => prev.map((x) => x.id === productId
+        ? { ...x, color_variants: newVariants, image_url: newVariants[0].images[0] }
+        : x));
+      toast.success(`Pārģenerēti ${newVariants.length} mockup`);
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const resetStep2 = async () => {
     if (!campaign) return;
     if (!confirm("Pārstartēt 2. soli? Tiks dzēsti visi šīs kampaņas dizaini un produktu melnraksti.")) return;
