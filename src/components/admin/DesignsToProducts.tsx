@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move, Maximize2 } from "lucide-react";
+import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move } from "lucide-react";
 import { composeMockup } from "@/lib/imageCrop";
 
 type DesignItem = {
