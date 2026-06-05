@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload } from "lucide-react";
+import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move } from "lucide-react";
 import { composeMockup } from "@/lib/imageCrop";
 
 type DesignItem = {
@@ -14,6 +14,7 @@ type DesignItem = {
   url: string;
   source: "library" | "campaign";
   createdAt: string;
+  campaignId?: string | null;
 };
 
 type ColorVariant = { name: string; hex: string; images: string[] };
@@ -29,8 +30,21 @@ type CatalogProduct = {
   print_area: { x: number; y: number; w: number; h: number } | null;
 };
 
-const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
+// Chest print area (centered horizontally, upper torso). Avoids belly placement.
+const DEFAULT_PRINT_AREA = { x: 0.32, y: 0.18, w: 0.36, h: 0.3 };
 const DEFAULT_PRICE = 25;
+
+function adjustPrintArea(
+  base: { x: number; y: number; w: number; h: number },
+  offsetY: number,
+  scale: number,
+) {
+  const w = Math.min(1, Math.max(0.05, base.w * scale));
+  const h = Math.min(1, Math.max(0.05, base.h * scale));
+  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2));
+  const y = Math.min(1 - h, Math.max(0, base.y + (base.h - h) / 2 + offsetY));
+  return { x, y, w, h };
+}
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -48,6 +62,9 @@ export function DesignsToProducts() {
   const [price, setPrice] = useState<string>(String(DEFAULT_PRICE));
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // Manual print placement adjustments (applied on top of each base's print_area)
+  const [offsetY, setOffsetY] = useState(0); // -0.15 .. +0.15 of mockup height
+  const [scale, setScale] = useState(1);     // 0.6 .. 1.4
 
   useEffect(() => { void load(); }, []);
 
@@ -56,7 +73,7 @@ export function DesignsToProducts() {
     try {
       const [{ data: lib }, { data: camp }, { data: prods }] = await Promise.all([
         supabase.from("design_library").select("id,name,file_path,created_at").order("created_at", { ascending: false }),
-        supabase.from("campaign_designs" as any).select("id,prompt,image_url,created_at,product_id").order("created_at", { ascending: false }),
+        supabase.from("campaign_designs" as any).select("id,prompt,image_url,created_at,product_id,campaign_id").order("created_at", { ascending: false }),
         supabase
           .from("products")
           .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,print_area")
@@ -88,6 +105,7 @@ export function DesignsToProducts() {
           url,
           source: "campaign",
           createdAt: r.created_at,
+          campaignId: r.campaign_id ?? null,
         });
       }
 
@@ -123,6 +141,17 @@ export function DesignsToProducts() {
 
   const selectedDesign = designs.find((d) => d.id === selectedDesignId) || null;
 
+  // Preview base = first selected base with at least one color image
+  const previewBase = useMemo(() => {
+    const sel = availableBases.filter((p) => selectedBases.has(p.id));
+    return sel[0] ?? null;
+  }, [availableBases, selectedBases]);
+  const previewColor = previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
+  const previewArea = useMemo(() => {
+    const base = previewBase?.print_area ?? DEFAULT_PRINT_AREA;
+    return adjustPrintArea(base, offsetY, scale);
+  }, [previewBase, offsetY, scale]);
+
   function toggleBase(id: string) {
     setSelectedBases((prev) => {
       const n = new Set(prev);
@@ -153,7 +182,8 @@ export function DesignsToProducts() {
     try {
       const selectedProducts = availableBases.filter((p) => selectedBases.has(p.id));
       for (const baseProduct of selectedProducts) {
-        const printArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
+        const baseArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
+        const printArea = adjustPrintArea(baseArea, offsetY, scale);
         const variants: ColorVariant[] = [];
         const eligible = baseProduct.color_variants.filter((cv) => cv.images?.[0]);
         for (let vi = 0; vi < eligible.length; vi++) {
@@ -203,6 +233,11 @@ export function DesignsToProducts() {
           in_stock: true,
           is_draft: true,
           status: "draft",
+          print_offset_y: offsetY,
+          print_scale: scale,
+          available_from: new Date().toISOString(),
+          always_available: false,
+          campaign_id: selectedDesign.campaignId ?? null,
         };
         const { error } = await supabase.from("products").insert(payload);
         if (error) {
@@ -358,6 +393,66 @@ export function DesignsToProducts() {
                   className="h-8 w-24 text-sm"
                   inputMode="decimal"
                 />
+              </div>
+
+              {/* Manual print placement */}
+              <div className="rounded border border-border p-2 space-y-2 bg-muted/30">
+                <div className="flex items-center gap-1.5 text-[11px] font-body text-muted-foreground">
+                  <Move className="w-3 h-3" /> Drukas novietojums
+                  <button
+                    type="button"
+                    onClick={() => { setOffsetY(0); setScale(1); }}
+                    className="ml-auto text-[10px] underline hover:text-foreground"
+                  >atiestatīt</button>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-[10px] font-body space-y-1">
+                    <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(offsetY * 100).toFixed(0)}%</span></div>
+                    <input
+                      type="range" min={-0.15} max={0.25} step={0.01}
+                      value={offsetY}
+                      onChange={(e) => setOffsetY(parseFloat(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                  </label>
+                  <label className="text-[10px] font-body space-y-1">
+                    <div className="flex justify-between"><span>Izmērs</span><span className="text-muted-foreground">{(scale * 100).toFixed(0)}%</span></div>
+                    <input
+                      type="range" min={0.5} max={1.4} step={0.05}
+                      value={scale}
+                      onChange={(e) => setScale(parseFloat(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                  </label>
+                </div>
+                {previewBase && previewColor && selectedDesign && (
+                  <div className="relative w-full max-w-[180px] mx-auto aspect-[3/4] bg-card rounded overflow-hidden border border-border">
+                    <img src={previewColor.images[0]} alt="" className="absolute inset-0 w-full h-full object-contain" />
+                    <img
+                      src={selectedDesign.url}
+                      alt=""
+                      className="absolute object-contain pointer-events-none"
+                      style={{
+                        left: `${previewArea.x * 100}%`,
+                        top: `${previewArea.y * 100}%`,
+                        width: `${previewArea.w * 100}%`,
+                        height: `${previewArea.h * 100}%`,
+                      }}
+                    />
+                    <div
+                      className="absolute border border-primary/60 border-dashed pointer-events-none"
+                      style={{
+                        left: `${previewArea.x * 100}%`,
+                        top: `${previewArea.y * 100}%`,
+                        width: `${previewArea.w * 100}%`,
+                        height: `${previewArea.h * 100}%`,
+                      }}
+                    />
+                  </div>
+                )}
+                {!previewBase && (
+                  <p className="text-[10px] text-muted-foreground font-body text-center">Izvēlies kreklu, lai redzētu priekšskatījumu</p>
+                )}
               </div>
 
               {progress && (

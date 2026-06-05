@@ -39,6 +39,7 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
+const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,6 +161,7 @@ const App = () => {
                         <Route path="/install" element={<Install />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/admin" element={<Admin />} />
+                        <Route path="/blog/:slug" element={<BlogPost />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />

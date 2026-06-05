@@ -8,6 +8,8 @@ import type { DBProduct } from "@/hooks/useProducts";
 import { getProductName } from "@/hooks/useProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
+const productHref = (p: DBProduct) =>
+  `/product/${p.slug}${(p as any).is_draft ? "?preview=1" : ""}`;
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
   const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
@@ -95,7 +97,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
             {displayImages.map((img, i) => (
               <Link
                 key={i}
-                to={`/product/${product.slug}`}
+                to={productHref(product)}
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
                 <ProductImage src={img} alt={`${displayName} ${i + 1}`} />
@@ -152,7 +154,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
       <div className="flex flex-col flex-1 p-2.5 sm:p-4">
         {/* Name + colors — grows to fill */}
         <div className="flex-1 min-h-0">
-          <Link to={`/product/${product.slug}`}>
+          <Link to={productHref(product)}>
             <h3 className="font-body font-semibold text-xs sm:text-sm mb-1.5 line-clamp-2 leading-tight">
               {displayName}
             </h3>
@@ -186,7 +188,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
               {product.price.toFixed(2).replace(".", ",")} €
             </span>
             <Link
-              to={`/product/${product.slug}`}
+              to={productHref(product)}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body text-white transition-all hover:scale-105 bg-cta-red"
             >
               <ShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -199,7 +201,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
           {/* Customize button */}
           {product.customizable && (
             <Link
-              to={`/product/${product.slug}`}
+              to={productHref(product)}
               className="flex items-center justify-center gap-1.5 w-full py-1.5 sm:py-2 rounded-md text-[10px] sm:text-xs font-semibold font-body border-2 border-cta-red text-cta-red hover:bg-cta-red hover:text-white transition-all whitespace-nowrap"
             >
               {t("products.customize")}
