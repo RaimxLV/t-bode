@@ -94,7 +94,7 @@ export const BlogManager = () => {
     if (allIds.length === 0) { setLinked([]); setLinkBusy(false); return; }
     const { data: prods } = await supabase
       .from("products")
-      .select("id,name,name_lv,image_url,available_from,expires_at,always_available")
+      .select("id,name,name_lv,image_url,available_from,expires_at,always_available,color_variants,print_offset_y,print_scale")
       .in("id", allIds);
     const byId = new Map((prods || []).map((p: any) => [p.id, p]));
     const ordered: LinkedProduct[] = [
