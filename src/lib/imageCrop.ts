@@ -182,8 +182,8 @@ export async function composeMockup(opts: {
   const aspect = design.naturalWidth / design.naturalHeight;
   let dw = rw, dh = rw / aspect;
   if (dh > rh) { dh = rh; dw = rh * aspect; }
-  const scale = opts.scale ?? 1;
-  dw *= scale; dh *= scale;
+  const userScale = opts.scale ?? 1;
+  dw *= userScale; dh *= userScale;
   const dx = rx + (rw - dw) / 2;
   const dy = ry + (rh - dh) / 2 + (opts.offsetY ?? 0) * rh;
 
