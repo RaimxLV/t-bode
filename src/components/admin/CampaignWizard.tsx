@@ -143,6 +143,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [addToCollection, setAddToCollection] = useState(true);
   const [expiresAt, setExpiresAt] = useState<string>("");
   const [success, setSuccess] = useState<{ products: number; blogSlug: string | null; expires: string | null } | null>(null);
+  const [styleChoice, setStyleChoice] = useState<string>("digital_illustration");
+  const [regenSingleId, setRegenSingleId] = useState<string | null>(null);
 
   const load = async () => {
     if (!campaignId) return;
@@ -155,6 +157,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
       setCampaign(camp);
+      if (camp?.style) setStyleChoice(camp.style);
 
       // Decide step from status
       if (camp) {
