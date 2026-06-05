@@ -291,7 +291,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Designs
       const { data: dRaw } = await supabase.from("campaign_designs" as any)
-        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id, style")
+        .select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id, style, slogan")
         .eq("campaign_id", campaignId)
         .order("created_at");
       const drows = (dRaw as unknown as DesignRow[]) ?? [];
