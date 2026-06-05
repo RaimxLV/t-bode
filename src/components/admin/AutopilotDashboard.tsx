@@ -299,11 +299,11 @@ export const AutopilotDashboard = () => {
                 maxWidth: 1400,
               });
               const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${vi}-${slugify(cv.name)}.jpg`;
-              const up = await supabase.storage.from("generated-mockups").upload(path, blob, {
+              const up = await supabase.storage.from("product-images").upload(path, blob, {
                 contentType: "image/jpeg", upsert: true,
               });
               if (up.error) throw up.error;
-              const publicUrl = supabase.storage.from("generated-mockups").getPublicUrl(path).data.publicUrl;
+              const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
               variants.push({
                 name: cv.name,
                 hex: cv.hex || "#888888",
