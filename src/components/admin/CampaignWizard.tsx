@@ -418,7 +418,12 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     finally { setBusy(null); }
   };
 
-  const regenSingleDesign = async (designId: string, newPrompt: string, newStyle?: string) => {
+  const regenSingleDesign = async (
+    designId: string,
+    newPrompt: string,
+    newStyle?: string,
+    newSlogan?: string,
+  ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
     try {
@@ -432,6 +437,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           image_size: imageSize,
           colors: preferredColors,
           transparent_bg: transparentBg,
+          slogan_override: newSlogan ?? "",
         },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
