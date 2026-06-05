@@ -218,6 +218,7 @@ export type Database = {
           is_primary: boolean
           product_id: string | null
           prompt: string
+          style: string | null
           updated_at: string
         }
         Insert: {
@@ -229,6 +230,7 @@ export type Database = {
           is_primary?: boolean
           product_id?: string | null
           prompt: string
+          style?: string | null
           updated_at?: string
         }
         Update: {
@@ -240,6 +242,7 @@ export type Database = {
           is_primary?: boolean
           product_id?: string | null
           prompt?: string
+          style?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -266,6 +269,7 @@ export type Database = {
           published_at: string | null
           starts_at: string | null
           status: Database["public"]["Enums"]["campaign_status"]
+          style: string | null
           title: string
           type: Database["public"]["Enums"]["campaign_type"]
           updated_at: string
@@ -284,6 +288,7 @@ export type Database = {
           published_at?: string | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
+          style?: string | null
           title: string
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
@@ -302,6 +307,7 @@ export type Database = {
           published_at?: string | null
           starts_at?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
+          style?: string | null
           title?: string
           type?: Database["public"]["Enums"]["campaign_type"]
           updated_at?: string
