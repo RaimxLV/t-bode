@@ -1062,7 +1062,12 @@ function ProductTuneRow({
   const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
   const dragStart = useRef<{ y: number; startOffset: number; pinchDist: number; startScale: number } | null>(null);
   const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
-  const baseImg = baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0] ?? product.image_url;
+  // Show the currently selected cover color's base mockup in the live preview
+  const coverColorName = product.color_variants[0]?.name;
+  const baseImg =
+    baseInfo?.color_variants?.find((cv) => cv.name === coverColorName && cv.images?.[0])?.images?.[0]
+    ?? baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0]
+    ?? product.image_url;
 
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
