@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2, Star, Package, FileText, ExternalLink } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, CheckCircle2, Loader2, Eye, RefreshCw, Image as ImageIcon, Wand2, Star, Package, FileText, ExternalLink, Shirt, Check } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { composeMockup } from "@/lib/imageCrop";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +56,32 @@ type DesignRow = {
   product_id: string | null;
 };
 
+type BaseRow = {
+  id: string;
+  product_id: string | null;
+  name: string;
+  color_name: string;
+  color_hex: string | null;
+  mockup_path: string;
+  print_area: { x: number; y: number; w: number; h: number };
+  is_active: boolean;
+};
+
+type BaseProductInfo = {
+  id: string;
+  name: string;
+  name_lv: string | null;
+  category: string;
+  sizes: string[] | null;
+  description: string | null;
+  description_lv: string | null;
+};
+
+function slugify(s: string) {
+  return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
+}
+
 const MONTHS_LV = ["Janv.", "Febr.", "Marts", "Apr.", "Maijs", "Jūn.", "Jūl.", "Aug.", "Sept.", "Okt.", "Nov.", "Dec."];
 
 function nextOccurrence(month: number, day: number): Date {
@@ -81,13 +109,20 @@ export const AutopilotDashboard = () => {
   const [publishing, setPublishing] = useState<string | null>(null);
   const [bloggingId, setBloggingId] = useState<string | null>(null);
   const [togglingDesign, setTogglingDesign] = useState<string | null>(null);
+  const [bases, setBases] = useState<BaseRow[]>([]);
+  const [baseInfos, setBaseInfos] = useState<BaseProductInfo[]>([]);
+  const [selectedBases, setSelectedBases] = useState<Record<string, Set<string>>>({});
+  const [useAiMockup, setUseAiMockup] = useState<Record<string, boolean>>({});
+  const [publishProgress, setPublishProgress] = useState<{ done: number; total: number } | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [hRes, cRes, dRes] = await Promise.all([
+    const [hRes, cRes, dRes, bRes, bpRes] = await Promise.all([
       supabase.from("holidays" as any).select("*").eq("is_active", true).order("month").order("day"),
       supabase.from("campaigns" as any).select("id, holiday_id, year, status, title, description, brief"),
       supabase.from("campaign_designs" as any).select("id, campaign_id, image_url, prompt, generation_error, is_primary, product_id"),
+      supabase.from("base_products").select("*").eq("is_active", true).order("sort_order"),
+      supabase.from("products").select("id,name,name_lv,category,sizes,description,description_lv"),
     ]);
     if (hRes.error) toast.error("Neizdevās ielādēt svētkus");
     else setHolidays((hRes.data as any) || []);
@@ -109,6 +144,13 @@ export const AutopilotDashboard = () => {
         setSignedUrls(map);
       }
     }
+    if (!bRes.error) {
+      setBases(((bRes.data as any[]) || []).map((x) => ({
+        ...x,
+        print_area: x.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 },
+      })));
+    }
+    if (!bpRes.error) setBaseInfos((bpRes.data as any) || []);
     setLoading(false);
   };
 
@@ -201,22 +243,149 @@ export const AutopilotDashboard = () => {
     }
   };
 
-  const runPublishProducts = async (campaignId: string) => {
+  const toggleBaseFor = (campaignId: string, productId: string) => {
+    setSelectedBases((prev) => {
+      const cur = new Set(prev[campaignId] ?? []);
+      cur.has(productId) ? cur.delete(productId) : cur.add(productId);
+      return { ...prev, [campaignId]: cur };
+    });
+  };
+
+  const basesByProduct = (() => {
+    const m = new Map<string, BaseRow[]>();
+    for (const b of bases) {
+      if (!b.product_id) continue;
+      const arr = m.get(b.product_id) ?? [];
+      arr.push(b); m.set(b.product_id, arr);
+    }
+    return m;
+  })();
+
+  const availableBaseProducts = baseInfos.filter((p) => basesByProduct.has(p.id));
+
+  const runPublishProducts = async (campaign: Campaign) => {
+    const campaignId = campaign.id;
+    const starred = designs.filter(
+      (d) => d.campaign_id === campaignId && d.is_primary && d.image_url && !d.product_id,
+    );
+    if (!starred.length) { toast.error("Atzīmē vismaz vienu ★ dizainu"); return; }
+    const selectedSet = selectedBases[campaignId] ?? new Set<string>();
+    const selectedProducts = availableBaseProducts.filter((p) => selectedSet.has(p.id));
+    if (!selectedProducts.length) { toast.error("Izvēlies vismaz vienu bāzes kreklu"); return; }
+
     setPublishing(campaignId);
+    const totalSteps = starred.length * selectedProducts.reduce(
+      (sum, p) => sum + (basesByProduct.get(p.id)?.length ?? 0), 0,
+    );
+    setPublishProgress({ done: 0, total: totalSteps });
+    let done = 0;
+    let createdCount = 0;
+    const brief: any = campaign.brief ?? {};
+    const baseTitle = brief.title_lv ?? campaign.title ?? "Kampaņas produkts";
+
     try {
-      const { data, error } = await supabase.functions.invoke("publish-campaign-products", {
-        body: { campaign_id: campaignId },
-      });
-      if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      const results = (data as any)?.results ?? [];
-      const okCount = results.filter((r: any) => r.ok).length;
-      toast.success(`Izveidoti ${okCount}/${results.length} produkti (melnraksts, paslēpti veikalā)`);
+      for (let di = 0; di < starred.length; di++) {
+        const design = starred[di];
+        const designSignedUrl = signedUrls[design.image_url!];
+        if (!designSignedUrl) {
+          toast.error(`Dizainam ${di + 1} nav pieejams URL`);
+          continue;
+        }
+
+        for (const baseProduct of selectedProducts) {
+          const items = basesByProduct.get(baseProduct.id) ?? [];
+          const variants: { name: string; hex: string; images: string[] }[] = [];
+
+          for (const b of items) {
+            try {
+              const mockupPublic = supabase.storage.from("mockup-templates").getPublicUrl(b.mockup_path).data.publicUrl;
+              const blob = await composeMockup({
+                mockupUrl: mockupPublic,
+                designUrl: designSignedUrl,
+                printArea: b.print_area,
+                maxWidth: 1400,
+              });
+              const path = `campaigns/${campaignId}/${design.id}/${baseProduct.id}/${b.id}.jpg`;
+              const up = await supabase.storage.from("generated-mockups").upload(path, blob, {
+                contentType: "image/jpeg", upsert: true,
+              });
+              if (up.error) throw up.error;
+              const publicUrl = supabase.storage.from("generated-mockups").getPublicUrl(path).data.publicUrl;
+              variants.push({
+                name: b.color_name,
+                hex: b.color_hex || "#888888",
+                images: [publicUrl],
+              });
+            } catch (e: any) {
+              console.error("Mockup failed", b.id, e);
+              toast.error(`${baseProduct.name} (${b.color_name}): mockup neizdevās`);
+            }
+            done++; setPublishProgress({ done, total: totalSteps });
+          }
+
+          if (variants.length === 0) continue;
+
+          const baseName = baseProduct.name_lv || baseProduct.name;
+          const productName = starred.length > 1
+            ? `${baseTitle} — ${baseName} #${di + 1}`
+            : `${baseTitle} — ${baseName}`;
+          const slug = `${slugify(baseTitle)}-${slugify(baseName)}-${campaign.year}-${di + 1}-${Date.now().toString(36)}`;
+
+          const payload: any = {
+            name: productName,
+            name_lv: productName,
+            name_en: null,
+            slug,
+            description: baseProduct.description ?? brief.description_lv ?? null,
+            description_lv: baseProduct.description_lv ?? brief.description_lv ?? null,
+            description_en: null,
+            price: 24.99,
+            category: baseProduct.category,
+            sizes: baseProduct.sizes ?? ["S", "M", "L", "XL"],
+            colors: variants.map((v) => v.name),
+            customizable: false,
+            color_variants: variants,
+            image_url: variants[0].images[0],
+            in_stock: true,
+            is_draft: true,
+            status: "draft",
+            holiday_id: (campaign as any).holiday_id,
+          };
+
+          const { data: product, error } = await supabase
+            .from("products")
+            .insert(payload)
+            .select("id")
+            .maybeSingle();
+
+          if (error || !product) {
+            console.error("Insert product failed", error);
+            toast.error(`${baseName}: produkts neizveidojās`);
+          } else {
+            createdCount++;
+            // Link first base product back to the design (one design can spawn many products,
+            // we just mark the design as "used")
+            if (!design.product_id) {
+              await supabase
+                .from("campaign_designs" as any)
+                .update({ product_id: (product as any).id })
+                .eq("id", design.id);
+            }
+          }
+        }
+      }
+
+      if (createdCount > 0) {
+        await supabase.from("campaigns" as any).update({ status: "products_ready" }).eq("id", campaignId);
+      }
+      toast.success(`Izveidoti ${createdCount} melnraksta produkti ar mockup`);
       await load();
     } catch (e: any) {
-      toast.error("Produktu publicēšana neizdevās: " + (e.message ?? "nezināma kļūda"));
+      console.error(e);
+      toast.error("Publicēšana neizdevās: " + (e?.message ?? "nezināma kļūda"));
     } finally {
       setPublishing(null);
+      setPublishProgress(null);
     }
   };
 
@@ -401,21 +570,90 @@ export const AutopilotDashboard = () => {
                     {camp.status === "designs_ready" && (
                       <>
                         <p className="text-[11px] text-muted-foreground">
-                          Atzīmē ★ vienu vai vairākus dizainus, kurus pārvērst par produktiem.
+                          1) Atzīmē ★ vienu vai vairākus dizainus. 2) Izvēlies bāzes kreklus zemāk. 3) Publicē.
                         </p>
+
+                        {/* Base products picker */}
+                        <div className="border rounded-md p-2 space-y-2 bg-muted/20">
+                          <div className="flex items-center gap-2">
+                            <Shirt className="w-3.5 h-3.5 text-primary" />
+                            <span className="text-xs font-semibold">Bāzes krekli</span>
+                            <Badge variant="secondary" className="ml-auto text-[10px]">
+                              {(selectedBases[camp.id]?.size ?? 0)} izvēlēti
+                            </Badge>
+                          </div>
+                          {availableBaseProducts.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground">
+                              Nav pieejamu bāzu — pievieno tās <strong>Bulk Studio → Bāzes krekli</strong>.
+                            </p>
+                          ) : (
+                            <div className="space-y-1 max-h-40 overflow-y-auto">
+                              {availableBaseProducts.map((p) => {
+                                const items = basesByProduct.get(p.id) ?? [];
+                                const sel = selectedBases[camp.id]?.has(p.id) ?? false;
+                                return (
+                                  <button
+                                    key={p.id}
+                                    type="button"
+                                    onClick={() => toggleBaseFor(camp.id, p.id)}
+                                    className={`w-full flex items-center gap-2 text-left rounded border p-1.5 transition ${sel ? "border-primary bg-primary/5" : "border-border hover:border-primary/40 bg-card"}`}
+                                  >
+                                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 ${sel ? "bg-primary border-primary" : "border-border"}`}>
+                                      {sel && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-xs truncate">{p.name_lv || p.name}</div>
+                                      <div className="text-[9px] text-muted-foreground">{items.length} krāsas</div>
+                                    </div>
+                                    <div className="flex -space-x-1">
+                                      {items.slice(0, 5).map((b) => (
+                                        <div key={b.id} className="w-3 h-3 rounded-full border border-background" style={{ background: b.color_hex || "#888" }} title={b.color_name} />
+                                      ))}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="w-3 h-3 text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground">AI mockup (drīzumā)</span>
+                            </div>
+                            <Switch
+                              checked={useAiMockup[camp.id] ?? false}
+                              onCheckedChange={(v) => setUseAiMockup((prev) => ({ ...prev, [camp.id]: v }))}
+                              disabled
+                            />
+                          </div>
+                        </div>
+
+                        {publishProgress && publishing === camp.id && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-muted-foreground">
+                              <span>Ģenerē mockup…</span>
+                              <span>{publishProgress.done}/{publishProgress.total}</span>
+                            </div>
+                            <div className="h-1 bg-muted rounded overflow-hidden">
+                              <div className="h-full bg-primary transition-all" style={{ width: `${(publishProgress.done / Math.max(1, publishProgress.total)) * 100}%` }} />
+                            </div>
+                          </div>
+                        )}
                         <Button
                           size="sm"
                           className="w-full"
                           disabled={
                             publishing === camp.id ||
+                            !(selectedBases[camp.id]?.size) ||
                             !designs.some((d) => d.campaign_id === camp.id && d.is_primary && d.image_url)
                           }
-                          onClick={() => runPublishProducts(camp.id)}
+                          onClick={() => runPublishProducts(camp)}
                         >
                           {publishing === camp.id ? (
                             <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Publicē produktus…</>
                           ) : (
-                            <><Package className="w-4 h-4 mr-2" />Publicēt produktus (melnraksti)</>
+                            <><Package className="w-4 h-4 mr-2" />Publicēt ar mockup (melnraksts)</>
                           )}
                         </Button>
                       </>
