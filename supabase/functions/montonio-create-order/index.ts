@@ -57,13 +57,21 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Compute amount on the server from items (don't trust client total blindly).
-    const itemsTotal = items.reduce(
-      (sum: number, it: any) => sum + Number(it.price) * Number(it.quantity || 1),
-      0
+    // SECURITY: Authoritative pricing comes from DB, never from the client.
+    const { data: dbItems, error: dbItemsErr } = await service
+      .from("order_items")
+      .select("product_name, quantity, unit_price")
+      .eq("order_id", order_id);
+    if (dbItemsErr || !dbItems || dbItems.length === 0) {
+      return new Response(JSON.stringify({ error: "Order items not found" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+      });
+    }
+    const itemsTotal = dbItems.reduce(
+      (sum: number, it: any) => sum + Number(it.unit_price) * Number(it.quantity || 1),
+      0,
     );
-    const shippingCost = Number(items[0]?.shippingCost ?? 0);
-    const grandTotal = Math.round((itemsTotal + shippingCost) * 100) / 100;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const notificationUrl = `${supabaseUrl}/functions/v1/montonio-webhook`;
@@ -75,6 +83,14 @@ Deno.serve(async (req) => {
       .select("order_number")
       .eq("id", order_id)
       .maybeSingle();
+    const { data: orderShipping } = await service
+      .from("orders")
+      .select("shipping_cost")
+      .eq("id", order_id)
+      .maybeSingle();
+    const shippingCost = Number(orderShipping?.shipping_cost ?? 0);
+    const grandTotal = Math.round((itemsTotal + shippingCost) * 100) / 100;
+
     const orderNumber = typeof orderRow?.order_number === "number" ? orderRow.order_number : null;
     const orderRef = orderNumber ? `T-${String(orderNumber).padStart(5, "0")}` : order_id.slice(0, 8).toUpperCase();
     // Use a human-readable merchant reference for customer-facing banking
