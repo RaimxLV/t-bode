@@ -88,7 +88,7 @@ const BlogPost = () => {
           noindex
         />
       )}
-      <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
         {isPreview && (
           <div className="mb-4 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-body text-primary">
             Priekšskatījuma režīms — ietver melnraksta produktus. Klientiem šis nav redzams.
@@ -125,7 +125,7 @@ const BlogPost = () => {
             )}
             {post.content && (
               <div
-                className="prose prose-invert max-w-none font-body prose-headings:font-display prose-a:text-primary"
+                className="prose prose-invert prose-lg max-w-none font-body prose-headings:font-display prose-headings:text-foreground prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-p:leading-relaxed prose-a:text-primary"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
             )}
@@ -136,7 +136,7 @@ const BlogPost = () => {
                 <p className="text-sm text-muted-foreground font-body mb-6">
                   Pieejami ierobežotu laiku — paspēj iegādāties pirms svētkiem.
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                   {products.map((p) => (
                     <ProductCard key={p.id} product={p as any} />
                   ))}

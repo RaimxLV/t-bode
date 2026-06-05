@@ -1111,6 +1111,7 @@ export type Database = {
         Row: {
           always_available: boolean
           available_from: string | null
+          base_product_id: string | null
           campaign_id: string | null
           category: string
           color_variants: Json
@@ -1143,6 +1144,7 @@ export type Database = {
         Insert: {
           always_available?: boolean
           available_from?: string | null
+          base_product_id?: string | null
           campaign_id?: string | null
           category: string
           color_variants?: Json
@@ -1175,6 +1177,7 @@ export type Database = {
         Update: {
           always_available?: boolean
           available_from?: string | null
+          base_product_id?: string | null
           campaign_id?: string | null
           category?: string
           color_variants?: Json

@@ -10,6 +10,7 @@ import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, 
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
+import { getOptimizedSrc } from "@/lib/imageOptimization";
 
 /* ------------ Types ------------ */
 type Holiday = { id: string; name_lv: string; month: number; day: number };
@@ -67,6 +68,7 @@ type CampProduct = {
   color_variants: ColorVariant[];
   print_offset_y: number | null;
   print_scale: number | null;
+  base_product_id: string | null;
 };
 
 type BlogPost = {
@@ -175,7 +177,12 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const { data: catRaw } = await supabase.from("products")
         .select("id,name,name_lv,category,sizes,description,description_lv,color_variants,image_url,print_area")
         .eq("customizable", true).eq("is_draft", false).order("name");
-      setCatalog(((catRaw as any[]) ?? []).map((p) => ({
+      const EXCLUDED_CATEGORIES = new Set(["mugs", "bags"]);
+      const EXCLUDED_NAME_RE = /bodij/i; // kids bodysuit
+      const filteredCat = ((catRaw as any[]) ?? []).filter(
+        (p) => !EXCLUDED_CATEGORIES.has((p.category ?? "").toLowerCase()) && !EXCLUDED_NAME_RE.test(p.name ?? "")
+      );
+      setCatalog(filteredCat.map((p) => ({
         ...p,
         color_variants: Array.isArray(p.color_variants) ? p.color_variants : [],
         print_area: p.print_area ?? null,
@@ -183,7 +190,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Campaign products
       const { data: cpRaw } = await supabase.from("products")
-        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale")
+        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id")
         .eq("campaign_id", campaignId)
         .order("created_at");
       setCampProducts(((cpRaw as any[]) ?? []).map((p) => ({
@@ -330,6 +337,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             colors: variants.map((v) => v.name), customizable: false, color_variants: variants,
             image_url: variants[0].images[0], in_stock: true, is_draft: true, status: "draft",
             holiday_id: campaign.holiday_id, campaign_id: campaign.id,
+            base_product_id: bp.id,
+            print_area: printArea,
           };
           const { data: prod, error } = await supabase.from("products").insert(payload).select("id").maybeSingle();
           if (error || !prod) toast.error(`${baseName}: ${error?.message ?? "neizveidojās"}`);
@@ -368,6 +377,72 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     if (error) { toast.error(error.message); return; }
     setCampProducts((prev) => prev.filter((x) => x.id !== productId));
     toast.success("Izslēgts");
+  };
+
+  const regenerateProductMockups = async (productId: string) => {
+    if (!campaign) return;
+    const p = campProducts.find((x) => x.id === productId);
+    if (!p) return;
+    if (!p.base_product_id) {
+      toast.error("Šim produktam trūkst bāzes atsauces — atjauno 2. soli un ģenerē no jauna.");
+      return;
+    }
+    // Find the design assigned to this product (or first starred)
+    let designRow = designs.find((d) => d.product_id === productId && d.image_url);
+    if (!designRow) designRow = designs.find((d) => d.is_primary && d.image_url);
+    if (!designRow?.image_url) { toast.error("Nav saistīta dizaina"); return; }
+    const designSigned = signedUrls[designRow.image_url];
+    if (!designSigned) { toast.error("Dizaina URL trūkst"); return; }
+
+    // Find the base catalog row for print_area
+    const { data: baseRow } = await supabase.from("products")
+      .select("id, print_area, color_variants")
+      .eq("id", p.base_product_id).maybeSingle();
+    if (!baseRow) { toast.error("Bāzes produkts nav atrasts"); return; }
+    const printArea = (baseRow.print_area as any) ?? DEFAULT_PRINT_AREA;
+    const baseVariants = Array.isArray(baseRow.color_variants) ? (baseRow.color_variants as ColorVariant[]) : [];
+
+    setBusy("regen-" + productId);
+    try {
+      const newVariants: ColorVariant[] = [];
+      for (let i = 0; i < p.color_variants.length; i++) {
+        const cv = p.color_variants[i];
+        const baseCv = baseVariants.find((b) => b.name === cv.name) ?? baseVariants[0];
+        if (!baseCv?.images?.[0]) continue;
+        try {
+          const blob = await composeMockup({
+            mockupUrl: baseCv.images[0],
+            designUrl: designSigned,
+            printArea,
+            baseColorHex: cv.hex,
+            maxWidth: 1400,
+            offsetY: p.print_offset_y ?? 0,
+            scale: p.print_scale ?? 1,
+          });
+          const path = `campaigns/${campaign.id}/${designRow.id}/${p.base_product_id}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
+          const up = await supabase.storage.from("product-images").upload(path, blob, { contentType: "image/jpeg", upsert: true });
+          if (up.error) throw up.error;
+          const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+          newVariants.push({ name: cv.name, hex: cv.hex, images: [publicUrl] });
+        } catch (e: any) {
+          console.error(e); toast.error(`${cv.name}: ${e.message}`);
+        }
+      }
+      if (!newVariants.length) { toast.error("Neizdevās izveidot nevienu mockup"); return; }
+      const { error } = await supabase.from("products").update({
+        color_variants: newVariants as any,
+        image_url: newVariants[0].images[0],
+      }).eq("id", productId);
+      if (error) throw error;
+      setCampProducts((prev) => prev.map((x) => x.id === productId
+        ? { ...x, color_variants: newVariants, image_url: newVariants[0].images[0] }
+        : x));
+      toast.success(`Pārģenerēti ${newVariants.length} mockup`);
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setBusy(null);
+    }
   };
 
   const resetStep2 = async () => {
@@ -512,6 +587,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onRemoveColor={removeColor}
                 onUpdatePrintAdj={updatePrintAdj}
                 onExcludeProduct={excludeProduct}
+                onRegenerateMockups={regenerateProductMockups}
                 onReset={resetStep2}
                 onBack={() => setStep(1)}
                 onNext={() => setStep(3)}
@@ -616,7 +692,7 @@ function StepIdea({ campaign, busy, onRegen, onNext, onClose }: any) {
 function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
-  onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onReset, onBack, onNext, onClose,
+  onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
 
@@ -641,7 +717,12 @@ function StepDesigns({
               <div key={d.id} className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
                 {d.image_url && signedUrls[d.image_url] ? (
                   <>
-                    <img src={signedUrls[d.image_url]} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+                      loading="lazy"
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                     <button
                       onClick={() => onToggleStar(d)}
                       className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
@@ -679,7 +760,14 @@ function StepDesigns({
                   className={`relative border-2 rounded-lg overflow-hidden text-left transition ${sel ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"}`}
                 >
                   <div className="aspect-square bg-muted">
-                    {thumb ? <img src={thumb} alt="" className="w-full h-full object-cover" /> : <Package className="w-8 h-8 m-auto" />}
+                    {thumb ? (
+                      <img
+                        src={getOptimizedSrc(thumb, 400, 70)}
+                        loading="lazy"
+                        alt=""
+                        className="w-full h-full object-contain"
+                      />
+                    ) : <Package className="w-8 h-8 m-auto" />}
                   </div>
                   <div className="p-1.5">
                     <p className="text-xs font-body line-clamp-1">{p.name_lv || p.name}</p>
@@ -713,12 +801,31 @@ function StepDesigns({
           <h4 className="font-semibold text-sm mb-2">Kampaņas produkti ({campProducts.length})</h4>
           <div className="space-y-2">
             {campProducts.map((p: CampProduct) => (
-              <div key={p.id} className="border rounded p-2 sm:p-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  {p.image_url && <img src={p.image_url} alt="" className="w-12 h-12 rounded object-cover" />}
+              <div key={p.id} className="border rounded p-3 space-y-3">
+                <div className="flex items-start gap-3">
+                  {p.image_url && (
+                    <img
+                      src={getOptimizedSrc(p.image_url, 320, 80)}
+                      loading="lazy"
+                      alt=""
+                      className="w-28 h-28 sm:w-36 sm:h-36 rounded object-cover border bg-muted"
+                    />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-body truncate">{p.name_lv || p.name}</div>
                     <div className="text-[10px] text-muted-foreground">{p.color_variants.length} krāsas</div>
+                    <div className="mt-2 grid grid-cols-1 gap-2 text-[11px]">
+                      <label className="space-y-1">
+                        <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span></div>
+                        <input type="range" min={-0.3} max={0.3} step={0.01} defaultValue={p.print_offset_y ?? 0}
+                          onChange={(e) => onUpdatePrintAdj(p.id, { print_offset_y: parseFloat(e.target.value) })} className="w-full accent-primary" />
+                      </label>
+                      <label className="space-y-1">
+                        <div className="flex justify-between"><span>Mērogs</span><span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span></div>
+                        <input type="range" min={0.4} max={1.4} step={0.02} defaultValue={p.print_scale ?? 1}
+                          onChange={(e) => onUpdatePrintAdj(p.id, { print_scale: parseFloat(e.target.value) })} className="w-full accent-primary" />
+                      </label>
+                    </div>
                   </div>
                   <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(p.id)} title="Izslēgt no kampaņas">
                     <Trash2 className="w-3.5 h-3.5" />
@@ -741,17 +848,16 @@ function StepDesigns({
                     ))}
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-3 text-[11px]">
-                  <label className="space-y-1">
-                    <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(((p.print_offset_y ?? 0)) * 100).toFixed(0)}%</span></div>
-                    <input type="range" min={-0.15} max={0.15} step={0.01} defaultValue={p.print_offset_y ?? 0}
-                      onChange={(e) => onUpdatePrintAdj(p.id, { print_offset_y: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                  </label>
-                  <label className="space-y-1">
-                    <div className="flex justify-between"><span>Mērogs</span><span className="text-muted-foreground">{((p.print_scale ?? 1) * 100).toFixed(0)}%</span></div>
-                    <input type="range" min={0.6} max={1.2} step={0.02} defaultValue={p.print_scale ?? 1}
-                      onChange={(e) => onUpdatePrintAdj(p.id, { print_scale: parseFloat(e.target.value) })} className="w-full accent-primary" />
-                  </label>
+                <div className="flex justify-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy === ("regen-" + p.id)}
+                    onClick={() => onRegenerateMockups(p.id)}
+                  >
+                    {busy === ("regen-" + p.id) ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 mr-1.5" />}
+                    Pārģenerēt ar šiem iestatījumiem
+                  </Button>
                 </div>
               </div>
             ))}
