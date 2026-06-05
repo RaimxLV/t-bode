@@ -31,38 +31,38 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://t-bode.lv/product/organic-cotton-t-shirt</loc>
+    <lastmod>2026-06-05T07:53:15.627Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://t-bode.lv/product/unisex-dry-handfeel-heavyweight</loc>
-    <lastmod>2026-06-03T09:07:20.045Z</lastmod>
+    <lastmod>2026-06-05T07:52:53.023Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/product/cotton-bag</loc>
+    <lastmod>2026-06-05T07:52:24.010Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://t-bode.lv/product/sweatshirt-without-hood</loc>
-    <lastmod>2026-06-03T09:07:20.045Z</lastmod>
+    <lastmod>2026-06-05T07:51:57.989Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://t-bode.lv/product/unisex-hoodie</loc>
-    <lastmod>2026-06-03T09:07:20.045Z</lastmod>
+    <lastmod>2026-06-05T07:51:30.285Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/product/organic-cotton-t-shirt</loc>
-    <lastmod>2026-06-03T09:07:20.045Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/product/white-mug-300ml</loc>
-    <lastmod>2026-05-31T05:31:45.862Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/product/duo-two-tone-mug</loc>
-    <lastmod>2026-05-31T05:31:45.862Z</lastmod>
+    <loc>https://t-bode.lv/product/t-shirt-kids</loc>
+    <lastmod>2026-06-05T07:50:55.381Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -80,6 +80,18 @@
   </url>
   <url>
     <loc>https://t-bode.lv/product/large-mug-450ml</loc>
+    <lastmod>2026-05-31T05:31:45.862Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/product/duo-two-tone-mug</loc>
+    <lastmod>2026-05-31T05:31:45.862Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/product/white-mug-300ml</loc>
     <lastmod>2026-05-31T05:31:45.862Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -165,18 +177,6 @@
   <url>
     <loc>https://t-bode.lv/product/latvia-hoodie-three-stars</loc>
     <lastmod>2026-05-25T14:03:29.128Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/product/t-shirt-kids</loc>
-    <lastmod>2026-05-25T08:43:34.152Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/product/cotton-bag</loc>
-    <lastmod>2026-05-25T08:41:16.800Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
