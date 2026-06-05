@@ -25,6 +25,9 @@ const BlogPost = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isPreview =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("preview") === "1";
 
   useEffect(() => {
     if (!slug) return;
@@ -58,10 +61,9 @@ const BlogPost = () => {
       const allIds = Array.from(new Set([...linkedIds, ...autoIds]));
       if (allIds.length === 0) { setProducts([]); setLoading(false); return; }
 
-      const { data: prods } = await supabase
-        .from("products")
-        .select("*")
-        .in("id", allIds);
+      let q = supabase.from("products").select("*").in("id", allIds);
+      if (!isPreview) q = q.eq("is_draft", false);
+      const { data: prods } = await q;
       // preserve manual order then auto
       const order = new Map<string, number>();
       linkedIds.forEach((id, i) => order.set(id, i));
@@ -73,7 +75,7 @@ const BlogPost = () => {
       setProducts(sorted);
       setLoading(false);
     })();
-  }, [slug]);
+  }, [slug, isPreview]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -87,6 +89,11 @@ const BlogPost = () => {
         />
       )}
       <main className="flex-1 max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
+        {isPreview && (
+          <div className="mb-4 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-body text-primary">
+            Priekšskatījuma režīms — ietver melnraksta produktus. Klientiem šis nav redzams.
+          </div>
+        )}
         <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" /> Atpakaļ
         </Link>
