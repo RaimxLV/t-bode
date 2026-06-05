@@ -1503,6 +1503,8 @@ export type Database = {
         | "ready"
         | "ready_for_review"
         | "failed"
+        | "generating_designs"
+        | "designs_ready"
       campaign_type: "holiday" | "collection" | "blog"
       content_status: "draft" | "scheduled" | "published" | "archived"
       order_status:
@@ -1652,6 +1654,8 @@ export const Constants = {
         "ready",
         "ready_for_review",
         "failed",
+        "generating_designs",
+        "designs_ready",
       ],
       campaign_type: ["holiday", "collection", "blog"],
       content_status: ["draft", "scheduled", "published", "archived"],
