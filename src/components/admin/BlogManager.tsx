@@ -45,9 +45,12 @@ export const BlogManager = () => {
   const [editing, setEditing] = useState<Post | null>(null);
   const [productsTab, setProductsTab] = useState<Post | null>(null);
   const [linked, setLinked] = useState<LinkedProduct[]>([]);
-  const [linkSearch, setLinkSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [linkBusy, setLinkBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerProducts, setPickerProducts] = useState<any[]>([]);
+  const [pickerSelected, setPickerSelected] = useState<Set<string>>(new Set());
+  const [pickerSearch, setPickerSearch] = useState("");
+  const [pickerLoading, setPickerLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -129,6 +132,36 @@ export const BlogManager = () => {
     await loadLinked(productsTab);
   };
 
+  const openPicker = async () => {
+    if (!productsTab) return;
+    setPickerOpen(true);
+    setPickerSelected(new Set());
+    setPickerLoading(true);
+    const linkedIds = new Set(linked.map((l) => l.id));
+    const { data } = await supabase
+      .from("products")
+      .select("id,name,name_lv,image_url,price,category,holiday_id")
+      .eq("is_draft", false)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    setPickerProducts((data || []).filter((p: any) => !linkedIds.has(p.id)));
+    setPickerLoading(false);
+  };
+
+  const confirmPicker = async () => {
+    if (!productsTab || pickerSelected.size === 0) { setPickerOpen(false); return; }
+    const rows = Array.from(pickerSelected).map((product_id) => ({
+      blog_post_id: productsTab.id,
+      product_id,
+      source: "manual",
+    }));
+    const { error } = await supabase.from("blog_post_products" as any).insert(rows);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Pievienoti ${rows.length} produkti`);
+    setPickerOpen(false);
+    await loadLinked(productsTab);
+  };
+
   const updateAvailability = async (productId: string, patch: Partial<LinkedProduct>) => {
     const payload: any = {};
     if ("available_from" in patch) payload.available_from = patch.available_from;
@@ -144,13 +177,69 @@ export const BlogManager = () => {
 
   const publish = async (p: Post) => {
     setBusy(p.id);
-    const { error } = await supabase
-      .from("blog_posts")
-      .update({ status: "published", published_at: new Date().toISOString() })
-      .eq("id", p.id);
-    setBusy(null);
-    if (error) toast.error("Neizdevās publicēt: " + error.message);
-    else { toast.success("Raksts publicēts"); load(); }
+    try {
+      // 1. Collect all related products (manual links + campaign auto)
+      const { data: links } = await supabase
+        .from("blog_post_products" as any)
+        .select("product_id")
+        .eq("blog_post_id", p.id);
+      const manualIds: string[] = (links || []).map((l: any) => l.product_id);
+      let autoIds: string[] = [];
+      let expiresAt: string | null = null;
+      if (p.campaign_id) {
+        const { data: byCampaign } = await supabase
+          .from("products")
+          .select("id")
+          .eq("campaign_id", p.campaign_id);
+        autoIds = (byCampaign || []).map((r: any) => r.id);
+
+        // Compute holiday-based expiry: 1 day before holiday
+        const { data: c } = await supabase
+          .from("campaigns")
+          .select("year, holidays(month, day)")
+          .eq("id", p.campaign_id)
+          .maybeSingle();
+        const h: any = (c as any)?.holidays;
+        if (h?.month && h?.day) {
+          const year = (c as any).year ?? new Date().getFullYear();
+          const holiday = new Date(Date.UTC(year, h.month - 1, h.day, 0, 0, 0));
+          const expiry = new Date(holiday.getTime() - 24 * 60 * 60 * 1000);
+          expiresAt = expiry.toISOString();
+        }
+      }
+
+      const allIds = Array.from(new Set([...manualIds, ...autoIds]));
+
+      // 2. Flip products live + flag for collection
+      if (allIds.length > 0) {
+        const patch: any = {
+          is_draft: false,
+          status: "published",
+          show_in_collection: true,
+          available_from: new Date().toISOString(),
+        };
+        if (expiresAt) patch.expires_at = expiresAt;
+        const { error: upErr } = await supabase
+          .from("products")
+          .update(patch)
+          .in("id", allIds);
+        if (upErr) throw upErr;
+      }
+
+      // 3. Publish blog post
+      const { error } = await supabase
+        .from("blog_posts")
+        .update({ status: "published", published_at: new Date().toISOString() })
+        .eq("id", p.id);
+      if (error) throw error;
+
+      toast.success(`Raksts publicēts un ${allIds.length} produkti redzami kolekcijā`);
+      load();
+    } catch (e: any) {
+      toast.error("Neizdevās publicēt: " + (e.message || e));
+    } finally {
+      setBusy(null);
+    }
   };
 
   const unpublish = async (p: Post) => {
@@ -301,29 +390,9 @@ export const BlogManager = () => {
                 <DialogTitle className="font-display">Saistītie produkti — {productsTab.title}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold">Pievienot produktu</label>
-                  <Input
-                    value={linkSearch}
-                    onChange={(e) => searchProducts(e.target.value)}
-                    placeholder="Meklēt pēc nosaukuma…"
-                  />
-                  {searchResults.length > 0 && (
-                    <div className="border border-border rounded divide-y divide-border max-h-48 overflow-y-auto">
-                      {searchResults.map((r) => (
-                        <button
-                          key={r.id}
-                          onClick={() => addLink(r.id)}
-                          className="w-full flex items-center gap-2 p-2 hover:bg-muted text-left"
-                        >
-                          {r.image_url && <img src={r.image_url} alt="" className="w-8 h-8 rounded object-cover" />}
-                          <span className="flex-1 text-sm font-body truncate">{r.name_lv || r.name}</span>
-                          <Plus className="w-4 h-4 text-primary" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <Button variant="outline" size="sm" onClick={openPicker} className="gap-1.5 w-full sm:w-auto">
+                  <Plus className="w-4 h-4" /> Pievienot produktus no galerijas
+                </Button>
 
                 {linkBusy ? (
                   <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
