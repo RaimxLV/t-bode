@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, FileText, Eye, Trash2, Send, Save, X, Package, Plus, Calendar, Infinity as InfinityIcon } from "lucide-react";
+import { Loader2, FileText, Eye, Trash2, Send, Save, X, Plus, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { RichTextEditor } from "./RichTextEditor";
 import {
   Dialog,
   DialogContent,
@@ -25,20 +26,6 @@ type Post = {
   campaign_id: string | null;
   published_at: string | null;
   created_at: string;
-};
-
-type LinkedProduct = {
-  id: string;
-  name: string;
-  name_lv: string | null;
-  image_url: string | null;
-  available_from: string | null;
-  expires_at: string | null;
-  always_available: boolean;
-  color_variants: Array<{ name: string; hex: string; images?: string[] }> | null;
-  print_offset_y: number | null;
-  print_scale: number | null;
-  source: "auto" | "manual";
 };
 
 export const BlogManager = () => {
