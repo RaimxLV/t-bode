@@ -868,6 +868,7 @@ function StepIdea({
   customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette,
 }: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
