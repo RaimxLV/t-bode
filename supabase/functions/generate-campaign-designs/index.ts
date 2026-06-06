@@ -218,26 +218,31 @@ function buildPrompt(
     : "Centered on pure white background.";
   // ALWAYS enforce frame-fit — these are DTF print files and must not be cropped.
   const frameRule = "CRITICAL: entire artwork fits inside canvas with 10% safe padding on all sides. Nothing touches edges. DTF print file.";
+  // Quality directive applied to every prompt — pushes the model away from cheap/childish output.
+  const qualityRule =
+    "Premium gallery-grade artwork, sophisticated composition, refined detail, professional design-studio quality. " +
+    "STRICT NEGATIVE: not childish, not infantile, not amateur, not cheap clip-art, not generic stock, not cartoonish kindergarten style, not Microsoft-Word clipart, no low-effort doodle. " +
+    "Style: editorial, premium streetwear / boutique apparel aesthetic.";
 
   // ===== Slogan / typography-led design (routed to Ideogram) =====
   if (slogan) {
     return (
-      `Vintage typographic t-shirt print design. HERO: the exact phrase "${slogan}" as LARGE BOLD DISTRESSED VINTAGE TYPOGRAPHY filling most of the canvas, screen-print style. ` +
-      `Text is dominant, perfectly spelled, stacked on multiple lines, with ornamental banners, ribbons or frames around it. ` +
-      `Decorative theme around the text (NOT main subject): ${base}. ` +
-      `Hand-drawn vintage screen-print, distressed texture, limited 2-3 color palette. ${bgHint} ${frameRule} ` +
+      `Premium editorial typographic t-shirt print. HERO: the exact phrase "${slogan}" as LARGE, BOLD, EXPRESSIVE custom-drawn typography — sophisticated lettering with character, filling most of the canvas. ` +
+      `Text is dominant, perfectly spelled (preserve every diacritic exactly), stacked on multiple lines with confident hierarchy. Integrate refined ornamental flourishes, ribbons, halftone or vintage screen-print textures around the text. ` +
+      `Conceptual visual motif (supporting, NOT replacing the text): ${base}. ` +
+      `Hand-crafted artisan screen-print aesthetic, limited disciplined 2–4 color palette, rich texture, mature streetwear/boutique apparel feel. ${bgHint} ${frameRule} ${qualityRule} ` +
       `STRICT: text IS the design, never a caption. No garment, mockup, person, hanger or fabric. No extra text beyond "${slogan}".`
     );
   }
 
   // ===== No slogan — pure illustration (Recraft) =====
   const styleHint = isVector
-    ? "Bold flat vector, clean shapes, limited palette."
+    ? "Bold confident flat vector, refined shape language, disciplined limited palette, mature boutique apparel look."
     : isIllustration
-    ? "Bold illustrated artwork, rich detail, centered."
-    : "Bold artwork for screen-print apparel.";
+    ? "Sophisticated illustrated artwork, intricate hand-crafted detail, balanced composition, editorial streetwear quality."
+    : "Premium artwork crafted for high-end screen-print apparel, refined and intentional.";
   return (
-    `${base}. ${styleHint} ${bgHint} ${frameRule} ` +
+    `${base}. ${styleHint} ${bgHint} ${frameRule} ${qualityRule} ` +
     `STRICT: standalone print artwork only (like a sticker). No garment, mockup, person, hanger, fabric. No text, no letters, no watermark, no background scene.`
   );
 }
