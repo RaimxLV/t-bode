@@ -426,7 +426,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           style: styleChoice,
           custom_style_id: customStyleId.trim() || null,
           image_size: imageSize,
-          colors: preferredColors,
+          colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
         },
       });
@@ -451,7 +451,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           style: styleChoice,
           custom_style_id: customStyleId.trim() || null,
           image_size: imageSize,
-          colors: preferredColors,
+          colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
           model_override: model,
         },
