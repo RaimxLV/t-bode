@@ -1081,8 +1081,8 @@ function StepIdea({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
+      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
         </Button>
@@ -1091,12 +1091,12 @@ function StepIdea({
           size="sm"
           disabled={!dirty || saving}
           onClick={save}
-          className="flex-1 sm:flex-initial"
+          className="flex-1 sm:flex-initial bg-zinc-700 text-white hover:bg-zinc-600"
         >
           {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt izmaiņas
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Aizvērt</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Aizvērt</Button>
         <div className="hidden sm:block flex-1" />
         <Button size="sm" disabled={!draft.title_lv || dirty} onClick={onNext} className="flex-1 sm:flex-initial" title={dirty ? "Vispirms saglabā izmaiņas" : undefined}>
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -1263,13 +1263,13 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
         </Button>
         <div className="hidden sm:block flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Saglabāt un turpināt vēlāk</Button>
         <Button size="sm" disabled={campProducts.length === 0} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
@@ -1374,13 +1374,13 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial text-zinc-100 hover:bg-zinc-800 hover:text-white">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Saglabāt un turpināt vēlāk</Button>
         <div className="hidden sm:block flex-1" />
         <Button size="sm" className="bg-primary w-full sm:w-auto" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
           {busy === "publish" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
