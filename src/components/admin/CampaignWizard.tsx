@@ -934,6 +934,13 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         )}
       </DialogContent>
     </Dialog>
+    {/* Library sheet: pick saved favorites and drop them into this campaign */}
+    <LibrarySheet
+      open={libraryOpen}
+      onOpenChange={setLibraryOpen}
+      onPick={addLibraryToCampaign}
+    />
+    </>
   );
 };
 
