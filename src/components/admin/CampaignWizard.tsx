@@ -1198,6 +1198,10 @@ function StepDesigns({
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
   onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice,
+  onChangeStyle, transparentBg, onChangeTransparentBg, customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette, modelChoice, onChangeModelChoice,
+  onSaveToLibrary, onOpenLibrary,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
@@ -1227,6 +1231,9 @@ function StepDesigns({
                 title="Mainīt krekla krāsu"
               />
             )}
+            <Button size="sm" variant="outline" onClick={onOpenLibrary} className="h-8 text-[11px]" title="Atvērt saglabāto dizainu bibliotēku">
+              <Heart className="w-4 h-4 mr-1 text-rose-500" /> Bibliotēka
+            </Button>
             <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns} className="h-8 text-[11px]">
               {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
               Pārģenerēt
@@ -1235,10 +1242,25 @@ function StepDesigns({
         </div>
 
         <p className="text-[11px] text-muted-foreground mb-2 mt-2">
-          Ģenerēšanas iestatījumus (stils, izmērs, krāsu palete) maini 1. solī. Šeit vari pārģenerēt visu vai atsevišķu dizainu ar ↻ pogu.
+          Maini stilu, AI modeli, izmēru un krāsas zemāk, tad spied <b>Pārģenerēt</b> (vai ↻ uz atsevišķa dizaina). ♥ saglabā dizainu bibliotēkā tālākai izmantošanai.
         </p>
-        <div className="rounded-md border border-primary/30 bg-primary/5 text-[11px] p-2 mb-2 leading-snug">
-          <b>AI modelis tiek izvēlēts automātiski.</b> Sauklis vai latviešu garumzīmes (ā, ē, š, ž…) → <b>Ideogram v3</b> (labi zīmē burtus un diakritikus). Bez teksta — <b>Recraft</b> ar izvēlēto stilu.
+        <div className="mb-3">
+          <GenerationSettings
+            styleChoice={styleChoice}
+            onChangeStyle={onChangeStyle}
+            transparentBg={transparentBg}
+            onChangeTransparentBg={onChangeTransparentBg}
+            customStyleId={customStyleId}
+            onChangeCustomStyleId={onChangeCustomStyleId}
+            imageSize={imageSize}
+            onChangeImageSize={onChangeImageSize}
+            preferredColors={preferredColors}
+            onChangePreferredColors={onChangePreferredColors}
+            usePalette={usePalette}
+            onChangeUsePalette={onChangeUsePalette}
+            modelChoice={modelChoice}
+            onChangeModelChoice={onChangeModelChoice}
+          />
         </div>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -1254,6 +1276,7 @@ function StepDesigns({
                 regenSingleId={regenSingleId}
                 styleChoice={styleChoice}
                 onToggleStar={onToggleStar}
+                onSaveToLibrary={onSaveToLibrary}
                 onRegenSingleDesign={onRegenSingleDesign}
                 showOnShirt={showOnShirt}
                 shirtColor={shirtColor}
