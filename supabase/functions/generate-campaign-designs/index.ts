@@ -211,40 +211,38 @@ function buildPrompt(
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
   // Hard cap on base description so the final prompt stays <1000 chars (fal.ai limit).
-  const base = rawPrompt.trim().slice(0, 450);
-  const slogan = opts.slogan?.trim().slice(0, 120);
+  const base = rawPrompt.trim().slice(0, 320);
+  const slogan = opts.slogan?.trim().slice(0, 100);
   const bgHint = transparent
-    ? "Isolated on solid background, cleanly removable. No edge-touching shadows."
-    : "Centered on pure white background.";
-  // ALWAYS enforce frame-fit — these are DTF print files and must not be cropped.
-  const frameRule = "CRITICAL: entire artwork fits inside canvas with 10% safe padding on all sides. Nothing touches edges. DTF print file.";
-  // Quality directive applied to every prompt — pushes the model away from cheap/childish output.
+    ? "Isolated, no edge shadows."
+    : "Centered on white background.";
+  // Frame-fit + quality rules, kept terse so total prompt stays under 1000 chars.
+  const frameRule = "Fit inside canvas with 10% safe padding. DTF print file.";
   const qualityRule =
-    "Premium gallery-grade artwork, sophisticated composition, refined detail, professional design-studio quality. " +
-    "STRICT NEGATIVE: not childish, not infantile, not amateur, not cheap clip-art, not generic stock, not cartoonish kindergarten style, not Microsoft-Word clipart, no low-effort doodle. " +
-    "Style: editorial, premium streetwear / boutique apparel aesthetic.";
+    "Premium editorial, gallery-grade, refined detail, boutique streetwear. " +
+    "NEGATIVE: not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon.";
 
   // ===== Slogan / typography-led design (routed to Ideogram) =====
   if (slogan) {
-    return (
-      `Premium editorial typographic t-shirt print. HERO: the exact phrase "${slogan}" as LARGE, BOLD, EXPRESSIVE custom-drawn typography — sophisticated lettering with character, filling most of the canvas. ` +
-      `Text is dominant, perfectly spelled (preserve every diacritic exactly), stacked on multiple lines with confident hierarchy. Integrate refined ornamental flourishes, ribbons, halftone or vintage screen-print textures around the text. ` +
-      `Conceptual visual motif (supporting, NOT replacing the text): ${base}. ` +
-      `Hand-crafted artisan screen-print aesthetic, limited disciplined 2–4 color palette, rich texture, mature streetwear/boutique apparel feel. ${bgHint} ${frameRule} ${qualityRule} ` +
-      `STRICT: text IS the design, never a caption. No garment, mockup, person, hanger or fabric. No extra text beyond "${slogan}".`
-    );
+    const out =
+      `Premium typographic t-shirt print. HERO text: "${slogan}" — large, bold, expressive custom lettering, perfectly spelled (preserve every diacritic), stacked, confident hierarchy, filling most of canvas. ` +
+      `Add refined ornamental flourishes, ribbons or vintage screen-print textures. ` +
+      `Supporting motif: ${base}. ` +
+      `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
+      `Text IS the design. No garment, mockup, person, fabric. No extra text beyond "${slogan}".`;
+    return out.slice(0, 990);
   }
 
   // ===== No slogan — pure illustration (Recraft) =====
   const styleHint = isVector
-    ? "Bold confident flat vector, refined shape language, disciplined limited palette, mature boutique apparel look."
+    ? "Bold confident flat vector, refined shapes, disciplined palette."
     : isIllustration
-    ? "Sophisticated illustrated artwork, intricate hand-crafted detail, balanced composition, editorial streetwear quality."
-    : "Premium artwork crafted for high-end screen-print apparel, refined and intentional.";
-  return (
+    ? "Sophisticated illustration, intricate detail, balanced composition."
+    : "Premium screen-print artwork.";
+  const out =
     `${base}. ${styleHint} ${bgHint} ${frameRule} ${qualityRule} ` +
-    `STRICT: standalone print artwork only (like a sticker). No garment, mockup, person, hanger, fabric. No text, no letters, no watermark, no background scene.`
-  );
+    `Standalone artwork like a sticker. No garment, mockup, person, fabric. No text, no letters, no watermark, no scene.`;
+  return out.slice(0, 990);
 }
 
 Deno.serve(async (req) => {
