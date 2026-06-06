@@ -1728,11 +1728,6 @@ function DesignCard({
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
           />
-          {d.slogan && (
-            <div className="absolute bottom-1 left-1 right-1 text-[9px] px-1.5 py-0.5 rounded bg-background/85 truncate font-mono" title={d.slogan}>
-              T: {d.slogan}
-            </div>
-          )}
           <button
             onClick={() => onToggleStar(d)}
             className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
