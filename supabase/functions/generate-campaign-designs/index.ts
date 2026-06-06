@@ -111,10 +111,29 @@ async function generateWithIdeogram(opts: {
 }
 
 async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
+  // Bria sometimes returns 422 "Failed to load the image" when fetching the
+  // source URL directly (signed fal CDN URLs, CORS, etc). To make it robust,
+  // download the image first and pass it inline as a base64 data URI.
+  let imageUrlForBria = opts.imageUrl;
+  try {
+    const dl = await fetch(opts.imageUrl);
+    if (dl.ok) {
+      const buf = new Uint8Array(await dl.arrayBuffer());
+      const ct = dl.headers.get("content-type") || "image/png";
+      // base64 encode
+      let bin = "";
+      const chunk = 0x8000;
+      for (let i = 0; i < buf.length; i += chunk) {
+        bin += String.fromCharCode(...buf.subarray(i, i + chunk));
+      }
+      imageUrlForBria = `data:${ct};base64,${btoa(bin)}`;
+    }
+  } catch (_) { /* fall back to URL */ }
+
   const res = await fetch("https://fal.run/fal-ai/bria/background/remove", {
     method: "POST",
     headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ image_url: opts.imageUrl }),
+    body: JSON.stringify({ image_url: imageUrlForBria }),
   });
   if (!res.ok) throw new Error(`Bria ${res.status}: ${(await res.text()).slice(0, 200)}`);
   const data = await res.json();
