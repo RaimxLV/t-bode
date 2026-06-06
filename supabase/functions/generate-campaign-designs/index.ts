@@ -85,14 +85,17 @@ async function generateWithIdeogram(opts: {
   prompt: string;
   imageSize?: string;
 }): Promise<{ bytes: Uint8Array; url: string }> {
-  const res = await fetch("https://fal.run/fal-ai/ideogram/v2", {
+  // v3 handles non-English text & diacritics (Latvian ā ē ī ū č š ž ķ ļ ņ ģ) much better than v2.
+  const res = await fetch("https://fal.run/fal-ai/ideogram/v3", {
     method: "POST",
     headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       prompt: opts.prompt,
-      aspect_ratio: sizeToAspect(opts.imageSize ?? "square_hd"),
-      style: "design",
+      image_size: ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd",
+      style: "DESIGN",
+      rendering_speed: "QUALITY",
       expand_prompt: false,
+      num_images: 1,
     }),
   });
   if (!res.ok) {
@@ -134,10 +137,15 @@ async function generateWithFal(opts: {
   model?: "auto" | "ideogram" | "recraft";
 }): Promise<{ bytes: Uint8Array; url: string }> {
   const model = opts.model ?? "auto";
-  // Force Ideogram, or auto-route when a slogan/text is required.
+  // Detect Latvian-specific characters in either the slogan or the description.
+  // If present, Ideogram (v3) handles diacritics far better than Recraft.
+  const lvRe = /[āēīōūčšžķļņģĀĒĪŌŪČŠŽĶĻŅĢ]/;
+  const hasLatvian =
+    lvRe.test(opts.slogan ?? "") || lvRe.test(opts.prompt ?? "");
+  // Force Ideogram, or auto-route when a slogan/text or Latvian diacritics are present.
   const useIdeogram =
     model === "ideogram" ||
-    (model === "auto" && !!(opts.slogan && opts.slogan.trim()));
+    (model === "auto" && (!!(opts.slogan && opts.slogan.trim()) || hasLatvian));
   if (useIdeogram) {
     const { bytes, url } = await generateWithIdeogram({
       falKey: opts.falKey,
