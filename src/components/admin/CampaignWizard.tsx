@@ -253,6 +253,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
   const [usePalette, setUsePalette] = useState<boolean>(false);
+  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const load = async () => {
     if (!campaignId) return;
@@ -428,6 +430,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
+          model_override: modelChoice,
         },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
@@ -439,7 +442,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const regenSingleDesign = async (
     designId: string,
-    model: "auto" | "ideogram" | "recraft" = "auto",
+    model: "auto" | "ideogram" | "recraft" = modelChoice,
   ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
@@ -471,6 +474,64 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       .update({ is_primary: !d.is_primary }).eq("id", d.id);
     if (error) { toast.error(error.message); return; }
     setDesigns((prev) => prev.map((x) => x.id === d.id ? { ...x, is_primary: !x.is_primary } : x));
+  };
+
+  /** Copy a generated design into the persistent design_library so it can be reused across campaigns. */
+  const saveToLibrary = async (d: DesignRow) => {
+    if (!d.image_url) { toast.error("Nav bildes"); return; }
+    try {
+      // Download bytes from campaign-assets (private), upload to design-library (public)
+      const signed = signedUrls[d.image_url];
+      if (!signed) { toast.error("Nav URL"); return; }
+      const res = await fetch(signed);
+      if (!res.ok) throw new Error("Nevar lejupielādēt");
+      const blob = await res.blob();
+      const name = (campaign?.brief?.title_lv || campaign?.title || "Dizains").slice(0, 60);
+      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.png`;
+      const up = await supabase.storage.from("design-library").upload(path, blob, {
+        contentType: "image/png", upsert: false,
+      });
+      if (up.error) throw up.error;
+      const { error: dbErr } = await supabase.from("design_library").insert({
+        name, file_path: path, file_size: blob.size, tags: ["favorite", "campaign"],
+      });
+      if (dbErr) throw dbErr;
+      toast.success("♥ Saglabāts bibliotēkā");
+    } catch (e: any) {
+      toast.error("Neizdevās: " + (e.message ?? e));
+    }
+  };
+
+  /** Pull a design from the library into the current campaign as a new design row (and star it). */
+  const addLibraryToCampaign = async (item: { id: string; name: string; file_path: string }) => {
+    if (!campaign) return;
+    try {
+      // Copy bytes into campaign-assets so the rest of the wizard (mockups) works unchanged.
+      const pub = supabase.storage.from("design-library").getPublicUrl(item.file_path).data.publicUrl;
+      const res = await fetch(pub);
+      if (!res.ok) throw new Error("Nevar lejupielādēt");
+      const blob = await res.blob();
+      const newDesignId = crypto.randomUUID();
+      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.png`;
+      const up = await supabase.storage.from("campaign-assets").upload(path, blob, {
+        contentType: "image/png", upsert: true,
+      });
+      if (up.error) throw up.error;
+      const { error } = await supabase.from("campaign_designs" as any).insert({
+        id: newDesignId,
+        campaign_id: campaign.id,
+        prompt: `[Bibliotēka] ${item.name}`,
+        image_url: path,
+        is_primary: true,
+        style: styleChoice,
+      });
+      if (error) throw error;
+      toast.success("Pievienots no bibliotēkas");
+      setLibraryOpen(false);
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + (e.message ?? e));
+    }
   };
 
   const availableBases = useMemo(
