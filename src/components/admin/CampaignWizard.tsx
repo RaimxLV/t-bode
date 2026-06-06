@@ -346,6 +346,24 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .maybeSingle();
       setBlogPost((bpRaw as any) ?? null);
 
+      // Reload favorites for this campaign so heart icons stay lit on reopen.
+      try {
+        const { data: favs } = await supabase.storage
+          .from("design-library")
+          .list(`campaign-favorites/${campaignId}`, { limit: 200 });
+        if (favs?.length) {
+          // file naming is `${design_id}-${ts}.png` — extract leading UUID
+          const ids = new Set<string>();
+          for (const f of favs) {
+            const m = f.name.match(/^([0-9a-f-]{36})/i);
+            if (m) ids.add(m[1]);
+          }
+          setFavoritedIds(ids);
+        } else {
+          setFavoritedIds(new Set());
+        }
+      } catch (_) { /* ignore */ }
+
       // Defaults
       if (camp && !expiresAt) {
         const iso = holidayExpiryISO(hData, camp.year);
