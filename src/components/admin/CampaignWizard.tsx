@@ -256,6 +256,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [usePalette, setUsePalette] = useState<boolean>(false);
   const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
   const load = async () => {
     if (!campaignId) return;
@@ -344,6 +345,24 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .limit(1)
         .maybeSingle();
       setBlogPost((bpRaw as any) ?? null);
+
+      // Reload favorites for this campaign so heart icons stay lit on reopen.
+      try {
+        const { data: favs } = await supabase.storage
+          .from("design-library")
+          .list(`campaign-favorites/${campaignId}`, { limit: 200 });
+        if (favs?.length) {
+          // file naming is `${design_id}-${ts}.png` — extract leading UUID
+          const ids = new Set<string>();
+          for (const f of favs) {
+            const m = f.name.match(/^([0-9a-f-]{36})/i);
+            if (m) ids.add(m[1]);
+          }
+          setFavoritedIds(ids);
+        } else {
+          setFavoritedIds(new Set());
+        }
+      } catch (_) { /* ignore */ }
 
       // Defaults
       if (camp && !expiresAt) {
@@ -480,6 +499,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   /** Copy a generated design into the persistent design_library so it can be reused across campaigns. */
   const saveToLibrary = async (d: DesignRow) => {
     if (!d.image_url) { toast.error("Nav bildes"); return; }
+    if (favoritedIds.has(d.id)) { toast.info("Jau bibliotēkā"); return; }
     try {
       // Download bytes from campaign-assets (private), upload to design-library (public)
       const signed = signedUrls[d.image_url];
@@ -497,6 +517,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         name, file_path: path, file_size: blob.size, tags: ["favorite", "campaign"],
       });
       if (dbErr) throw dbErr;
+      setFavoritedIds((prev) => { const n = new Set(prev); n.add(d.id); return n; });
       toast.success("♥ Saglabāts bibliotēkā");
     } catch (e: any) {
       toast.error("Neizdevās: " + (e.message ?? e));
@@ -881,6 +902,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onToggleStar={toggleStar}
                 onSaveToLibrary={saveToLibrary}
                 onOpenLibrary={() => setLibraryOpen(true)}
+                favoritedIds={favoritedIds}
                 onRegenDesigns={regenDesigns}
                 onRegenSingleDesign={regenSingleDesign}
                 regenSingleId={regenSingleId}
@@ -1205,6 +1227,7 @@ function StepDesigns({
   imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette, modelChoice, onChangeModelChoice,
   onSaveToLibrary, onOpenLibrary,
+  favoritedIds,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
@@ -1283,6 +1306,7 @@ function StepDesigns({
                 onRegenSingleDesign={onRegenSingleDesign}
                 showOnShirt={showOnShirt}
                 shirtColor={shirtColor}
+                favorited={favoritedIds?.has?.(d.id) ?? false}
               />
             ))}
           </div>
@@ -1697,18 +1721,27 @@ function ProductTuneRow({
               try {
                 const safe = (product.name_lv || product.name || "drukas-fails")
                   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+                // Try AI upscale for sharp print-ready output; fall back to bicubic.
+                let upscaledUrl: string | undefined;
+                try {
+                  const { data, error } = await supabase.functions.invoke("upscale-design", {
+                    body: { image_url: designUrl, target_long_edge: 3072 },
+                  });
+                  if (!error && (data as any)?.url) upscaledUrl = (data as any).url as string;
+                } catch (_) { /* fall back to bicubic */ }
                 await downloadPrintReadyPng({
                   imageUrl: designUrl,
+                  upscaledUrl,
                   fileName: `${safe}-460dpi.png`,
                 });
-                toast.success("Drukas fails lejupielādēts");
+                toast.success(upscaledUrl ? "AI-uzlabots drukas fails lejupielādēts" : "Drukas fails lejupielādēts");
               } catch (e: any) {
                 toast.error(e?.message || "Neizdevās sagatavot drukas failu");
               } finally {
                 setDownloading(false);
               }
             }}
-            title="Lejuplādēt 460 DPI PNG ar caurspīdīgu fonu"
+            title="Lejuplādēt AI-uzlabotu 460 DPI PNG ar caurspīdīgu fonu"
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           </Button>
@@ -1779,6 +1812,7 @@ function DesignCard({
   onRegenSingleDesign,
   showOnShirt,
   shirtColor,
+  favorited,
 }: {
   d: DesignRow;
   signedUrls: Record<string, string>;
@@ -1789,6 +1823,7 @@ function DesignCard({
   onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
+  favorited?: boolean;
 }) {
   // local helper rendered inline below; defined here to keep it scoped
   const ShirtPreview = ({ src, color, busy: b, children }: { src: string; color: "white" | "black"; busy: boolean; children?: React.ReactNode }) => (
@@ -1864,10 +1899,10 @@ function DesignCard({
           {onSaveToLibrary && (
             <button
               onClick={() => onSaveToLibrary(d)}
-              className="absolute bottom-1 right-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
-              title="Saglabāt bibliotēkā"
+              className={`absolute bottom-1 right-1 p-1 rounded-full transition ${favorited ? "bg-rose-500 text-white opacity-100" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
+              title={favorited ? "Bibliotēkā" : "Saglabāt bibliotēkā"}
             >
-              <Heart className="w-4 h-4 text-rose-500" />
+              <Heart className={`w-4 h-4 ${favorited ? "fill-current text-white" : "text-rose-500"}`} />
             </button>
           )}
         </>
