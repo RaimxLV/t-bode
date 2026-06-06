@@ -1731,7 +1731,7 @@ function DesignCard({
   regenSingleId: string | null;
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
-  onRegenSingleDesign: (id: string, prompt: string, style?: string, slogan?: string) => void;
+  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
 }) {
@@ -1760,9 +1760,7 @@ function DesignCard({
   );
 
   const [editing, setEditing] = useState(false);
-  const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
-  const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
-  const [draftSlogan, setDraftSlogan] = useState<string>(d.slogan || "");
+  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft">("auto");
 
   const busy = regenSingleId === d.id;
   const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
@@ -1779,9 +1777,9 @@ function DesignCard({
             <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
           </button>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="absolute top-1 left-1 p-1 rounded-full bg-background/80 transition z-10"
-            title="Mainīt promptu un pārģenerēt"
+            title="Pārģenerēt"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -1802,9 +1800,9 @@ function DesignCard({
             <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
           </button>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="absolute top-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
-            title="Mainīt promptu un pārģenerēt"
+            title="Pārģenerēt"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -1813,7 +1811,7 @@ function DesignCard({
         <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
           <span>⚠ {d.generation_error}</span>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="underline text-foreground"
           >
             Mēģināt vēlreiz
@@ -1832,55 +1830,30 @@ function DesignCard({
       )}
 
       {editing && (
-        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5 overflow-y-auto">
-          <p className="text-[10px] font-semibold">Mainīt promptu</p>
-          <Textarea
-            value={draftPrompt}
-            onChange={(e) => setDraftPrompt(e.target.value)}
-            rows={3}
-            className="text-[11px] min-h-0 resize-none"
-            placeholder="Piem. minimālistisks zaķis ar morkām…"
-          />
-          <div>
-            <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
-              Sauklis / teksts zīmējumā
-            </label>
-            <Input
-              value={draftSlogan}
-              onChange={(e) => setDraftSlogan(e.target.value)}
-              placeholder='piem. "Kur Janka, tur pjanka"'
-              className="h-7 text-[11px]"
-            />
-            {draftSlogan.trim() && (
-              <p className="text-[9px] text-primary mt-0.5">→ izmantos Ideogram (labi zīmē burtus)</p>
-            )}
-          </div>
+        <div className="absolute inset-0 z-10 bg-background/95 p-3 flex flex-col gap-2 justify-center">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            AI modelis
+          </label>
           <select
-            value={draftStyle}
-            onChange={(e) => setDraftStyle(e.target.value)}
-            className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
-            disabled={!!draftSlogan.trim()}
-            title={draftSlogan.trim() ? "Ar tekstu vienmēr tiek izmantots Ideogram" : ""}
+            value={draftModel}
+            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft")}
+            className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
-            {STYLE_GROUPS.map((g) => (
-              <optgroup key={g.group} label={g.group}>
-                {g.options.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </optgroup>
-            ))}
+            <option value="auto">Auto (ieteicams)</option>
+            <option value="recraft">Recraft (ilustrācija)</option>
+            <option value="ideogram">Ideogram (ar tekstu)</option>
           </select>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5 mt-1">
             <Button
               size="sm"
-              className="flex-1 h-7 text-[11px]"
-              disabled={!draftPrompt.trim() || busy}
-              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle, draftSlogan); }}
+              className="flex-1 h-8 text-xs"
+              disabled={busy}
+              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftModel); }}
             >
-              <Wand2 className="w-3 h-3 mr-1" /> Ģenerēt
+              <Wand2 className="w-3.5 h-3.5 mr-1" /> Ģenerēt
             </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setEditing(false)}>
-              <X className="w-3 h-3" />
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditing(false)}>
+              <X className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
