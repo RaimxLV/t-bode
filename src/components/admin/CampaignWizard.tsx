@@ -1209,6 +1209,7 @@ function StepDesigns({
   imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette, modelChoice, onChangeModelChoice,
   onSaveToLibrary, onOpenLibrary,
+  favoritedIds,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
@@ -1287,6 +1288,7 @@ function StepDesigns({
                 onRegenSingleDesign={onRegenSingleDesign}
                 showOnShirt={showOnShirt}
                 shirtColor={shirtColor}
+                favorited={favoritedIds?.has?.(d.id) ?? false}
               />
             ))}
           </div>
