@@ -195,40 +195,35 @@ function buildPrompt(
 ): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
-  const base = rawPrompt.trim();
-  const slogan = opts.slogan?.trim();
+  // Hard cap on base description so the final prompt stays <1000 chars (fal.ai limit).
+  const base = rawPrompt.trim().slice(0, 450);
+  const slogan = opts.slogan?.trim().slice(0, 120);
   const bgHint = transparent
-    ? "Isolated on a plain solid background that can be cleanly removed. No shadows touching edges."
-    : "Centered composition isolated on a pure white background.";
-  const frameRule = opts.fitInFrame
-    ? `CRITICAL FRAMING: the ENTIRE composition must fit completely inside the canvas with at least 10% safe padding on every side. Nothing touches the edges — this is a DTF print file.`
-    : `Centered composition.`;
+    ? "Isolated on solid background, cleanly removable. No edge-touching shadows."
+    : "Centered on pure white background.";
+  // ALWAYS enforce frame-fit — these are DTF print files and must not be cropped.
+  const frameRule = "CRITICAL: entire artwork fits inside canvas with 10% safe padding on all sides. Nothing touches edges. DTF print file.";
 
   // ===== Slogan / typography-led design (routed to Ideogram) =====
   if (slogan) {
     return (
-      `Vintage typographic t-shirt print design. The HERO of the artwork is the exact phrase "${slogan}" rendered as LARGE, BOLD, DISTRESSED VINTAGE TYPOGRAPHY that fills most of the canvas — like a screen-printed beer/biker/retro apparel graphic. ` +
-      `The text MUST be the dominant visual element, perfectly spelled, stacked on multiple lines if needed, with ornamental flourishes, banners, ribbons, or decorative frames around it. ` +
-      `Theme/illustration context (use as supporting decoration around the text, NOT as the main subject): ${base}. ` +
-      `Style: hand-drawn vintage screen-print, distressed texture, monochrome or 2-3 color limited palette, woodcut/letterpress feel. ` +
-      `${bgHint} ${frameRule} ` +
-      `STRICT: do NOT render the text as a caption below or beside the illustration — the text IS the design. ` +
-      `Do NOT show a t-shirt, hoodie, mug, garment, mockup, person, hanger, or fabric. Output ONLY the standalone print artwork. ` +
-      `No watermark, no extra text beyond "${slogan}".`
+      `Vintage typographic t-shirt print design. HERO: the exact phrase "${slogan}" as LARGE BOLD DISTRESSED VINTAGE TYPOGRAPHY filling most of the canvas, screen-print style. ` +
+      `Text is dominant, perfectly spelled, stacked on multiple lines, with ornamental banners, ribbons or frames around it. ` +
+      `Decorative theme around the text (NOT main subject): ${base}. ` +
+      `Hand-drawn vintage screen-print, distressed texture, limited 2-3 color palette. ${bgHint} ${frameRule} ` +
+      `STRICT: text IS the design, never a caption. No garment, mockup, person, hanger or fabric. No extra text beyond "${slogan}".`
     );
   }
 
   // ===== No slogan — pure illustration (Recraft) =====
   const styleHint = isVector
-    ? "Bold flat vector artwork, clean geometric shapes, screen-print ready, limited palette."
+    ? "Bold flat vector, clean shapes, limited palette."
     : isIllustration
-    ? "Bold illustrated artwork with rich detail, centered composition, screen-print ready."
-    : "Bold artwork suitable for screen-printing on apparel.";
+    ? "Bold illustrated artwork, rich detail, centered."
+    : "Bold artwork for screen-print apparel.";
   return (
     `${base}. ${styleHint} ${bgHint} ${frameRule} ` +
-    `STRICT: do NOT show a t-shirt, hoodie, mug, garment, mockup, person model, hanger, or fabric. ` +
-    `Output ONLY the standalone design artwork itself — like a sticker or print file. ` +
-    `No text, no letters, no watermark. No shadows, no photo, no background scene.`
+    `STRICT: standalone print artwork only (like a sticker). No garment, mockup, person, hanger, fabric. No text, no letters, no watermark, no background scene.`
   );
 }
 
