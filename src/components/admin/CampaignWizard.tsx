@@ -1941,6 +1941,10 @@ function DesignCard({
             <option value="auto">Auto (ieteicams)</option>
             <option value="recraft">Recraft (ilustrācija)</option>
             <option value="ideogram">Ideogram (ar tekstu)</option>
+            <option value="flux-pro">FLUX Pro 1.1</option>
+            <option value="flux-schnell">FLUX Schnell (ātrs)</option>
+            <option value="nano-banana">Nano Banana</option>
+            <option value="seedream">Seedream v4</option>
           </select>
           <div className="flex gap-1.5 mt-1">
             <Button
