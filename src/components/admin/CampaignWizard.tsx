@@ -1785,6 +1785,7 @@ function DesignCard({
   onRegenSingleDesign,
   showOnShirt,
   shirtColor,
+  favorited,
 }: {
   d: DesignRow;
   signedUrls: Record<string, string>;
@@ -1795,6 +1796,7 @@ function DesignCard({
   onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
+  favorited?: boolean;
 }) {
   // local helper rendered inline below; defined here to keep it scoped
   const ShirtPreview = ({ src, color, busy: b, children }: { src: string; color: "white" | "black"; busy: boolean; children?: React.ReactNode }) => (
