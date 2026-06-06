@@ -1920,6 +1920,7 @@ function GenerationSettings({
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
+  modelChoice, onChangeModelChoice,
 }: {
   styleChoice: string;
   onChangeStyle: (v: string) => void;
@@ -1933,8 +1934,10 @@ function GenerationSettings({
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
   usePalette: boolean;
   onChangeUsePalette: (v: boolean) => void;
+  modelChoice: "auto" | "ideogram" | "recraft";
+  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft") => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
   const usingCustom = customStyleId.trim().length > 0;
 
@@ -1953,8 +1956,9 @@ function GenerationSettings({
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold"
       >
-        <span>Ģenerēšanas iestatījumi {open ? "▾" : "▸"}</span>
+        <span>fal.ai iestatījumi {open ? "▾" : "▸"}</span>
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
+          {modelChoice === "auto" ? "Auto" : modelChoice === "ideogram" ? "Ideogram" : "Recraft"} ·{" "}
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
@@ -1962,6 +1966,24 @@ function GenerationSettings({
       </button>
       {open && (
         <div className="px-3 pb-3 space-y-3 border-t pt-3">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              AI modelis
+            </label>
+            <select
+              value={modelChoice}
+              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft")}
+              className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
+            >
+              <option value="auto">Auto — labākais variants pēc satura</option>
+              <option value="ideogram">Ideogram v3 — vislabāk burtiem un latviešu garumzīmēm</option>
+              <option value="recraft">Recraft V3 — bagātīga ilustrācija (bez teksta)</option>
+            </select>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              <b>Auto:</b> ja saulis vai latviešu burti — Ideogram, citādi Recraft ar izvēlēto stilu.
+            </p>
+          </div>
+
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stils</label>
             <select
