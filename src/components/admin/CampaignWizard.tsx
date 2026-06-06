@@ -256,6 +256,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [usePalette, setUsePalette] = useState<boolean>(false);
   const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
   const load = async () => {
     if (!campaignId) return;
@@ -480,6 +481,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   /** Copy a generated design into the persistent design_library so it can be reused across campaigns. */
   const saveToLibrary = async (d: DesignRow) => {
     if (!d.image_url) { toast.error("Nav bildes"); return; }
+    if (favoritedIds.has(d.id)) { toast.info("Jau bibliotēkā"); return; }
     try {
       // Download bytes from campaign-assets (private), upload to design-library (public)
       const signed = signedUrls[d.image_url];
@@ -497,6 +499,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         name, file_path: path, file_size: blob.size, tags: ["favorite", "campaign"],
       });
       if (dbErr) throw dbErr;
+      setFavoritedIds((prev) => { const n = new Set(prev); n.add(d.id); return n; });
       toast.success("♥ Saglabāts bibliotēkā");
     } catch (e: any) {
       toast.error("Neizdevās: " + (e.message ?? e));
