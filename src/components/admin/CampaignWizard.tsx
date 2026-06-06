@@ -743,9 +743,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     <button
       type="button"
       onClick={() => campaign && setStep(n as 1 | 2 | 3)}
-      className={`flex items-center gap-2 text-xs font-body ${step === n ? "text-primary" : "text-muted-foreground"}`}
+      className={`flex items-center gap-2 text-xs font-body transition ${step === n ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
     >
-      <span className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${step === n ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
+      <span className={`w-7 h-7 rounded-full flex items-center justify-center border-2 text-[11px] font-bold transition ${step === n ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/40 ring-2 ring-primary/20" : step > n ? "border-primary/60 bg-primary/10 text-primary" : "border-border bg-card"}`}>
         {n}
       </span>
       <span className="hidden sm:inline">{label}</span>
@@ -763,11 +763,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         </DialogHeader>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between gap-2 py-2 border-b border-border mt-3 min-w-0">
+        <div className="flex items-center justify-between gap-2 py-2.5 px-2 rounded-lg bg-primary/5 border border-primary/15 mt-3 min-w-0">
           <StepDot n={1} label="Idejas" />
-          <div className="flex-1 h-px bg-border mx-1" />
+          <div className={`flex-1 h-0.5 mx-1 rounded-full ${step >= 2 ? "bg-primary/60" : "bg-border"}`} />
           <StepDot n={2} label="Dizaini & produkti" />
-          <div className="flex-1 h-px bg-border mx-1" />
+          <div className={`flex-1 h-0.5 mx-1 rounded-full ${step >= 3 ? "bg-primary/60" : "bg-border"}`} />
           <StepDot n={3} label="Blogs & publicēšana" />
         </div>
 
