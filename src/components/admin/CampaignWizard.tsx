@@ -1081,8 +1081,8 @@ function StepIdea({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
+      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
         </Button>
@@ -1091,12 +1091,12 @@ function StepIdea({
           size="sm"
           disabled={!dirty || saving}
           onClick={save}
-          className="flex-1 sm:flex-initial"
+          className="flex-1 sm:flex-initial bg-zinc-700 text-white hover:bg-zinc-600"
         >
           {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt izmaiņas
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Aizvērt</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Aizvērt</Button>
         <div className="hidden sm:block flex-1" />
         <Button size="sm" disabled={!draft.title_lv || dirty} onClick={onNext} className="flex-1 sm:flex-initial" title={dirty ? "Vispirms saglabā izmaiņas" : undefined}>
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -1194,18 +1194,18 @@ function StepDesigns({
                   onClick={() => onToggleBase(p.id)}
                   className={`relative border-2 rounded-lg overflow-hidden text-left transition ${sel ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"}`}
                 >
-                  <div className="aspect-square bg-white">
+                  <div className="aspect-square bg-white overflow-hidden flex items-center justify-center">
                     {thumb ? (
                       <img
                         src={getOptimizedSrc(thumb, 400, 70)}
                         loading="lazy"
                         alt=""
-                        className="w-full h-full object-contain scale-[1.15] origin-center"
+                        className="w-[88%] h-[88%] object-contain"
                       />
                     ) : <Package className="w-8 h-8 m-auto" />}
                   </div>
-                  <div className="p-1.5">
-                    <p className="text-xs font-body line-clamp-1">{p.name_lv || p.name}</p>
+                  <div className="p-2 bg-card border-t border-border">
+                    <p className="text-xs font-body line-clamp-1 leading-tight">{p.name_lv || p.name}</p>
                     <p className="text-[10px] text-muted-foreground">{p.color_variants.filter((cv) => cv.images?.[0]).length} krāsas</p>
                   </div>
                   {sel && <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">✓</div>}
@@ -1263,13 +1263,13 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
         </Button>
         <div className="hidden sm:block flex-1" />
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Saglabāt un turpināt vēlāk</Button>
         <Button size="sm" disabled={campProducts.length === 0} onClick={onNext} className="flex-1 sm:flex-initial">
           Tālāk <ArrowRight className="w-4 h-4 ml-1.5" />
         </Button>
@@ -1374,13 +1374,13 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
-        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
-        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
+        <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial text-zinc-100 hover:bg-zinc-800 hover:text-white">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
           Saglabāt
         </Button>
-        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex">Saglabāt un turpināt vēlāk</Button>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">Saglabāt un turpināt vēlāk</Button>
         <div className="hidden sm:block flex-1" />
         <Button size="sm" className="bg-primary w-full sm:w-auto" disabled={busy === "publish" || campProductsCount === 0} onClick={onPublish}>
           {busy === "publish" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1.5" />}
@@ -1510,8 +1510,8 @@ function ProductTuneRow({
           ref={previewRef}
           className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none"
         >
-          {/* Scale wrapper makes the shirt fill more of the frame; print area & design stay aligned */}
-          <div className="absolute inset-0 scale-[1.18] origin-center">
+          {/* Shirt + print area + design overlay (kept 1:1 so shirts never crop) */}
+          <div className="absolute inset-0">
             {baseImg && (
               <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
             )}
