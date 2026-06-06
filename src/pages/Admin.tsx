@@ -633,6 +633,7 @@ const Admin = () => {
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
                   { value: "autopilot", icon: Sparkles, label: "Autopilot" },
                   { value: "designstoproducts", icon: Wand2, label: "Dizaini → Krekli" },
+                  { value: "drafts", icon: FileEditIcon, label: "Melnraksti" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
