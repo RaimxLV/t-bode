@@ -1738,6 +1738,30 @@ function DesignCard({
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
 }) {
+  // local helper rendered inline below; defined here to keep it scoped
+  const ShirtPreview = ({ src, color, busy: b, children }: { src: string; color: "white" | "black"; busy: boolean; children?: React.ReactNode }) => (
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Simple t-shirt silhouette */}
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+        <path
+          d="M40 50 L70 25 Q100 45 130 25 L160 50 L185 75 L165 95 L150 80 L150 180 L50 180 L50 80 L35 95 L15 75 Z"
+          fill={color === "white" ? "#f5f5f5" : "#1a1a1a"}
+          stroke={color === "white" ? "#d0d0d0" : "#000"}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <img
+        src={src}
+        loading="lazy"
+        alt=""
+        className={`relative w-[42%] h-[42%] object-contain ${b ? "opacity-30" : ""}`}
+        style={{ transform: "translateY(8%)", mixBlendMode: color === "black" ? "screen" : "multiply" }}
+      />
+      {children}
+    </div>
+  );
+
   const [editing, setEditing] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
   const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
