@@ -158,7 +158,7 @@ async function generateWithFal(opts: {
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
   slogan?: string;
-  model?: "auto" | "ideogram" | "recraft";
+  model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }): Promise<{ bytes: Uint8Array; url: string }> {
   const model = opts.model ?? "auto";
   // Detect Latvian-specific characters in either the slogan or the description.
