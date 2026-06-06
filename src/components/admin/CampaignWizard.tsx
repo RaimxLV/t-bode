@@ -57,6 +57,16 @@ type DesignRow = {
 
 type ColorVariant = { name: string; hex: string; images: string[] };
 
+function summarizeGenerationError(message: string | null | undefined) {
+  if (!message) return "Neizdevās uzģenerēt dizainu.";
+  const raw = message.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+  if (/bg-remove failed|Failed to load the image|Failed to download the image/i.test(message)) {
+    return "Neizdevās noņemt fonu, bet vari mēģināt vēlreiz.";
+  }
+  if (/timeout|timed out/i.test(message)) return "Ģenerēšana aizņēma pārāk ilgu laiku. Mēģini vēlreiz.";
+  return raw.slice(0, 120) || "Neizdevās uzģenerēt dizainu.";
+}
+
 type CatalogProduct = {
   id: string;
   name: string;
@@ -1907,8 +1917,9 @@ function DesignCard({
           )}
         </>
       ) : d.generation_error ? (
-        <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
-          <span>⚠ {d.generation_error}</span>
+        <div className="p-3 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-2 bg-destructive/5">
+          <span className="text-xl leading-none">⚠</span>
+          <span className="line-clamp-4 max-w-full break-words">{summarizeGenerationError(d.generation_error)}</span>
           <button
             onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="underline text-foreground"
