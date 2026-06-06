@@ -1726,6 +1726,8 @@ function DesignCard({
   styleChoice,
   onToggleStar,
   onRegenSingleDesign,
+  showOnShirt,
+  shirtColor,
 }: {
   d: DesignRow;
   signedUrls: Record<string, string>;
@@ -1733,6 +1735,8 @@ function DesignCard({
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
   onRegenSingleDesign: (id: string, prompt: string, style?: string, slogan?: string) => void;
+  showOnShirt?: boolean;
+  shirtColor?: "white" | "black";
 }) {
   const [editing, setEditing] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
@@ -1740,13 +1744,31 @@ function DesignCard({
   const [draftSlogan, setDraftSlogan] = useState<string>(d.slogan || "");
 
   const busy = regenSingleId === d.id;
+  const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
 
   return (
     <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
-      {d.image_url && signedUrls[d.image_url] ? (
+      {imgSrc && showOnShirt ? (
+        <ShirtPreview src={imgSrc} color={shirtColor || "white"} busy={busy}>
+          <button
+            onClick={() => onToggleStar(d)}
+            className={`absolute top-1 right-1 p-1 rounded-full transition z-10 ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80"}`}
+            title={d.is_primary ? "Noņemt ★" : "Atzīmēt ★"}
+          >
+            <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
+          </button>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            className="absolute top-1 left-1 p-1 rounded-full bg-background/80 transition z-10"
+            title="Mainīt promptu un pārģenerēt"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </ShirtPreview>
+      ) : imgSrc ? (
         <>
           <img
-            src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+            src={imgSrc}
             loading="lazy"
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
