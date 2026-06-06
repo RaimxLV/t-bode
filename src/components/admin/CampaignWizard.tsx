@@ -1872,10 +1872,10 @@ function DesignCard({
           {onSaveToLibrary && (
             <button
               onClick={() => onSaveToLibrary(d)}
-              className="absolute bottom-1 right-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
-              title="Saglabāt bibliotēkā"
+              className={`absolute bottom-1 right-1 p-1 rounded-full transition ${favorited ? "bg-rose-500 text-white opacity-100" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
+              title={favorited ? "Bibliotēkā" : "Saglabāt bibliotēkā"}
             >
-              <Heart className="w-4 h-4 text-rose-500" />
+              <Heart className={`w-4 h-4 ${favorited ? "fill-current text-white" : "text-rose-500"}`} />
             </button>
           )}
         </>
