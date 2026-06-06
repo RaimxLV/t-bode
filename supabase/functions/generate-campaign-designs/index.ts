@@ -22,7 +22,7 @@ interface Body {
   /** Per-design slogan text to weave into the artwork (auto-routes to Ideogram). */
   slogan_override?: string;
   /** Force a specific image model: "auto" | "ideogram" | "recraft". */
-  model_override?: "auto" | "ideogram" | "recraft";
+  model_override?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }
 
 /** Allowed Recraft V3 styles (full list from fal.ai schema). */
@@ -125,6 +125,30 @@ async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }):
   return new Uint8Array(await r.arrayBuffer());
 }
 
+/** Generic fal.ai text-to-image caller for endpoints that share the {prompt, image_size} shape. */
+async function generateWithFalEndpoint(opts: {
+  falKey: string;
+  endpoint: string;
+  body: Record<string, unknown>;
+}): Promise<{ bytes: Uint8Array; url: string }> {
+  const res = await fetch(`https://fal.run/${opts.endpoint}`, {
+    method: "POST",
+    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(opts.body),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`${opts.endpoint} ${res.status}: ${t.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const url: string | undefined =
+    data?.images?.[0]?.url ?? data?.image?.url ?? data?.output?.[0];
+  if (!url) throw new Error(`${opts.endpoint}: no image url in response`);
+  const imgRes = await fetch(url);
+  if (!imgRes.ok) throw new Error(`${opts.endpoint} download ${imgRes.status}`);
+  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
+}
+
 async function generateWithFal(opts: {
   falKey: string;
   prompt: string;
@@ -134,7 +158,7 @@ async function generateWithFal(opts: {
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
   slogan?: string;
-  model?: "auto" | "ideogram" | "recraft";
+  model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }): Promise<{ bytes: Uint8Array; url: string }> {
   const model = opts.model ?? "auto";
   // Detect Latvian-specific characters in either the slogan or the description.
@@ -151,6 +175,30 @@ async function generateWithFal(opts: {
       falKey: opts.falKey,
       prompt: opts.prompt,
       imageSize: opts.imageSize,
+    });
+    if (opts.transparentBg) {
+      const stripped = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });
+      return { bytes: stripped, url };
+    }
+    return { bytes, url };
+  }
+
+  const sizeSafeGeneric = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize! : "square_hd";
+
+  // ---- Direct model overrides (skip Recraft branch) ----
+  if (model === "flux-pro" || model === "flux-schnell" || model === "nano-banana" || model === "seedream") {
+    const endpointMap: Record<string, string> = {
+      "flux-pro": "fal-ai/flux-pro/v1.1",
+      "flux-schnell": "fal-ai/flux/schnell",
+      "nano-banana": "fal-ai/nano-banana",
+      "seedream": "fal-ai/bytedance/seedream/v4/text-to-image",
+    };
+    const body: Record<string, unknown> = { prompt: opts.prompt, image_size: sizeSafeGeneric, num_images: 1 };
+    if (model === "seedream") body.image_size = sizeSafeGeneric;
+    const { bytes, url } = await generateWithFalEndpoint({
+      falKey: opts.falKey,
+      endpoint: endpointMap[model],
+      body,
     });
     if (opts.transparentBg) {
       const stripped = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });

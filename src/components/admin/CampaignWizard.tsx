@@ -254,7 +254,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
   const [usePalette, setUsePalette] = useState<boolean>(false);
-  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
@@ -462,7 +462,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const regenSingleDesign = async (
     designId: string,
-    model: "auto" | "ideogram" | "recraft" = modelChoice,
+    model: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream" = modelChoice,
   ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
@@ -1820,7 +1820,7 @@ function DesignCard({
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
   onSaveToLibrary?: (d: DesignRow) => void;
-  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
+  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
   favorited?: boolean;
@@ -1850,7 +1850,7 @@ function DesignCard({
   );
 
   const [editing, setEditing] = useState(false);
-  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
 
   const busy = regenSingleId === d.id;
   const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
@@ -1935,12 +1935,16 @@ function DesignCard({
           </label>
           <select
             value={draftModel}
-            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft")}
+            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
             className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
             <option value="auto">Auto (ieteicams)</option>
             <option value="recraft">Recraft (ilustrācija)</option>
             <option value="ideogram">Ideogram (ar tekstu)</option>
+            <option value="flux-pro">FLUX Pro 1.1</option>
+            <option value="flux-schnell">FLUX Schnell (ātrs)</option>
+            <option value="nano-banana">Nano Banana</option>
+            <option value="seedream">Seedream v4</option>
           </select>
           <div className="flex gap-1.5 mt-1">
             <Button
@@ -2058,8 +2062,8 @@ function GenerationSettings({
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
   usePalette: boolean;
   onChangeUsePalette: (v: boolean) => void;
-  modelChoice: "auto" | "ideogram" | "recraft";
-  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft") => void;
+  modelChoice: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream") => void;
 }) {
   const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
@@ -2082,7 +2086,15 @@ function GenerationSettings({
       >
         <span>fal.ai iestatījumi {open ? "▾" : "▸"}</span>
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
-          {modelChoice === "auto" ? "Auto" : modelChoice === "ideogram" ? "Ideogram" : "Recraft"} ·{" "}
+          {({
+            auto: "Auto",
+            ideogram: "Ideogram v3",
+            recraft: "Recraft V3",
+            "flux-pro": "FLUX Pro 1.1",
+            "flux-schnell": "FLUX Schnell",
+            "nano-banana": "Nano Banana",
+            seedream: "Seedream v4",
+          } as Record<string, string>)[modelChoice]} ·{" "}
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
@@ -2096,12 +2108,16 @@ function GenerationSettings({
             </label>
             <select
               value={modelChoice}
-              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft")}
+              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
               className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
             >
               <option value="auto">Auto — labākais variants pēc satura</option>
               <option value="ideogram">Ideogram v3 — vislabāk burtiem un latviešu garumzīmēm</option>
               <option value="recraft">Recraft V3 — bagātīga ilustrācija (bez teksta)</option>
+            <option value="flux-pro">FLUX Pro 1.1 — fotorealistisks, bagāta detaļa</option>
+            <option value="flux-schnell">FLUX Schnell — ātrs, lēts melnraksts</option>
+            <option value="nano-banana">Nano Banana (Gemini) — eksperimentāls, kreatīvs</option>
+            <option value="seedream">Seedream v4 — augsta izšķirtspēja, mākslinieciski</option>
             </select>
             <p className="text-[10px] text-muted-foreground mt-1">
               <b>Auto:</b> ja saulis vai latviešu burti — Ideogram, citādi Recraft ar izvēlēto stilu.
