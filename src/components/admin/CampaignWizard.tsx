@@ -1081,7 +1081,7 @@ function StepIdea({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
@@ -1263,7 +1263,7 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
@@ -1374,7 +1374,7 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
