@@ -254,7 +254,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
   const [usePalette, setUsePalette] = useState<boolean>(false);
-  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [favoritedIds, setFavoritedIds] = useState<Set<string>>(new Set());
 
@@ -462,7 +462,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const regenSingleDesign = async (
     designId: string,
-    model: "auto" | "ideogram" | "recraft" = modelChoice,
+    model: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream" = modelChoice,
   ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
@@ -1820,7 +1820,7 @@ function DesignCard({
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
   onSaveToLibrary?: (d: DesignRow) => void;
-  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
+  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
   favorited?: boolean;
@@ -1850,7 +1850,7 @@ function DesignCard({
   );
 
   const [editing, setEditing] = useState(false);
-  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
 
   const busy = regenSingleId === d.id;
   const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
@@ -1935,7 +1935,7 @@ function DesignCard({
           </label>
           <select
             value={draftModel}
-            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft")}
+            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
             className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
             <option value="auto">Auto (ieteicams)</option>
@@ -2058,8 +2058,8 @@ function GenerationSettings({
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
   usePalette: boolean;
   onChangeUsePalette: (v: boolean) => void;
-  modelChoice: "auto" | "ideogram" | "recraft";
-  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft") => void;
+  modelChoice: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream") => void;
 }) {
   const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
@@ -2096,7 +2096,7 @@ function GenerationSettings({
             </label>
             <select
               value={modelChoice}
-              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft")}
+              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
               className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
             >
               <option value="auto">Auto — labākais variants pēc satura</option>
