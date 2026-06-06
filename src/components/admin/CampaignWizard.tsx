@@ -1881,7 +1881,23 @@ function DesignCard({
   const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
 
   const busy = regenSingleId === d.id;
-  const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
+  const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
+  const baseSigned = d.image_url ? signedUrls[d.image_url] : undefined;
+  const imgSrc = fallbackSrc ?? (baseSigned ? getOptimizedSrc(baseSigned, 400, 70) : null);
+
+  // If the signed URL fails (expired / 404), try to re-sign once or fall back
+  // to the raw http URL when image_url is already an absolute URL.
+  const handleImgError = async () => {
+    if (!d.image_url || fallbackSrc) return;
+    if (/^https?:\/\//i.test(d.image_url)) { setFallbackSrc(d.image_url); return; }
+    try {
+      await supabase.auth.refreshSession().catch(() => {});
+      const { data } = await supabase.storage
+        .from("campaign-assets")
+        .createSignedUrl(d.image_url, 60 * 60);
+      if (data?.signedUrl) setFallbackSrc(data.signedUrl);
+    } catch (_) { /* give up — show error UI */ }
+  };
 
   return (
     <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
