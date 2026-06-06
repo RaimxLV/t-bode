@@ -1081,7 +1081,7 @@ function StepIdea({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
@@ -1194,13 +1194,13 @@ function StepDesigns({
                   onClick={() => onToggleBase(p.id)}
                   className={`relative border-2 rounded-lg overflow-hidden text-left transition ${sel ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"}`}
                 >
-                  <div className="aspect-square bg-muted">
+                  <div className="aspect-square bg-white">
                     {thumb ? (
                       <img
                         src={getOptimizedSrc(thumb, 400, 70)}
                         loading="lazy"
                         alt=""
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain scale-[1.15] origin-center"
                       />
                     ) : <Package className="w-8 h-8 m-auto" />}
                   </div>
@@ -1263,7 +1263,7 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
@@ -1374,7 +1374,7 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 pt-4 border-t sticky bottom-0 bg-background -mx-3 sm:mx-0 px-3 sm:px-0 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
@@ -1508,37 +1508,40 @@ function ProductTuneRow({
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 select-none"
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none"
         >
-          {baseImg && (
-            <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
-          )}
-          {/* Print area outline */}
-          <div
-            className="absolute border border-dashed border-primary/60 pointer-events-none"
-            style={{
-              left: `${printArea.x * 100}%`,
-              top: `${printArea.y * 100}%`,
-              width: `${printArea.w * 100}%`,
-              height: `${printArea.h * 100}%`,
-            }}
-          />
-          {/* Design overlay */}
-          {designUrl && (
-            <img
-              src={designUrl}
-              alt=""
-              draggable={false}
-              className="absolute pointer-events-none"
+          {/* Scale wrapper makes the shirt fill more of the frame; print area & design stay aligned */}
+          <div className="absolute inset-0 scale-[1.18] origin-center">
+            {baseImg && (
+              <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
+            )}
+            {/* Print area outline */}
+            <div
+              className="absolute border border-dashed border-primary/60 pointer-events-none"
               style={{
-                left: `${dxRel * 100}%`,
-                top: `${dyRel * 100}%`,
-                width: `${dwRel * 100}%`,
-                height: `${dhRel * 100}%`,
-                objectFit: "contain",
+                left: `${printArea.x * 100}%`,
+                top: `${printArea.y * 100}%`,
+                width: `${printArea.w * 100}%`,
+                height: `${printArea.h * 100}%`,
               }}
             />
-          )}
+            {/* Design overlay */}
+            {designUrl && (
+              <img
+                src={designUrl}
+                alt=""
+                draggable={false}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${dxRel * 100}%`,
+                  top: `${dyRel * 100}%`,
+                  width: `${dwRel * 100}%`,
+                  height: `${dhRel * 100}%`,
+                  objectFit: "contain",
+                }}
+              />
+            )}
+          </div>
           {autoSaving && (
             <div className="absolute bottom-1 left-1 right-1 text-[10px] bg-background/80 rounded px-1.5 py-0.5 flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" /> Saglabājas…
