@@ -1703,18 +1703,27 @@ function ProductTuneRow({
               try {
                 const safe = (product.name_lv || product.name || "drukas-fails")
                   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+                // Try AI upscale for sharp print-ready output; fall back to bicubic.
+                let upscaledUrl: string | undefined;
+                try {
+                  const { data, error } = await supabase.functions.invoke("upscale-design", {
+                    body: { image_url: designUrl, target_long_edge: 3072 },
+                  });
+                  if (!error && (data as any)?.url) upscaledUrl = (data as any).url as string;
+                } catch (_) { /* fall back to bicubic */ }
                 await downloadPrintReadyPng({
                   imageUrl: designUrl,
+                  upscaledUrl,
                   fileName: `${safe}-460dpi.png`,
                 });
-                toast.success("Drukas fails lejupielādēts");
+                toast.success(upscaledUrl ? "AI-uzlabots drukas fails lejupielādēts" : "Drukas fails lejupielādēts");
               } catch (e: any) {
                 toast.error(e?.message || "Neizdevās sagatavot drukas failu");
               } finally {
                 setDownloading(false);
               }
             }}
-            title="Lejuplādēt 460 DPI PNG ar caurspīdīgu fonu"
+            title="Lejuplādēt AI-uzlabotu 460 DPI PNG ar caurspīdīgu fonu"
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           </Button>
