@@ -1071,9 +1071,11 @@ function StepIdea({
               onChangeImageSize={onChangeImageSize}
               preferredColors={preferredColors}
               onChangePreferredColors={onChangePreferredColors}
+              usePalette={usePalette}
+              onChangeUsePalette={onChangeUsePalette}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli automātiski izmanto Ideogram (labi zīmē burtus).
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
             </p>
           </section>
         </>
