@@ -1160,6 +1160,8 @@ function StepIdea({
               onChangePreferredColors={onChangePreferredColors}
               usePalette={usePalette}
               onChangeUsePalette={onChangeUsePalette}
+              modelChoice={modelChoice}
+              onChangeModelChoice={onChangeModelChoice}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
               Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
