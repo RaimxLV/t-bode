@@ -312,15 +312,33 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .order("created_at");
       const drows = (dRaw as unknown as DesignRow[]) ?? [];
       setDesigns(drows);
-      const paths = drows.filter((d) => d.image_url).map((d) => d.image_url as string);
+      // image_url can be either a storage path (campaign-assets) or already a
+      // full http(s) URL (e.g. from fal CDN or design library). Only the
+      // storage paths need signing; URLs we use as-is.
+      const allUrls = drows.filter((d) => d.image_url).map((d) => d.image_url as string);
+      const httpUrls = allUrls.filter((u) => /^https?:\/\//i.test(u));
+      const paths = allUrls.filter((u) => !/^https?:\/\//i.test(u));
+      const m: Record<string, string> = {};
+      httpUrls.forEach((u) => { m[u] = u; });
       if (paths.length) {
-        const { data: signed } = await supabase.storage.from("campaign-assets").createSignedUrls(paths, 60 * 60);
-        const m: Record<string, string> = {};
-        (signed ?? []).forEach((s, i) => { if (s.signedUrl) m[paths[i]] = s.signedUrl; });
-        setSignedUrls(m);
-      } else {
-        setSignedUrls({});
+        // Make sure the session is fresh — an expired JWT silently produces
+        // empty signedUrl entries (bucket RLS depends on auth.uid()).
+        await supabase.auth.refreshSession().catch(() => {});
+        const { data: signed, error: signErr } = await supabase
+          .storage.from("campaign-assets")
+          .createSignedUrls(paths, 60 * 60);
+        if (signErr) {
+          console.warn("[CampaignWizard] createSignedUrls error:", signErr);
+        }
+        (signed ?? []).forEach((s, i) => {
+          if (s.signedUrl) {
+            m[paths[i]] = s.signedUrl;
+          } else {
+            console.warn("[CampaignWizard] no signedUrl for", paths[i], s.error);
+          }
+        });
       }
+      setSignedUrls(m);
 
       // Catalog (customizable bases)
       const { data: catRaw } = await supabase.from("products")
