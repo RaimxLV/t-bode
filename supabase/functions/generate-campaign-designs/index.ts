@@ -111,37 +111,76 @@ async function generateWithIdeogram(opts: {
 }
 
 async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
-  // Bria sometimes returns 422 "Failed to load the image" when fetching the
-  // source URL directly (signed fal CDN URLs, CORS, etc). To make it robust,
-  // download the image first and pass it inline as a base64 data URI.
-  let imageUrlForBria = opts.imageUrl;
-  try {
-    const dl = await fetch(opts.imageUrl);
-    if (dl.ok) {
-      const buf = new Uint8Array(await dl.arrayBuffer());
-      const ct = dl.headers.get("content-type") || "image/png";
-      // base64 encode
-      let bin = "";
-      const chunk = 0x8000;
-      for (let i = 0; i < buf.length; i += chunk) {
-        bin += String.fromCharCode(...buf.subarray(i, i + chunk));
-      }
-      imageUrlForBria = `data:${ct};base64,${btoa(bin)}`;
-    }
-  } catch (_) { /* fall back to URL */ }
+  // Strategy: upload the source PNG to fal storage first so background-removal
+  // endpoints receive a stable, server-side fal CDN URL (not a signed/short-lived
+  // one from another fal endpoint). Then try a small fallback chain so a single
+  // model outage doesn't fail the whole design generation.
 
-  const res = await fetch("https://fal.run/fal-ai/bria/background/remove", {
-    method: "POST",
-    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ image_url: imageUrlForBria }),
-  });
-  if (!res.ok) throw new Error(`Bria ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  const data = await res.json();
-  const url: string | undefined = data?.image?.url;
-  if (!url) throw new Error("Bria: no image url");
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`Bria download ${r.status}`);
-  return new Uint8Array(await r.arrayBuffer());
+  // 1. Download bytes from the source URL.
+  const dl = await fetch(opts.imageUrl);
+  if (!dl.ok) throw new Error(`bg-remove source download ${dl.status}`);
+  const srcBytes = new Uint8Array(await dl.arrayBuffer());
+  const ct = dl.headers.get("content-type") || "image/png";
+
+  // 2. Upload to fal storage to get a clean CDN URL.
+  let uploadedUrl: string | null = null;
+  try {
+    const initRes = await fetch("https://rest.alpha.fal.ai/storage/upload/initiate", {
+      method: "POST",
+      headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ file_name: "src.png", content_type: ct }),
+    });
+    if (initRes.ok) {
+      const init = await initRes.json();
+      const putRes = await fetch(init.upload_url, {
+        method: "PUT",
+        headers: { "Content-Type": ct },
+        body: srcBytes,
+      });
+      if (putRes.ok) uploadedUrl = init.file_url as string;
+    }
+  } catch (_) { /* fall through to data URI */ }
+
+  // Fall back to base64 data URI if upload failed.
+  if (!uploadedUrl) {
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < srcBytes.length; i += chunk) {
+      bin += String.fromCharCode(...srcBytes.subarray(i, i + chunk));
+    }
+    uploadedUrl = `data:${ct};base64,${btoa(bin)}`;
+  }
+
+  // 3. Try a chain of background-removal models.
+  const endpoints: { url: string; body: (u: string) => Record<string, unknown> }[] = [
+    { url: "https://fal.run/fal-ai/birefnet/v2", body: (u) => ({ image_url: u }) },
+    { url: "https://fal.run/fal-ai/imageutils/rembg", body: (u) => ({ image_url: u }) },
+    { url: "https://fal.run/fal-ai/bria/background/remove", body: (u) => ({ image_url: u }) },
+  ];
+  const errors: string[] = [];
+  for (const ep of endpoints) {
+    try {
+      const res = await fetch(ep.url, {
+        method: "POST",
+        headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(ep.body(uploadedUrl)),
+      });
+      if (!res.ok) {
+        errors.push(`${ep.url} ${res.status}: ${(await res.text()).slice(0, 120)}`);
+        continue;
+      }
+      const data = await res.json();
+      const outUrl: string | undefined =
+        data?.image?.url ?? data?.images?.[0]?.url ?? data?.output?.url;
+      if (!outUrl) { errors.push(`${ep.url}: no image url`); continue; }
+      const r = await fetch(outUrl);
+      if (!r.ok) { errors.push(`${ep.url} download ${r.status}`); continue; }
+      return new Uint8Array(await r.arrayBuffer());
+    } catch (e: any) {
+      errors.push(`${ep.url}: ${e?.message ?? e}`);
+    }
+  }
+  throw new Error(`bg-remove failed: ${errors.join(" | ").slice(0, 400)}`);
 }
 
 /** Generic fal.ai text-to-image caller for endpoints that share the {prompt, image_size} shape. */
