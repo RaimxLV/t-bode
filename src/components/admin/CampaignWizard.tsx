@@ -956,6 +956,7 @@ function StepIdea({
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
+  modelChoice, onChangeModelChoice,
 }: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
