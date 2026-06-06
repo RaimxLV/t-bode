@@ -1926,6 +1926,81 @@ function DesignCard({
   );
 }
 
+/* ------------ Library picker sheet (favorited / saved designs) ------------ */
+function LibrarySheet({
+  open, onOpenChange, onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPick: (item: { id: string; name: string; file_path: string }) => void;
+}) {
+  const [items, setItems] = useState<{ id: string; name: string; file_path: string; tags: string[]; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("design_library")
+        .select("id, name, file_path, tags, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setItems((data as any) ?? []);
+      setLoading(false);
+    })();
+  }, [open]);
+
+  const publicUrl = (p: string) =>
+    supabase.storage.from("design-library").getPublicUrl(p).data.publicUrl;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-rose-500" /> Saglabāto dizainu bibliotēka
+          </SheetTitle>
+        </SheetHeader>
+        <p className="text-xs text-muted-foreground mt-2">
+          Klikšķini uz dizaina, lai pievienotu to šai kampaņai. Pievienotais tiks automātiski atzīmēts ★ un izmantots krekliem.
+        </p>
+        {loading ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin" /></div>
+        ) : items.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-10">
+            Nav saglabātu dizainu. Atver dizainu un nospied ♥, lai pievienotu bibliotēkai.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            {items.map((it) => (
+              <button
+                key={it.id}
+                type="button"
+                disabled={adding === it.id}
+                onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
+                className="relative aspect-square rounded border bg-white overflow-hidden hover:ring-2 hover:ring-primary transition"
+                title={it.name}
+              >
+                <img src={publicUrl(it.file_path)} alt={it.name} loading="lazy" className="w-full h-full object-contain" />
+                {adding === it.id && (
+                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate text-left">
+                  {it.name}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 /* ------------ Generation settings panel (fal.ai Recraft V3) ------------ */
 function GenerationSettings({
   styleChoice, onChangeStyle,
