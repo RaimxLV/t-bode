@@ -8,6 +8,10 @@ const corsHeaders = {
 
 interface Body {
   campaign_id: string;
+  /** If set, regenerate ONLY this idea index (0-based) and keep the rest. */
+  idea_index?: number;
+  /** Optional hint when regenerating a single idea (e.g. "vairāk humora, neon krāsas"). */
+  hint?: string;
 }
 
 interface Brief {
@@ -16,7 +20,7 @@ interface Brief {
   description_lv: string;
   target_audience: string;
   color_palette: string[]; // hex
-  design_ideas: { title: string; prompt: string }[];
+  design_ideas: { title: string; prompt: string; slogan?: string }[];
   product_types: string[]; // e.g. ["t-shirt", "hoodie", "mug"]
 }
 
@@ -27,7 +31,7 @@ Deno.serve(async (req) => {
     const auth = await requireAdmin(req, corsHeaders);
     if (!auth.ok) return auth.response;
 
-    const { campaign_id }: Body = await req.json();
+    const { campaign_id, idea_index, hint }: Body = await req.json();
     if (!campaign_id) {
       return new Response(JSON.stringify({ error: "campaign_id required" }), {
         status: 400,
@@ -50,7 +54,7 @@ Deno.serve(async (req) => {
     // Load campaign + holiday
     const { data: campaign, error: cErr } = await admin
       .from("campaigns")
-      .select("id, year, holiday_id, holidays(name_lv, name_en, prompt_theme, month, day)")
+      .select("id, year, brief, holiday_id, holidays(name_lv, name_en, prompt_theme, month, day)")
       .eq("id", campaign_id)
       .maybeSingle();
 
@@ -68,11 +72,83 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const existingBrief: Partial<Brief> = ((campaign as any).brief ?? {}) as any;
+    const singleMode = typeof idea_index === "number" && Array.isArray(existingBrief.design_ideas);
 
     // Mark generating
-    await admin.from("campaigns").update({ status: "generating" }).eq("id", campaign_id);
+    if (!singleMode) {
+      await admin.from("campaigns").update({ status: "generating" }).eq("id", campaign_id);
+    }
 
-    const systemPrompt = `You are a creative director for T-Bode — a Latvian custom apparel brand (t-shirts, hoodies, mugs, bags) based in Riga. You design seasonal/holiday marketing campaigns for the Latvian market. Always write in Latvian (LV). Be specific, culturally authentic, and avoid generic stock-photo clichés. Output ONLY valid JSON matching the schema, no markdown, no commentary.`;
+    const systemPrompt = `You are a senior creative director for T-Bode — a Latvian custom apparel brand (DTF-printed t-shirts, hoodies, mugs, tote bags) from Rīga. You design HIGHLY ORIGINAL, MODERN, BOLD seasonal campaigns for the Latvian market.
+
+Hard rules:
+- ALWAYS write Latvian copy (title, tagline, description, slogans) in fluent, natural, contemporary Latvian — no awkward AI-translation, no English loanwords unless they are real LV slang.
+- Slogans should feel like things a real Latvian would actually say or quote: humor, folk wisdom, pop-culture references, mild irony, regional sayings ("kur Janka, tur pjanka", "miers virsū" style — but invent ORIGINAL ones; don't copy that exact phrase unless it truly fits).
+- Design prompts (in English, for an image-gen model) must be DETAILED, CINEMATIC, MODERN — describe composition, color palette, illustration style (e.g. bold flat vector, retro screen-print, vintage woodcut, neo-folk, pop-art, risograph), mood, decorative elements. Avoid stock-photo clichés ("happy family in field", "smiling person holding flowers").
+- NEVER describe a t-shirt/hoodie/mug/mockup — describe ONLY the standalone artwork as if it were a print file / sticker.
+- Output ONLY valid JSON matching the schema, no markdown fences, no commentary.`;
+
+    // ----- Single-idea regen branch -----
+    if (singleMode) {
+      const existingTitles = (existingBrief.design_ideas ?? [])
+        .map((i, idx) => idx === idea_index ? null : `"${i.title}"`)
+        .filter(Boolean)
+        .join(", ");
+      const userPromptSingle = `Regenerate ONE design idea (#${(idea_index as number) + 1} of ${(existingBrief.design_ideas ?? []).length}) for this Latvian holiday campaign:
+
+Holiday: ${holiday.name_lv} (${holiday.name_en ?? ""})
+Date: ${holiday.day}.${holiday.month}.${(campaign as any).year}
+Theme keywords: ${holiday.prompt_theme}
+Campaign title: ${existingBrief.title_lv ?? "—"}
+Tagline: ${existingBrief.tagline_lv ?? "—"}
+Existing idea titles to AVOID duplicating: ${existingTitles || "(none)"}
+${hint ? `User direction: ${hint}` : ""}
+
+Return JSON: { "title": "Latvian short name (1-4 words)", "prompt": "Detailed cinematic English image prompt — bold modern illustration style, no garment/mockup, no text in the art unless slogan is provided", "slogan": "Optional Latvian slogan to weave into the artwork as typography, or empty string" }
+
+Be DIFFERENT and more daring than the existing ideas.`;
+
+      const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPromptSingle },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+      if (!aiRes.ok) {
+        const t = await aiRes.text();
+        console.error("single-idea AI error:", aiRes.status, t);
+        return new Response(JSON.stringify({ error: aiRes.status === 429 ? "AI rate limit. Mēģini vēlāk." : aiRes.status === 402 ? "AI kredīti beigušies." : "AI ģenerēšanas kļūda" }), {
+          status: aiRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const aiData = await aiRes.json();
+      let newIdea: { title: string; prompt: string; slogan?: string };
+      try {
+        newIdea = JSON.parse(aiData.choices?.[0]?.message?.content ?? "{}");
+      } catch {
+        return new Response(JSON.stringify({ error: "AI atbilde nav derīgs JSON" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const ideas = [...(existingBrief.design_ideas ?? [])];
+      ideas[idea_index as number] = {
+        title: newIdea.title ?? ideas[idea_index as number]?.title ?? "Ideja",
+        prompt: newIdea.prompt ?? "",
+        slogan: (newIdea.slogan ?? "").trim() || undefined,
+      };
+      const merged = { ...existingBrief, design_ideas: ideas };
+      await admin.from("campaigns").update({ brief: merged as any }).eq("id", campaign_id);
+      return new Response(JSON.stringify({ brief: merged, idea: ideas[idea_index as number] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const userPrompt = `Create a campaign brief for the upcoming Latvian holiday:
 
@@ -88,15 +164,21 @@ Return JSON with this exact shape:
   "target_audience": "Short description of target audience in Latvian",
   "color_palette": ["#hex1", "#hex2", "#hex3", "#hex4"],
   "design_ideas": [
-    { "title": "Short LV name", "prompt": "Detailed English image-gen prompt for AI art (style, mood, composition, no text on shirt)" },
-    { "title": "...", "prompt": "..." },
-    { "title": "...", "prompt": "..." },
-    { "title": "...", "prompt": "..." }
+    { "title": "Short LV name", "prompt": "Detailed cinematic English image-gen prompt: composition, palette, illustration style, mood, decorative elements. No garment/mockup.", "slogan": "Optional Latvian slogan woven into the art as bold typography (or empty string)" },
+    { "title": "...", "prompt": "...", "slogan": "..." },
+    { "title": "...", "prompt": "...", "slogan": "..." },
+    { "title": "...", "prompt": "...", "slogan": "..." }
   ],
   "product_types": ["t-shirt", "hoodie", "mug", "tote-bag"]
 }
 
-Generate 4 distinct design ideas that fit Latvian cultural context. Choose product_types most relevant to this holiday (typically 2-3 from: t-shirt, hoodie, mug, tote-bag, kids-shirt).`;
+REQUIREMENTS for design_ideas:
+- Generate 4 distinct, BOLD, MODERN ideas — each in a different visual style (e.g. one bold flat vector, one retro screen-print, one neo-folk illustration, one pop-art / risograph).
+- AT LEAST 2 of the 4 ideas MUST include a "slogan" field with an original, witty Latvian phrase that will be rendered as the dominant typography of the artwork (vintage / distressed lettering style). The other 2 may have slogan = "".
+- Slogans must be in natural, contemporary Latvian — humorous, ironic, or culturally specific. Reference Latvian folk traditions, weather, sauna, jāņi, midsummer, food, drinking culture, regional slang where it fits the holiday. Do NOT use English. Do NOT use the cliché "Kur Janka, tur pjanka" unless the holiday truly is about partying — invent fresh ones.
+- Prompts (English) must be richly detailed: specify the illustration style, exact composition, lighting/mood, 3-5 color words, and 2-3 decorative motifs. 30-60 words each.
+
+Choose product_types most relevant to this holiday (typically 2-3 from: t-shirt, hoodie, mug, tote-bag, kids-shirt).`;
 
     const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -105,7 +187,7 @@ Generate 4 distinct design ideas that fit Latvian cultural context. Choose produ
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

@@ -247,6 +247,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [success, setSuccess] = useState<{ products: number; blogSlug: string | null; expires: string | null } | null>(null);
   const [styleChoice, setStyleChoice] = useState<string>("digital_illustration");
   const [regenSingleId, setRegenSingleId] = useState<string | null>(null);
+  const [regenIdeaIdx, setRegenIdeaIdx] = useState<number | null>(null);
   const [transparentBg, setTransparentBg] = useState<boolean>(false);
   const [customStyleId, setCustomStyleId] = useState<string>("");
   const [imageSize, setImageSize] = useState<string>("square_hd");
@@ -382,6 +383,23 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       await load();
     } catch (e: any) { toast.error("Neizdevās: " + e.message); }
     finally { setBusy(null); }
+  };
+
+  const regenSingleIdea = async (idx: number, hint?: string) => {
+    if (!campaign) return;
+    setRegenIdeaIdx(idx);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-brief", {
+        body: { campaign_id: campaign.id, idea_index: idx, hint: hint || undefined },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
+      toast.success(`Ideja #${idx + 1} pārģenerēta`);
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setRegenIdeaIdx(null);
+    }
   };
 
   const saveBrief = async (newBrief: Brief) => {
@@ -768,6 +786,18 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 busy={busy}
                 onRegen={regenBrief}
                 onSaveBrief={saveBrief}
+                onRegenSingleIdea={regenSingleIdea}
+                regenIdeaIdx={regenIdeaIdx}
+                styleChoice={styleChoice}
+                onChangeStyle={setStyleChoice}
+                transparentBg={transparentBg}
+                onChangeTransparentBg={setTransparentBg}
+                customStyleId={customStyleId}
+                onChangeCustomStyleId={setCustomStyleId}
+                imageSize={imageSize}
+                onChangeImageSize={setImageSize}
+                preferredColors={preferredColors}
+                onChangePreferredColors={setPreferredColors}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
@@ -839,10 +869,19 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
 /* -------------------- Sub-components -------------------- */
 
-function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any) {
+function StepIdea({
+  campaign, busy, onRegen, onSaveBrief, onNext, onClose,
+  onRegenSingleIdea, regenIdeaIdx,
+  styleChoice, onChangeStyle,
+  transparentBg, onChangeTransparentBg,
+  customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize,
+  preferredColors, onChangePreferredColors,
+}: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
   const [saving, setSaving] = useState(false);
+  const [hintByIdx, setHintByIdx] = useState<Record<number, string>>({});
 
   useEffect(() => { setDraft(campaign.brief ?? {}); }, [campaign.id, campaign.brief]);
 
@@ -990,6 +1029,31 @@ function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any
                       Ja ievadi tekstu, automātiski izmanto AI modeli, kas labi zīmē burtus (Ideogram).
                     </div>
                   </div>
+                  <div className="pt-2 border-t border-dashed">
+                    <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      AI norāde šai idejai (nav obligāts)
+                    </label>
+                    <Input
+                      value={hintByIdx[idx] ?? ""}
+                      onChange={(e) => setHintByIdx({ ...hintByIdx, [idx]: e.target.value })}
+                      placeholder='piem. "vairāk humora, neon krāsas, retro 80s"'
+                      className="h-8 text-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      disabled={regenIdeaIdx === idx || dirty}
+                      onClick={() => onRegenSingleIdea?.(idx, hintByIdx[idx])}
+                      title={dirty ? "Vispirms saglabā izmaiņas" : "AI pārģenerēs tikai šo ideju"}
+                    >
+                      {regenIdeaIdx === idx
+                        ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        : <Sparkles className="w-4 h-4 mr-1.5" />}
+                      Pārģenerēt tikai šo ideju ar AI
+                    </Button>
+                  </div>
                 </div>
               ))}
               {ideas.length === 0 && (
@@ -998,6 +1062,27 @@ function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any
                 </div>
               )}
             </div>
+          </section>
+
+          <section>
+            <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-muted-foreground">
+              fal.ai ģenerēšanas iestatījumi
+            </h4>
+            <GenerationSettings
+              styleChoice={styleChoice}
+              onChangeStyle={onChangeStyle}
+              transparentBg={transparentBg}
+              onChangeTransparentBg={onChangeTransparentBg}
+              customStyleId={customStyleId}
+              onChangeCustomStyleId={onChangeCustomStyleId}
+              imageSize={imageSize}
+              onChangeImageSize={onChangeImageSize}
+              preferredColors={preferredColors}
+              onChangePreferredColors={onChangePreferredColors}
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli automātiski izmanto Ideogram (labi zīmē burtus).
+            </p>
           </section>
         </>
       )}
