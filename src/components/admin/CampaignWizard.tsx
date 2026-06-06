@@ -786,6 +786,18 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 busy={busy}
                 onRegen={regenBrief}
                 onSaveBrief={saveBrief}
+                onRegenSingleIdea={regenSingleIdea}
+                regenIdeaIdx={regenIdeaIdx}
+                styleChoice={styleChoice}
+                onChangeStyle={setStyleChoice}
+                transparentBg={transparentBg}
+                onChangeTransparentBg={setTransparentBg}
+                customStyleId={customStyleId}
+                onChangeCustomStyleId={setCustomStyleId}
+                imageSize={imageSize}
+                onChangeImageSize={setImageSize}
+                preferredColors={preferredColors}
+                onChangePreferredColors={setPreferredColors}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
