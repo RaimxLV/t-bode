@@ -1925,6 +1925,7 @@ function DesignCard({
             loading="lazy"
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
+            onError={handleImgError}
           />
           <button
             onClick={() => onToggleStar(d)}
