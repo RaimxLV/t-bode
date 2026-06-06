@@ -90,8 +90,10 @@ function crc32(bytes: Uint8Array): number {
 export async function downloadPrintReadyPng(opts: {
   imageUrl: string;
   fileName: string;
+  /** Optional pre-upscaled image URL (e.g. from fal clarity-upscaler). Used when provided. */
+  upscaledUrl?: string;
 }): Promise<void> {
-  const img = await loadImage(opts.imageUrl);
+  const img = await loadImage(opts.upscaledUrl || opts.imageUrl);
 
   // Compute output size: scale longest edge up to TARGET_LONG_EDGE (don't downscale below native)
   const nativeLong = Math.max(img.naturalWidth, img.naturalHeight);
