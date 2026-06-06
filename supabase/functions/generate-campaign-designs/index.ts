@@ -21,6 +21,8 @@ interface Body {
   transparent_bg?: boolean;
   /** Per-design slogan text to weave into the artwork (auto-routes to Ideogram). */
   slogan_override?: string;
+  /** Force a specific image model: "auto" | "ideogram" | "recraft". */
+  model_override?: "auto" | "ideogram" | "recraft";
 }
 
 /** Allowed Recraft V3 styles (full list from fal.ai schema). */
@@ -129,9 +131,14 @@ async function generateWithFal(opts: {
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
   slogan?: string;
+  model?: "auto" | "ideogram" | "recraft";
 }): Promise<{ bytes: Uint8Array; url: string }> {
-  // Auto-route: if a slogan/text is required, use Ideogram (much better at legible text).
-  if (opts.slogan && opts.slogan.trim()) {
+  const model = opts.model ?? "auto";
+  // Force Ideogram, or auto-route when a slogan/text is required.
+  const useIdeogram =
+    model === "ideogram" ||
+    (model === "auto" && !!(opts.slogan && opts.slogan.trim()));
+  if (useIdeogram) {
     const { bytes, url } = await generateWithIdeogram({
       falKey: opts.falKey,
       prompt: opts.prompt,
@@ -309,6 +316,7 @@ Deno.serve(async (req) => {
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
+          model: body.model_override,
         });
         const path = `${campaign_id}/${design_id}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage

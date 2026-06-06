@@ -438,9 +438,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const regenSingleDesign = async (
     designId: string,
-    newPrompt: string,
-    newStyle?: string,
-    newSlogan?: string,
+    model: "auto" | "ideogram" | "recraft" = "auto",
   ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
@@ -449,13 +447,12 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         body: {
           campaign_id: campaign.id,
           design_id: designId,
-          prompt_override: newPrompt,
-          style: newStyle || styleChoice,
+          style: styleChoice,
           custom_style_id: customStyleId.trim() || null,
           image_size: imageSize,
           colors: preferredColors,
           transparent_bg: transparentBg,
-          slogan_override: newSlogan ?? "",
+          model_override: model,
         },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
@@ -746,9 +743,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     <button
       type="button"
       onClick={() => campaign && setStep(n as 1 | 2 | 3)}
-      className={`flex items-center gap-2 text-xs font-body ${step === n ? "text-primary" : "text-muted-foreground"}`}
+      className={`flex items-center gap-2 text-xs font-body transition ${step === n ? "text-primary font-semibold" : "text-muted-foreground hover:text-foreground"}`}
     >
-      <span className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${step === n ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
+      <span className={`w-7 h-7 rounded-full flex items-center justify-center border-2 text-[11px] font-bold transition ${step === n ? "border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/40 ring-2 ring-primary/20" : step > n ? "border-primary/60 bg-primary/10 text-primary" : "border-border bg-card"}`}>
         {n}
       </span>
       <span className="hidden sm:inline">{label}</span>
@@ -766,11 +763,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         </DialogHeader>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between gap-2 py-2 border-b border-border mt-3 min-w-0">
+        <div className="flex items-center justify-between gap-2 py-2.5 px-2 rounded-lg bg-primary/5 border border-primary/15 mt-3 min-w-0">
           <StepDot n={1} label="Idejas" />
-          <div className="flex-1 h-px bg-border mx-1" />
+          <div className={`flex-1 h-0.5 mx-1 rounded-full ${step >= 2 ? "bg-primary/60" : "bg-border"}`} />
           <StepDot n={2} label="Dizaini & produkti" />
-          <div className="flex-1 h-px bg-border mx-1" />
+          <div className={`flex-1 h-0.5 mx-1 rounded-full ${step >= 3 ? "bg-primary/60" : "bg-border"}`} />
           <StepDot n={3} label="Blogs & publicēšana" />
         </div>
 
@@ -1495,10 +1492,8 @@ function ProductTuneRow({
     scheduleSave(offsetY, clamped);
   };
 
-  // Pointer/touch drag (vertical → offsetY) + pinch (2-finger → scale)
+  // Sliders only — touch/pinch/wheel intentionally disabled to avoid accidental drag while scrolling.
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const dragStart = useRef<{ y: number; startOffset: number; pinchDist: number; startScale: number } | null>(null);
   const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
   // Show the currently selected cover color's base mockup in the live preview
   const coverColorName = product.color_variants[0]?.name;
@@ -1506,43 +1501,6 @@ function ProductTuneRow({
     baseInfo?.color_variants?.find((cv) => cv.name === coverColorName && cv.images?.[0])?.images?.[0]
     ?? baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0]
     ?? product.image_url;
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.current.size === 1) {
-      dragStart.current = { y: e.clientY, startOffset: offsetY, pinchDist: 0, startScale: scale };
-    } else if (pointers.current.size === 2) {
-      const pts = Array.from(pointers.current.values());
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      dragStart.current = { y: 0, startOffset: offsetY, pinchDist: dist, startScale: scale };
-    }
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    const rect = previewRef.current?.getBoundingClientRect();
-    if (!rect || !dragStart.current) return;
-    if (pointers.current.size === 1) {
-      const dy = (e.clientY - dragStart.current.y) / (rect.height * printArea.h);
-      updateOffset(dragStart.current.startOffset + dy);
-    } else if (pointers.current.size >= 2) {
-      const pts = Array.from(pointers.current.values());
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      if (dragStart.current.pinchDist > 0) {
-        updateScale(dragStart.current.startScale * (dist / dragStart.current.pinchDist));
-      }
-    }
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    pointers.current.delete(e.pointerId);
-    if (pointers.current.size === 0) dragStart.current = null;
-  };
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = -e.deltaY * 0.0015;
-    updateScale(scale + delta);
-  };
 
   // Compute design aspect for overlay sizing
   const [designAspect, setDesignAspect] = useState<number>(1);
@@ -1568,13 +1526,7 @@ function ProductTuneRow({
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-          onWheel={onWheel}
-          style={{ cursor: "grab" }}
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 select-none"
         >
           {baseImg && (
             <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
@@ -1734,7 +1686,7 @@ function DesignCard({
   regenSingleId: string | null;
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
-  onRegenSingleDesign: (id: string, prompt: string, style?: string, slogan?: string) => void;
+  onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
 }) {
@@ -1763,9 +1715,7 @@ function DesignCard({
   );
 
   const [editing, setEditing] = useState(false);
-  const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
-  const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
-  const [draftSlogan, setDraftSlogan] = useState<string>(d.slogan || "");
+  const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft">("auto");
 
   const busy = regenSingleId === d.id;
   const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
@@ -1782,9 +1732,9 @@ function DesignCard({
             <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
           </button>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="absolute top-1 left-1 p-1 rounded-full bg-background/80 transition z-10"
-            title="Mainīt promptu un pārģenerēt"
+            title="Pārģenerēt"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -1805,9 +1755,9 @@ function DesignCard({
             <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
           </button>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="absolute top-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
-            title="Mainīt promptu un pārģenerēt"
+            title="Pārģenerēt"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -1816,7 +1766,7 @@ function DesignCard({
         <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
           <span>⚠ {d.generation_error}</span>
           <button
-            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="underline text-foreground"
           >
             Mēģināt vēlreiz
@@ -1835,55 +1785,30 @@ function DesignCard({
       )}
 
       {editing && (
-        <div className="absolute inset-0 z-10 bg-background/95 p-2 flex flex-col gap-1.5 overflow-y-auto">
-          <p className="text-[10px] font-semibold">Mainīt promptu</p>
-          <Textarea
-            value={draftPrompt}
-            onChange={(e) => setDraftPrompt(e.target.value)}
-            rows={3}
-            className="text-[11px] min-h-0 resize-none"
-            placeholder="Piem. minimālistisks zaķis ar morkām…"
-          />
-          <div>
-            <label className="text-[9px] uppercase tracking-wider text-muted-foreground">
-              Sauklis / teksts zīmējumā
-            </label>
-            <Input
-              value={draftSlogan}
-              onChange={(e) => setDraftSlogan(e.target.value)}
-              placeholder='piem. "Kur Janka, tur pjanka"'
-              className="h-7 text-[11px]"
-            />
-            {draftSlogan.trim() && (
-              <p className="text-[9px] text-primary mt-0.5">→ izmantos Ideogram (labi zīmē burtus)</p>
-            )}
-          </div>
+        <div className="absolute inset-0 z-10 bg-background/95 p-3 flex flex-col gap-2 justify-center">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            AI modelis
+          </label>
           <select
-            value={draftStyle}
-            onChange={(e) => setDraftStyle(e.target.value)}
-            className="text-[11px] rounded border border-border bg-card px-1.5 py-1 font-body"
-            disabled={!!draftSlogan.trim()}
-            title={draftSlogan.trim() ? "Ar tekstu vienmēr tiek izmantots Ideogram" : ""}
+            value={draftModel}
+            onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft")}
+            className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
-            {STYLE_GROUPS.map((g) => (
-              <optgroup key={g.group} label={g.group}>
-                {g.options.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </optgroup>
-            ))}
+            <option value="auto">Auto (ieteicams)</option>
+            <option value="recraft">Recraft (ilustrācija)</option>
+            <option value="ideogram">Ideogram (ar tekstu)</option>
           </select>
-          <div className="flex gap-1">
+          <div className="flex gap-1.5 mt-1">
             <Button
               size="sm"
-              className="flex-1 h-7 text-[11px]"
-              disabled={!draftPrompt.trim() || busy}
-              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftPrompt, draftStyle, draftSlogan); }}
+              className="flex-1 h-8 text-xs"
+              disabled={busy}
+              onClick={() => { setEditing(false); onRegenSingleDesign(d.id, draftModel); }}
             >
-              <Wand2 className="w-3 h-3 mr-1" /> Ģenerēt
+              <Wand2 className="w-3.5 h-3.5 mr-1" /> Ģenerēt
             </Button>
-            <Button size="sm" variant="ghost" className="h-7 text-[11px]" onClick={() => setEditing(false)}>
-              <X className="w-3 h-3" />
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditing(false)}>
+              <X className="w-3.5 h-3.5" />
             </Button>
           </div>
         </div>
