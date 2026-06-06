@@ -1194,13 +1194,13 @@ function StepDesigns({
                   onClick={() => onToggleBase(p.id)}
                   className={`relative border-2 rounded-lg overflow-hidden text-left transition ${sel ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-foreground/40"}`}
                 >
-                  <div className="aspect-square bg-muted">
+                  <div className="aspect-square bg-white">
                     {thumb ? (
                       <img
                         src={getOptimizedSrc(thumb, 400, 70)}
                         loading="lazy"
                         alt=""
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain scale-[1.15] origin-center"
                       />
                     ) : <Package className="w-8 h-8 m-auto" />}
                   </div>
