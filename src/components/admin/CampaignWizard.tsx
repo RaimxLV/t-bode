@@ -1806,6 +1806,7 @@ function GenerationSettings({
   customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette,
 }: {
   styleChoice: string;
   onChangeStyle: (v: string) => void;
@@ -1817,6 +1818,8 @@ function GenerationSettings({
   onChangeImageSize: (v: string) => void;
   preferredColors: { r: number; g: number; b: number }[];
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
+  usePalette: boolean;
+  onChangeUsePalette: (v: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [newColor, setNewColor] = useState("#dc2626");
@@ -1841,6 +1844,7 @@ function GenerationSettings({
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
+          {usePalette ? " · palete" : ""}
         </span>
       </button>
       {open && (
@@ -1905,7 +1909,21 @@ function GenerationSettings({
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Vēlamās krāsas (līdz 5)
             </label>
-            <div className="flex flex-wrap gap-1.5 items-center mt-1">
+            <label className="flex items-center gap-2 cursor-pointer mt-1 mb-1.5">
+              <input
+                type="checkbox"
+                checked={usePalette}
+                onChange={(e) => onChangeUsePalette(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-xs">Izmantot krāsu paleti</span>
+            </label>
+            {!usePalette && (
+              <p className="text-[10px] text-muted-foreground">
+                Izslēgts — AI brīvi izvēlas krāsas atbilstoši saturam.
+              </p>
+            )}
+            <div className={`flex flex-wrap gap-1.5 items-center mt-1 ${usePalette ? "" : "opacity-40 pointer-events-none"}`}>
               {preferredColors.map((c, i) => (
                 <button
                   key={i}
