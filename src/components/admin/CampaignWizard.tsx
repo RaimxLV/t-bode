@@ -1492,10 +1492,8 @@ function ProductTuneRow({
     scheduleSave(offsetY, clamped);
   };
 
-  // Pointer/touch drag (vertical → offsetY) + pinch (2-finger → scale)
+  // Sliders only — touch/pinch/wheel intentionally disabled to avoid accidental drag while scrolling.
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const pointers = useRef<Map<number, { x: number; y: number }>>(new Map());
-  const dragStart = useRef<{ y: number; startOffset: number; pinchDist: number; startScale: number } | null>(null);
   const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
   // Show the currently selected cover color's base mockup in the live preview
   const coverColorName = product.color_variants[0]?.name;
@@ -1503,43 +1501,6 @@ function ProductTuneRow({
     baseInfo?.color_variants?.find((cv) => cv.name === coverColorName && cv.images?.[0])?.images?.[0]
     ?? baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0]
     ?? product.image_url;
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointers.current.size === 1) {
-      dragStart.current = { y: e.clientY, startOffset: offsetY, pinchDist: 0, startScale: scale };
-    } else if (pointers.current.size === 2) {
-      const pts = Array.from(pointers.current.values());
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      dragStart.current = { y: 0, startOffset: offsetY, pinchDist: dist, startScale: scale };
-    }
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!pointers.current.has(e.pointerId)) return;
-    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    const rect = previewRef.current?.getBoundingClientRect();
-    if (!rect || !dragStart.current) return;
-    if (pointers.current.size === 1) {
-      const dy = (e.clientY - dragStart.current.y) / (rect.height * printArea.h);
-      updateOffset(dragStart.current.startOffset + dy);
-    } else if (pointers.current.size >= 2) {
-      const pts = Array.from(pointers.current.values());
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      if (dragStart.current.pinchDist > 0) {
-        updateScale(dragStart.current.startScale * (dist / dragStart.current.pinchDist));
-      }
-    }
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    pointers.current.delete(e.pointerId);
-    if (pointers.current.size === 0) dragStart.current = null;
-  };
-  const onWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = -e.deltaY * 0.0015;
-    updateScale(scale + delta);
-  };
 
   // Compute design aspect for overlay sizing
   const [designAspect, setDesignAspect] = useState<number>(1);
@@ -1565,13 +1526,7 @@ function ProductTuneRow({
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 touch-none select-none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-          onWheel={onWheel}
-          style={{ cursor: "grab" }}
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 select-none"
         >
           {baseImg && (
             <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
