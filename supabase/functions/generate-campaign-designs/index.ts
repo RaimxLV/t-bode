@@ -397,6 +397,7 @@ Deno.serve(async (req) => {
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
+          model: body.model_override,
         });
         const path = `${campaign_id}/${i}-${Date.now()}.png`;
         const { error: upErr } = await admin.storage
