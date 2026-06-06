@@ -1775,6 +1775,7 @@ function DesignCard({
   regenSingleId,
   styleChoice,
   onToggleStar,
+  onSaveToLibrary,
   onRegenSingleDesign,
   showOnShirt,
   shirtColor,
@@ -1784,6 +1785,7 @@ function DesignCard({
   regenSingleId: string | null;
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
+  onSaveToLibrary?: (d: DesignRow) => void;
   onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
