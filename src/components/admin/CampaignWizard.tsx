@@ -884,6 +884,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onToggleStar={toggleStar}
                 onSaveToLibrary={saveToLibrary}
                 onOpenLibrary={() => setLibraryOpen(true)}
+                favoritedIds={favoritedIds}
                 onRegenDesigns={regenDesigns}
                 onRegenSingleDesign={regenSingleDesign}
                 regenSingleId={regenSingleId}
