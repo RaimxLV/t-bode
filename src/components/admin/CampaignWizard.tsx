@@ -816,6 +816,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="block max-w-[100vw] sm:max-w-5xl w-screen sm:w-full max-h-[100dvh] sm:max-h-[92vh] h-[100dvh] sm:h-auto overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
         <DialogHeader className="min-w-0">
