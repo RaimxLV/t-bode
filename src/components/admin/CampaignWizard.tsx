@@ -252,6 +252,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [customStyleId, setCustomStyleId] = useState<string>("");
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
+  const [usePalette, setUsePalette] = useState<boolean>(false);
 
   const load = async () => {
     if (!campaignId) return;
