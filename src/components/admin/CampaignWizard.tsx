@@ -1508,36 +1508,40 @@ function ProductTuneRow({
         {/* Live preview */}
         <div
           ref={previewRef}
-          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-muted overflow-hidden shrink-0 select-none"
+          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none"
         >
-          {baseImg && (
-            <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
-          )}
-          {/* Print area outline */}
-          <div
-            className="absolute border border-dashed border-primary/60 pointer-events-none"
-            style={{
-              left: `${printArea.x * 100}%`,
-              top: `${printArea.y * 100}%`,
-              width: `${printArea.w * 100}%`,
-              height: `${printArea.h * 100}%`,
-            }}
-          />
-          {/* Design overlay */}
-          {designUrl && (
-            <img
-              src={designUrl}
-              alt=""
-              draggable={false}
-              className="absolute pointer-events-none"
+          {/* Scale wrapper makes the shirt fill more of the frame; print area & design stay aligned */}
+          <div className="absolute inset-0 scale-[1.18] origin-center">
+            {baseImg && (
+              <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
+            )}
+            {/* Print area outline */}
+            <div
+              className="absolute border border-dashed border-primary/60 pointer-events-none"
               style={{
-                left: `${dxRel * 100}%`,
-                top: `${dyRel * 100}%`,
-                width: `${dwRel * 100}%`,
-                height: `${dhRel * 100}%`,
-                objectFit: "contain",
+                left: `${printArea.x * 100}%`,
+                top: `${printArea.y * 100}%`,
+                width: `${printArea.w * 100}%`,
+                height: `${printArea.h * 100}%`,
               }}
             />
+            {/* Design overlay */}
+            {designUrl && (
+              <img
+                src={designUrl}
+                alt=""
+                draggable={false}
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${dxRel * 100}%`,
+                  top: `${dyRel * 100}%`,
+                  width: `${dwRel * 100}%`,
+                  height: `${dhRel * 100}%`,
+                  objectFit: "contain",
+                }}
+              />
+            )}
+          </div>
           )}
           {autoSaving && (
             <div className="absolute bottom-1 left-1 right-1 text-[10px] bg-background/80 rounded px-1.5 py-0.5 flex items-center gap-1">
