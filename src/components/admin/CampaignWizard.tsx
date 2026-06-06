@@ -247,6 +247,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [success, setSuccess] = useState<{ products: number; blogSlug: string | null; expires: string | null } | null>(null);
   const [styleChoice, setStyleChoice] = useState<string>("digital_illustration");
   const [regenSingleId, setRegenSingleId] = useState<string | null>(null);
+  const [regenIdeaIdx, setRegenIdeaIdx] = useState<number | null>(null);
   const [transparentBg, setTransparentBg] = useState<boolean>(false);
   const [customStyleId, setCustomStyleId] = useState<string>("");
   const [imageSize, setImageSize] = useState<string>("square_hd");
@@ -382,6 +383,23 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       await load();
     } catch (e: any) { toast.error("Neizdevās: " + e.message); }
     finally { setBusy(null); }
+  };
+
+  const regenSingleIdea = async (idx: number, hint?: string) => {
+    if (!campaign) return;
+    setRegenIdeaIdx(idx);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-campaign-brief", {
+        body: { campaign_id: campaign.id, idea_index: idx, hint: hint || undefined },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
+      toast.success(`Ideja #${idx + 1} pārģenerēta`);
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + e.message);
+    } finally {
+      setRegenIdeaIdx(null);
+    }
   };
 
   const saveBrief = async (newBrief: Brief) => {
