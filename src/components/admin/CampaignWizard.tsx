@@ -2082,7 +2082,15 @@ function GenerationSettings({
       >
         <span>fal.ai iestatījumi {open ? "▾" : "▸"}</span>
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
-          {modelChoice === "auto" ? "Auto" : modelChoice === "ideogram" ? "Ideogram" : "Recraft"} ·{" "}
+          {({
+            auto: "Auto",
+            ideogram: "Ideogram v3",
+            recraft: "Recraft V3",
+            "flux-pro": "FLUX Pro 1.1",
+            "flux-schnell": "FLUX Schnell",
+            "nano-banana": "Nano Banana",
+            seedream: "Seedream v4",
+          } as Record<string, string>)[modelChoice]} ·{" "}
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
@@ -2102,6 +2110,10 @@ function GenerationSettings({
               <option value="auto">Auto — labākais variants pēc satura</option>
               <option value="ideogram">Ideogram v3 — vislabāk burtiem un latviešu garumzīmēm</option>
               <option value="recraft">Recraft V3 — bagātīga ilustrācija (bez teksta)</option>
+            <option value="flux-pro">FLUX Pro 1.1 — fotorealistisks, bagāta detaļa</option>
+            <option value="flux-schnell">FLUX Schnell — ātrs, lēts melnraksts</option>
+            <option value="nano-banana">Nano Banana (Gemini) — eksperimentāls, kreatīvs</option>
+            <option value="seedream">Seedream v4 — augsta izšķirtspēja, mākslinieciski</option>
             </select>
             <p className="text-[10px] text-muted-foreground mt-1">
               <b>Auto:</b> ja saulis vai latviešu burti — Ideogram, citādi Recraft ar izvēlēto stilu.
