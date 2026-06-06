@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download } from "lucide-react";
+import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download, Heart, Library } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { downloadPrintReadyPng } from "@/lib/printFile";
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
@@ -253,6 +254,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
   const [usePalette, setUsePalette] = useState<boolean>(false);
+  const [modelChoice, setModelChoice] = useState<"auto" | "ideogram" | "recraft">("auto");
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const load = async () => {
     if (!campaignId) return;
@@ -428,6 +431,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
+          model_override: modelChoice,
         },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error ?? error?.message);
@@ -439,7 +443,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const regenSingleDesign = async (
     designId: string,
-    model: "auto" | "ideogram" | "recraft" = "auto",
+    model: "auto" | "ideogram" | "recraft" = modelChoice,
   ) => {
     if (!campaign) return;
     setRegenSingleId(designId);
@@ -471,6 +475,64 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       .update({ is_primary: !d.is_primary }).eq("id", d.id);
     if (error) { toast.error(error.message); return; }
     setDesigns((prev) => prev.map((x) => x.id === d.id ? { ...x, is_primary: !x.is_primary } : x));
+  };
+
+  /** Copy a generated design into the persistent design_library so it can be reused across campaigns. */
+  const saveToLibrary = async (d: DesignRow) => {
+    if (!d.image_url) { toast.error("Nav bildes"); return; }
+    try {
+      // Download bytes from campaign-assets (private), upload to design-library (public)
+      const signed = signedUrls[d.image_url];
+      if (!signed) { toast.error("Nav URL"); return; }
+      const res = await fetch(signed);
+      if (!res.ok) throw new Error("Nevar lejupielādēt");
+      const blob = await res.blob();
+      const name = (campaign?.brief?.title_lv || campaign?.title || "Dizains").slice(0, 60);
+      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.png`;
+      const up = await supabase.storage.from("design-library").upload(path, blob, {
+        contentType: "image/png", upsert: false,
+      });
+      if (up.error) throw up.error;
+      const { error: dbErr } = await supabase.from("design_library").insert({
+        name, file_path: path, file_size: blob.size, tags: ["favorite", "campaign"],
+      });
+      if (dbErr) throw dbErr;
+      toast.success("♥ Saglabāts bibliotēkā");
+    } catch (e: any) {
+      toast.error("Neizdevās: " + (e.message ?? e));
+    }
+  };
+
+  /** Pull a design from the library into the current campaign as a new design row (and star it). */
+  const addLibraryToCampaign = async (item: { id: string; name: string; file_path: string }) => {
+    if (!campaign) return;
+    try {
+      // Copy bytes into campaign-assets so the rest of the wizard (mockups) works unchanged.
+      const pub = supabase.storage.from("design-library").getPublicUrl(item.file_path).data.publicUrl;
+      const res = await fetch(pub);
+      if (!res.ok) throw new Error("Nevar lejupielādēt");
+      const blob = await res.blob();
+      const newDesignId = crypto.randomUUID();
+      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.png`;
+      const up = await supabase.storage.from("campaign-assets").upload(path, blob, {
+        contentType: "image/png", upsert: true,
+      });
+      if (up.error) throw up.error;
+      const { error } = await supabase.from("campaign_designs" as any).insert({
+        id: newDesignId,
+        campaign_id: campaign.id,
+        prompt: `[Bibliotēka] ${item.name}`,
+        image_url: path,
+        is_primary: true,
+        style: styleChoice,
+      });
+      if (error) throw error;
+      toast.success("Pievienots no bibliotēkas");
+      setLibraryOpen(false);
+      await load();
+    } catch (e: any) {
+      toast.error("Neizdevās: " + (e.message ?? e));
+    }
   };
 
   const availableBases = useMemo(
@@ -754,6 +816,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   );
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="block max-w-[100vw] sm:max-w-5xl w-screen sm:w-full max-h-[100dvh] sm:max-h-[92vh] h-[100dvh] sm:h-auto overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
         <DialogHeader className="min-w-0">
@@ -798,6 +861,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onChangePreferredColors={setPreferredColors}
                 usePalette={usePalette}
                 onChangeUsePalette={setUsePalette}
+                modelChoice={modelChoice}
+                onChangeModelChoice={setModelChoice}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
@@ -814,10 +879,25 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 publishProgress={publishProgress}
                 busy={busy}
                 onToggleStar={toggleStar}
+                onSaveToLibrary={saveToLibrary}
+                onOpenLibrary={() => setLibraryOpen(true)}
                 onRegenDesigns={regenDesigns}
                 onRegenSingleDesign={regenSingleDesign}
                 regenSingleId={regenSingleId}
                 styleChoice={styleChoice}
+                onChangeStyle={setStyleChoice}
+                transparentBg={transparentBg}
+                onChangeTransparentBg={setTransparentBg}
+                customStyleId={customStyleId}
+                onChangeCustomStyleId={setCustomStyleId}
+                imageSize={imageSize}
+                onChangeImageSize={setImageSize}
+                preferredColors={preferredColors}
+                onChangePreferredColors={setPreferredColors}
+                usePalette={usePalette}
+                onChangeUsePalette={setUsePalette}
+                modelChoice={modelChoice}
+                onChangeModelChoice={setModelChoice}
                 onToggleBase={toggleBase}
                 onBuildMockups={buildMockups}
                 onRemoveColor={removeColor}
@@ -855,6 +935,13 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         )}
       </DialogContent>
     </Dialog>
+    {/* Library sheet: pick saved favorites and drop them into this campaign */}
+    <LibrarySheet
+      open={libraryOpen}
+      onOpenChange={setLibraryOpen}
+      onPick={addLibraryToCampaign}
+    />
+    </>
   );
 };
 
@@ -869,6 +956,7 @@ function StepIdea({
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
+  modelChoice, onChangeModelChoice,
 }: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
@@ -1073,6 +1161,8 @@ function StepIdea({
               onChangePreferredColors={onChangePreferredColors}
               usePalette={usePalette}
               onChangeUsePalette={onChangeUsePalette}
+              modelChoice={modelChoice}
+              onChangeModelChoice={onChangeModelChoice}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
               Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
@@ -1111,6 +1201,10 @@ function StepDesigns({
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
   onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice,
+  onChangeStyle, transparentBg, onChangeTransparentBg, customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette, modelChoice, onChangeModelChoice,
+  onSaveToLibrary, onOpenLibrary,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
@@ -1140,6 +1234,9 @@ function StepDesigns({
                 title="Mainīt krekla krāsu"
               />
             )}
+            <Button size="sm" variant="outline" onClick={onOpenLibrary} className="h-8 text-[11px]" title="Atvērt saglabāto dizainu bibliotēku">
+              <Heart className="w-4 h-4 mr-1 text-rose-500" /> Bibliotēka
+            </Button>
             <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns} className="h-8 text-[11px]">
               {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
               Pārģenerēt
@@ -1148,10 +1245,25 @@ function StepDesigns({
         </div>
 
         <p className="text-[11px] text-muted-foreground mb-2 mt-2">
-          Ģenerēšanas iestatījumus (stils, izmērs, krāsu palete) maini 1. solī. Šeit vari pārģenerēt visu vai atsevišķu dizainu ar ↻ pogu.
+          Maini stilu, AI modeli, izmēru un krāsas zemāk, tad spied <b>Pārģenerēt</b> (vai ↻ uz atsevišķa dizaina). ♥ saglabā dizainu bibliotēkā tālākai izmantošanai.
         </p>
-        <div className="rounded-md border border-primary/30 bg-primary/5 text-[11px] p-2 mb-2 leading-snug">
-          <b>AI modelis tiek izvēlēts automātiski.</b> Sauklis vai latviešu garumzīmes (ā, ē, š, ž…) → <b>Ideogram v3</b> (labi zīmē burtus un diakritikus). Bez teksta — <b>Recraft</b> ar izvēlēto stilu.
+        <div className="mb-3">
+          <GenerationSettings
+            styleChoice={styleChoice}
+            onChangeStyle={onChangeStyle}
+            transparentBg={transparentBg}
+            onChangeTransparentBg={onChangeTransparentBg}
+            customStyleId={customStyleId}
+            onChangeCustomStyleId={onChangeCustomStyleId}
+            imageSize={imageSize}
+            onChangeImageSize={onChangeImageSize}
+            preferredColors={preferredColors}
+            onChangePreferredColors={onChangePreferredColors}
+            usePalette={usePalette}
+            onChangeUsePalette={onChangeUsePalette}
+            modelChoice={modelChoice}
+            onChangeModelChoice={onChangeModelChoice}
+          />
         </div>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -1167,6 +1279,7 @@ function StepDesigns({
                 regenSingleId={regenSingleId}
                 styleChoice={styleChoice}
                 onToggleStar={onToggleStar}
+                onSaveToLibrary={onSaveToLibrary}
                 onRegenSingleDesign={onRegenSingleDesign}
                 showOnShirt={showOnShirt}
                 shirtColor={shirtColor}
@@ -1662,6 +1775,7 @@ function DesignCard({
   regenSingleId,
   styleChoice,
   onToggleStar,
+  onSaveToLibrary,
   onRegenSingleDesign,
   showOnShirt,
   shirtColor,
@@ -1671,6 +1785,7 @@ function DesignCard({
   regenSingleId: string | null;
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
+  onSaveToLibrary?: (d: DesignRow) => void;
   onRegenSingleDesign: (id: string, model?: "auto" | "ideogram" | "recraft") => void;
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
@@ -1746,6 +1861,15 @@ function DesignCard({
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+          {onSaveToLibrary && (
+            <button
+              onClick={() => onSaveToLibrary(d)}
+              className="absolute bottom-1 right-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
+              title="Saglabāt bibliotēkā"
+            >
+              <Heart className="w-4 h-4 text-rose-500" />
+            </button>
+          )}
         </>
       ) : d.generation_error ? (
         <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
@@ -1802,6 +1926,81 @@ function DesignCard({
   );
 }
 
+/* ------------ Library picker sheet (favorited / saved designs) ------------ */
+function LibrarySheet({
+  open, onOpenChange, onPick,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPick: (item: { id: string; name: string; file_path: string }) => void;
+}) {
+  const [items, setItems] = useState<{ id: string; name: string; file_path: string; tags: string[]; created_at: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("design_library")
+        .select("id, name, file_path, tags, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setItems((data as any) ?? []);
+      setLoading(false);
+    })();
+  }, [open]);
+
+  const publicUrl = (p: string) =>
+    supabase.storage.from("design-library").getPublicUrl(p).data.publicUrl;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-rose-500" /> Saglabāto dizainu bibliotēka
+          </SheetTitle>
+        </SheetHeader>
+        <p className="text-xs text-muted-foreground mt-2">
+          Klikšķini uz dizaina, lai pievienotu to šai kampaņai. Pievienotais tiks automātiski atzīmēts ★ un izmantots krekliem.
+        </p>
+        {loading ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin" /></div>
+        ) : items.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-10">
+            Nav saglabātu dizainu. Atver dizainu un nospied ♥, lai pievienotu bibliotēkai.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 mt-3">
+            {items.map((it) => (
+              <button
+                key={it.id}
+                type="button"
+                disabled={adding === it.id}
+                onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
+                className="relative aspect-square rounded border bg-white overflow-hidden hover:ring-2 hover:ring-primary transition"
+                title={it.name}
+              >
+                <img src={publicUrl(it.file_path)} alt={it.name} loading="lazy" className="w-full h-full object-contain" />
+                {adding === it.id && (
+                  <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  </div>
+                )}
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate text-left">
+                  {it.name}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 /* ------------ Generation settings panel (fal.ai Recraft V3) ------------ */
 function GenerationSettings({
   styleChoice, onChangeStyle,
@@ -1810,6 +2009,7 @@ function GenerationSettings({
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
+  modelChoice, onChangeModelChoice,
 }: {
   styleChoice: string;
   onChangeStyle: (v: string) => void;
@@ -1823,8 +2023,10 @@ function GenerationSettings({
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
   usePalette: boolean;
   onChangeUsePalette: (v: boolean) => void;
+  modelChoice: "auto" | "ideogram" | "recraft";
+  onChangeModelChoice: (v: "auto" | "ideogram" | "recraft") => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
   const usingCustom = customStyleId.trim().length > 0;
 
@@ -1843,8 +2045,9 @@ function GenerationSettings({
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold"
       >
-        <span>Ģenerēšanas iestatījumi {open ? "▾" : "▸"}</span>
+        <span>fal.ai iestatījumi {open ? "▾" : "▸"}</span>
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
+          {modelChoice === "auto" ? "Auto" : modelChoice === "ideogram" ? "Ideogram" : "Recraft"} ·{" "}
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
@@ -1852,6 +2055,24 @@ function GenerationSettings({
       </button>
       {open && (
         <div className="px-3 pb-3 space-y-3 border-t pt-3">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              AI modelis
+            </label>
+            <select
+              value={modelChoice}
+              onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft")}
+              className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
+            >
+              <option value="auto">Auto — labākais variants pēc satura</option>
+              <option value="ideogram">Ideogram v3 — vislabāk burtiem un latviešu garumzīmēm</option>
+              <option value="recraft">Recraft V3 — bagātīga ilustrācija (bez teksta)</option>
+            </select>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              <b>Auto:</b> ja saulis vai latviešu burti — Ideogram, citādi Recraft ar izvēlēto stilu.
+            </p>
+          </div>
+
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stils</label>
             <select
