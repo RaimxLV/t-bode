@@ -860,6 +860,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onChangePreferredColors={setPreferredColors}
                 usePalette={usePalette}
                 onChangeUsePalette={setUsePalette}
+                modelChoice={modelChoice}
+                onChangeModelChoice={setModelChoice}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
@@ -876,10 +878,25 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 publishProgress={publishProgress}
                 busy={busy}
                 onToggleStar={toggleStar}
+                onSaveToLibrary={saveToLibrary}
+                onOpenLibrary={() => setLibraryOpen(true)}
                 onRegenDesigns={regenDesigns}
                 onRegenSingleDesign={regenSingleDesign}
                 regenSingleId={regenSingleId}
                 styleChoice={styleChoice}
+                onChangeStyle={setStyleChoice}
+                transparentBg={transparentBg}
+                onChangeTransparentBg={setTransparentBg}
+                customStyleId={customStyleId}
+                onChangeCustomStyleId={setCustomStyleId}
+                imageSize={imageSize}
+                onChangeImageSize={setImageSize}
+                preferredColors={preferredColors}
+                onChangePreferredColors={setPreferredColors}
+                usePalette={usePalette}
+                onChangeUsePalette={setUsePalette}
+                modelChoice={modelChoice}
+                onChangeModelChoice={setModelChoice}
                 onToggleBase={toggleBase}
                 onBuildMockups={buildMockups}
                 onRemoveColor={removeColor}
