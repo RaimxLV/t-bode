@@ -1121,6 +1121,8 @@ function StepDesigns({
   imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
+  const [showOnShirt, setShowOnShirt] = useState(false);
+  const [shirtColor, setShowShirtColor] = useState<"white" | "black">("white");
 
   return (
     <div className="space-y-5">
@@ -1128,10 +1130,29 @@ function StepDesigns({
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h4 className="font-semibold text-sm">AI dizaini ({designs.length})</h4>
-          <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
-            {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
-            Pārģenerēt visus
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant={showOnShirt ? "default" : "outline"}
+              onClick={() => setShowOnShirt((v) => !v)}
+              className="h-8 text-[11px]"
+              title="Priekšskats uz krekla"
+            >
+              👕 {showOnShirt ? "Atpakaļ" : "Uz krekla"}
+            </Button>
+            {showOnShirt && (
+              <button
+                type="button"
+                onClick={() => setShowShirtColor((c) => (c === "white" ? "black" : "white"))}
+                className={`w-7 h-7 rounded-full border-2 ${shirtColor === "white" ? "bg-white border-foreground" : "bg-black border-foreground"}`}
+                title="Mainīt krekla krāsu"
+              />
+            )}
+            <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns} className="h-8 text-[11px]">
+              {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
+              Pārģenerēt
+            </Button>
+          </div>
         </div>
 
         <GenerationSettings
@@ -1168,6 +1189,8 @@ function StepDesigns({
                 styleChoice={styleChoice}
                 onToggleStar={onToggleStar}
                 onRegenSingleDesign={onRegenSingleDesign}
+                showOnShirt={showOnShirt}
+                shirtColor={shirtColor}
               />
             ))}
           </div>
