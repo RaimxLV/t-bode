@@ -252,6 +252,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [customStyleId, setCustomStyleId] = useState<string>("");
   const [imageSize, setImageSize] = useState<string>("square_hd");
   const [preferredColors, setPreferredColors] = useState<{ r: number; g: number; b: number }[]>([]);
+  const [usePalette, setUsePalette] = useState<boolean>(false);
 
   const load = async () => {
     if (!campaignId) return;
@@ -425,7 +426,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           style: styleChoice,
           custom_style_id: customStyleId.trim() || null,
           image_size: imageSize,
-          colors: preferredColors,
+          colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
         },
       });
@@ -450,7 +451,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           style: styleChoice,
           custom_style_id: customStyleId.trim() || null,
           image_size: imageSize,
-          colors: preferredColors,
+          colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
           model_override: model,
         },
@@ -795,6 +796,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onChangeImageSize={setImageSize}
                 preferredColors={preferredColors}
                 onChangePreferredColors={setPreferredColors}
+                usePalette={usePalette}
+                onChangeUsePalette={setUsePalette}
                 onNext={() => setStep(2)}
                 onClose={closeAndRefresh}
               />
@@ -815,15 +818,6 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 onRegenSingleDesign={regenSingleDesign}
                 regenSingleId={regenSingleId}
                 styleChoice={styleChoice}
-                onChangeStyle={setStyleChoice}
-                transparentBg={transparentBg}
-                onChangeTransparentBg={setTransparentBg}
-                customStyleId={customStyleId}
-                onChangeCustomStyleId={setCustomStyleId}
-                imageSize={imageSize}
-                onChangeImageSize={setImageSize}
-                preferredColors={preferredColors}
-                onChangePreferredColors={setPreferredColors}
                 onToggleBase={toggleBase}
                 onBuildMockups={buildMockups}
                 onRemoveColor={removeColor}
@@ -874,6 +868,7 @@ function StepIdea({
   customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette,
 }: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
@@ -1076,9 +1071,11 @@ function StepIdea({
               onChangeImageSize={onChangeImageSize}
               preferredColors={preferredColors}
               onChangePreferredColors={onChangePreferredColors}
+              usePalette={usePalette}
+              onChangeUsePalette={onChangeUsePalette}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli automātiski izmanto Ideogram (labi zīmē burtus).
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
             </p>
           </section>
         </>
@@ -1113,9 +1110,7 @@ function StepDesigns({
   campaign, designs, signedUrls, availableBases, selectedBases, campProducts, catalog,
   publishProgress, busy, onToggleStar, onRegenDesigns, onToggleBase, onBuildMockups,
   onRemoveColor, onUpdatePrintAdj, onExcludeProduct, onRegenerateMockups, onReset, onBack, onNext, onClose,
-  onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice, onChangeStyle,
-  transparentBg, onChangeTransparentBg, customStyleId, onChangeCustomStyleId,
-  imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
+  onSetCoverColor, onRegenSingleDesign, regenSingleId, styleChoice,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
@@ -1152,24 +1147,11 @@ function StepDesigns({
           </div>
         </div>
 
-        <GenerationSettings
-          styleChoice={styleChoice}
-          onChangeStyle={onChangeStyle}
-          transparentBg={transparentBg}
-          onChangeTransparentBg={onChangeTransparentBg}
-          customStyleId={customStyleId}
-          onChangeCustomStyleId={onChangeCustomStyleId}
-          imageSize={imageSize}
-          onChangeImageSize={onChangeImageSize}
-          preferredColors={preferredColors}
-          onChangePreferredColors={onChangePreferredColors}
-        />
-
         <p className="text-[11px] text-muted-foreground mb-2 mt-2">
-          Iestatījumi tiek pielietoti visiem dizainiem. Vienam atsevišķam dizainam vari mainīt promptu un pārģenerēt tikai to ar ↻ pogu uz kartītes.
+          Ģenerēšanas iestatījumus (stils, izmērs, krāsu palete) maini 1. solī. Šeit vari pārģenerēt visu vai atsevišķu dizainu ar ↻ pogu.
         </p>
         <div className="rounded-md border border-primary/30 bg-primary/5 text-[11px] p-2 mb-2 leading-snug">
-          <b>AI modelis tiek izvēlēts automātiski.</b> Ja dizainam pievieno sauklis/tekstu (↻ → laukā "Sauklis"), tiek izmantots <b>Ideogram</b> (labi zīmē burtus). Bez teksta — <b>Recraft</b> ar izvēlēto stilu augšā. Stila sarakstā <i>nav</i> jāmeklē "Ideogram".
+          <b>AI modelis tiek izvēlēts automātiski.</b> Sauklis vai latviešu garumzīmes (ā, ē, š, ž…) → <b>Ideogram v3</b> (labi zīmē burtus un diakritikus). Bez teksta — <b>Recraft</b> ar izvēlēto stilu.
         </div>
         {designs.length === 0 ? (
           <div className="rounded border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -1824,6 +1806,7 @@ function GenerationSettings({
   customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
+  usePalette, onChangeUsePalette,
 }: {
   styleChoice: string;
   onChangeStyle: (v: string) => void;
@@ -1835,6 +1818,8 @@ function GenerationSettings({
   onChangeImageSize: (v: string) => void;
   preferredColors: { r: number; g: number; b: number }[];
   onChangePreferredColors: (v: { r: number; g: number; b: number }[]) => void;
+  usePalette: boolean;
+  onChangeUsePalette: (v: boolean) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [newColor, setNewColor] = useState("#dc2626");
@@ -1859,6 +1844,7 @@ function GenerationSettings({
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
+          {usePalette ? " · palete" : ""}
         </span>
       </button>
       {open && (
@@ -1923,7 +1909,21 @@ function GenerationSettings({
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Vēlamās krāsas (līdz 5)
             </label>
-            <div className="flex flex-wrap gap-1.5 items-center mt-1">
+            <label className="flex items-center gap-2 cursor-pointer mt-1 mb-1.5">
+              <input
+                type="checkbox"
+                checked={usePalette}
+                onChange={(e) => onChangeUsePalette(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-xs">Izmantot krāsu paleti</span>
+            </label>
+            {!usePalette && (
+              <p className="text-[10px] text-muted-foreground">
+                Izslēgts — AI brīvi izvēlas krāsas atbilstoši saturam.
+              </p>
+            )}
+            <div className={`flex flex-wrap gap-1.5 items-center mt-1 ${usePalette ? "" : "opacity-40 pointer-events-none"}`}>
               {preferredColors.map((c, i) => (
                 <button
                   key={i}
