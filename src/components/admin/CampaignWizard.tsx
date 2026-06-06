@@ -1121,6 +1121,8 @@ function StepDesigns({
   imageSize, onChangeImageSize, preferredColors, onChangePreferredColors,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
+  const [showOnShirt, setShowOnShirt] = useState(false);
+  const [shirtColor, setShowShirtColor] = useState<"white" | "black">("white");
 
   return (
     <div className="space-y-5">
@@ -1128,10 +1130,29 @@ function StepDesigns({
       <section>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
           <h4 className="font-semibold text-sm">AI dizaini ({designs.length})</h4>
-          <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns}>
-            {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1.5" />}
-            Pārģenerēt visus
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant={showOnShirt ? "default" : "outline"}
+              onClick={() => setShowOnShirt((v) => !v)}
+              className="h-8 text-[11px]"
+              title="Priekšskats uz krekla"
+            >
+              👕 {showOnShirt ? "Atpakaļ" : "Uz krekla"}
+            </Button>
+            {showOnShirt && (
+              <button
+                type="button"
+                onClick={() => setShowShirtColor((c) => (c === "white" ? "black" : "white"))}
+                className={`w-7 h-7 rounded-full border-2 ${shirtColor === "white" ? "bg-white border-foreground" : "bg-black border-foreground"}`}
+                title="Mainīt krekla krāsu"
+              />
+            )}
+            <Button size="sm" variant="outline" disabled={busy === "designs"} onClick={onRegenDesigns} className="h-8 text-[11px]">
+              {busy === "designs" ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
+              Pārģenerēt
+            </Button>
+          </div>
         </div>
 
         <GenerationSettings
@@ -1168,6 +1189,8 @@ function StepDesigns({
                 styleChoice={styleChoice}
                 onToggleStar={onToggleStar}
                 onRegenSingleDesign={onRegenSingleDesign}
+                showOnShirt={showOnShirt}
+                shirtColor={shirtColor}
               />
             ))}
           </div>
@@ -1703,6 +1726,8 @@ function DesignCard({
   styleChoice,
   onToggleStar,
   onRegenSingleDesign,
+  showOnShirt,
+  shirtColor,
 }: {
   d: DesignRow;
   signedUrls: Record<string, string>;
@@ -1710,29 +1735,68 @@ function DesignCard({
   styleChoice: string;
   onToggleStar: (d: DesignRow) => void;
   onRegenSingleDesign: (id: string, prompt: string, style?: string, slogan?: string) => void;
+  showOnShirt?: boolean;
+  shirtColor?: "white" | "black";
 }) {
+  // local helper rendered inline below; defined here to keep it scoped
+  const ShirtPreview = ({ src, color, busy: b, children }: { src: string; color: "white" | "black"; busy: boolean; children?: React.ReactNode }) => (
+    <div className="relative w-full h-full flex items-center justify-center">
+      {/* Simple t-shirt silhouette */}
+      <svg viewBox="0 0 200 200" className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid meet">
+        <path
+          d="M40 50 L70 25 Q100 45 130 25 L160 50 L185 75 L165 95 L150 80 L150 180 L50 180 L50 80 L35 95 L15 75 Z"
+          fill={color === "white" ? "#f5f5f5" : "#1a1a1a"}
+          stroke={color === "white" ? "#d0d0d0" : "#000"}
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <img
+        src={src}
+        loading="lazy"
+        alt=""
+        className={`relative w-[42%] h-[42%] object-contain ${b ? "opacity-30" : ""}`}
+        style={{ transform: "translateY(8%)", mixBlendMode: color === "black" ? "screen" : "multiply" }}
+      />
+      {children}
+    </div>
+  );
+
   const [editing, setEditing] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState(d.prompt || "");
   const [draftStyle, setDraftStyle] = useState<string>(d.style || styleChoice);
   const [draftSlogan, setDraftSlogan] = useState<string>(d.slogan || "");
 
   const busy = regenSingleId === d.id;
+  const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
 
   return (
     <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
-      {d.image_url && signedUrls[d.image_url] ? (
+      {imgSrc && showOnShirt ? (
+        <ShirtPreview src={imgSrc} color={shirtColor || "white"} busy={busy}>
+          <button
+            onClick={() => onToggleStar(d)}
+            className={`absolute top-1 right-1 p-1 rounded-full transition z-10 ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80"}`}
+            title={d.is_primary ? "Noņemt ★" : "Atzīmēt ★"}
+          >
+            <Star className={`w-4 h-4 ${d.is_primary ? "fill-current" : ""}`} />
+          </button>
+          <button
+            onClick={() => { setDraftPrompt(d.prompt || ""); setDraftStyle(d.style || styleChoice); setDraftSlogan(d.slogan || ""); setEditing(true); }}
+            className="absolute top-1 left-1 p-1 rounded-full bg-background/80 transition z-10"
+            title="Mainīt promptu un pārģenerēt"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </ShirtPreview>
+      ) : imgSrc ? (
         <>
           <img
-            src={getOptimizedSrc(signedUrls[d.image_url], 400, 70)}
+            src={imgSrc}
             loading="lazy"
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
           />
-          {d.slogan && (
-            <div className="absolute bottom-1 left-1 right-1 text-[9px] px-1.5 py-0.5 rounded bg-background/85 truncate font-mono" title={d.slogan}>
-              T: {d.slogan}
-            </div>
-          )}
           <button
             onClick={() => onToggleStar(d)}
             className={`absolute top-1 right-1 p-1 rounded-full transition ${d.is_primary ? "bg-primary text-primary-foreground" : "bg-background/80 opacity-0 group-hover:opacity-100"}`}
