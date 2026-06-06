@@ -869,10 +869,19 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
 /* -------------------- Sub-components -------------------- */
 
-function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any) {
+function StepIdea({
+  campaign, busy, onRegen, onSaveBrief, onNext, onClose,
+  onRegenSingleIdea, regenIdeaIdx,
+  styleChoice, onChangeStyle,
+  transparentBg, onChangeTransparentBg,
+  customStyleId, onChangeCustomStyleId,
+  imageSize, onChangeImageSize,
+  preferredColors, onChangePreferredColors,
+}: any) {
   const initial: Brief = campaign.brief ?? {};
   const [draft, setDraft] = useState<Brief>(initial);
   const [saving, setSaving] = useState(false);
+  const [hintByIdx, setHintByIdx] = useState<Record<number, string>>({});
 
   useEffect(() => { setDraft(campaign.brief ?? {}); }, [campaign.id, campaign.brief]);
 
@@ -1020,6 +1029,31 @@ function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any
                       Ja ievadi tekstu, automātiski izmanto AI modeli, kas labi zīmē burtus (Ideogram).
                     </div>
                   </div>
+                  <div className="pt-2 border-t border-dashed">
+                    <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      AI norāde šai idejai (nav obligāts)
+                    </label>
+                    <Input
+                      value={hintByIdx[idx] ?? ""}
+                      onChange={(e) => setHintByIdx({ ...hintByIdx, [idx]: e.target.value })}
+                      placeholder='piem. "vairāk humora, neon krāsas, retro 80s"'
+                      className="h-8 text-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2 w-full"
+                      disabled={regenIdeaIdx === idx || dirty}
+                      onClick={() => onRegenSingleIdea?.(idx, hintByIdx[idx])}
+                      title={dirty ? "Vispirms saglabā izmaiņas" : "AI pārģenerēs tikai šo ideju"}
+                    >
+                      {regenIdeaIdx === idx
+                        ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                        : <Sparkles className="w-4 h-4 mr-1.5" />}
+                      Pārģenerēt tikai šo ideju ar AI
+                    </Button>
+                  </div>
                 </div>
               ))}
               {ideas.length === 0 && (
@@ -1028,6 +1062,27 @@ function StepIdea({ campaign, busy, onRegen, onSaveBrief, onNext, onClose }: any
                 </div>
               )}
             </div>
+          </section>
+
+          <section>
+            <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-muted-foreground">
+              fal.ai ģenerēšanas iestatījumi
+            </h4>
+            <GenerationSettings
+              styleChoice={styleChoice}
+              onChangeStyle={onChangeStyle}
+              transparentBg={transparentBg}
+              onChangeTransparentBg={onChangeTransparentBg}
+              customStyleId={customStyleId}
+              onChangeCustomStyleId={onChangeCustomStyleId}
+              imageSize={imageSize}
+              onChangeImageSize={onChangeImageSize}
+              preferredColors={preferredColors}
+              onChangePreferredColors={onChangePreferredColors}
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli automātiski izmanto Ideogram (labi zīmē burtus).
+            </p>
           </section>
         </>
       )}
