@@ -183,6 +183,21 @@ async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }):
   throw new Error(`bg-remove failed: ${errors.join(" | ").slice(0, 400)}`);
 }
 
+async function maybeRemoveBackground(opts: {
+  falKey: string;
+  imageUrl: string;
+  originalBytes: Uint8Array;
+  enabled?: boolean;
+}): Promise<Uint8Array> {
+  if (!opts.enabled) return opts.originalBytes;
+  try {
+    return await removeBackgroundBria({ falKey: opts.falKey, imageUrl: opts.imageUrl });
+  } catch (error) {
+    console.error("background removal failed, keeping original image:", error);
+    return opts.originalBytes;
+  }
+}
+
 /** Generic fal.ai text-to-image caller for endpoints that share the {prompt, image_size} shape. */
 async function generateWithFalEndpoint(opts: {
   falKey: string;
@@ -234,11 +249,13 @@ async function generateWithFal(opts: {
       prompt: opts.prompt,
       imageSize: opts.imageSize,
     });
-    if (opts.transparentBg) {
-      const stripped = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });
-      return { bytes: stripped, url };
-    }
-    return { bytes, url };
+    const finalBytes = await maybeRemoveBackground({
+      falKey: opts.falKey,
+      imageUrl: url,
+      originalBytes: bytes,
+      enabled: opts.transparentBg,
+    });
+    return { bytes: finalBytes, url };
   }
 
   const sizeSafeGeneric = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize! : "square_hd";
@@ -258,11 +275,13 @@ async function generateWithFal(opts: {
       endpoint: endpointMap[model],
       body,
     });
-    if (opts.transparentBg) {
-      const stripped = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });
-      return { bytes: stripped, url };
-    }
-    return { bytes, url };
+    const finalBytes = await maybeRemoveBackground({
+      falKey: opts.falKey,
+      imageUrl: url,
+      originalBytes: bytes,
+      enabled: opts.transparentBg,
+    });
+    return { bytes: finalBytes, url };
   }
 
   const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
@@ -299,13 +318,16 @@ async function generateWithFal(opts: {
   const url: string | undefined = data?.images?.[0]?.url;
   if (!url) throw new Error("fal.ai: no image url in response");
 
-  if (opts.transparentBg) {
-    const bytes = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: url });
-    return { bytes, url };
-  }
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
-  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
+  const bytes = new Uint8Array(await imgRes.arrayBuffer());
+  const finalBytes = await maybeRemoveBackground({
+    falKey: opts.falKey,
+    imageUrl: url,
+    originalBytes: bytes,
+    enabled: opts.transparentBg,
+  });
+  return { bytes: finalBytes, url };
 }
 
 function buildPrompt(
