@@ -1542,7 +1542,6 @@ function ProductTuneRow({
               />
             )}
           </div>
-          )}
           {autoSaving && (
             <div className="absolute bottom-1 left-1 right-1 text-[10px] bg-background/80 rounded px-1.5 py-0.5 flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" /> Saglabājas…
