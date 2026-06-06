@@ -1861,6 +1861,15 @@ function DesignCard({
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+          {onSaveToLibrary && (
+            <button
+              onClick={() => onSaveToLibrary(d)}
+              className="absolute bottom-1 right-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition"
+              title="Saglabāt bibliotēkā"
+            >
+              <Heart className="w-4 h-4 text-rose-500" />
+            </button>
+          )}
         </>
       ) : d.generation_error ? (
         <div className="p-2 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-1">
