@@ -867,7 +867,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   return (
     <>
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="block max-w-[100vw] sm:max-w-5xl w-screen sm:w-full max-h-[100dvh] sm:max-h-[92vh] h-[100dvh] sm:h-auto overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
+      <DialogContent className="block max-w-full sm:max-w-5xl w-full max-h-[100dvh] sm:max-h-[92vh] h-[100dvh] sm:h-auto overflow-y-auto overflow-x-hidden p-3 sm:p-6 rounded-none sm:rounded-lg">
         <DialogHeader className="min-w-0">
           <DialogTitle className="font-display text-base sm:text-xl flex items-center gap-2 pr-8 min-w-0">
             <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary shrink-0" />
@@ -1221,7 +1221,7 @@ function StepIdea({
         </>
       )}
 
-      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="flex flex-wrap gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" disabled={busy === "brief"} onClick={onRegen} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white">
           {busy === "brief" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
           Pārģenerēt
@@ -1428,7 +1428,7 @@ function StepDesigns({
         </section>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "reset2"} onClick={onReset} className="hidden sm:inline-flex text-zinc-200 hover:bg-zinc-800 hover:text-white">
           <RotateCcw className="w-4 h-4 mr-1.5" />Atjaunot šo soli
@@ -1539,7 +1539,7 @@ function StepBlog({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18),0_200px_0_200px_rgb(24_24_27)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+      <div className="flex flex-wrap items-center gap-2 sticky bottom-0 bg-zinc-900 text-white border-t border-zinc-800 shadow-[0_-6px_16px_rgba(0,0,0,0.18)] rounded-t-lg -mx-3 sm:mx-0 px-3 sm:px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         <Button variant="outline" size="sm" onClick={onBack} className="flex-1 sm:flex-initial border-zinc-600 bg-zinc-800 text-white hover:bg-zinc-700 hover:text-white"><ArrowLeft className="w-4 h-4 mr-1.5" />Atpakaļ</Button>
         <Button variant="ghost" size="sm" disabled={busy === "save-blog"} onClick={onSave} className="flex-1 sm:flex-initial text-zinc-100 hover:bg-zinc-800 hover:text-white">
           {busy === "save-blog" ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
@@ -1881,7 +1881,23 @@ function DesignCard({
   const [draftModel, setDraftModel] = useState<"auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream">("auto");
 
   const busy = regenSingleId === d.id;
-  const imgSrc = d.image_url && signedUrls[d.image_url] ? getOptimizedSrc(signedUrls[d.image_url], 400, 70) : null;
+  const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
+  const baseSigned = d.image_url ? signedUrls[d.image_url] : undefined;
+  const imgSrc = fallbackSrc ?? (baseSigned ? getOptimizedSrc(baseSigned, 400, 70) : null);
+
+  // If the signed URL fails (expired / 404), try to re-sign once or fall back
+  // to the raw http URL when image_url is already an absolute URL.
+  const handleImgError = async () => {
+    if (!d.image_url || fallbackSrc) return;
+    if (/^https?:\/\//i.test(d.image_url)) { setFallbackSrc(d.image_url); return; }
+    try {
+      await supabase.auth.refreshSession().catch(() => {});
+      const { data } = await supabase.storage
+        .from("campaign-assets")
+        .createSignedUrl(d.image_url, 60 * 60);
+      if (data?.signedUrl) setFallbackSrc(data.signedUrl);
+    } catch (_) { /* give up — show error UI */ }
+  };
 
   return (
     <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
@@ -1909,6 +1925,7 @@ function DesignCard({
             loading="lazy"
             alt=""
             className={`w-full h-full object-cover ${busy ? "opacity-30" : ""}`}
+            onError={handleImgError}
           />
           <button
             onClick={() => onToggleStar(d)}
