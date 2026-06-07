@@ -351,13 +351,12 @@ function buildPrompt(
 
   // ===== Slogan / typography-led design =====
   if (slogan) {
-    const spelling = spellLatvianDiacritics(slogan);
     const out =
-      `Premium typographic print artwork. HERO text: "${slogan}" — render this EXACT string, character by character, preserving every Latvian diacritic. ${spelling}No paraphrasing, no translation, no extra letters, no missing letters, no missing accents. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
-      `Add refined ornamental flourishes, ribbons or vintage screen-print textures. ` +
-      `Supporting motif: ${base}. ` +
+      `Typographic poster artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
+      `Large bold custom lettering, stacked hierarchy, fills most of canvas. ` +
+      `Decorative motif behind the text: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
-      `Text IS the design. No extra text beyond "${slogan}".`;
+      `Do NOT add any other words, banners, ribbons with text, signatures or watermarks — only the exact phrase "${slogan}".`;
     return out.slice(0, 990);
   }
 
