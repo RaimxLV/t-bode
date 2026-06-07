@@ -105,7 +105,7 @@ Tagline: ${existingBrief.tagline_lv ?? "—"}
 Existing idea titles to AVOID duplicating: ${existingTitles || "(none)"}
 ${hint ? `User direction: ${hint}` : ""}
 
-Return JSON: { "title": "Latvian short name (1-4 words)", "prompt": "Detailed cinematic English image prompt — bold modern illustration style, no garment/mockup, no text in the art unless slogan is provided", "slogan": "Optional Latvian slogan to weave into the artwork as typography, or empty string" }
+Return JSON: { "title": "Latvian short name (1-4 words)", "prompt": "Detailed cinematic English image prompt — bold modern illustration style, no garment/mockup, the slogan will be the dominant typography", "slogan": "REQUIRED original witty Latvian slogan (2-6 words) to render as the dominant typography of the artwork — never empty" }
 
 Be DIFFERENT and more daring than the existing ideas.`;
 
@@ -164,7 +164,7 @@ Return JSON with this exact shape:
   "target_audience": "Short description of target audience in Latvian",
   "color_palette": ["#hex1", "#hex2", "#hex3", "#hex4"],
   "design_ideas": [
-    { "title": "Short LV name", "prompt": "Detailed cinematic English image-gen prompt: composition, palette, illustration style, mood, decorative elements. No garment/mockup.", "slogan": "Optional Latvian slogan woven into the art as bold typography (or empty string)" },
+    { "title": "Short LV name", "prompt": "Detailed cinematic English image-gen prompt: composition, palette, illustration style, mood, decorative elements. No garment/mockup.", "slogan": "REQUIRED Latvian slogan (2-6 words) rendered as dominant typography" },
     { "title": "...", "prompt": "...", "slogan": "..." },
     { "title": "...", "prompt": "...", "slogan": "..." },
     { "title": "...", "prompt": "...", "slogan": "..." }
@@ -174,7 +174,7 @@ Return JSON with this exact shape:
 
 REQUIREMENTS for design_ideas:
 - Generate 4 distinct, BOLD, MODERN ideas — each in a different visual style (e.g. one bold flat vector, one retro screen-print, one neo-folk illustration, one pop-art / risograph).
-- AT LEAST 2 of the 4 ideas MUST include a "slogan" field with an original, witty Latvian phrase that will be rendered as the dominant typography of the artwork (vintage / distressed lettering style). The other 2 may have slogan = "".
+- ALL 4 ideas MUST include a non-empty "slogan" field with an original, witty Latvian phrase (2-6 words) that will be rendered as the dominant typography of the artwork (vintage / distressed lettering style). Slogans must be UNIQUE across the 4 ideas — no repeats, no near-duplicates.
 - Slogans must be in natural, contemporary Latvian — humorous, ironic, or culturally specific. Reference Latvian folk traditions, weather, sauna, jāņi, midsummer, food, drinking culture, regional slang where it fits the holiday. Do NOT use English. Do NOT use the cliché "Kur Janka, tur pjanka" unless the holiday truly is about partying — invent fresh ones.
 - Prompts (English) must be richly detailed: specify the illustration style, exact composition, lighting/mood, 3-5 color words, and 2-3 decorative motifs. 30-60 words each.
 
