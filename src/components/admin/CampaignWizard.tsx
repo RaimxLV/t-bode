@@ -1771,7 +1771,7 @@ function ProductTuneRow({
                   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
                 await downloadPrintReadyPng({
                   imageUrl: designUrl,
-                  fileName: `${safe}-460dpi.png`,
+                  fileName: `${safe}-print.png`,
                 });
                 toast.success("Drukas fails lejupielādēts");
               } catch (e: any) {
