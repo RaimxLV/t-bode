@@ -71,57 +71,31 @@ const ALLOWED_SIZES = new Set([
 
 type GenerationMode = "text" | "illustration";
 
-type GatewayModelOverride = "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+type FalModelOverride = "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 
-type GatewayTarget = {
-  provider: "openai" | "gemini";
-  model: string;
-};
-
-function gatewayImageSize(size: string): "1024x1024" | "1024x1536" | "1536x1024" {
-  switch (size) {
-    case "portrait_4_3":
-    case "portrait_16_9":
-      return "1024x1536";
-    case "landscape_4_3":
-    case "landscape_16_9":
-      return "1536x1024";
-    case "square":
-    case "square_hd":
-    default:
-      return "1024x1024";
-  }
-}
-
-function resolveGatewayTarget(opts: {
+/** Map legacy UI tokens to a fal.ai endpoint. Defaults favour recraft-v3 because it
+ *  natively understands our style tokens and renders Latvian text reliably. */
+function resolveFalEndpoint(opts: {
   mode: GenerationMode;
-  model?: GatewayModelOverride;
-  transparentBg?: boolean;
-}): GatewayTarget {
-  if (opts.transparentBg) {
-    switch (opts.model) {
-      case "flux-schnell":
-      case "nano-banana":
-        return { provider: "gemini", model: "google/gemini-3.1-flash-image-preview" };
-      default:
-        return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
-    }
-  }
+  model?: FalModelOverride;
+}): string {
   switch (opts.model) {
     case "ideogram":
-      return { provider: "openai", model: "openai/gpt-image-2" };
-    case "recraft":
+      return "fal-ai/ideogram/v2";
     case "flux-pro":
-    case "seedream":
-      return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
+      return "fal-ai/flux-pro/v1.1";
     case "flux-schnell":
-      return { provider: "gemini", model: "google/gemini-2.5-flash-image" };
+      return "fal-ai/flux/schnell";
     case "nano-banana":
-      return { provider: "gemini", model: "google/gemini-3.1-flash-image-preview" };
+      return "fal-ai/flux/schnell";
+    case "seedream":
+      return "fal-ai/bytedance/seedream/v3/text-to-image";
+    case "recraft":
+      return "fal-ai/recraft-v3";
     case "auto":
     default:
-      if (opts.mode === "text") return { provider: "openai", model: "openai/gpt-image-2" };
-      return { provider: "openai", model: "openai/gpt-image-2" };
+      // Recraft-v3 handles both typography (text mode) and our style tokens.
+      return "fal-ai/recraft-v3";
   }
 }
 
@@ -202,6 +176,28 @@ function buildGatewayPrompt(opts: {
   return `${opts.prompt} ${extras}`.slice(0, 3800);
 }
 
+async function falFetchImageBytes(url: string): Promise<Uint8Array> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Neizdevās lejupielādēt attēlu no fal.ai (${res.status})`);
+  return new Uint8Array(await res.arrayBuffer());
+}
+
+async function falRemoveBackground(apiKey: string, imageUrl: string): Promise<string> {
+  const res = await fetch("https://fal.run/fal-ai/imageutils/rembg", {
+    method: "POST",
+    headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ image_url: imageUrl }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`fal rembg neizdevās (${res.status}): ${t.slice(0, 200)}`);
+  }
+  const data = await res.json();
+  const url: string | undefined = data?.image?.url ?? data?.images?.[0]?.url;
+  if (!url) throw new Error("fal rembg neatgrieza attēla URL");
+  return url;
+}
+
 async function generateDesignImage(opts: {
   apiKey: string;
   prompt: string;
@@ -211,10 +207,10 @@ async function generateDesignImage(opts: {
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
   slogan?: string;
-  model?: GatewayModelOverride;
+  model?: FalModelOverride;
 }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
   const mode = resolveGenerationMode({ prompt: opts.prompt, slogan: opts.slogan, model: opts.model });
-  const target = resolveGatewayTarget({ mode, model: opts.model, transparentBg: opts.transparentBg });
+  const endpoint = resolveFalEndpoint({ mode, model: opts.model });
   const prompt = buildGatewayPrompt({
     prompt: opts.prompt,
     mode,
@@ -223,55 +219,61 @@ async function generateDesignImage(opts: {
     colors: opts.colors,
     customStyleId: opts.customStyleId,
   });
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+  const imageSize = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd";
+
+  // Per-endpoint request body. Recraft-v3 natively accepts our style tokens
+  // and an RGB color palette; everyone else gets a generic flux-style body.
+  const isRecraft = endpoint === "fal-ai/recraft-v3";
+  const body: Record<string, unknown> = isRecraft
+    ? {
+        prompt,
+        image_size: imageSize,
+        style: ALLOWED_STYLES.has(opts.style) && opts.style !== "any" ? opts.style : "digital_illustration",
+        colors: (opts.colors ?? []).slice(0, 5).map((c) => ({
+          r: Math.max(0, Math.min(255, c.r | 0)),
+          g: Math.max(0, Math.min(255, c.g | 0)),
+          b: Math.max(0, Math.min(255, c.b | 0)),
+        })),
+      }
+    : {
+        prompt,
+        image_size: imageSize,
+        num_images: 1,
+        enable_safety_checker: true,
+      };
+
+  const res = await fetch(`https://fal.run/${endpoint}`, {
     method: "POST",
-    headers: {
-      "Lovable-API-Key": opts.apiKey,
-      "X-Lovable-AIG-SDK": "manual-fetch",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(
-      target.provider === "openai"
-        ? {
-            model: target.model,
-            prompt,
-            size: gatewayImageSize(opts.imageSize ?? "square_hd"),
-            quality: "high",
-            output_format: "png",
-            n: 1,
-            stream: false,
-          }
-        : {
-            model: target.model,
-            messages: [{ role: "user", content: prompt }],
-            modalities: ["image", "text"],
-            stream: false,
-          },
-    ),
+    headers: { Authorization: `Key ${opts.apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 
   if (res.status === 429) {
-    throw new Error("AI ģenerēšana šobrīd ir pārāk noslogota. Mēģini vēlreiz pēc brīža.");
+    throw new Error("fal.ai šobrīd ir pārāk noslogots. Mēģini vēlreiz pēc brīža.");
   }
-  if (res.status === 402) {
-    throw new Error("AI kredīti šobrīd nav pieejami. Papildini kredītus un mēģini vēlreiz.");
+  if (res.status === 401 || res.status === 403) {
+    throw new Error("fal.ai atslēga (FAL_KEY) nav derīga vai trūkst kredītu.");
   }
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`AI ģenerēšana neizdevās (${res.status}): ${t.slice(0, 300)}`);
+    throw new Error(`fal.ai ģenerēšana neizdevās (${res.status}): ${t.slice(0, 300)}`);
   }
 
   const data = await res.json();
-  const b64: string | undefined = data?.data?.[0]?.b64_json;
-  if (!b64) throw new Error("AI neatgrieza attēla failu.");
-  const bytes = decodeBase64Image(b64);
+  let url: string | undefined = data?.images?.[0]?.url ?? data?.image?.url;
+  if (!url) throw new Error("fal.ai neatgrieza attēla URL.");
+
+  // Optional background removal pass for transparent print files.
+  if (opts.transparentBg) {
+    try {
+      url = await falRemoveBackground(opts.apiKey, url);
+    } catch (e) {
+      console.warn("background removal failed, returning original:", e);
+    }
+  }
+
+  const bytes = await falFetchImageBytes(url);
   const detected = detectImageAsset(bytes, "image/png");
-  if (!opts.transparentBg && !["png", "svg"].includes(detected.extension)) {
-    throw new Error("AI atgrieza neatbalstītu attēla formātu.");
-  }
-  if (opts.transparentBg && !["png", "svg"].includes(detected.extension)) {
-    throw new Error("AI neatgrieza PNG/SVG failu ar caurspīdīgu fonu.");
-  }
   return {
     bytes,
     contentType: detected.contentType,
@@ -340,11 +342,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const FAL_KEY = Deno.env.get("FAL_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    if (!FAL_KEY) {
+      return new Response(JSON.stringify({ error: "FAL_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -401,7 +403,7 @@ Deno.serve(async (req) => {
 
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
-          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
+          apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
@@ -469,7 +471,7 @@ Deno.serve(async (req) => {
       const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
-          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
+          apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
