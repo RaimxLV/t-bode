@@ -173,7 +173,11 @@ function buildGatewayPrompt(opts: {
     opts.customStyleId?.trim() ? `Honor this internal style reference when useful: ${opts.customStyleId.trim()}.` : "",
     "The output must be a premium apparel print design, centered, isolated, crisp, production-ready, with clean edges and strong silhouette.",
   ].filter(Boolean).join(" ");
-  return `${opts.prompt} ${extras}`.slice(0, 3800);
+  // fal.ai endpoints (flux/schnell, ideogram, recraft, bytedance/seedream)
+  // reject prompts longer than ~1000 chars with HTTP 422 "string_too_long".
+  // Trim base prompt first, then append extras, then hard-cap to 900 chars.
+  const basePrompt = opts.prompt.length > 500 ? opts.prompt.slice(0, 500) : opts.prompt;
+  return `${basePrompt} ${extras}`.slice(0, 900);
 }
 
 async function falFetchImageBytes(url: string): Promise<Uint8Array> {
