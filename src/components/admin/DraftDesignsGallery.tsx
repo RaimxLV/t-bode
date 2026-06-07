@@ -129,19 +129,11 @@ export function DraftDesignsGallery() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "")
         .slice(0, 60) || "drukas-fails";
-      let upscaledUrl: string | undefined;
-      try {
-        const { data, error } = await supabase.functions.invoke("upscale-design", {
-          body: { image_url: item.url, target_long_edge: 3072 },
-        });
-        if (!error && (data as any)?.url) upscaledUrl = (data as any).url as string;
-      } catch (_) { /* fall back to bicubic */ }
       await downloadPrintReadyPng({
         imageUrl: item.url,
-        upscaledUrl,
         fileName: `${safe}-460dpi.png`,
       });
-      toast.success(upscaledUrl ? "AI-uzlabots drukas fails lejupielādēts" : "Drukas fails lejupielādēts");
+      toast.success("Drukas fails lejupielādēts (oriģinālā kvalitāte, 460 DPI)");
     } catch (e: any) {
       toast.error(e?.message || "Neizdevās sagatavot drukas failu");
     } finally {
@@ -223,7 +215,7 @@ export function DraftDesignsGallery() {
                   className="h-7 w-7 p-0"
                   onClick={() => handleDownload(item)}
                   disabled={downloadingKey === item.key}
-                  title="Lejuplādēt AI-uzlabotu 460 DPI drukas failu"
+                  title="Lejuplādēt oriģinālo PNG ar 460 DPI (caurspīdīgs fons, bez pārkodēšanas)"
                 >
                   {downloadingKey === item.key
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
