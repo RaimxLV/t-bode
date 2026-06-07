@@ -353,7 +353,8 @@ function buildPrompt(
   if (slogan) {
     const out =
       `Typographic poster artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
-      `Large bold custom lettering, stacked hierarchy, fills most of canvas. ` +
+      `MAXIMALLY ARTISTIC custom hand-lettering — NEVER use generic, standard, default or system fonts (no Helvetica, Arial, Inter, Roboto, Times, Impact, Bebas). ` +
+      `Pick a daring expressive lettering style: blackletter gothic, baroque flourished script, art-nouveau Mucha lettering, psychedelic 70s warped type, brutalist woodcut, distressed punk stencil, vintage Latvian folk ornament type, art-deco geometric, surreal melting type, woodblock circus poster, riso-grain grunge, or hand-carved engraving. Choose ONE style that fits the mood and execute it with virtuoso craftsmanship — irregular weights, ligatures, custom swashes, decorative terminals, texture, character. Letters stacked in bold hierarchy, fills most of canvas. ` +
       `Decorative motif behind the text: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
       `Do NOT add any other words, banners, ribbons with text, signatures or watermarks — only the exact phrase "${slogan}".`;
