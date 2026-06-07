@@ -94,8 +94,9 @@ function resolveFalEndpoint(opts: {
       return "fal-ai/recraft-v3";
     case "auto":
     default:
-      // Recraft-v3 handles both typography (text mode) and our style tokens.
-      return "fal-ai/recraft-v3";
+      // Ideogram v2 renders typography (incl. non-English text with diacritics)
+      // far more reliably than recraft-v3. Recraft is kept for pure illustration.
+      return opts.mode === "text" ? "fal-ai/ideogram/v2" : "fal-ai/recraft-v3";
   }
 }
 
