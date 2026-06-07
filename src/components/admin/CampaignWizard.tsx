@@ -1882,6 +1882,7 @@ function DesignCard({
 
   const busy = regenSingleId === d.id;
   const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const baseSigned = d.image_url ? signedUrls[d.image_url] : undefined;
   const imgSrc = fallbackSrc ?? (baseSigned ? getOptimizedSrc(baseSigned, 400, 70) : null);
 
@@ -1895,13 +1896,17 @@ function DesignCard({
       const { data } = await supabase.storage
         .from("campaign-assets")
         .createSignedUrl(d.image_url, 60 * 60);
-      if (data?.signedUrl) setFallbackSrc(data.signedUrl);
+      if (data?.signedUrl) {
+        setFallbackSrc(data.signedUrl);
+        return;
+      }
     } catch (_) { /* give up — show error UI */ }
+    setImageLoadFailed(true);
   };
 
   return (
     <div className="relative group aspect-square rounded border bg-muted/30 overflow-hidden">
-      {imgSrc && showOnShirt ? (
+      {imgSrc && !imageLoadFailed && showOnShirt ? (
         <ShirtPreview src={imgSrc} color={shirtColor || "white"} busy={busy}>
           <button
             onClick={() => onToggleStar(d)}
@@ -1918,7 +1923,7 @@ function DesignCard({
             <RefreshCw className="w-4 h-4" />
           </button>
         </ShirtPreview>
-      ) : imgSrc ? (
+      ) : imgSrc && !imageLoadFailed ? (
         <>
           <img
             src={imgSrc}
@@ -1951,10 +1956,12 @@ function DesignCard({
             </button>
           )}
         </>
-      ) : d.generation_error ? (
+      ) : d.generation_error || imageLoadFailed ? (
         <div className="p-3 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-2 bg-destructive/5">
           <span className="text-xl leading-none">⚠</span>
-          <span className="line-clamp-4 max-w-full break-words">{summarizeGenerationError(d.generation_error)}</span>
+          <span className="line-clamp-4 max-w-full break-words">
+            {imageLoadFailed ? "Neizdevās ielādēt ģenerēto attēlu. Pārģenerē šo dizainu." : summarizeGenerationError(d.generation_error)}
+          </span>
           <button
             onClick={() => { setDraftModel("auto"); setEditing(true); }}
             className="underline text-foreground"
