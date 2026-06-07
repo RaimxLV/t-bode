@@ -11,7 +11,7 @@ interface Body {
   design_id?: string;
   prompt_override?: string;
   style?: string;
-  /** Optional Recraft custom style UUID (overrides preset). */
+  /** Optional custom style UUID retained for compatibility with existing campaign settings. */
   custom_style_id?: string;
   /** Square_hd / square / portrait_hd / landscape_hd / landscape. */
   image_size?: string;
@@ -25,7 +25,7 @@ interface Body {
   model_override?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }
 
-/** Allowed Recraft V3 styles (full list from fal.ai schema). */
+/** Supported legacy style tokens retained so existing campaigns keep their visual direction. */
 const ALLOWED_STYLES = new Set<string>([
   "any",
   // Realistic
@@ -237,7 +237,7 @@ function buildPrompt(
 ): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
-  // Hard cap on base description so the final prompt stays <1000 chars (fal.ai limit).
+  // Keep the base prompt concise so the typography and print constraints stay dominant.
   const base = rawPrompt.trim().slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
   const bgHint = transparent
@@ -249,7 +249,7 @@ function buildPrompt(
     "Premium editorial, gallery-grade, refined detail, boutique streetwear. " +
     "NEGATIVE: not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon.";
 
-  // ===== Slogan / typography-led design (routed to Ideogram) =====
+  // ===== Slogan / typography-led design =====
   if (slogan) {
     const out =
       `Premium typographic t-shirt print. HERO text: "${slogan}" — render this exact string with perfect spelling, preserve every diacritic exactly, no paraphrasing, no substitutions, no extra letters. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
@@ -260,7 +260,7 @@ function buildPrompt(
     return out.slice(0, 990);
   }
 
-  // ===== No slogan — pure illustration (Recraft) =====
+  // ===== No slogan — pure illustration =====
   const styleHint = isVector
     ? "Bold confident flat vector, refined shapes, disciplined palette."
     : isIllustration
