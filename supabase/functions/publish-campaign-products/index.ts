@@ -21,6 +21,11 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
+function extFromContentType(contentType: string | null): "png" | "jpg" {
+  const value = (contentType || "").toLowerCase();
+  return value.includes("jpeg") || value.includes("jpg") ? "jpg" : "png";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -85,11 +90,12 @@ Deno.serve(async (req) => {
           .download(d.image_url);
         if (dlErr || !file) throw new Error(`Download failed: ${dlErr?.message}`);
 
+        const contentType = file.type || "image/png";
         const bytes = new Uint8Array(await file.arrayBuffer());
-        const publicPath = `campaigns/${campaign_id}/${d.id}.png`;
+        const publicPath = `campaigns/${campaign_id}/${d.id}.${extFromContentType(contentType)}`;
         const { error: upErr } = await admin.storage
           .from("product-images")
-          .upload(publicPath, bytes, { contentType: "image/png", upsert: true });
+          .upload(publicPath, bytes, { contentType, upsert: true });
         if (upErr) throw upErr;
 
         const { data: pub } = admin.storage.from("product-images").getPublicUrl(publicPath);
