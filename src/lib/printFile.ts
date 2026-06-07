@@ -12,6 +12,24 @@
 
 const DPI = 460;
 
+function sniffImageType(buf: ArrayBuffer, headerContentType: string | null): { isPng: boolean; extension: string; mimeType: string } {
+  const bytes = new Uint8Array(buf);
+  const asciiHead = new TextDecoder().decode(bytes.subarray(0, Math.min(bytes.length, 512))).trimStart().toLowerCase();
+  if (asciiHead.startsWith("<svg") || (asciiHead.startsWith("<?xml") && asciiHead.includes("<svg"))) {
+    return { isPng: false, extension: ".svg", mimeType: "image/svg+xml" };
+  }
+  const isPng =
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+  if (isPng) return { isPng: true, extension: ".png", mimeType: "image/png" };
+  const isJpg = bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  if (isJpg) return { isPng: false, extension: ".jpg", mimeType: "image/jpeg" };
+  const header = (headerContentType || "application/octet-stream").toLowerCase();
+  if (header.includes("svg")) return { isPng: false, extension: ".svg", mimeType: "image/svg+xml" };
+  if (header.includes("jpeg") || header.includes("jpg")) return { isPng: false, extension: ".jpg", mimeType: "image/jpeg" };
+  return { isPng: false, extension: ".png", mimeType: header || "image/png" };
+}
+
 // Inject a pHYs chunk (DPI) immediately after the IHDR chunk
 function injectDpi(buf: ArrayBuffer, dpi: number): Blob {
   const src = new Uint8Array(buf);
@@ -77,17 +95,15 @@ export async function downloadPrintReadyPng(opts: {
   // Validate it's a PNG (89 50 4E 47). If the source is JPG (e.g. an older
   // pre-transparency design), we still pass it through — the user gets the
   // original quality with no re-encoding, but DPI injection is skipped.
-  const sig = new Uint8Array(buf, 0, 8);
-  const isPng =
-    sig[0] === 0x89 && sig[1] === 0x50 && sig[2] === 0x4e && sig[3] === 0x47;
-  const dpiBlob: Blob = isPng
+  const detected = sniffImageType(buf, res.headers.get("content-type"));
+  const dpiBlob: Blob = detected.isPng
     ? injectDpi(buf, DPI)
-    : new Blob([buf], { type: res.headers.get("content-type") || "image/png" });
+    : new Blob([buf], { type: detected.mimeType });
 
   const url = URL.createObjectURL(dpiBlob);
   const a = document.createElement("a");
   a.href = url;
-  const ext = isPng ? ".png" : ".jpg";
+  const ext = detected.extension;
   a.download = opts.fileName.endsWith(ext) ? opts.fileName : opts.fileName.replace(/\.(png|jpg|jpeg)$/i, "") + ext;
   document.body.appendChild(a);
   a.click();

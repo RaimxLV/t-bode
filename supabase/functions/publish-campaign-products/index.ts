@@ -21,8 +21,10 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
-function extFromContentType(contentType: string | null): "png" | "jpg" {
+function extFromContentType(contentType: string | null): "png" | "jpg" | "svg" | "webp" {
   const value = (contentType || "").toLowerCase();
+  if (value.includes("svg")) return "svg";
+  if (value.includes("webp")) return "webp";
   return value.includes("jpeg") || value.includes("jpg") ? "jpg" : "png";
 }
 
