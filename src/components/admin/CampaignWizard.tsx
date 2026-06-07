@@ -535,10 +535,20 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const res = await fetch(signed);
       if (!res.ok) throw new Error("Nevar lejupielādēt");
       const blob = await res.blob();
+      const contentType = blob.type || (d.image_url.match(/\.(svg|png|jpe?g|webp)(?:$|\?)/i)?.[1]?.toLowerCase() === "svg"
+        ? "image/svg+xml"
+        : "image/png");
+      const ext = contentType.includes("svg")
+        ? "svg"
+        : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("jpeg") || contentType.includes("jpg")
+        ? "jpg"
+        : "png";
       const name = (campaign?.brief?.title_lv || campaign?.title || "Dizains").slice(0, 60);
-      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.png`;
+      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.${ext}`;
       const up = await supabase.storage.from("design-library").upload(path, blob, {
-        contentType: "image/png", upsert: false,
+        contentType, upsert: false,
       });
       if (up.error) throw up.error;
       const { error: dbErr } = await supabase.from("design_library").insert({
@@ -561,10 +571,20 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const res = await fetch(pub);
       if (!res.ok) throw new Error("Nevar lejupielādēt");
       const blob = await res.blob();
+      const contentType = blob.type || (item.file_path.match(/\.(svg|png|jpe?g|webp)(?:$|\?)/i)?.[1]?.toLowerCase() === "svg"
+        ? "image/svg+xml"
+        : "image/png");
+      const ext = contentType.includes("svg")
+        ? "svg"
+        : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("jpeg") || contentType.includes("jpg")
+        ? "jpg"
+        : "png";
       const newDesignId = crypto.randomUUID();
-      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.png`;
+      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.${ext}`;
       const up = await supabase.storage.from("campaign-assets").upload(path, blob, {
-        contentType: "image/png", upsert: true,
+        contentType, upsert: true,
       });
       if (up.error) throw up.error;
       const { error } = await supabase.from("campaign_designs" as any).insert({
