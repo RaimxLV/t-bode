@@ -98,6 +98,15 @@ function resolveGatewayTarget(opts: {
   model?: GatewayModelOverride;
   transparentBg?: boolean;
 }): GatewayTarget {
+  if (opts.transparentBg) {
+    switch (opts.model) {
+      case "flux-schnell":
+      case "nano-banana":
+        return { provider: "gemini", model: "google/gemini-3.1-flash-image-preview" };
+      default:
+        return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
+    }
+  }
   switch (opts.model) {
     case "ideogram":
       return { provider: "openai", model: "openai/gpt-image-2" };
@@ -112,7 +121,6 @@ function resolveGatewayTarget(opts: {
     case "auto":
     default:
       if (opts.mode === "text") return { provider: "openai", model: "openai/gpt-image-2" };
-      if (opts.transparentBg) return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
       return { provider: "openai", model: "openai/gpt-image-2" };
   }
 }
