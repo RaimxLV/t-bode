@@ -105,7 +105,7 @@ type BlogPost = {
 
 const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
-/** Recraft V3 style presets (fal.ai) — full catalog, grouped. */
+/** Style preset catalog used to guide generated artwork. */
 type StyleOpt = { value: string; label: string };
 const STYLE_GROUPS: { group: string; options: StyleOpt[] }[] = [
   { group: "Vektors", options: [
