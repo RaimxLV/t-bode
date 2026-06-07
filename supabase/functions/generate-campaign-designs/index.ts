@@ -485,16 +485,16 @@ Deno.serve(async (req) => {
       const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
 
       try {
-        const { bytes } = await generateWithFal({
+        const { bytes, contentType, extension } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
         });
-        const path = `${campaign_id}/${design_id}-${Date.now()}.png`;
+        const path = `${campaign_id}/${design_id}-${Date.now()}.${extension}`;
         const { error: upErr } = await admin.storage
           .from("campaign-assets")
-          .upload(path, bytes, { contentType: "image/png", upsert: true });
+          .upload(path, bytes, { contentType, upsert: true });
         if (upErr) throw upErr;
 
         const { error: updErr } = await admin
@@ -553,16 +553,16 @@ Deno.serve(async (req) => {
       const slogan = (idea.slogan ?? "").trim();
       const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
-        const { bytes } = await generateWithFal({
+        const { bytes, contentType, extension } = await generateWithFal({
           falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
         });
-        const path = `${campaign_id}/${i}-${Date.now()}.png`;
+        const path = `${campaign_id}/${i}-${Date.now()}.${extension}`;
         const { error: upErr } = await admin.storage
           .from("campaign-assets")
-          .upload(path, bytes, { contentType: "image/png", upsert: true });
+          .upload(path, bytes, { contentType, upsert: true });
         if (upErr) throw upErr;
 
         const { error: insErr } = await admin.from("campaign_designs").insert({
