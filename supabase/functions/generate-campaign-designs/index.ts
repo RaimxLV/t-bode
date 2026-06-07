@@ -69,6 +69,22 @@ const ALLOWED_SIZES = new Set([
   "square_hd","square","portrait_4_3","portrait_16_9","landscape_4_3","landscape_16_9",
 ]);
 
+/** High-resolution custom dimensions for print-quality output. fal endpoints
+ *  (ideogram v3, recraft v3, flux, seedream) accept {width, height} up to 2048.
+ *  We always upgrade preset sizes to 2048 on the long edge so designs are usable
+ *  for DTF/print without a lossy upscaler step afterwards. */
+function hiResDims(size: string): { width: number; height: number } {
+  switch (size) {
+    case "portrait_4_3":   return { width: 1536, height: 2048 };
+    case "portrait_16_9":  return { width: 1152, height: 2048 };
+    case "landscape_4_3":  return { width: 2048, height: 1536 };
+    case "landscape_16_9": return { width: 2048, height: 1152 };
+    case "square":
+    case "square_hd":
+    default:               return { width: 2048, height: 2048 };
+  }
+}
+
 /** Map fal image_size to Ideogram aspect_ratio. */
 function sizeToAspect(size: string): string {
   switch (size) {
