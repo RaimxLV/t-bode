@@ -535,10 +535,20 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const res = await fetch(signed);
       if (!res.ok) throw new Error("Nevar lejupielādēt");
       const blob = await res.blob();
+      const contentType = blob.type || (d.image_url.match(/\.(svg|png|jpe?g|webp)(?:$|\?)/i)?.[1]?.toLowerCase() === "svg"
+        ? "image/svg+xml"
+        : "image/png");
+      const ext = contentType.includes("svg")
+        ? "svg"
+        : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("jpeg") || contentType.includes("jpg")
+        ? "jpg"
+        : "png";
       const name = (campaign?.brief?.title_lv || campaign?.title || "Dizains").slice(0, 60);
-      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.png`;
+      const path = `campaign-favorites/${campaign?.id}/${d.id}-${Date.now()}.${ext}`;
       const up = await supabase.storage.from("design-library").upload(path, blob, {
-        contentType: "image/png", upsert: false,
+        contentType, upsert: false,
       });
       if (up.error) throw up.error;
       const { error: dbErr } = await supabase.from("design_library").insert({
@@ -561,10 +571,20 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const res = await fetch(pub);
       if (!res.ok) throw new Error("Nevar lejupielādēt");
       const blob = await res.blob();
+      const contentType = blob.type || (item.file_path.match(/\.(svg|png|jpe?g|webp)(?:$|\?)/i)?.[1]?.toLowerCase() === "svg"
+        ? "image/svg+xml"
+        : "image/png");
+      const ext = contentType.includes("svg")
+        ? "svg"
+        : contentType.includes("webp")
+        ? "webp"
+        : contentType.includes("jpeg") || contentType.includes("jpg")
+        ? "jpg"
+        : "png";
       const newDesignId = crypto.randomUUID();
-      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.png`;
+      const path = `${campaign.id}/${newDesignId}-lib-${Date.now()}.${ext}`;
       const up = await supabase.storage.from("campaign-assets").upload(path, blob, {
-        contentType: "image/png", upsert: true,
+        contentType, upsert: true,
       });
       if (up.error) throw up.error;
       const { error } = await supabase.from("campaign_designs" as any).insert({
@@ -1749,27 +1769,18 @@ function ProductTuneRow({
               try {
                 const safe = (product.name_lv || product.name || "drukas-fails")
                   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-                // Try AI upscale for sharp print-ready output; fall back to bicubic.
-                let upscaledUrl: string | undefined;
-                try {
-                  const { data, error } = await supabase.functions.invoke("upscale-design", {
-                    body: { image_url: designUrl, target_long_edge: 3072 },
-                  });
-                  if (!error && (data as any)?.url) upscaledUrl = (data as any).url as string;
-                } catch (_) { /* fall back to bicubic */ }
                 await downloadPrintReadyPng({
                   imageUrl: designUrl,
-                  upscaledUrl,
                   fileName: `${safe}-460dpi.png`,
                 });
-                toast.success(upscaledUrl ? "AI-uzlabots drukas fails lejupielādēts" : "Drukas fails lejupielādēts");
+                toast.success("Drukas fails lejupielādēts");
               } catch (e: any) {
                 toast.error(e?.message || "Neizdevās sagatavot drukas failu");
               } finally {
                 setDownloading(false);
               }
             }}
-            title="Lejuplādēt AI-uzlabotu 460 DPI PNG ar caurspīdīgu fonu"
+            title="Lejuplādēt oriģinālo print failu ar caurspīdīgu fonu"
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           </Button>

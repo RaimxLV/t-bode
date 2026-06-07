@@ -235,13 +235,31 @@ async function maybeRemoveBackground(opts: {
   imageUrl: string;
   originalBytes: Uint8Array;
   enabled?: boolean;
-}): Promise<Uint8Array> {
-  if (!opts.enabled) return opts.originalBytes;
+}): Promise<{ bytes: Uint8Array; contentType: string; extension: string; backgroundRemoved: boolean }> {
+  const originalAsset = detectImageAsset(opts.originalBytes);
+  if (!opts.enabled) {
+    return {
+      bytes: opts.originalBytes,
+      contentType: originalAsset.contentType,
+      extension: originalAsset.extension,
+      backgroundRemoved: false,
+    };
+  }
   try {
-    return await removeBackgroundBria({ falKey: opts.falKey, imageUrl: opts.imageUrl });
+    const removedBytes = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: opts.imageUrl });
+    const removedAsset = detectImageAsset(removedBytes);
+    if (!["png", "svg"].includes(removedAsset.extension)) {
+      throw new Error(`bg-remove returned unsupported format: ${removedAsset.contentType}`);
+    }
+    return {
+      bytes: removedBytes,
+      contentType: removedAsset.contentType,
+      extension: removedAsset.extension,
+      backgroundRemoved: true,
+    };
   } catch (error) {
-    console.error("background removal failed, keeping original image:", error);
-    return opts.originalBytes;
+    console.error("background removal failed:", error);
+    throw error instanceof Error ? error : new Error(String(error));
   }
 }
 
@@ -298,17 +316,20 @@ async function generateWithFal(opts: {
       prompt: opts.prompt,
       imageSize: opts.imageSize,
     });
-    const finalBytes = await maybeRemoveBackground({
+    const finalAsset = await maybeRemoveBackground({
       falKey: opts.falKey,
       imageUrl: url,
       originalBytes: bytes,
       enabled: opts.transparentBg,
     });
+    if (opts.transparentBg && !finalAsset.backgroundRemoved) {
+      throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
+    }
     return {
-      bytes: finalBytes,
+      bytes: finalAsset.bytes,
       url,
-      contentType: opts.transparentBg ? "image/png" : contentType,
-      extension: opts.transparentBg ? "png" : extension,
+      contentType: finalAsset.contentType,
+      extension: finalAsset.extension,
     };
   }
 
@@ -329,17 +350,20 @@ async function generateWithFal(opts: {
       endpoint: endpointMap[model],
       body,
     });
-    const finalBytes = await maybeRemoveBackground({
+    const finalAsset = await maybeRemoveBackground({
       falKey: opts.falKey,
       imageUrl: url,
       originalBytes: bytes,
       enabled: opts.transparentBg,
     });
+      if (opts.transparentBg && !finalAsset.backgroundRemoved) {
+        throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
+      }
       return {
-        bytes: finalBytes,
+        bytes: finalAsset.bytes,
         url,
-        contentType: opts.transparentBg ? "image/png" : contentType,
-        extension: opts.transparentBg ? "png" : extension,
+        contentType: finalAsset.contentType,
+        extension: finalAsset.extension,
       };
   }
 
@@ -380,17 +404,20 @@ async function generateWithFal(opts: {
   if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
   const bytes = new Uint8Array(await imgRes.arrayBuffer());
   const detected = detectImageAsset(bytes, imgRes.headers.get("content-type"));
-  const finalBytes = await maybeRemoveBackground({
+  const finalAsset = await maybeRemoveBackground({
     falKey: opts.falKey,
     imageUrl: url,
     originalBytes: bytes,
     enabled: opts.transparentBg,
   });
+  if (opts.transparentBg && !finalAsset.backgroundRemoved) {
+    throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
+  }
   return {
-    bytes: finalBytes,
+    bytes: finalAsset.bytes,
     url,
-    contentType: opts.transparentBg ? "image/png" : detected.contentType,
-    extension: opts.transparentBg ? "png" : detected.extension,
+    contentType: finalAsset.contentType,
+    extension: finalAsset.extension,
   };
 }
 

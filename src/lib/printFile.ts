@@ -96,6 +96,9 @@ export async function downloadPrintReadyPng(opts: {
   // pre-transparency design), we still pass it through — the user gets the
   // original quality with no re-encoding, but DPI injection is skipped.
   const detected = sniffImageType(buf, res.headers.get("content-type"));
+  if (![".png", ".svg"].includes(detected.extension)) {
+    throw new Error("Drukai atļauti tikai PNG vai SVG faili ar caurspīdīgu fonu. Šo dizainu vajag pārģenerēt.");
+  }
   const dpiBlob: Blob = detected.isPng
     ? injectDpi(buf, DPI)
     : new Blob([buf], { type: detected.mimeType });
