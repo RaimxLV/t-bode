@@ -11,21 +11,21 @@ interface Body {
   design_id?: string;
   prompt_override?: string;
   style?: string;
-  /** Optional Recraft custom style UUID (overrides preset). */
+  /** Optional custom style UUID retained for compatibility with existing campaign settings. */
   custom_style_id?: string;
   /** Square_hd / square / portrait_hd / landscape_hd / landscape. */
   image_size?: string;
   /** Up to 5 preferred RGB colors, e.g. [{r:200,g:30,b:40}]. */
   colors?: { r: number; g: number; b: number }[];
-  /** Strip background after generation (Bria). */
+  /** Return the design with a transparent background when possible. */
   transparent_bg?: boolean;
-  /** Per-design slogan text to weave into the artwork (auto-routes to Ideogram). */
+  /** Per-design slogan text to weave into the artwork. */
   slogan_override?: string;
-  /** Force a specific image model: "auto" | "ideogram" | "recraft". */
+  /** Legacy model selector kept for UI compatibility; now maps to internal generation modes. */
   model_override?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }
 
-/** Allowed Recraft V3 styles (full list from fal.ai schema). */
+/** Supported legacy style tokens retained so existing campaigns keep their visual direction. */
 const ALLOWED_STYLES = new Set<string>([
   "any",
   // Realistic
@@ -69,19 +69,20 @@ const ALLOWED_SIZES = new Set([
   "square_hd","square","portrait_4_3","portrait_16_9","landscape_4_3","landscape_16_9",
 ]);
 
-/** High-resolution custom dimensions for print-quality output. fal endpoints
- *  (ideogram v3, recraft v3, flux, seedream) accept {width, height} up to 2048.
- *  We always upgrade preset sizes to 2048 on the long edge so designs are usable
- *  for DTF/print without a lossy upscaler step afterwards. */
-function hiResDims(size: string): { width: number; height: number } {
+type GenerationMode = "text" | "illustration";
+
+function gatewayImageSize(size: string): "1024x1024" | "1024x1536" | "1536x1024" {
   switch (size) {
-    case "portrait_4_3":   return { width: 1536, height: 2048 };
-    case "portrait_16_9":  return { width: 1152, height: 2048 };
-    case "landscape_4_3":  return { width: 2048, height: 1536 };
-    case "landscape_16_9": return { width: 2048, height: 1152 };
+    case "portrait_4_3":
+    case "portrait_16_9":
+      return "1024x1536";
+    case "landscape_4_3":
+    case "landscape_16_9":
+      return "1536x1024";
     case "square":
     case "square_hd":
-    default:               return { width: 2048, height: 2048 };
+    default:
+      return "1024x1024";
   }
 }
 
@@ -114,183 +115,56 @@ function detectImageAsset(bytes: Uint8Array, headerContentType?: string | null):
   return { contentType: "image/png", extension: "png" };
 }
 
-/** Map fal image_size to Ideogram aspect_ratio. */
-function sizeToAspect(size: string): string {
-  switch (size) {
-    case "portrait_4_3": return "3:4";
-    case "portrait_16_9": return "9:16";
-    case "landscape_4_3": return "4:3";
-    case "landscape_16_9": return "16:9";
-    default: return "1:1";
-  }
+function decodeBase64Image(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
-async function generateWithIdeogram(opts: {
-  falKey: string;
+function resolveGenerationMode(opts: {
   prompt: string;
-  imageSize?: string;
-}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
-  // v3 handles non-English text & diacritics (Latvian ā ē ī ū č š ž ķ ļ ņ ģ) much better than v2.
-  const res = await fetch("https://fal.run/fal-ai/ideogram/v3", {
-    method: "POST",
-    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt: opts.prompt,
-      image_size: hiResDims(opts.imageSize ?? "square_hd"),
-      style: "DESIGN",
-      rendering_speed: "QUALITY",
-      expand_prompt: false,
-      num_images: 1,
-    }),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`ideogram ${res.status}: ${t.slice(0, 300)}`);
-  }
-  const data = await res.json();
-  const url: string | undefined = data?.images?.[0]?.url ?? data?.image?.url;
-  if (!url) throw new Error("ideogram: no image url");
-  const imgRes = await fetch(url);
-  if (!imgRes.ok) throw new Error(`ideogram download ${imgRes.status}`);
-  const bytes = new Uint8Array(await imgRes.arrayBuffer());
-  const { contentType, extension } = detectImageAsset(bytes, imgRes.headers.get("content-type"));
-  return { bytes, url, contentType, extension };
+  slogan?: string;
+  model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+}): GenerationMode {
+  if (opts.model === "ideogram") return "text";
+  if (opts.model && opts.model !== "auto") return "illustration";
+  const lvRe = /[āēīōūčšžķļņģĀĒĪŌŪČŠŽĶĻŅĢ]/;
+  if ((opts.slogan || "").trim()) return "text";
+  if (lvRe.test(opts.prompt)) return "text";
+  return "illustration";
 }
 
-async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
-  // Strategy: upload the source PNG to fal storage first so background-removal
-  // endpoints receive a stable, server-side fal CDN URL (not a signed/short-lived
-  // one from another fal endpoint). Then try a small fallback chain so a single
-  // model outage doesn't fail the whole design generation.
-
-  // 1. Download bytes from the source URL.
-  const dl = await fetch(opts.imageUrl);
-  if (!dl.ok) throw new Error(`bg-remove source download ${dl.status}`);
-  const srcBytes = new Uint8Array(await dl.arrayBuffer());
-  const ct = dl.headers.get("content-type") || "image/png";
-
-  // 2. Upload to fal storage to get a clean CDN URL.
-  let uploadedUrl: string | null = null;
-  try {
-    const initRes = await fetch("https://rest.alpha.fal.ai/storage/upload/initiate", {
-      method: "POST",
-      headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ file_name: "src.png", content_type: ct }),
-    });
-    if (initRes.ok) {
-      const init = await initRes.json();
-      const putRes = await fetch(init.upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": ct },
-        body: srcBytes,
-      });
-      if (putRes.ok) uploadedUrl = init.file_url as string;
-    }
-  } catch (_) { /* fall through to data URI */ }
-
-  // Fall back to base64 data URI if upload failed.
-  if (!uploadedUrl) {
-    let bin = "";
-    const chunk = 0x8000;
-    for (let i = 0; i < srcBytes.length; i += chunk) {
-      bin += String.fromCharCode(...srcBytes.subarray(i, i + chunk));
-    }
-    uploadedUrl = `data:${ct};base64,${btoa(bin)}`;
-  }
-
-  // 3. Try a chain of background-removal models.
-  const endpoints: { url: string; body: (u: string) => Record<string, unknown> }[] = [
-    { url: "https://fal.run/fal-ai/birefnet/v2", body: (u) => ({ image_url: u }) },
-    { url: "https://fal.run/fal-ai/imageutils/rembg", body: (u) => ({ image_url: u }) },
-    { url: "https://fal.run/fal-ai/bria/background/remove", body: (u) => ({ image_url: u }) },
-  ];
-  const errors: string[] = [];
-  for (const ep of endpoints) {
-    try {
-      const res = await fetch(ep.url, {
-        method: "POST",
-        headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(ep.body(uploadedUrl)),
-      });
-      if (!res.ok) {
-        errors.push(`${ep.url} ${res.status}: ${(await res.text()).slice(0, 120)}`);
-        continue;
-      }
-      const data = await res.json();
-      const outUrl: string | undefined =
-        data?.image?.url ?? data?.images?.[0]?.url ?? data?.output?.url;
-      if (!outUrl) { errors.push(`${ep.url}: no image url`); continue; }
-      const r = await fetch(outUrl);
-      if (!r.ok) { errors.push(`${ep.url} download ${r.status}`); continue; }
-      return new Uint8Array(await r.arrayBuffer());
-    } catch (e: any) {
-      errors.push(`${ep.url}: ${e?.message ?? e}`);
-    }
-  }
-  throw new Error(`bg-remove failed: ${errors.join(" | ").slice(0, 400)}`);
+function buildGatewayPrompt(opts: {
+  prompt: string;
+  mode: GenerationMode;
+  transparentBg?: boolean;
+  style: string;
+  colors?: { r: number; g: number; b: number }[];
+  customStyleId?: string;
+}) {
+  const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
+  const palette = (opts.colors ?? [])
+    .slice(0, 5)
+    .map((c) => `rgb(${Math.max(0, Math.min(255, c.r | 0))}, ${Math.max(0, Math.min(255, c.g | 0))}, ${Math.max(0, Math.min(255, c.b | 0))})`)
+    .join(", ");
+  const extras = [
+    opts.mode === "text"
+      ? "Typography is critical. If text appears, render every character exactly as written, preserve Latvian diacritics perfectly, do not paraphrase, do not translate, do not add extra letters, and keep the lettering fully legible."
+      : "No accidental text, no gibberish letters, no watermark, no signature.",
+    opts.transparentBg
+      ? "Final asset must have a truly transparent background with no white box, no matte, no halo, no edge shadow, and no background objects."
+      : "Use a clean plain background only if absolutely necessary.",
+    `Visual style direction: ${styleSafe}.`,
+    palette ? `Use this restrained print palette when possible: ${palette}.` : "Use a disciplined screen-print palette suited for apparel.",
+    opts.customStyleId?.trim() ? `Honor this internal style reference when useful: ${opts.customStyleId.trim()}.` : "",
+    "The output must be a premium apparel print design, centered, isolated, crisp, production-ready, with clean edges and strong silhouette.",
+  ].filter(Boolean).join(" ");
+  return `${opts.prompt} ${extras}`.slice(0, 3800);
 }
 
-async function maybeRemoveBackground(opts: {
-  falKey: string;
-  imageUrl: string;
-  originalBytes: Uint8Array;
-  enabled?: boolean;
-}): Promise<{ bytes: Uint8Array; contentType: string; extension: string; backgroundRemoved: boolean }> {
-  const originalAsset = detectImageAsset(opts.originalBytes);
-  if (!opts.enabled) {
-    return {
-      bytes: opts.originalBytes,
-      contentType: originalAsset.contentType,
-      extension: originalAsset.extension,
-      backgroundRemoved: false,
-    };
-  }
-  try {
-    const removedBytes = await removeBackgroundBria({ falKey: opts.falKey, imageUrl: opts.imageUrl });
-    const removedAsset = detectImageAsset(removedBytes);
-    if (!["png", "svg"].includes(removedAsset.extension)) {
-      throw new Error(`bg-remove returned unsupported format: ${removedAsset.contentType}`);
-    }
-    return {
-      bytes: removedBytes,
-      contentType: removedAsset.contentType,
-      extension: removedAsset.extension,
-      backgroundRemoved: true,
-    };
-  } catch (error) {
-    console.error("background removal failed:", error);
-    throw error instanceof Error ? error : new Error(String(error));
-  }
-}
-
-/** Generic fal.ai text-to-image caller for endpoints that share the {prompt, image_size} shape. */
-async function generateWithFalEndpoint(opts: {
-  falKey: string;
-  endpoint: string;
-  body: Record<string, unknown>;
-}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
-  const res = await fetch(`https://fal.run/${opts.endpoint}`, {
-    method: "POST",
-    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(opts.body),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`${opts.endpoint} ${res.status}: ${t.slice(0, 300)}`);
-  }
-  const data = await res.json();
-  const url: string | undefined =
-    data?.images?.[0]?.url ?? data?.image?.url ?? data?.output?.[0];
-  if (!url) throw new Error(`${opts.endpoint}: no image url in response`);
-  const imgRes = await fetch(url);
-  if (!imgRes.ok) throw new Error(`${opts.endpoint} download ${imgRes.status}`);
-  const bytes = new Uint8Array(await imgRes.arrayBuffer());
-  const { contentType, extension } = detectImageAsset(bytes, imgRes.headers.get("content-type"));
-  return { bytes, url, contentType, extension };
-}
-
-async function generateWithFal(opts: {
-  falKey: string;
+async function generateDesignImage(opts: {
+  apiKey: string;
   prompt: string;
   style: string;
   customStyleId?: string;
@@ -299,125 +173,59 @@ async function generateWithFal(opts: {
   transparentBg?: boolean;
   slogan?: string;
   model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
-}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
-  const model = opts.model ?? "auto";
-  // Detect Latvian-specific characters in either the slogan or the description.
-  // If present, Ideogram (v3) handles diacritics far better than Recraft.
-  const lvRe = /[āēīōūčšžķļņģĀĒĪŌŪČŠŽĶĻŅĢ]/;
-  const hasLatvian =
-    lvRe.test(opts.slogan ?? "") || lvRe.test(opts.prompt ?? "");
-  // Force Ideogram, or auto-route when a slogan/text or Latvian diacritics are present.
-  const useIdeogram =
-    model === "ideogram" ||
-    (model === "auto" && (!!(opts.slogan && opts.slogan.trim()) || hasLatvian));
-  if (useIdeogram) {
-    const { bytes, url, contentType, extension } = await generateWithIdeogram({
-      falKey: opts.falKey,
-      prompt: opts.prompt,
-      imageSize: opts.imageSize,
-    });
-    const finalAsset = await maybeRemoveBackground({
-      falKey: opts.falKey,
-      imageUrl: url,
-      originalBytes: bytes,
-      enabled: opts.transparentBg,
-    });
-    if (opts.transparentBg && !finalAsset.backgroundRemoved) {
-      throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
-    }
-    return {
-      bytes: finalAsset.bytes,
-      url,
-      contentType: finalAsset.contentType,
-      extension: finalAsset.extension,
-    };
-  }
-
-  const hiDims = hiResDims(opts.imageSize ?? "square_hd");
-
-  // ---- Direct model overrides (skip Recraft branch) ----
-  if (model === "flux-pro" || model === "flux-schnell" || model === "nano-banana" || model === "seedream") {
-    const endpointMap: Record<string, string> = {
-      "flux-pro": "fal-ai/flux-pro/v1.1",
-      "flux-schnell": "fal-ai/flux/schnell",
-      "nano-banana": "fal-ai/nano-banana",
-      "seedream": "fal-ai/bytedance/seedream/v4/text-to-image",
-    };
-    const body: Record<string, unknown> = { prompt: opts.prompt, image_size: hiDims, num_images: 1 };
-    if (model === "seedream") body.image_size = hiDims;
-      const { bytes, url, contentType, extension } = await generateWithFalEndpoint({
-      falKey: opts.falKey,
-      endpoint: endpointMap[model],
-      body,
-    });
-    const finalAsset = await maybeRemoveBackground({
-      falKey: opts.falKey,
-      imageUrl: url,
-      originalBytes: bytes,
-      enabled: opts.transparentBg,
-    });
-      if (opts.transparentBg && !finalAsset.backgroundRemoved) {
-        throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
-      }
-      return {
-        bytes: finalAsset.bytes,
-        url,
-        contentType: finalAsset.contentType,
-        extension: finalAsset.extension,
-      };
-  }
-
-  const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
-
-  const payload: Record<string, unknown> = {
-    prompt: opts.prompt,
-    image_size: hiDims,
-  };
-  if (opts.customStyleId && opts.customStyleId.trim()) {
-    payload.style_id = opts.customStyleId.trim();
-  } else {
-    payload.style = styleSafe;
-  }
-  if (opts.colors?.length) {
-    payload.colors = opts.colors.slice(0, 5).map((c) => ({
-      r: Math.max(0, Math.min(255, c.r | 0)),
-      g: Math.max(0, Math.min(255, c.g | 0)),
-      b: Math.max(0, Math.min(255, c.b | 0)),
-    }));
-  }
-
-  const res = await fetch("https://fal.run/fal-ai/recraft-v3", {
+}): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
+  const mode = resolveGenerationMode({ prompt: opts.prompt, slogan: opts.slogan, model: opts.model });
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
-    headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    headers: {
+      Authorization: `Bearer ${opts.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-image-2",
+      prompt: buildGatewayPrompt({
+        prompt: opts.prompt,
+        mode,
+        transparentBg: opts.transparentBg,
+        style: opts.style,
+        colors: opts.colors,
+        customStyleId: opts.customStyleId,
+      }),
+      size: gatewayImageSize(opts.imageSize ?? "square_hd"),
+      quality: "high",
+      background: opts.transparentBg ? "transparent" : "opaque",
+      output_format: "png",
+      n: 1,
+      stream: false,
+    }),
   });
 
+  if (res.status === 429) {
+    throw new Error("AI ģenerēšana šobrīd ir pārāk noslogota. Mēģini vēlreiz pēc brīža.");
+  }
+  if (res.status === 402) {
+    throw new Error("AI kredīti šobrīd nav pieejami. Papildini kredītus un mēģini vēlreiz.");
+  }
   if (!res.ok) {
     const t = await res.text();
-    throw new Error(`fal.ai ${res.status}: ${t.slice(0, 300)}`);
+    throw new Error(`AI ģenerēšana neizdevās (${res.status}): ${t.slice(0, 300)}`);
   }
-  const data = await res.json();
-  const url: string | undefined = data?.images?.[0]?.url;
-  if (!url) throw new Error("fal.ai: no image url in response");
 
-  const imgRes = await fetch(url);
-  if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
-  const bytes = new Uint8Array(await imgRes.arrayBuffer());
-  const detected = detectImageAsset(bytes, imgRes.headers.get("content-type"));
-  const finalAsset = await maybeRemoveBackground({
-    falKey: opts.falKey,
-    imageUrl: url,
-    originalBytes: bytes,
-    enabled: opts.transparentBg,
-  });
-  if (opts.transparentBg && !finalAsset.backgroundRemoved) {
-    throw new Error("Neizdevās iegūt caurspīdīgu fonu. Mēģini pārģenerēt ar citu modeli.");
+  const data = await res.json();
+  const b64: string | undefined = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("AI neatgrieza attēla failu.");
+  const bytes = decodeBase64Image(b64);
+  const detected = detectImageAsset(bytes, "image/png");
+  if (!opts.transparentBg && !["png", "svg"].includes(detected.extension)) {
+    throw new Error("AI atgrieza neatbalstītu attēla formātu.");
+  }
+  if (opts.transparentBg && !["png", "svg"].includes(detected.extension)) {
+    throw new Error("AI neatgrieza PNG/SVG failu ar caurspīdīgu fonu.");
   }
   return {
-    bytes: finalAsset.bytes,
-    url,
-    contentType: finalAsset.contentType,
-    extension: finalAsset.extension,
+    bytes,
+    contentType: detected.contentType,
+    extension: detected.extension,
   };
 }
 
@@ -429,7 +237,7 @@ function buildPrompt(
 ): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
-  // Hard cap on base description so the final prompt stays <1000 chars (fal.ai limit).
+  // Keep the base prompt concise so the typography and print constraints stay dominant.
   const base = rawPrompt.trim().slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
   const bgHint = transparent
@@ -441,10 +249,10 @@ function buildPrompt(
     "Premium editorial, gallery-grade, refined detail, boutique streetwear. " +
     "NEGATIVE: not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon.";
 
-  // ===== Slogan / typography-led design (routed to Ideogram) =====
+  // ===== Slogan / typography-led design =====
   if (slogan) {
     const out =
-      `Premium typographic t-shirt print. HERO text: "${slogan}" — large, bold, expressive custom lettering, perfectly spelled (preserve every diacritic), stacked, confident hierarchy, filling most of canvas. ` +
+      `Premium typographic t-shirt print. HERO text: "${slogan}" — render this exact string with perfect spelling, preserve every diacritic exactly, no paraphrasing, no substitutions, no extra letters. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
       `Add refined ornamental flourishes, ribbons or vintage screen-print textures. ` +
       `Supporting motif: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
@@ -452,7 +260,7 @@ function buildPrompt(
     return out.slice(0, 990);
   }
 
-  // ===== No slogan — pure illustration (Recraft) =====
+  // ===== No slogan — pure illustration =====
   const styleHint = isVector
     ? "Bold confident flat vector, refined shapes, disciplined palette."
     : isIllustration
@@ -482,11 +290,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const FAL_KEY = Deno.env.get("FAL_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!FAL_KEY) {
-      return new Response(JSON.stringify({ error: "FAL_KEY not configured" }), {
+    if (!LOVABLE_API_KEY) {
+      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -542,8 +350,8 @@ Deno.serve(async (req) => {
       const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
 
       try {
-        const { bytes, contentType, extension } = await generateWithFal({
-          falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
+        const { bytes, contentType, extension } = await generateDesignImage({
+          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
@@ -610,8 +418,8 @@ Deno.serve(async (req) => {
       const slogan = (idea.slogan ?? "").trim();
       const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
-        const { bytes, contentType, extension } = await generateWithFal({
-          falKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
+        const { bytes, contentType, extension } = await generateDesignImage({
+          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,

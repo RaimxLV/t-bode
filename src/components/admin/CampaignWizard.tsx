@@ -60,9 +60,9 @@ type ColorVariant = { name: string; hex: string; images: string[] };
 function summarizeGenerationError(message: string | null | undefined) {
   if (!message) return "Neizdevās uzģenerēt dizainu.";
   const raw = message.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
-  if (/bg-remove failed|Failed to load the image|Failed to download the image/i.test(message)) {
-    return "Neizdevās noņemt fonu, bet vari mēģināt vēlreiz.";
-  }
+  if (/exhausted balance|fal\.ai 403|ideogram 403/i.test(message)) return "Iepriekšējais ģenerators vairs nav pieejams. Spied mēģināt vēlreiz, lai ģenerētu ar jauno modeli.";
+  if (/bg-remove failed|Failed to load the image|Failed to download the image/i.test(message)) return "Neizdevās iegūt caurspīdīgu fonu. Mēģini vēlreiz.";
+  if (/exact string|diacritic|extra letters|Typography is critical/i.test(message)) return "AI nesanāca korekts teksts. Mēģini vēlreiz vai lieto īsāku saukli.";
   if (/timeout|timed out/i.test(message)) return "Ģenerēšana aizņēma pārāk ilgu laiku. Mēģini vēlreiz.";
   return raw.slice(0, 120) || "Neizdevās uzģenerēt dizainu.";
 }
@@ -105,7 +105,7 @@ type BlogPost = {
 
 const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 
-/** Recraft V3 style presets (fal.ai) — full catalog, grouped. */
+/** Style preset catalog used to guide generated artwork. */
 type StyleOpt = { value: string; label: string };
 const STYLE_GROUPS: { group: string; options: StyleOpt[] }[] = [
   { group: "Vektors", options: [
@@ -1176,7 +1176,7 @@ function StepIdea({
                       placeholder='piem. "Kur Janka, tur pjanka"'
                     />
                     <div className="text-[10px] text-muted-foreground mt-1">
-                      Ja ievadi tekstu, automātiski izmanto AI modeli, kas labi zīmē burtus (Ideogram).
+                      Ja ievadi tekstu, sistēma automātiski dod prioritāti precīzai burtu atveidei.
                     </div>
                   </div>
                   <div className="pt-2 border-t border-dashed">
@@ -1216,7 +1216,7 @@ function StepIdea({
 
           <section>
             <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-muted-foreground">
-              fal.ai ģenerēšanas iestatījumi
+              AI ģenerēšanas iestatījumi
             </h4>
             <GenerationSettings
               styleChoice={styleChoice}
@@ -1235,7 +1235,7 @@ function StepIdea({
               onChangeModelChoice={onChangeModelChoice}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski tiek ģenerētas teksta precizitātes režīmā.
             </p>
           </section>
         </>
@@ -1771,7 +1771,7 @@ function ProductTuneRow({
                   .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
                 await downloadPrintReadyPng({
                   imageUrl: designUrl,
-                  fileName: `${safe}-460dpi.png`,
+                  fileName: `${safe}-print.png`,
                 });
                 toast.success("Drukas fails lejupielādēts");
               } catch (e: any) {
@@ -2004,12 +2004,12 @@ function DesignCard({
             className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
             <option value="auto">Auto (ieteicams)</option>
-            <option value="recraft">Recraft (ilustrācija)</option>
-            <option value="ideogram">Ideogram (ar tekstu)</option>
-            <option value="flux-pro">FLUX Pro 1.1</option>
-            <option value="flux-schnell">FLUX Schnell (ātrs)</option>
-            <option value="nano-banana">Nano Banana</option>
-            <option value="seedream">Seedream v4</option>
+            <option value="ideogram">Teksta prioritāte</option>
+            <option value="recraft">Ilustrācijas prioritāte</option>
+            <option value="flux-pro">Detalizēts plakāta stils</option>
+            <option value="flux-schnell">Ātrāks melnraksts</option>
+            <option value="nano-banana">Eksperimentāls</option>
+            <option value="seedream">Māksliniecisks</option>
           </select>
           <div className="flex gap-1.5 mt-1">
             <Button
@@ -2105,7 +2105,7 @@ function LibrarySheet({
   );
 }
 
-/* ------------ Generation settings panel (fal.ai Recraft V3) ------------ */
+/* ------------ Generation settings panel ------------ */
 function GenerationSettings({
   styleChoice, onChangeStyle,
   transparentBg, onChangeTransparentBg,
@@ -2149,16 +2149,16 @@ function GenerationSettings({
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold"
       >
-        <span>fal.ai iestatījumi {open ? "▾" : "▸"}</span>
+        <span>AI ģenerēšanas iestatījumi {open ? "▾" : "▸"}</span>
         <span className="text-[10px] font-normal text-muted-foreground truncate ml-2">
           {({
             auto: "Auto",
-            ideogram: "Ideogram v3",
-            recraft: "Recraft V3",
-            "flux-pro": "FLUX Pro 1.1",
-            "flux-schnell": "FLUX Schnell",
-            "nano-banana": "Nano Banana",
-            seedream: "Seedream v4",
+            ideogram: "Teksta prioritāte",
+            recraft: "Ilustrācijas prioritāte",
+            "flux-pro": "Detalizēts",
+            "flux-schnell": "Ātrs",
+            "nano-banana": "Eksperimentāls",
+            seedream: "Māksliniecisks",
           } as Record<string, string>)[modelChoice]} ·{" "}
           {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
@@ -2176,16 +2176,16 @@ function GenerationSettings({
               onChange={(e) => onChangeModelChoice(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
               className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
             >
-              <option value="auto">Auto — labākais variants pēc satura</option>
-              <option value="ideogram">Ideogram v3 — vislabāk burtiem un latviešu garumzīmēm</option>
-              <option value="recraft">Recraft V3 — bagātīga ilustrācija (bez teksta)</option>
-            <option value="flux-pro">FLUX Pro 1.1 — fotorealistisks, bagāta detaļa</option>
-            <option value="flux-schnell">FLUX Schnell — ātrs, lēts melnraksts</option>
-            <option value="nano-banana">Nano Banana (Gemini) — eksperimentāls, kreatīvs</option>
-            <option value="seedream">Seedream v4 — augsta izšķirtspēja, mākslinieciski</option>
+              <option value="auto">Auto — sistēma pati izvēlas labāko režīmu</option>
+              <option value="ideogram">Teksta prioritāte — saukļiem un precīzākam tekstam</option>
+              <option value="recraft">Ilustrācijas prioritāte — bez lieka teksta artefaktiem</option>
+              <option value="flux-pro">Detalizēts plakāta stils</option>
+              <option value="flux-schnell">Ātrāks melnraksts</option>
+              <option value="nano-banana">Eksperimentāls</option>
+              <option value="seedream">Māksliniecisks</option>
             </select>
             <p className="text-[10px] text-muted-foreground mt-1">
-              <b>Auto:</b> ja saulis vai latviešu burti — Ideogram, citādi Recraft ar izvēlēto stilu.
+              <b>Auto:</b> ja dizainā ir teksts, sistēma dod prioritāti teksta precizitātei; citādi ilustrācijas kvalitātei.
             </p>
           </div>
 
@@ -2209,7 +2209,7 @@ function GenerationSettings({
 
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pielāgots Recraft stila ID
+              Pielāgots stila ID
             </label>
             <Input
               value={customStyleId}
@@ -2218,7 +2218,7 @@ function GenerationSettings({
               className="mt-1 h-8 text-xs"
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Iztrenē savu stilu vietnē recraft.ai un ielīmē UUID. Pārraksta izvēlēto stilu.
+              Ja tev ir savs stila identifikators, ielīmē to šeit. Tas pārraksta izvēlēto stilu.
             </p>
           </div>
 
@@ -2242,7 +2242,7 @@ function GenerationSettings({
               onChange={(e) => onChangeTransparentBg(e.target.checked)}
               className="rounded"
             />
-            <span className="text-xs">Caurspīdīgs fons (auto-noņemšana)</span>
+            <span className="text-xs">Caurspīdīgs fons</span>
           </label>
 
           <div>
