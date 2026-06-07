@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Trash2, Sparkles, Loader2, Image as ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ImageLightbox } from "@/components/ImageLightbox";
 
 type DesignItem = {
   key: string;
@@ -21,6 +22,7 @@ export function DraftDesignsGallery() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<DesignItem[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   async function load() {
     setLoading(true);
@@ -148,9 +150,14 @@ export function DraftDesignsGallery() {
         </Button>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-        {items.map((item) => (
+        {items.map((item, idx) => (
           <Card key={item.key} className="overflow-hidden group relative">
-            <div className="aspect-square bg-muted/30 flex items-center justify-center relative">
+            <button
+              type="button"
+              onClick={() => setLightboxIndex(idx)}
+              className="aspect-square bg-muted/30 flex items-center justify-center relative w-full cursor-zoom-in"
+              aria-label={`Apskatīt ${item.name} pilnā izmērā`}
+            >
               <img
                 src={item.url}
                 alt={item.name}
@@ -166,7 +173,7 @@ export function DraftDesignsGallery() {
               >
                 {item.source === "library" ? "Bibliotēka" : "Kampaņa"}
               </Badge>
-            </div>
+            </button>
             <CardContent className="p-2 space-y-1.5">
               <p className="text-xs font-body line-clamp-2 min-h-[2rem]">{item.name}</p>
               <div className="flex gap-1">
@@ -191,6 +198,15 @@ export function DraftDesignsGallery() {
           </Card>
         ))}
       </div>
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={items.map((i) => i.url)}
+          initialIndex={lightboxIndex}
+          open={lightboxIndex !== null}
+          onClose={() => setLightboxIndex(null)}
+          alt="Dizains"
+        />
+      )}
     </>
   );
 }
