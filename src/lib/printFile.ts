@@ -1,41 +1,16 @@
-// Download a design as a transparent print-ready PNG with 460 DPI metadata.
-// - Removes near-white background pixels (makes them transparent)
-// - Upscales (bicubic via 2-pass canvas) so the output is suitable for large prints
-// - Injects a pHYs chunk into the PNG so the file reports 460 DPI
+// Download a design as a print-ready PNG with 460 DPI metadata.
+//
+// IMPORTANT: We fetch the *original* PNG bytes from fal/Supabase storage and
+// only inject a pHYs (DPI) chunk. We deliberately do NOT:
+//   - re-encode via canvas (would strip alpha when the source has transparency
+//     and lose color fidelity by going through 8-bit sRGB conversion),
+//   - run a client-side bicubic upscale (visibly blurry on print),
+//   - call any AI upscaler (clarity-upscaler returns JPG without alpha and
+//     re-introduces a background, which is unusable for DTF print).
+// The source image is already generated at 2048px on the long edge with a
+// transparent background, which is print-ready at ~A4 @ 300 DPI.
 
 const DPI = 460;
-const TARGET_LONG_EDGE = 3600; // ~20cm @ 460 DPI; safe default for shirt prints
-const WHITE_THRESHOLD = 240;   // pixels >= this on R/G/B are treated as background
-
-async function loadImage(url: string): Promise<HTMLImageElement> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
-    img.onerror = () => reject(new Error("Neizdevās ielādēt dizaina attēlu"));
-    img.src = url;
-  });
-  return img;
-}
-
-function removeWhiteBackground(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  const data = ctx.getImageData(0, 0, w, h);
-  const px = data.data;
-  for (let i = 0; i < px.length; i += 4) {
-    const r = px[i], g = px[i + 1], b = px[i + 2];
-    if (r >= WHITE_THRESHOLD && g >= WHITE_THRESHOLD && b >= WHITE_THRESHOLD) {
-      px[i + 3] = 0;
-    } else {
-      // soft edge: fade alpha for very light pixels to avoid white halo
-      const minC = Math.min(r, g, b);
-      if (minC > 215) {
-        const t = (minC - 215) / (WHITE_THRESHOLD - 215); // 0..1
-        px[i + 3] = Math.round(px[i + 3] * (1 - t));
-      }
-    }
-  }
-  ctx.putImageData(data, 0, 0);
-}
 
 // Inject a pHYs chunk (DPI) immediately after the IHDR chunk
 function injectDpi(buf: ArrayBuffer, dpi: number): Blob {
@@ -90,38 +65,30 @@ function crc32(bytes: Uint8Array): number {
 export async function downloadPrintReadyPng(opts: {
   imageUrl: string;
   fileName: string;
-  /** Optional pre-upscaled image URL (e.g. from fal clarity-upscaler). Used when provided. */
+  /** @deprecated kept for API compatibility — ignored. Upscaling produced
+   *  JPG-without-alpha output unusable for print and is no longer performed. */
   upscaledUrl?: string;
 }): Promise<void> {
-  const img = await loadImage(opts.upscaledUrl || opts.imageUrl);
+  // Fetch original PNG bytes — preserves alpha, exact pixels, full bit depth.
+  const res = await fetch(opts.imageUrl, { mode: "cors", credentials: "omit" });
+  if (!res.ok) throw new Error(`Neizdevās ielādēt dizainu (${res.status})`);
+  const buf = await res.arrayBuffer();
 
-  // Compute output size: scale longest edge up to TARGET_LONG_EDGE (don't downscale below native)
-  const nativeLong = Math.max(img.naturalWidth, img.naturalHeight);
-  const scale = Math.max(1, TARGET_LONG_EDGE / nativeLong);
-  const outW = Math.round(img.naturalWidth * scale);
-  const outH = Math.round(img.naturalHeight * scale);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = outW;
-  canvas.height = outH;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Canvas nav pieejams");
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(img, 0, 0, outW, outH);
-
-  removeWhiteBackground(ctx, outW, outH);
-
-  const blob: Blob = await new Promise((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("PNG eksports neizdevās"))), "image/png")
-  );
-  const buf = await blob.arrayBuffer();
-  const dpiBlob = injectDpi(buf, DPI);
+  // Validate it's a PNG (89 50 4E 47). If the source is JPG (e.g. an older
+  // pre-transparency design), we still pass it through — the user gets the
+  // original quality with no re-encoding, but DPI injection is skipped.
+  const sig = new Uint8Array(buf, 0, 8);
+  const isPng =
+    sig[0] === 0x89 && sig[1] === 0x50 && sig[2] === 0x4e && sig[3] === 0x47;
+  const dpiBlob: Blob = isPng
+    ? injectDpi(buf, DPI)
+    : new Blob([buf], { type: res.headers.get("content-type") || "image/png" });
 
   const url = URL.createObjectURL(dpiBlob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = opts.fileName.endsWith(".png") ? opts.fileName : opts.fileName + ".png";
+  const ext = isPng ? ".png" : ".jpg";
+  a.download = opts.fileName.endsWith(ext) ? opts.fileName : opts.fileName.replace(/\.(png|jpg|jpeg)$/i, "") + ext;
   document.body.appendChild(a);
   a.click();
   a.remove();
