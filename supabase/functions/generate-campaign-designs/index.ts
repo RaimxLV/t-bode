@@ -94,8 +94,9 @@ function resolveFalEndpoint(opts: {
       return "fal-ai/recraft-v3";
     case "auto":
     default:
-      // Recraft-v3 handles both typography (text mode) and our style tokens.
-      return "fal-ai/recraft-v3";
+      // Ideogram v2 renders typography (incl. non-English text with diacritics)
+      // far more reliably than recraft-v3. Recraft is kept for pure illustration.
+      return opts.mode === "text" ? "fal-ai/ideogram/v2" : "fal-ai/recraft-v3";
   }
 }
 
@@ -321,25 +322,32 @@ function buildPrompt(
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
   // Keep the base prompt concise so the typography and print constraints stay dominant.
-  const base = rawPrompt.trim().slice(0, 320);
+  // Strip any quoted strings — quoted Latvian text in the base prompt frequently
+  // gets rendered by the image model as visible lettering on the artwork.
+  const base = rawPrompt
+    .replace(/["“”„«»‚'’][^"“”„«»‚'’]{0,80}["“”„«»‚'’]/g, "")
+    .trim()
+    .slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
   const bgHint = transparent
     ? "Isolated, no edge shadows."
     : "Centered on white background.";
   // Frame-fit + quality rules, kept terse so total prompt stays under 1000 chars.
-  const frameRule = "Fit inside canvas with 10% safe padding. DTF print file.";
+  const frameRule =
+    "FLAT 2D ARTWORK ONLY. NOT a t-shirt, NOT a hoodie, NOT a garment, NOT a mockup, NOT a product photo, no fabric, no person, no model wearing anything, no apparel. Just the standalone design on the background. Fit inside canvas with 10% safe padding. DTF print file.";
   const qualityRule =
     "Premium editorial, gallery-grade, refined detail, boutique streetwear. " +
     "NEGATIVE: not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon.";
 
   // ===== Slogan / typography-led design =====
   if (slogan) {
+    const spelling = spellLatvianDiacritics(slogan);
     const out =
-      `Premium typographic t-shirt print. HERO text: "${slogan}" — render this exact string with perfect spelling, preserve every diacritic exactly, no paraphrasing, no substitutions, no extra letters. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
+      `Premium typographic print artwork. HERO text: "${slogan}" — render this EXACT string, character by character, preserving every Latvian diacritic. ${spelling}No paraphrasing, no translation, no extra letters, no missing letters, no missing accents. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
       `Add refined ornamental flourishes, ribbons or vintage screen-print textures. ` +
       `Supporting motif: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
-      `Text IS the design. No garment, mockup, person, fabric. No extra text beyond "${slogan}".`;
+      `Text IS the design. No extra text beyond "${slogan}".`;
     return out.slice(0, 990);
   }
 
@@ -351,8 +359,35 @@ function buildPrompt(
     : "Premium screen-print artwork.";
   const out =
     `${base}. ${styleHint} ${bgHint} ${frameRule} ${qualityRule} ` +
-    `Standalone artwork like a sticker. No garment, mockup, person, fabric. No text, no letters, no watermark, no scene.`;
+    `Standalone sticker-style artwork. Absolutely no text, no letters, no words, no numbers, no watermark, no scene.`;
   return out.slice(0, 990);
+}
+
+/**
+ * For Latvian slogans, append a character-by-character description of the
+ * diacritic letters. This dramatically improves how text-capable image models
+ * (ideogram, recraft) render macrons (ā ē ī ū ō) and commas/carons (č š ž ķ ļ ņ ģ).
+ */
+function spellLatvianDiacritics(slogan: string): string {
+  const map: Record<string, string> = {
+    "ā": "a with macron (ā)", "ē": "e with macron (ē)", "ī": "i with macron (ī)",
+    "ū": "u with macron (ū)", "ō": "o with macron (ō)",
+    "č": "c with caron (č)", "š": "s with caron (š)", "ž": "z with caron (ž)",
+    "ģ": "g with comma below (ģ)", "ķ": "k with comma below (ķ)",
+    "ļ": "l with comma below (ļ)", "ņ": "n with comma below (ņ)",
+    "Ā": "A with macron (Ā)", "Ē": "E with macron (Ē)", "Ī": "I with macron (Ī)",
+    "Ū": "U with macron (Ū)", "Ō": "O with macron (Ō)",
+    "Č": "C with caron (Č)", "Š": "S with caron (Š)", "Ž": "Z with caron (Ž)",
+    "Ģ": "G with comma below (Ģ)", "Ķ": "K with comma below (Ķ)",
+    "Ļ": "L with comma below (Ļ)", "Ņ": "N with comma below (Ņ)",
+  };
+  const seen = new Set<string>();
+  const parts: string[] = [];
+  for (const ch of slogan) {
+    if (map[ch] && !seen.has(ch)) { seen.add(ch); parts.push(map[ch]); }
+  }
+  if (!parts.length) return "";
+  return `Diacritic guide for the text: ${parts.join(", ")}. `;
 }
 
 Deno.serve(async (req) => {
