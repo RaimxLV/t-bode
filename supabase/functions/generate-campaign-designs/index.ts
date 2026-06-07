@@ -342,11 +342,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const FAL_KEY = Deno.env.get("FAL_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    if (!FAL_KEY) {
+      return new Response(JSON.stringify({ error: "FAL_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -403,7 +403,7 @@ Deno.serve(async (req) => {
 
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
-          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
+          apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
@@ -471,7 +471,7 @@ Deno.serve(async (req) => {
       const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
-          apiKey: LOVABLE_API_KEY, prompt: finalPrompt, style: useStyle,
+          apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
           customStyleId: useCustomId, imageSize: useSize, colors: useColors, transparentBg: useTransparent,
           slogan,
           model: body.model_override,
