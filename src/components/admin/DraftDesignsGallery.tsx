@@ -136,9 +136,9 @@ export function DraftDesignsGallery() {
         .slice(0, 60) || "drukas-fails";
       await downloadPrintReadyPng({
         imageUrl: item.url,
-        fileName: `${safe}-460dpi.png`,
+        fileName: `${safe}-print.png`,
       });
-      toast.success("Drukas fails lejupielādēts (oriģinālā kvalitāte, 460 DPI)");
+      toast.success("Drukas fails lejupielādēts (oriģinālā kvalitāte, PNG/SVG bez balta fona)");
     } catch (e: any) {
       toast.error(e?.message || "Neizdevās sagatavot drukas failu");
     } finally {
@@ -220,7 +220,7 @@ export function DraftDesignsGallery() {
                   className="h-7 w-7 p-0"
                   onClick={() => handleDownload(item)}
                   disabled={downloadingKey === item.key}
-                  title="Lejuplādēt oriģinālo PNG ar 460 DPI (caurspīdīgs fons, bez pārkodēšanas)"
+                  title="Lejuplādēt oriģinālo print failu PNG/SVG formātā ar caurspīdīgu fonu"
                 >
                   {downloadingKey === item.key
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
