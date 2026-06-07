@@ -61,6 +61,7 @@ function summarizeGenerationError(message: string | null | undefined) {
   if (!message) return "Neizdevās uzģenerēt dizainu.";
   const raw = message.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
   if (/exhausted balance|fal\.ai 403|ideogram 403/i.test(message)) return "Iepriekšējais ģenerators vairs nav pieejams. Spied mēģināt vēlreiz, lai ģenerētu ar jauno modeli.";
+  if (/Transparent background is not supported for this model|transparent background/i.test(message)) return "Šim režīmam caurspīdīgs fons nav pieejams. Pārslēdzu uz saderīgu ģenerēšanu — mēģini vēlreiz.";
   if (/bg-remove failed|Failed to load the image|Failed to download the image/i.test(message)) return "Neizdevās iegūt caurspīdīgu fonu. Mēģini vēlreiz.";
   if (/exact string|diacritic|extra letters|Typography is critical/i.test(message)) return "AI nesanāca korekts teksts. Mēģini vēlreiz vai lieto īsāku saukli.";
   if (/timeout|timed out/i.test(message)) return "Ģenerēšana aizņēma pārāk ilgu laiku. Mēģini vēlreiz.";
