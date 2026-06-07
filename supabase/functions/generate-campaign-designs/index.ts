@@ -100,7 +100,7 @@ async function generateWithIdeogram(opts: {
   falKey: string;
   prompt: string;
   imageSize?: string;
-}): Promise<{ bytes: Uint8Array; url: string }> {
+}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
   // v3 handles non-English text & diacritics (Latvian ā ē ī ū č š ž ķ ļ ņ ģ) much better than v2.
   const res = await fetch("https://fal.run/fal-ai/ideogram/v3", {
     method: "POST",
@@ -123,7 +123,9 @@ async function generateWithIdeogram(opts: {
   if (!url) throw new Error("ideogram: no image url");
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`ideogram download ${imgRes.status}`);
-  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
+  const contentType = (imgRes.headers.get("content-type") || "image/png").toLowerCase();
+  const extension = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
+   return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url, contentType, extension };
 }
 
 async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
@@ -219,7 +221,7 @@ async function generateWithFalEndpoint(opts: {
   falKey: string;
   endpoint: string;
   body: Record<string, unknown>;
-}): Promise<{ bytes: Uint8Array; url: string }> {
+}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
   const res = await fetch(`https://fal.run/${opts.endpoint}`, {
     method: "POST",
     headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
@@ -235,7 +237,9 @@ async function generateWithFalEndpoint(opts: {
   if (!url) throw new Error(`${opts.endpoint}: no image url in response`);
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`${opts.endpoint} download ${imgRes.status}`);
-  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url };
+  const contentType = (imgRes.headers.get("content-type") || "image/png").toLowerCase();
+  const extension = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
+  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url, contentType, extension };
 }
 
 async function generateWithFal(opts: {
@@ -248,7 +252,7 @@ async function generateWithFal(opts: {
   transparentBg?: boolean;
   slogan?: string;
   model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
-}): Promise<{ bytes: Uint8Array; url: string }> {
+}): Promise<{ bytes: Uint8Array; url: string; contentType: string; extension: string }> {
   const model = opts.model ?? "auto";
   // Detect Latvian-specific characters in either the slogan or the description.
   // If present, Ideogram (v3) handles diacritics far better than Recraft.
@@ -260,7 +264,7 @@ async function generateWithFal(opts: {
     model === "ideogram" ||
     (model === "auto" && (!!(opts.slogan && opts.slogan.trim()) || hasLatvian));
   if (useIdeogram) {
-    const { bytes, url } = await generateWithIdeogram({
+    const { bytes, url, contentType, extension } = await generateWithIdeogram({
       falKey: opts.falKey,
       prompt: opts.prompt,
       imageSize: opts.imageSize,
@@ -271,7 +275,12 @@ async function generateWithFal(opts: {
       originalBytes: bytes,
       enabled: opts.transparentBg,
     });
-    return { bytes: finalBytes, url };
+    return {
+      bytes: finalBytes,
+      url,
+      contentType: opts.transparentBg ? "image/png" : contentType,
+      extension: opts.transparentBg ? "png" : extension,
+    };
   }
 
   const hiDims = hiResDims(opts.imageSize ?? "square_hd");
@@ -286,7 +295,7 @@ async function generateWithFal(opts: {
     };
     const body: Record<string, unknown> = { prompt: opts.prompt, image_size: hiDims, num_images: 1 };
     if (model === "seedream") body.image_size = hiDims;
-    const { bytes, url } = await generateWithFalEndpoint({
+      const { bytes, url, contentType, extension } = await generateWithFalEndpoint({
       falKey: opts.falKey,
       endpoint: endpointMap[model],
       body,
@@ -297,7 +306,12 @@ async function generateWithFal(opts: {
       originalBytes: bytes,
       enabled: opts.transparentBg,
     });
-    return { bytes: finalBytes, url };
+      return {
+        bytes: finalBytes,
+        url,
+        contentType: opts.transparentBg ? "image/png" : contentType,
+        extension: opts.transparentBg ? "png" : extension,
+      };
   }
 
   const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
@@ -342,7 +356,12 @@ async function generateWithFal(opts: {
     originalBytes: bytes,
     enabled: opts.transparentBg,
   });
-  return { bytes: finalBytes, url };
+  return {
+    bytes: finalBytes,
+    url,
+    contentType: opts.transparentBg ? "image/png" : (imgRes.headers.get("content-type") || "image/png").toLowerCase(),
+    extension: opts.transparentBg ? "png" : (((imgRes.headers.get("content-type") || "image/png").toLowerCase().includes("jpeg") || (imgRes.headers.get("content-type") || "image/png").toLowerCase().includes("jpg")) ? "jpg" : "png"),
+  };
 }
 
 function buildPrompt(
