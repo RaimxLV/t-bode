@@ -81,7 +81,7 @@ function resolveFalEndpoint(opts: {
 }): string {
   switch (opts.model) {
     case "ideogram":
-      return "fal-ai/ideogram/v2";
+      return "fal-ai/ideogram/v3";
     case "flux-pro":
       return "fal-ai/flux-pro/v1.1";
     case "flux-schnell":
@@ -96,7 +96,7 @@ function resolveFalEndpoint(opts: {
     default:
       // Ideogram v2 renders typography (incl. non-English text with diacritics)
       // far more reliably than recraft-v3. Recraft is kept for pure illustration.
-      return opts.mode === "text" ? "fal-ai/ideogram/v2" : "fal-ai/recraft-v3";
+      return opts.mode === "text" ? "fal-ai/ideogram/v3" : "fal-ai/recraft-v3";
   }
 }
 
@@ -256,6 +256,7 @@ async function generateDesignImage(opts: {
   // Per-endpoint request body. Recraft-v3 natively accepts our style tokens
   // and an RGB color palette; everyone else gets a generic flux-style body.
   const isRecraft = endpoint === "fal-ai/recraft-v3";
+  const isIdeogramV3 = endpoint === "fal-ai/ideogram/v3";
   const body: Record<string, unknown> = isRecraft
     ? {
         prompt,
@@ -266,6 +267,15 @@ async function generateDesignImage(opts: {
           g: Math.max(0, Math.min(255, c.g | 0)),
           b: Math.max(0, Math.min(255, c.b | 0)),
         })),
+      }
+    : isIdeogramV3
+    ? {
+        prompt,
+        image_size: imageSize,
+        num_images: 1,
+        rendering_speed: "QUALITY",
+        style: "DESIGN",
+        expand_prompt: false,
       }
     : {
         prompt,
@@ -341,13 +351,12 @@ function buildPrompt(
 
   // ===== Slogan / typography-led design =====
   if (slogan) {
-    const spelling = spellLatvianDiacritics(slogan);
     const out =
-      `Premium typographic print artwork. HERO text: "${slogan}" — render this EXACT string, character by character, preserving every Latvian diacritic. ${spelling}No paraphrasing, no translation, no extra letters, no missing letters, no missing accents. Large, bold, expressive custom lettering, stacked, confident hierarchy, filling most of canvas. ` +
-      `Add refined ornamental flourishes, ribbons or vintage screen-print textures. ` +
-      `Supporting motif: ${base}. ` +
+      `Typographic poster artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
+      `Large bold custom lettering, stacked hierarchy, fills most of canvas. ` +
+      `Decorative motif behind the text: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
-      `Text IS the design. No extra text beyond "${slogan}".`;
+      `Do NOT add any other words, banners, ribbons with text, signatures or watermarks — only the exact phrase "${slogan}".`;
     return out.slice(0, 990);
   }
 
