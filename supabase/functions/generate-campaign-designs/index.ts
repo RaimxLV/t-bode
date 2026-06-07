@@ -107,7 +107,7 @@ async function generateWithIdeogram(opts: {
     headers: { Authorization: `Key ${opts.falKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       prompt: opts.prompt,
-      image_size: ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd",
+      image_size: hiResDims(opts.imageSize ?? "square_hd"),
       style: "DESIGN",
       rendering_speed: "QUALITY",
       expand_prompt: false,
