@@ -274,7 +274,7 @@ async function generateWithFal(opts: {
     return { bytes: finalBytes, url };
   }
 
-  const sizeSafeGeneric = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize! : "square_hd";
+  const hiDims = hiResDims(opts.imageSize ?? "square_hd");
 
   // ---- Direct model overrides (skip Recraft branch) ----
   if (model === "flux-pro" || model === "flux-schnell" || model === "nano-banana" || model === "seedream") {
@@ -284,8 +284,8 @@ async function generateWithFal(opts: {
       "nano-banana": "fal-ai/nano-banana",
       "seedream": "fal-ai/bytedance/seedream/v4/text-to-image",
     };
-    const body: Record<string, unknown> = { prompt: opts.prompt, image_size: sizeSafeGeneric, num_images: 1 };
-    if (model === "seedream") body.image_size = sizeSafeGeneric;
+    const body: Record<string, unknown> = { prompt: opts.prompt, image_size: hiDims, num_images: 1 };
+    if (model === "seedream") body.image_size = hiDims;
     const { bytes, url } = await generateWithFalEndpoint({
       falKey: opts.falKey,
       endpoint: endpointMap[model],
@@ -301,11 +301,10 @@ async function generateWithFal(opts: {
   }
 
   const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
-  const sizeSafe = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd";
 
   const payload: Record<string, unknown> = {
     prompt: opts.prompt,
-    image_size: sizeSafe,
+    image_size: hiDims,
   };
   if (opts.customStyleId && opts.customStyleId.trim()) {
     payload.style_id = opts.customStyleId.trim();
