@@ -81,7 +81,7 @@ function resolveFalEndpoint(opts: {
 }): string {
   switch (opts.model) {
     case "ideogram":
-      return "fal-ai/ideogram/v2";
+      return "fal-ai/ideogram/v3";
     case "flux-pro":
       return "fal-ai/flux-pro/v1.1";
     case "flux-schnell":
@@ -96,7 +96,7 @@ function resolveFalEndpoint(opts: {
     default:
       // Ideogram v2 renders typography (incl. non-English text with diacritics)
       // far more reliably than recraft-v3. Recraft is kept for pure illustration.
-      return opts.mode === "text" ? "fal-ai/ideogram/v2" : "fal-ai/recraft-v3";
+      return opts.mode === "text" ? "fal-ai/ideogram/v3" : "fal-ai/recraft-v3";
   }
 }
 
