@@ -1176,7 +1176,7 @@ function StepIdea({
                       placeholder='piem. "Kur Janka, tur pjanka"'
                     />
                     <div className="text-[10px] text-muted-foreground mt-1">
-                      Ja ievadi tekstu, automātiski izmanto AI modeli, kas labi zīmē burtus (Ideogram).
+                      Ja ievadi tekstu, sistēma automātiski dod prioritāti precīzai burtu atveidei.
                     </div>
                   </div>
                   <div className="pt-2 border-t border-dashed">
@@ -1216,7 +1216,7 @@ function StepIdea({
 
           <section>
             <h4 className="font-semibold text-xs uppercase tracking-wider mb-2 text-muted-foreground">
-              fal.ai ģenerēšanas iestatījumi
+              AI ģenerēšanas iestatījumi
             </h4>
             <GenerationSettings
               styleChoice={styleChoice}
@@ -1235,7 +1235,7 @@ function StepIdea({
               onChangeModelChoice={onChangeModelChoice}
             />
             <p className="text-[10px] text-muted-foreground mt-1">
-              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski izmanto Ideogram v3.
+              Stils, izmērs un krāsas tiek pielietoti, kad nākamajā solī ģenerēsi bildes. Idejas ar saukli vai latviešu garumzīmēm automātiski tiek ģenerētas teksta precizitātes režīmā.
             </p>
           </section>
         </>
