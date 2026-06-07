@@ -54,7 +54,9 @@ export function DraftDesignsGallery() {
       }
 
       const campRows = ((camp || []) as any[]) ?? [];
-      const paths = campRows.map((r) => r.image_url as string).filter(Boolean);
+      const rowsWithPaths = campRows.filter((r) => r.image_url && !/^https?:\/\//i.test(r.image_url));
+      const paths = rowsWithPaths.map((r) => r.image_url as string);
+      const absoluteRows = campRows.filter((r) => r.image_url && /^https?:\/\//i.test(r.image_url));
       const signedMap: Record<string, string> = {};
       if (paths.length) {
         await supabase.auth.refreshSession();
@@ -65,6 +67,9 @@ export function DraftDesignsGallery() {
           if (s.signedUrl) signedMap[paths[i]] = s.signedUrl;
         });
       }
+      absoluteRows.forEach((r) => {
+        signedMap[r.image_url] = r.image_url;
+      });
       for (const r of campRows) {
         const url = signedMap[r.image_url];
         if (!url) continue;
