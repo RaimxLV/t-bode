@@ -1884,7 +1884,8 @@ function DesignCard({
   const [fallbackSrc, setFallbackSrc] = useState<string | null>(null);
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
   const baseSigned = d.image_url ? signedUrls[d.image_url] : undefined;
-  const imgSrc = fallbackSrc ?? (baseSigned ? getOptimizedSrc(baseSigned, 400, 70) : null);
+  const isSvgAsset = !!baseSigned && /(?:\.svg(?:\?|$)|[?&]format=svg\b)/i.test(baseSigned);
+  const imgSrc = fallbackSrc ?? (baseSigned ? (isSvgAsset ? baseSigned : getOptimizedSrc(baseSigned, 400, 70)) : null);
 
   // If the signed URL fails (expired / 404), try to re-sign once or fall back
   // to the raw http URL when image_url is already an absolute URL.
