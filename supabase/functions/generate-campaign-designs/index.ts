@@ -85,6 +85,35 @@ function hiResDims(size: string): { width: number; height: number } {
   }
 }
 
+function detectImageAsset(bytes: Uint8Array, headerContentType?: string | null): { contentType: string; extension: string } {
+  const asciiHead = new TextDecoder().decode(bytes.subarray(0, Math.min(bytes.length, 512))).trimStart().toLowerCase();
+  if (asciiHead.startsWith("<svg") || (asciiHead.startsWith("<?xml") && asciiHead.includes("<svg"))) {
+    return { contentType: "image/svg+xml", extension: "svg" };
+  }
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+    bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a
+  ) {
+    return { contentType: "image/png", extension: "png" };
+  }
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { contentType: "image/jpeg", extension: "jpg" };
+  }
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) {
+    return { contentType: "image/webp", extension: "webp" };
+  }
+  const header = (headerContentType || "image/png").toLowerCase();
+  if (header.includes("svg")) return { contentType: "image/svg+xml", extension: "svg" };
+  if (header.includes("jpeg") || header.includes("jpg")) return { contentType: "image/jpeg", extension: "jpg" };
+  if (header.includes("webp")) return { contentType: "image/webp", extension: "webp" };
+  return { contentType: "image/png", extension: "png" };
+}
+
 /** Map fal image_size to Ideogram aspect_ratio. */
 function sizeToAspect(size: string): string {
   switch (size) {
@@ -123,9 +152,9 @@ async function generateWithIdeogram(opts: {
   if (!url) throw new Error("ideogram: no image url");
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`ideogram download ${imgRes.status}`);
-  const contentType = (imgRes.headers.get("content-type") || "image/png").toLowerCase();
-  const extension = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
-   return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url, contentType, extension };
+  const bytes = new Uint8Array(await imgRes.arrayBuffer());
+  const { contentType, extension } = detectImageAsset(bytes, imgRes.headers.get("content-type"));
+  return { bytes, url, contentType, extension };
 }
 
 async function removeBackgroundBria(opts: { falKey: string; imageUrl: string }): Promise<Uint8Array> {
@@ -237,9 +266,9 @@ async function generateWithFalEndpoint(opts: {
   if (!url) throw new Error(`${opts.endpoint}: no image url in response`);
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`${opts.endpoint} download ${imgRes.status}`);
-  const contentType = (imgRes.headers.get("content-type") || "image/png").toLowerCase();
-  const extension = contentType.includes("jpeg") || contentType.includes("jpg") ? "jpg" : "png";
-  return { bytes: new Uint8Array(await imgRes.arrayBuffer()), url, contentType, extension };
+  const bytes = new Uint8Array(await imgRes.arrayBuffer());
+  const { contentType, extension } = detectImageAsset(bytes, imgRes.headers.get("content-type"));
+  return { bytes, url, contentType, extension };
 }
 
 async function generateWithFal(opts: {
@@ -350,6 +379,7 @@ async function generateWithFal(opts: {
   const imgRes = await fetch(url);
   if (!imgRes.ok) throw new Error(`fal.ai image download ${imgRes.status}`);
   const bytes = new Uint8Array(await imgRes.arrayBuffer());
+  const detected = detectImageAsset(bytes, imgRes.headers.get("content-type"));
   const finalBytes = await maybeRemoveBackground({
     falKey: opts.falKey,
     imageUrl: url,
@@ -359,8 +389,8 @@ async function generateWithFal(opts: {
   return {
     bytes: finalBytes,
     url,
-    contentType: opts.transparentBg ? "image/png" : (imgRes.headers.get("content-type") || "image/png").toLowerCase(),
-    extension: opts.transparentBg ? "png" : (((imgRes.headers.get("content-type") || "image/png").toLowerCase().includes("jpeg") || (imgRes.headers.get("content-type") || "image/png").toLowerCase().includes("jpg")) ? "jpg" : "png"),
+    contentType: opts.transparentBg ? "image/png" : detected.contentType,
+    extension: opts.transparentBg ? "png" : detected.extension,
   };
 }
 
