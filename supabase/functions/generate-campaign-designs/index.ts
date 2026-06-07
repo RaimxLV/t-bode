@@ -155,6 +155,7 @@ function buildGatewayPrompt(opts: {
   style: string;
   colors?: { r: number; g: number; b: number }[];
   customStyleId?: string;
+  maxLength?: number;
 }) {
   const styleSafe = ALLOWED_STYLES.has(opts.style) ? opts.style : "digital_illustration";
   const palette = (opts.colors ?? [])
@@ -173,11 +174,17 @@ function buildGatewayPrompt(opts: {
     opts.customStyleId?.trim() ? `Honor this internal style reference when useful: ${opts.customStyleId.trim()}.` : "",
     "The output must be a premium apparel print design, centered, isolated, crisp, production-ready, with clean edges and strong silhouette.",
   ].filter(Boolean).join(" ");
-  // fal.ai endpoints (flux/schnell, ideogram, recraft, bytedance/seedream)
-  // reject prompts longer than ~1000 chars with HTTP 422 "string_too_long".
-  // Trim base prompt first, then append extras, then hard-cap to 900 chars.
-  const basePrompt = opts.prompt.length > 500 ? opts.prompt.slice(0, 500) : opts.prompt;
-  return `${basePrompt} ${extras}`.slice(0, 900);
+  // Per fal.ai OpenAPI schemas:
+  //   - recraft-v3: maxLength = 1000 (HARD LIMIT, returns 422 above)
+  //   - flux-pro/v1.1, flux/schnell, ideogram/v2, bytedance/seedream: no documented max
+  // Caller passes the endpoint-specific cap so we don't needlessly truncate
+  // when the model can handle a rich, detailed prompt.
+  const cap = opts.maxLength ?? 4000;
+  // Reserve ~40% of the budget for the style/quality/typography extras,
+  // give the rest to the creative base prompt.
+  const baseBudget = Math.max(200, Math.floor(cap * 0.6));
+  const basePrompt = opts.prompt.length > baseBudget ? opts.prompt.slice(0, baseBudget) : opts.prompt;
+  return `${basePrompt} ${extras}`.slice(0, cap);
 }
 
 async function falFetchImageBytes(url: string): Promise<Uint8Array> {
@@ -215,6 +222,8 @@ async function generateDesignImage(opts: {
 }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
   const mode = resolveGenerationMode({ prompt: opts.prompt, slogan: opts.slogan, model: opts.model });
   const endpoint = resolveFalEndpoint({ mode, model: opts.model });
+  // Endpoint-specific prompt cap. Only recraft-v3 documents a hard 1000-char limit.
+  const promptCap = endpoint === "fal-ai/recraft-v3" ? 1000 : 4000;
   const prompt = buildGatewayPrompt({
     prompt: opts.prompt,
     mode,
@@ -222,6 +231,7 @@ async function generateDesignImage(opts: {
     style: opts.style,
     colors: opts.colors,
     customStyleId: opts.customStyleId,
+    maxLength: promptCap,
   });
   const imageSize = ALLOWED_SIZES.has(opts.imageSize ?? "") ? opts.imageSize : "square_hd";
 
