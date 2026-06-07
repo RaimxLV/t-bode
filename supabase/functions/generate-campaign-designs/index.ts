@@ -194,19 +194,36 @@ async function falFetchImageBytes(url: string): Promise<Uint8Array> {
 }
 
 async function falRemoveBackground(apiKey: string, imageUrl: string): Promise<string> {
-  const res = await fetch("https://fal.run/fal-ai/imageutils/rembg", {
-    method: "POST",
-    headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ image_url: imageUrl }),
-  });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`fal rembg neizdevās (${res.status}): ${t.slice(0, 200)}`);
+  // Try the best available models in order. birefnet/v2 gives the cleanest
+  // edges (no white halo); bria is a strong commercial fallback; the legacy
+  // rembg is a last resort.
+  const endpoints = [
+    { path: "fal-ai/birefnet/v2", body: { image_url: imageUrl, model: "General Use (Heavy)", output_format: "png" } },
+    { path: "fal-ai/bria/background/remove", body: { image_url: imageUrl } },
+    { path: "fal-ai/imageutils/rembg", body: { image_url: imageUrl } },
+  ];
+  let lastErr = "";
+  for (const ep of endpoints) {
+    try {
+      const res = await fetch(`https://fal.run/${ep.path}`, {
+        method: "POST",
+        headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(ep.body),
+      });
+      if (!res.ok) {
+        lastErr = `${ep.path} ${res.status}: ${(await res.text()).slice(0, 200)}`;
+        console.warn("bg remover failed:", lastErr);
+        continue;
+      }
+      const data = await res.json();
+      const url: string | undefined = data?.image?.url ?? data?.images?.[0]?.url;
+      if (!url) { lastErr = `${ep.path}: no url`; continue; }
+      return url;
+    } catch (e) {
+      lastErr = `${ep.path}: ${e instanceof Error ? e.message : String(e)}`;
+    }
   }
-  const data = await res.json();
-  const url: string | undefined = data?.image?.url ?? data?.images?.[0]?.url;
-  if (!url) throw new Error("fal rembg neatgrieza attēla URL");
-  return url;
+  throw new Error(`fona noņemšana neizdevās: ${lastErr}`);
 }
 
 async function generateDesignImage(opts: {
