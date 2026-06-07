@@ -4,9 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Sparkles, Loader2, Image as ImageIcon } from "lucide-react";
+import { Trash2, Sparkles, Loader2, Image as ImageIcon, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { downloadPrintReadyPng } from "@/lib/printFile";
 
 type DesignItem = {
   key: string;
@@ -23,6 +24,7 @@ export function DraftDesignsGallery() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<DesignItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -117,6 +119,36 @@ export function DraftDesignsGallery() {
     }
   }
 
+  async function handleDownload(item: DesignItem) {
+    setDownloadingKey(item.key);
+    try {
+      const safe = (item.name || "drukas-fails")
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "drukas-fails";
+      let upscaledUrl: string | undefined;
+      try {
+        const { data, error } = await supabase.functions.invoke("upscale-design", {
+          body: { image_url: item.url, target_long_edge: 3072 },
+        });
+        if (!error && (data as any)?.url) upscaledUrl = (data as any).url as string;
+      } catch (_) { /* fall back to bicubic */ }
+      await downloadPrintReadyPng({
+        imageUrl: item.url,
+        upscaledUrl,
+        fileName: `${safe}-460dpi.png`,
+      });
+      toast.success(upscaledUrl ? "AI-uzlabots drukas fails lejupielādēts" : "Drukas fails lejupielādēts");
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās sagatavot drukas failu");
+    } finally {
+      setDownloadingKey(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -180,10 +212,22 @@ export function DraftDesignsGallery() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="flex-1 h-7 text-[11px] gap-1"
+                  className="flex-1 h-7 text-[11px] gap-1 min-w-0"
                   onClick={() => navigate("/admin?tab=designstoproducts")}
                 >
                   <Sparkles className="w-3 h-3" /> Publicēt
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => handleDownload(item)}
+                  disabled={downloadingKey === item.key}
+                  title="Lejuplādēt AI-uzlabotu 460 DPI drukas failu"
+                >
+                  {downloadingKey === item.key
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Download className="w-3.5 h-3.5" />}
                 </Button>
                 <Button
                   size="sm"
