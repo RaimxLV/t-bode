@@ -71,6 +71,13 @@ const ALLOWED_SIZES = new Set([
 
 type GenerationMode = "text" | "illustration";
 
+type GatewayModelOverride = "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+
+type GatewayTarget = {
+  provider: "openai" | "gemini";
+  model: string;
+};
+
 function gatewayImageSize(size: string): "1024x1024" | "1024x1536" | "1536x1024" {
   switch (size) {
     case "portrait_4_3":
@@ -83,6 +90,38 @@ function gatewayImageSize(size: string): "1024x1024" | "1024x1536" | "1536x1024"
     case "square_hd":
     default:
       return "1024x1024";
+  }
+}
+
+function resolveGatewayTarget(opts: {
+  mode: GenerationMode;
+  model?: GatewayModelOverride;
+  transparentBg?: boolean;
+}): GatewayTarget {
+  if (opts.transparentBg) {
+    switch (opts.model) {
+      case "flux-schnell":
+      case "nano-banana":
+        return { provider: "gemini", model: "google/gemini-3.1-flash-image-preview" };
+      default:
+        return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
+    }
+  }
+  switch (opts.model) {
+    case "ideogram":
+      return { provider: "openai", model: "openai/gpt-image-2" };
+    case "recraft":
+    case "flux-pro":
+    case "seedream":
+      return { provider: "gemini", model: "google/gemini-3-pro-image-preview" };
+    case "flux-schnell":
+      return { provider: "gemini", model: "google/gemini-2.5-flash-image" };
+    case "nano-banana":
+      return { provider: "gemini", model: "google/gemini-3.1-flash-image-preview" };
+    case "auto":
+    default:
+      if (opts.mode === "text") return { provider: "openai", model: "openai/gpt-image-2" };
+      return { provider: "openai", model: "openai/gpt-image-2" };
   }
 }
 
@@ -172,32 +211,43 @@ async function generateDesignImage(opts: {
   colors?: { r: number; g: number; b: number }[];
   transparentBg?: boolean;
   slogan?: string;
-  model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
+  model?: GatewayModelOverride;
 }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
   const mode = resolveGenerationMode({ prompt: opts.prompt, slogan: opts.slogan, model: opts.model });
+  const target = resolveGatewayTarget({ mode, model: opts.model, transparentBg: opts.transparentBg });
+  const prompt = buildGatewayPrompt({
+    prompt: opts.prompt,
+    mode,
+    transparentBg: opts.transparentBg,
+    style: opts.style,
+    colors: opts.colors,
+    customStyleId: opts.customStyleId,
+  });
   const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${opts.apiKey}`,
+      "Lovable-API-Key": opts.apiKey,
+      "X-Lovable-AIG-SDK": "manual-fetch",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: "openai/gpt-image-2",
-      prompt: buildGatewayPrompt({
-        prompt: opts.prompt,
-        mode,
-        transparentBg: opts.transparentBg,
-        style: opts.style,
-        colors: opts.colors,
-        customStyleId: opts.customStyleId,
-      }),
-      size: gatewayImageSize(opts.imageSize ?? "square_hd"),
-      quality: "high",
-      background: opts.transparentBg ? "transparent" : "opaque",
-      output_format: "png",
-      n: 1,
-      stream: false,
-    }),
+    body: JSON.stringify(
+      target.provider === "openai"
+        ? {
+            model: target.model,
+            prompt,
+            size: gatewayImageSize(opts.imageSize ?? "square_hd"),
+            quality: "high",
+            output_format: "png",
+            n: 1,
+            stream: false,
+          }
+        : {
+            model: target.model,
+            messages: [{ role: "user", content: prompt }],
+            modalities: ["image", "text"],
+            stream: false,
+          },
+    ),
   });
 
   if (res.status === 429) {
