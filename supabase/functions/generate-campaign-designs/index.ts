@@ -256,6 +256,7 @@ async function generateDesignImage(opts: {
   // Per-endpoint request body. Recraft-v3 natively accepts our style tokens
   // and an RGB color palette; everyone else gets a generic flux-style body.
   const isRecraft = endpoint === "fal-ai/recraft-v3";
+  const isIdeogramV3 = endpoint === "fal-ai/ideogram/v3";
   const body: Record<string, unknown> = isRecraft
     ? {
         prompt,
@@ -266,6 +267,15 @@ async function generateDesignImage(opts: {
           g: Math.max(0, Math.min(255, c.g | 0)),
           b: Math.max(0, Math.min(255, c.b | 0)),
         })),
+      }
+    : isIdeogramV3
+    ? {
+        prompt,
+        image_size: imageSize,
+        num_images: 1,
+        rendering_speed: "QUALITY",
+        style: "DESIGN",
+        expand_prompt: false,
       }
     : {
         prompt,
