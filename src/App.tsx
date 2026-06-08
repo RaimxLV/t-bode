@@ -177,6 +177,7 @@ const App = () => {
                         <Route path="/design-catalog" element={<LegacyRedirect to="/design" />} />
                         <Route path="/configurator/*" element={<LegacyRedirect to="/design" />} />
                         <Route path="/products" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/veikals" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/men-t-shirt" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/women-t-shirt" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/bernu-t-krekli" element={<LegacyRedirect to="/collection" />} />
