@@ -111,92 +111,7 @@ const DEFAULT_PRINT_AREA = { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
 /** Style preset catalog used to guide generated artwork. */
 type StyleOpt = { value: string; label: string };
 const STYLE_GROUPS: { group: string; options: StyleOpt[] }[] = [
-  { group: "Vektors", options: [
-    { value: "vector_illustration", label: "Vektors (klasisks)" },
-    { value: "vector_illustration/line_art", label: "Line Art" },
-    { value: "vector_illustration/linocut", label: "Linogrievums" },
-    { value: "vector_illustration/line_circuit", label: "Tehno līnijas" },
-    { value: "vector_illustration/bold_stroke", label: "Treknas līnijas" },
-    { value: "vector_illustration/cutout", label: "Izgriezums" },
-    { value: "vector_illustration/engraving", label: "Gravīra" },
-    { value: "vector_illustration/editorial", label: "Editorial" },
-    { value: "vector_illustration/emotional_flat", label: "Emocionāls flat" },
-    { value: "vector_illustration/infographical", label: "Infografika" },
-    { value: "vector_illustration/marker_outline", label: "Markeris" },
-    { value: "vector_illustration/mosaic", label: "Mozaīka" },
-    { value: "vector_illustration/naivector", label: "Naivs vektors" },
-    { value: "vector_illustration/roundish_flat", label: "Apaļš flat" },
-    { value: "vector_illustration/segmented_colors", label: "Segmentētas krāsas" },
-    { value: "vector_illustration/sharp_contrast", label: "Asa kontrasta" },
-    { value: "vector_illustration/thin", label: "Tievas līnijas" },
-    { value: "vector_illustration/vivid_shapes", label: "Spilgtas formas" },
-    { value: "vector_illustration/contour_pop_art", label: "Contour Pop Art" },
-    { value: "vector_illustration/cosmics", label: "Cosmics" },
-    { value: "vector_illustration/chemistry", label: "Ķīmija" },
-    { value: "vector_illustration/colored_stencil", label: "Krāsains šablons" },
-    { value: "vector_illustration/depressive", label: "Drūms" },
-  ] },
-  { group: "Ilustrācija", options: [
-    { value: "digital_illustration", label: "Ilustrācija (jaukta)" },
-    { value: "digital_illustration/2d_art_poster", label: "Plakāts (2D)" },
-    { value: "digital_illustration/2d_art_poster_2", label: "Plakāts (2D) v2" },
-    { value: "digital_illustration/hand_drawn", label: "Roku zīmēts" },
-    { value: "digital_illustration/hand_drawn_outline", label: "Kontūru zīmējums" },
-    { value: "digital_illustration/pixel_art", label: "Pixel Art" },
-    { value: "digital_illustration/grain", label: "Tekstūrēts (grain)" },
-    { value: "digital_illustration/infantile_sketch", label: "Bērnišķīga skice" },
-    { value: "digital_illustration/handmade_3d", label: "Roku 3D" },
-    { value: "digital_illustration/engraving_color", label: "Gravīra (krāsā)" },
-    { value: "digital_illustration/antiquarian", label: "Antikvariāts" },
-    { value: "digital_illustration/bold_fantasy", label: "Fantāzija" },
-    { value: "digital_illustration/child_book", label: "Bērnu grāmata" },
-    { value: "digital_illustration/cover", label: "Vāks" },
-    { value: "digital_illustration/crosshatch", label: "Crosshatch" },
-    { value: "digital_illustration/digital_engraving", label: "Digitāla gravīra" },
-    { value: "digital_illustration/expressionism", label: "Ekspresionisms" },
-    { value: "digital_illustration/freehand_details", label: "Freehand detaļas" },
-    { value: "digital_illustration/graphic_intensity", label: "Grafiska intensitāte" },
-    { value: "digital_illustration/hard_comics", label: "Komiksi" },
-    { value: "digital_illustration/long_shadow", label: "Long Shadow" },
-    { value: "digital_illustration/modern_folk", label: "Mūsdienu folkloras" },
-    { value: "digital_illustration/multicolor", label: "Daudzkrāsains" },
-    { value: "digital_illustration/neon_calm", label: "Neona miers" },
-    { value: "digital_illustration/noir", label: "Noir" },
-    { value: "digital_illustration/nostalgic_pastel", label: "Nostalģisks pastelis" },
-    { value: "digital_illustration/outline_details", label: "Kontūras + detaļas" },
-    { value: "digital_illustration/pastel_gradient", label: "Pastelis gradients" },
-    { value: "digital_illustration/pastel_sketch", label: "Pastelis skice" },
-    { value: "digital_illustration/pop_art", label: "Pop Art" },
-    { value: "digital_illustration/pop_renaissance", label: "Pop Renesanse" },
-    { value: "digital_illustration/street_art", label: "Street Art" },
-    { value: "digital_illustration/tablet_sketch", label: "Planšetes skice" },
-    { value: "digital_illustration/urban_glow", label: "Urban Glow" },
-    { value: "digital_illustration/urban_sketching", label: "Urban skice" },
-    { value: "digital_illustration/vanilla_dreams", label: "Vanilla sapņi" },
-    { value: "digital_illustration/young_adult_book", label: "Jaunatnes grāmata" },
-  ] },
-  { group: "Reālistisks", options: [
-    { value: "realistic_image", label: "Reālistisks (klasisks)" },
-    { value: "realistic_image/b_and_w", label: "Melnbalts" },
-    { value: "realistic_image/hard_flash", label: "Cietā zibspuldze" },
-    { value: "realistic_image/hdr", label: "HDR" },
-    { value: "realistic_image/natural_light", label: "Dabiska gaisma" },
-    { value: "realistic_image/studio_portrait", label: "Studijas portrets" },
-    { value: "realistic_image/enterprise", label: "Enterprise" },
-    { value: "realistic_image/motion_blur", label: "Kustības blur" },
-    { value: "realistic_image/evening_light", label: "Vakara gaisma" },
-    { value: "realistic_image/faded_nostalgia", label: "Izbalējusi nostalģija" },
-    { value: "realistic_image/forest_life", label: "Meža dzīve" },
-    { value: "realistic_image/mystic_naturalism", label: "Mistisks naturalisms" },
-    { value: "realistic_image/natural_tones", label: "Dabiskie toņi" },
-    { value: "realistic_image/organic_calm", label: "Organisks miers" },
-    { value: "realistic_image/real_life_glow", label: "Real life glow" },
-    { value: "realistic_image/retro_realism", label: "Retro reālisms" },
-    { value: "realistic_image/retro_snapshot", label: "Retro foto" },
-    { value: "realistic_image/urban_drama", label: "Urbānā drāma" },
-    { value: "realistic_image/village_realism", label: "Lauku reālisms" },
-    { value: "realistic_image/warm_folk", label: "Silts folks" },
-  ] },
+  { group: "Stils", options: [{ value: "digital_illustration", label: "Noklusējums" }] },
 ];
 const STYLE_PRESETS: StyleOpt[] = STYLE_GROUPS.flatMap((g) => g.options);
 
@@ -282,10 +197,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
       setCampaign(camp);
-      if (camp?.style) setStyleChoice(camp.style);
       if (camp) {
         setTransparentBg(!!camp.transparent_bg);
-        setCustomStyleId(camp.custom_style_id || "");
         setImageSize(camp.image_size || "square_hd");
         setPreferredColors(Array.isArray(camp.preferred_colors) ? camp.preferred_colors : []);
       }
@@ -477,7 +390,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         body: {
           campaign_id: campaign.id,
           style: styleChoice,
-          custom_style_id: customStyleId.trim() || null,
+          custom_style_id: null,
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
@@ -503,7 +416,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           campaign_id: campaign.id,
           design_id: designId,
           style: styleChoice,
-          custom_style_id: customStyleId.trim() || null,
+          custom_style_id: null,
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
@@ -1226,8 +1139,6 @@ function StepIdea({
               onChangeStyle={onChangeStyle}
               transparentBg={transparentBg}
               onChangeTransparentBg={onChangeTransparentBg}
-              customStyleId={customStyleId}
-              onChangeCustomStyleId={onChangeCustomStyleId}
               imageSize={imageSize}
               onChangeImageSize={onChangeImageSize}
               preferredColors={preferredColors}
@@ -1327,8 +1238,6 @@ function StepDesigns({
             onChangeStyle={onChangeStyle}
             transparentBg={transparentBg}
             onChangeTransparentBg={onChangeTransparentBg}
-            customStyleId={customStyleId}
-            onChangeCustomStyleId={onChangeCustomStyleId}
             imageSize={imageSize}
             onChangeImageSize={onChangeImageSize}
             preferredColors={preferredColors}
@@ -2171,7 +2080,6 @@ function LibrarySheet({
 function GenerationSettings({
   styleChoice, onChangeStyle,
   transparentBg, onChangeTransparentBg,
-  customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
@@ -2181,8 +2089,6 @@ function GenerationSettings({
   onChangeStyle: (v: string) => void;
   transparentBg: boolean;
   onChangeTransparentBg: (v: boolean) => void;
-  customStyleId: string;
-  onChangeCustomStyleId: (v: string) => void;
   imageSize: string;
   onChangeImageSize: (v: string) => void;
   preferredColors: { r: number; g: number; b: number }[];
@@ -2194,7 +2100,7 @@ function GenerationSettings({
 }) {
   const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
-  const usingCustom = customStyleId.trim().length > 0;
+  
 
   const addColor = () => {
     const rgb = hexToRgb(newColor);
@@ -2222,7 +2128,7 @@ function GenerationSettings({
             "nano-banana": "Eksperimentāls",
             seedream: "Māksliniecisks",
           } as Record<string, string>)[modelChoice]} ·{" "}
-          {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
+          {STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
         </span>
@@ -2274,7 +2180,7 @@ function GenerationSettings({
             <select
               value={styleChoice}
               onChange={(e) => onChangeStyle(e.target.value)}
-              disabled={usingCustom}
+              
               className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body disabled:opacity-50"
             >
               {STYLE_GROUPS.map((g) => (
@@ -2287,20 +2193,6 @@ function GenerationSettings({
             </select>
           </div>
 
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pielāgots stila ID
-            </label>
-            <Input
-              value={customStyleId}
-              onChange={(e) => onChangeCustomStyleId(e.target.value)}
-              placeholder="piem. 5e8c7f48-…"
-              className="mt-1 h-8 text-xs"
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Ja tev ir savs stila identifikators, ielīmē to šeit. Tas pārraksta izvēlēto stilu.
-            </p>
-          </div>
 
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Izmērs</label>
