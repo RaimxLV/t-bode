@@ -2193,20 +2193,6 @@ function GenerationSettings({
             </select>
           </div>
 
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Pielāgots stila ID
-            </label>
-            <Input
-              value={customStyleId}
-              onChange={(e) => onChangeCustomStyleId(e.target.value)}
-              placeholder="piem. 5e8c7f48-…"
-              className="mt-1 h-8 text-xs"
-            />
-            <p className="text-[10px] text-muted-foreground mt-1">
-              Ja tev ir savs stila identifikators, ielīmē to šeit. Tas pārraksta izvēlēto stilu.
-            </p>
-          </div>
 
           <div>
             <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Izmērs</label>
