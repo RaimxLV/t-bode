@@ -16,10 +16,10 @@ const Index = () => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "T-Bode — Profesionāla T-kreklu un apģērbu apdruka Rīgā"
+    ? "T-Bode | Kvalitatīva apģērbu apdruka un personalizēti dizaini"
     : "Custom T-shirt printing in Riga | T-Bode";
   const description = isLv
-    ? "👕 Tavs dizains. Mūsu augstākās kvalitātes izpildījums!\n\n🎨 Apdruka uz t-krekliem, hūdijiem, krūzēm un somām ar mūsdienīgu DTF tehnoloģiju.\n\n📍 Mūsu veikali Rīgā:\n• Akropole Rīga (Maskavas iela 257)\n• Domina Shopping (Ieriķu iela 3)\n• Origo (Stacijas laukums 2)\n• Alfa / Akropole Alfa (Brīvības gatve 372)\n\n🏢 Birojs un ražošana:\n• Braslas iela 29, Rīga\n\n✨ Izveido savu stilu pats mūsu tiešsaistes dizaina rīkā! Ātra izgatavošana un draudzīgas cenas."
+    ? "Pasūti unikālus T-kreklus un hūdijus ar savu dizainu! T-Bode piedāvā augstākās kvalitātes apdruku, modernas tehnoloģijas un ātru izgatavošanu. Ienāc!"
     : "Custom t-shirt, hoodie, mug & bag printing in Riga with DTF technology. Design your own or shop the T-Bode collection. Stores: Akropole, Domina, Origo, Alfa.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
