@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon, Image as ImageIcon } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,7 @@ const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m =
 const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManager").then(m => ({ default: m.PrintZonesManager })));
 const DesignsToProducts = lazy(() => import("@/components/admin/DesignsToProducts").then(m => ({ default: m.DesignsToProducts })));
 const DraftDesignsGallery = lazy(() => import("@/components/admin/DraftDesignsGallery").then(m => ({ default: m.DraftDesignsGallery })));
+const DesignLibrary = lazy(() => import("@/components/admin/bulk/DesignLibrary").then(m => ({ default: m.DesignLibrary })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
@@ -395,6 +396,7 @@ const Admin = () => {
             <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Blogs</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
+            <TabsTrigger value="designlibrary" className="gap-1.5 text-sm"><ImageIcon className="w-4 h-4" /> Dizainu bibliotēka</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
           </TabsList>
 
@@ -546,34 +548,22 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="designlibrary">
+            <Suspense fallback={<TabFallback />}>
+              <DesignLibrary />
+            </Suspense>
+          </TabsContent>
+
           <TabsContent value="drafts">
-            <Tabs defaultValue="designs" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="designs" className="gap-1.5">
-                  <Sparkles className="w-4 h-4" /> Dizaini
-                </TabsTrigger>
-                <TabsTrigger value="products" className="gap-1.5">
-                  <ShoppingBag className="w-4 h-4" /> Produkti
-                  <Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge>
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="designs">
-                <Suspense fallback={<TabFallback />}>
-                  <DraftDesignsGallery />
-                </Suspense>
-              </TabsContent>
-              <TabsContent value="products">
-                {loadingProducts ? (
-                  <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
-                ) : draftProducts.length === 0 ? (
-                  <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
-                    Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
-                  </CardContent></Card>
-                ) : (
-                  renderProductGrid(draftProducts, false)
-                )}
-              </TabsContent>
-            </Tabs>
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
+            ) : draftProducts.length === 0 ? (
+              <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
+                Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
+              </CardContent></Card>
+            ) : (
+              renderProductGrid(draftProducts, false)
+            )}
           </TabsContent>
 
         </Tabs>
