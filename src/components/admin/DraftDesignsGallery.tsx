@@ -178,7 +178,7 @@ export function DraftDesignsGallery() {
           <Sparkles className="w-4 h-4" /> Pārvērst par produktiem
         </Button>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {items.map((item, idx) => (
           <Card key={item.key} className="overflow-hidden group relative">
             <button

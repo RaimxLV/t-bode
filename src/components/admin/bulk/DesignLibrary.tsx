@@ -347,7 +347,7 @@ export function DesignLibrary() {
                 <button
                   onClick={(e) => { e.stopPropagation(); void removeBackgrounds([d.id], true); }}
                   disabled={bgRemoving}
-                  className="absolute top-1 right-[3.25rem] p-1 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-primary transition-all disabled:opacity-100"
+                  className="absolute top-1 right-[3.25rem] p-1 rounded bg-black/70 text-white hover:bg-primary transition-all"
                   aria-label="Noņemt fonu"
                   title="Noņemt fonu"
                 >
