@@ -2100,7 +2100,7 @@ function GenerationSettings({
 }) {
   const [open, setOpen] = useState(true);
   const [newColor, setNewColor] = useState("#dc2626");
-  const usingCustom = customStyleId.trim().length > 0;
+  
 
   const addColor = () => {
     const rgb = hexToRgb(newColor);
