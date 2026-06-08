@@ -441,13 +441,13 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   };
 
   /** Copy a generated design into the persistent design_library so it can be reused across campaigns. */
-  const saveToLibrary = async (d: DesignRow) => {
-    if (!d.image_url) { toast.error("Nav bildes"); return; }
-    if (favoritedIds.has(d.id)) { toast.info("Jau bibliotēkā"); return; }
+  const saveToLibrary = async (d: DesignRow): Promise<{ id: string; path: string } | null> => {
+    if (!d.image_url) { toast.error("Nav bildes"); return null; }
+    if (favoritedIds.has(d.id)) { toast.info("Jau bibliotēkā"); return null; }
     try {
       // Download bytes from campaign-assets (private), upload to design-library (public)
       const signed = signedUrls[d.image_url];
-      if (!signed) { toast.error("Nav URL"); return; }
+      if (!signed) { toast.error("Nav URL"); return null; }
       const res = await fetch(signed);
       if (!res.ok) throw new Error("Nevar lejupielādēt");
       const blob = await res.blob();
@@ -467,14 +467,50 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         contentType, upsert: false,
       });
       if (up.error) throw up.error;
-      const { error: dbErr } = await supabase.from("design_library").insert({
+      const { data: row, error: dbErr } = await supabase.from("design_library").insert({
         name, file_path: path, file_size: blob.size, tags: ["favorite", "campaign"],
-      });
+      }).select("id, file_path").maybeSingle();
       if (dbErr) throw dbErr;
       setFavoritedIds((prev) => { const n = new Set(prev); n.add(d.id); return n; });
       toast.success("♥ Saglabāts bibliotēkā");
+      return row ? { id: (row as any).id, path: (row as any).file_path } : null;
     } catch (e: any) {
       toast.error("Neizdevās: " + (e.message ?? e));
+      return null;
+    }
+  };
+
+  /** Save the campaign design to the library and immediately remove its background. */
+  const [bgRemovingDesignId, setBgRemovingDesignId] = useState<string | null>(null);
+  const saveAndRemoveBg = async (d: DesignRow) => {
+    if (!d.image_url) { toast.error("Nav bildes"); return; }
+    setBgRemovingDesignId(d.id);
+    try {
+      let libRef: { id: string; path: string } | null = null;
+      if (favoritedIds.has(d.id)) {
+        // Already in library — find existing row by matching campaign-favorites path
+        const { data: rows } = await supabase
+          .from("design_library")
+          .select("id, file_path")
+          .like("file_path", `campaign-favorites/${campaign?.id}/${d.id}-%`)
+          .limit(1);
+        if (rows && rows.length > 0) libRef = { id: (rows[0] as any).id, path: (rows[0] as any).file_path };
+      } else {
+        libRef = await saveToLibrary(d);
+      }
+      if (!libRef) { toast.error("Neizdevās saglabāt bibliotēkā"); return; }
+      toast.info("Noņem fonu…");
+      const data = await removeDesignBackground([libRef.id], true);
+      const ok = data?.ok ?? 0;
+      if (ok) toast.success("Fons noņemts. Skaties dizainu bibliotēkā.");
+      else {
+        const firstErr = data?.results?.find((r) => !r.ok)?.error;
+        toast.error(firstErr || "Neizdevās noņemt fonu");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās");
+    } finally {
+      setBgRemovingDesignId(null);
     }
   };
 
