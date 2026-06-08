@@ -339,13 +339,13 @@ export function DesignsToProducts() {
                         className="absolute inset-0"
                         aria-label={`Izvēlēties dizainu ${d.name}`}
                       >
-                      <img src={d.url} alt={d.name} className="w-full h-full object-contain p-1" loading="lazy" />
-                      {sel && <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5"><Check className="w-3 h-3" /></div>}
-                      <div className="absolute top-1 left-1">
-                        <Badge variant={d.source === "campaign" ? "default" : "secondary"} className="text-[8px] px-1 py-0 h-4">
-                          {d.source === "campaign" ? <><Sparkles className="w-2 h-2 mr-0.5" />AI</> : "Lib"}
-                        </Badge>
-                      </div>
+                        <img src={d.url} alt={d.name} className="w-full h-full object-contain p-1" loading="lazy" />
+                        {sel && <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5"><Check className="w-3 h-3" /></div>}
+                        <div className="absolute top-1 left-1">
+                          <Badge variant={d.source === "campaign" ? "default" : "secondary"} className="text-[8px] px-1 py-0 h-4">
+                            {d.source === "campaign" ? <><Sparkles className="w-2 h-2 mr-0.5" />AI</> : "Lib"}
+                          </Badge>
+                        </div>
                       </button>
                       {d.source === "library" && (
                         <button
