@@ -46,7 +46,7 @@ async function fetchProducts(env: { url: string; key: string }): Promise<Sitemap
   }
   try {
     const res = await fetch(
-      `${env.url}/rest/v1/products?select=slug,updated_at&order=updated_at.desc`,
+      `${env.url}/rest/v1/products?select=slug,updated_at&status=eq.published&is_draft=eq.false&order=updated_at.desc`,
       {
         headers: {
           apikey: env.key,
@@ -69,6 +69,34 @@ async function fetchProducts(env: { url: string; key: string }): Promise<Sitemap
       }));
   } catch (e: any) {
     console.warn(`[sitemap] Supabase fetch error: ${e?.message}`);
+    return [];
+  }
+}
+
+async function fetchBlogPosts(env: { url: string; key: string }): Promise<SitemapEntry[]> {
+  if (!env.url || !env.key) return [];
+  try {
+    const res = await fetch(
+      `${env.url}/rest/v1/blog_posts?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc`,
+      { headers: { apikey: env.key, Authorization: `Bearer ${env.key}` } },
+    );
+    if (!res.ok) {
+      console.warn(`[sitemap] blog_posts fetch failed: ${res.status}`);
+      return [];
+    }
+    const rows = (await res.json()) as Array<{ slug: string; updated_at: string; published_at: string }>;
+    return rows
+      .filter((r) => r.slug)
+      .map((r) => ({
+        path: `/blog/${r.slug}`,
+        lastmod: (r.updated_at || r.published_at)
+          ? new Date(r.updated_at || r.published_at).toISOString()
+          : undefined,
+        changefreq: "weekly" as const,
+        priority: "0.7",
+      }));
+  } catch (e: any) {
+    console.warn(`[sitemap] blog_posts fetch error: ${e?.message}`);
     return [];
   }
 }
@@ -96,10 +124,13 @@ function generateSitemap(entries: SitemapEntry[]) {
 
 (async () => {
   const env = loadEnv();
-  const productEntries = await fetchProducts(env);
-  const entries = [...staticEntries, ...productEntries];
+  const [productEntries, blogEntries] = await Promise.all([
+    fetchProducts(env),
+    fetchBlogPosts(env),
+  ]);
+  const entries = [...staticEntries, ...productEntries, ...blogEntries];
   writeFileSync(resolve("public/sitemap.xml"), generateSitemap(entries));
   console.log(
-    `[sitemap] wrote public/sitemap.xml (${entries.length} URLs: ${staticEntries.length} static + ${productEntries.length} products)`,
+    `[sitemap] wrote public/sitemap.xml (${entries.length} URLs: ${staticEntries.length} static + ${productEntries.length} products + ${blogEntries.length} blog posts)`,
   );
 })();
