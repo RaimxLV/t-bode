@@ -548,34 +548,22 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="designlibrary">
+            <Suspense fallback={<TabFallback />}>
+              <DesignLibrary />
+            </Suspense>
+          </TabsContent>
+
           <TabsContent value="drafts">
-            <Tabs defaultValue="designs" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="designs" className="gap-1.5">
-                  <Sparkles className="w-4 h-4" /> Dizaini
-                </TabsTrigger>
-                <TabsTrigger value="products" className="gap-1.5">
-                  <ShoppingBag className="w-4 h-4" /> Produkti
-                  <Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge>
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="designs">
-                <Suspense fallback={<TabFallback />}>
-                  <DraftDesignsGallery />
-                </Suspense>
-              </TabsContent>
-              <TabsContent value="products">
-                {loadingProducts ? (
-                  <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
-                ) : draftProducts.length === 0 ? (
-                  <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
-                    Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
-                  </CardContent></Card>
-                ) : (
-                  renderProductGrid(draftProducts, false)
-                )}
-              </TabsContent>
-            </Tabs>
+            {loadingProducts ? (
+              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
+            ) : draftProducts.length === 0 ? (
+              <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
+                Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
+              </CardContent></Card>
+            ) : (
+              renderProductGrid(draftProducts, false)
+            )}
           </TabsContent>
 
         </Tabs>
