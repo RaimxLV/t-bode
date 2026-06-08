@@ -197,10 +197,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .maybeSingle();
       const camp = campRaw as unknown as Campaign | null;
       setCampaign(camp);
-      if (camp?.style) setStyleChoice(camp.style);
       if (camp) {
         setTransparentBg(!!camp.transparent_bg);
-        setCustomStyleId(camp.custom_style_id || "");
         setImageSize(camp.image_size || "square_hd");
         setPreferredColors(Array.isArray(camp.preferred_colors) ? camp.preferred_colors : []);
       }
@@ -392,7 +390,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         body: {
           campaign_id: campaign.id,
           style: styleChoice,
-          custom_style_id: customStyleId.trim() || null,
+          custom_style_id: null,
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
@@ -418,7 +416,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           campaign_id: campaign.id,
           design_id: designId,
           style: styleChoice,
-          custom_style_id: customStyleId.trim() || null,
+          custom_style_id: null,
           image_size: imageSize,
           colors: usePalette ? preferredColors : [],
           transparent_bg: transparentBg,
