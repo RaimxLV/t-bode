@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Trash2, Sparkles, Loader2, Image as ImageIcon, Download } from "lucide-react";
+import { Trash2, Sparkles, Loader2, Image as ImageIcon, Download, Eraser } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { downloadPrintReadyPng } from "@/lib/printFile";
@@ -25,6 +25,7 @@ export function DraftDesignsGallery() {
   const [items, setItems] = useState<DesignItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
+  const [bgRemovingKey, setBgRemovingKey] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -146,6 +147,29 @@ export function DraftDesignsGallery() {
     }
   }
 
+  async function handleRemoveBg(item: DesignItem) {
+    if (item.source !== "library") {
+      toast.error("Fona noņemšana pieejama tikai bibliotēkas dizainiem. Vispirms saglabā kampaņas dizainu bibliotēkā.");
+      return;
+    }
+    if (!confirm(`Noņemt fonu "${item.name}"? Oriģināls tiks aizstāts ar caurspīdīgu PNG.`)) return;
+    setBgRemovingKey(item.key);
+    try {
+      const { data, error } = await supabase.functions.invoke("remove-design-background", {
+        body: { design_ids: [item.id], replace: true },
+      });
+      if (error) throw error;
+      const ok = (data as any)?.ok ?? 0;
+      if (ok) toast.success("Fons noņemts");
+      else toast.error("Neizdevās noņemt fonu");
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || "Fona noņemšana neizdevās");
+    } finally {
+      setBgRemovingKey(null);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -226,6 +250,20 @@ export function DraftDesignsGallery() {
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     : <Download className="w-3.5 h-3.5" />}
                 </Button>
+                {item.source === "library" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 w-7 p-0"
+                    onClick={() => handleRemoveBg(item)}
+                    disabled={bgRemovingKey === item.key}
+                    title="Noņemt fonu (caurspīdīgs PNG)"
+                  >
+                    {bgRemovingKey === item.key
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <Eraser className="w-3.5 h-3.5" />}
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="ghost"
