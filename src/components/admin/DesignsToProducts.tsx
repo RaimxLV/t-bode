@@ -329,11 +329,16 @@ export function DesignsToProducts() {
                 {filteredDesigns.map((d) => {
                   const sel = selectedDesignId === d.id;
                   return (
-                    <button
+                    <div
                       key={d.id}
-                      onClick={() => setSelectedDesignId(d.id)}
                       className={`relative aspect-square rounded border-2 overflow-hidden bg-[repeating-conic-gradient(#e5e7eb_0_25%,#fff_0_50%)] bg-[length:12px_12px] ${sel ? "border-primary ring-2 ring-primary/40" : "border-border hover:border-primary/50"}`}
                     >
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDesignId(d.id)}
+                        className="absolute inset-0"
+                        aria-label={`Izvēlēties dizainu ${d.name}`}
+                      >
                       <img src={d.url} alt={d.name} className="w-full h-full object-contain p-1" loading="lazy" />
                       {sel && <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-0.5"><Check className="w-3 h-3" /></div>}
                       <div className="absolute top-1 left-1">
@@ -341,6 +346,7 @@ export function DesignsToProducts() {
                           {d.source === "campaign" ? <><Sparkles className="w-2 h-2 mr-0.5" />AI</> : "Lib"}
                         </Badge>
                       </div>
+                      </button>
                       {d.source === "library" && (
                         <button
                           type="button"
@@ -354,7 +360,7 @@ export function DesignsToProducts() {
                         </button>
                       )}
                       <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] px-1 py-0.5 truncate font-body">{d.name}</div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
