@@ -435,6 +435,19 @@ export async function createZakekeOrder(opts: {
       zakekeOrderId = extractOrderId(resolvedOrder);
     }
   }
+  // Zakeke V2 /order responses sometimes echo the payload without their own
+  // internal `id` — only the `orderCode` we sent. In that case the orderCode
+  // *is* the canonical identifier and /v2/orders/{orderCode}/output-files
+  // accepts it. Use it so we don't throw away a successfully created order.
+  if (!zakekeOrderId) {
+    const echoedCode = data?.orderCode ?? null;
+    if (echoedCode && String(echoedCode) === String(opts.externalOrderId)) {
+      console.log(
+        `[zakeke-create-order] no internal id in response — using orderCode=${echoedCode} as zakekeOrderId`,
+      );
+      zakekeOrderId = String(echoedCode);
+    }
+  }
   if (!zakekeOrderId) {
     console.error(
       `[zakeke-create-order] Could NOT extract Zakeke order id from response. ` +
