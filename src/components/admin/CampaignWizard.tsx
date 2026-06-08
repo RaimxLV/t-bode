@@ -1924,6 +1924,16 @@ function DesignCard({
               <Heart className={`w-4 h-4 ${favorited ? "fill-current text-white" : "text-rose-500"}`} />
             </button>
           )}
+          {onSaveAndRemoveBg && (
+            <button
+              onClick={() => onSaveAndRemoveBg(d)}
+              disabled={!!bgRemoving}
+              className="absolute bottom-1 left-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition disabled:opacity-100"
+              title="Saglabāt bibliotēkā un noņemt fonu"
+            >
+              {bgRemoving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eraser className="w-4 h-4" />}
+            </button>
+          )}
         </>
       ) : d.generation_error || imageLoadFailed ? (
         <div className="p-3 text-[10px] text-destructive flex flex-col items-center justify-center h-full text-center gap-2 bg-destructive/5">
