@@ -10,10 +10,10 @@ const OurCollection = () => {
   return (
     <div className="min-h-screen">
       <Seo
-        title={isLv ? "Mūsu kolekcija" : "Our Collection"}
+        title={isLv ? "T-Bode Veikals | Pērc gatavus T-kreklus un sezonas dizainus" : "T-Bode Shop | Ready-made T-shirts & seasonal designs"}
         description={
           isLv
-            ? "Pārlūko T-Bode gatavo apģērbu un aksesuāru kolekciju — t-krekli, hūdiji, krūzes un somas ar oriģināliem dizainiem."
+            ? "Iepazīsti T-Bode veikalu! Atklāj mūsu jaunāko kolekciju un sezonas piedāvājumus. Gatavi dizaini, ērta iepirkšanās un ātra piegāde visā Latvijā. Izvēlies savējo!"
             : "Browse the T-Bode ready-made collection of t-shirts, hoodies, mugs and bags with original designs."
         }
       />
