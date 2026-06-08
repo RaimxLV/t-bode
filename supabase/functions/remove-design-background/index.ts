@@ -9,10 +9,31 @@ const corsHeaders = {
 const BUCKET = "design-library";
 
 async function falRemoveBackground(apiKey: string, imageUrl: string): Promise<string> {
+  // Highest-quality first. We intentionally avoid weaker fallbacks (bria/rembg)
+  // because they often produce blocky / halo edges on logos and text.
   const endpoints = [
-    { path: "fal-ai/birefnet/v2", body: { image_url: imageUrl, model: "General Use (Heavy)", output_format: "png" } },
-    { path: "fal-ai/bria/background/remove", body: { image_url: imageUrl } },
-    { path: "fal-ai/imageutils/rembg", body: { image_url: imageUrl } },
+    {
+      path: "fal-ai/birefnet/v2",
+      body: {
+        image_url: imageUrl,
+        model: "General Use (Heavy)",
+        operating_resolution: "2048x2048",
+        output_format: "png",
+        output_mask: false,
+        refine_foreground: true,
+      },
+    },
+    {
+      // Same model, slightly lower res — used only if 2048 times out
+      path: "fal-ai/birefnet/v2",
+      body: {
+        image_url: imageUrl,
+        model: "General Use (Heavy)",
+        operating_resolution: "1024x1024",
+        output_format: "png",
+        refine_foreground: true,
+      },
+    },
   ];
   let lastErr = "";
   for (const ep of endpoints) {
