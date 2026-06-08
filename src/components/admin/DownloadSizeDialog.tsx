@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Download, Loader2, X, Ruler } from "lucide-react";
 import { urlToImage } from "@/lib/imageCrop";
 
-const DPI = 300;
+const DPI = 460;
 
 // Minimal pHYs injector (same logic as src/lib/printFile.ts)
 function injectDpi(buf: ArrayBuffer, dpi: number): Blob {
