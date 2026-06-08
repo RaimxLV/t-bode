@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
@@ -7,6 +8,39 @@ const corsHeaders = {
 };
 
 const BUCKET = "design-library";
+
+/**
+ * Crop fully-transparent borders from a PNG so the design fills the canvas.
+ * Adds a small safe padding so edges aren't flush against the bitmap edge.
+ */
+async function trimTransparentPng(bytes: Uint8Array, alphaThreshold = 8, padPct = 0.02): Promise<Uint8Array> {
+  const img = await Image.decode(bytes);
+  const w = img.width, h = img.height;
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const px = img.getPixelAt(x + 1, y + 1); // 1-indexed RGBA
+      const a = px & 0xff;
+      if (a > alphaThreshold) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return bytes; // fully transparent — leave alone
+  const cw = maxX - minX + 1;
+  const ch = maxY - minY + 1;
+  if (cw === w && ch === h) return bytes;
+  const pad = Math.round(Math.max(cw, ch) * padPct);
+  const x0 = Math.max(0, minX - pad);
+  const y0 = Math.max(0, minY - pad);
+  const x1 = Math.min(w, maxX + 1 + pad);
+  const y1 = Math.min(h, maxY + 1 + pad);
+  const cropped = img.clone().crop(x0, y0, x1 - x0, y1 - y0);
+  return await cropped.encode();
+}
 
 async function falRemoveBackground(apiKey: string, imageUrl: string): Promise<string> {
   // Highest-quality first. We intentionally avoid weaker fallbacks (bria/rembg)
@@ -105,7 +139,12 @@ Deno.serve(async (req) => {
         const cleanedUrl = await falRemoveBackground(FAL_KEY, sourceUrl);
         const imgRes = await fetch(cleanedUrl);
         if (!imgRes.ok) throw new Error(`Nevar lejupielādēt rezultātu (${imgRes.status})`);
-        const bytes = new Uint8Array(await imgRes.arrayBuffer());
+        let bytes = new Uint8Array(await imgRes.arrayBuffer());
+        try {
+          bytes = await trimTransparentPng(bytes);
+        } catch (e) {
+          console.warn("trim transparent failed (keeping uncropped):", e);
+        }
 
         const baseName = (row.name || "design").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
         let newPath: string;
