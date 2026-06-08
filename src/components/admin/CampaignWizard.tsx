@@ -1997,21 +1997,39 @@ function DesignCard({
 
       {editing && (
         <div className="absolute inset-0 z-10 bg-background/95 p-3 flex flex-col gap-2 justify-center">
-          <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            AI modelis
-          </label>
+          <div className="flex items-center gap-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              AI modelis
+            </label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground hover:text-foreground transition">
+                  <Info className="w-3 h-3" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs text-xs space-y-1.5">
+                <p><b>Auto</b> — ieteicams 99% gadījumu.</p>
+                <p><b>Ideogram</b> — precīzs teksts.</p>
+                <p><b>Recraft</b> — tīras ilustrācijas.</p>
+                <p><b>Flux Pro</b> — kinematogrāfisks.</p>
+                <p><b>Flux Schnell</b> — ātrs melnraksts.</p>
+                <p><b>Nano Banana</b> — dabas kompozīcijas.</p>
+                <p><b>Seedream</b> — gleznains, māksliniecisks.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <select
             value={draftModel}
             onChange={(e) => setDraftModel(e.target.value as "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream")}
             className="text-xs rounded border border-border bg-card px-2 py-1.5 font-body"
           >
             <option value="auto">Auto (ieteicams)</option>
-            <option value="ideogram">Teksta prioritāte</option>
-            <option value="recraft">Ilustrācijas prioritāte</option>
-            <option value="flux-pro">Detalizēts plakāta stils</option>
-            <option value="flux-schnell">Ātrāks melnraksts</option>
-            <option value="nano-banana">Eksperimentāls</option>
-            <option value="seedream">Māksliniecisks</option>
+            <option value="ideogram">Ideogram — precīzs teksts</option>
+            <option value="recraft">Recraft — tīras ilustrācijas</option>
+            <option value="flux-pro">Flux Pro — kinematogrāfisks</option>
+            <option value="flux-schnell">Flux Schnell — ātrs melnraksts</option>
+            <option value="nano-banana">Nano Banana — dabas kompozīcijas</option>
+            <option value="seedream">Seedream — gleznains, māksliniecisks</option>
           </select>
           <div className="flex gap-1.5 mt-1">
             <Button
