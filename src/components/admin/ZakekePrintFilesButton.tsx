@@ -637,26 +637,6 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
     );
   }
 
-  const _regenerate_already_defined = async () => {
-    setRegenerating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("zakeke-print-files", {
-        body: { order_item_id: item.id, force: true },
-      });
-      if (error) throw error;
-      if (data?.files) {
-        setFiles(data.files);
-        toast.success("Drukas faili atjaunoti");
-      } else {
-        toast.info("Zakeke vēl gatavo failus — pamēģini pēc minūtes");
-      }
-    } catch (e: any) {
-      toast.error(`Neizdevās atjaunot: ${e?.message ?? e}`);
-    } finally {
-      setRegenerating(false);
-    }
-  };
-
   const hasRealPrint = printable.length > 0;
 
   return (
