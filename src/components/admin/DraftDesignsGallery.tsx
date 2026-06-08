@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { Trash2, Sparkles, Loader2, Image as ImageIcon, Download, Eraser } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ImageLightbox } from "@/components/ImageLightbox";
-import { downloadPrintReadyPng } from "@/lib/printFile";
 import { removeDesignBackground } from "@/lib/removeDesignBackground";
+import { DownloadSizeDialog } from "@/components/admin/DownloadSizeDialog";
 
 type DesignItem = {
   key: string;
@@ -25,8 +25,8 @@ export function DraftDesignsGallery() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<DesignItem[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [downloadingKey, setDownloadingKey] = useState<string | null>(null);
   const [bgRemovingKey, setBgRemovingKey] = useState<string | null>(null);
+  const [downloadItem, setDownloadItem] = useState<DesignItem | null>(null);
 
   async function load() {
     setLoading(true);
@@ -126,26 +126,14 @@ export function DraftDesignsGallery() {
     }
   }
 
-  async function handleDownload(item: DesignItem) {
-    setDownloadingKey(item.key);
-    try {
-      const safe = (item.name || "drukas-fails")
-        .toLowerCase()
-        .normalize("NFKD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 60) || "drukas-fails";
-      await downloadPrintReadyPng({
-        imageUrl: item.url,
-        fileName: `${safe}-print.png`,
-      });
-      toast.success("Drukas fails lejupielādēts (oriģinālā kvalitāte, PNG/SVG bez balta fona)");
-    } catch (e: any) {
-      toast.error(e?.message || "Neizdevās sagatavot drukas failu");
-    } finally {
-      setDownloadingKey(null);
-    }
+  function safeFileName(name: string) {
+    return (name || "drukas-fails")
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "drukas-fails";
   }
 
   async function handleRemoveBg(item: DesignItem) {
@@ -244,13 +232,10 @@ export function DraftDesignsGallery() {
                   size="sm"
                   variant="ghost"
                   className="h-7 w-7 p-0"
-                  onClick={() => handleDownload(item)}
-                  disabled={downloadingKey === item.key}
-                  title="Lejuplādēt oriģinālo print failu PNG/SVG formātā ar caurspīdīgu fonu"
+                  onClick={() => setDownloadItem(item)}
+                  title="Lejupielādēt — izvēlies izmēru cm"
                 >
-                  {downloadingKey === item.key
-                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    : <Download className="w-3.5 h-3.5" />}
+                  <Download className="w-3.5 h-3.5" />
                 </Button>
                 {item.source === "library" && (
                   <Button
@@ -286,6 +271,13 @@ export function DraftDesignsGallery() {
           open={lightboxIndex !== null}
           onClose={() => setLightboxIndex(null)}
           alt="Dizains"
+        />
+      )}
+      {downloadItem && (
+        <DownloadSizeDialog
+          imageUrl={downloadItem.url}
+          fileName={safeFileName(downloadItem.name)}
+          onClose={() => setDownloadItem(null)}
         />
       )}
     </>
