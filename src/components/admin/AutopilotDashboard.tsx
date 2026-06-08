@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { CampaignWizard } from "./CampaignWizard";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FreeDesignStudio } from "./FreeDesignStudio";
 
 type Holiday = {
   id: string;
@@ -102,7 +104,17 @@ export const AutopilotDashboard = () => {
   const campOf = (hid: string, year: number) => campaigns.find((c) => c.holiday_id === hid && c.year === year);
 
   return (
-    <div className="space-y-4">
+    <Tabs defaultValue="holidays" className="w-full space-y-4">
+      <TabsList className="w-full sm:w-auto justify-start">
+        <TabsTrigger value="holidays" className="gap-1.5">
+          <Calendar className="w-4 h-4" /> Svētku kampaņas
+        </TabsTrigger>
+        <TabsTrigger value="studio" className="gap-1.5">
+          <Wand2 className="w-4 h-4" /> AI Studija
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="holidays" className="space-y-4 mt-0">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -180,6 +192,11 @@ export const AutopilotDashboard = () => {
         onOpenChange={(o) => !o && setWizardId(null)}
         onChanged={() => load()}
       />
-    </div>
+      </TabsContent>
+
+      <TabsContent value="studio" className="mt-0">
+        <FreeDesignStudio />
+      </TabsContent>
+    </Tabs>
   );
 };
