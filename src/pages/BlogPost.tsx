@@ -85,7 +85,30 @@ const BlogPost = () => {
           title={post.title}
           description={post.excerpt || post.title}
           image={post.cover_image_url || undefined}
-          noindex
+          type="article"
+          canonical={`https://www.t-bode.lv/blog/${post.slug}`}
+          jsonLd={{
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: post.title,
+            description: post.excerpt || undefined,
+            image: post.cover_image_url ? [post.cover_image_url] : undefined,
+            datePublished: post.published_at || undefined,
+            dateModified: post.published_at || undefined,
+            mainEntityOfPage: {
+              "@type": "WebPage",
+              "@id": `https://www.t-bode.lv/blog/${post.slug}`,
+            },
+            author: { "@type": "Organization", name: "T-Bode" },
+            publisher: {
+              "@type": "Organization",
+              name: "T-Bode",
+              logo: {
+                "@type": "ImageObject",
+                url: "https://www.t-bode.lv/og-image.jpg",
+              },
+            },
+          }}
         />
       )}
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
