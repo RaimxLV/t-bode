@@ -2180,7 +2180,7 @@ function GenerationSettings({
             <select
               value={styleChoice}
               onChange={(e) => onChangeStyle(e.target.value)}
-              disabled={usingCustom}
+              
               className="mt-1 w-full text-xs rounded border border-border bg-card px-2 py-1.5 font-body disabled:opacity-50"
             >
               {STYLE_GROUPS.map((g) => (
