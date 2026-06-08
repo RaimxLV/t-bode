@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
     let wantZip = false;
     let downloadUrl: string | null = null;
     let downloadName: string | null = null;
+    let force = false;
     if (req.method === "GET") {
       const u = new URL(req.url);
       orderItemId = u.searchParams.get("order_item_id");
@@ -88,6 +89,7 @@ Deno.serve(async (req) => {
       wantZip = u.searchParams.get("zip") === "1";
       downloadUrl = u.searchParams.get("download_url");
       downloadName = u.searchParams.get("download_name");
+      force = u.searchParams.get("force") === "1";
     } else {
       const body = await req.json().catch(() => ({}));
       orderItemId = body?.order_item_id ?? null;
@@ -95,6 +97,7 @@ Deno.serve(async (req) => {
       wantZip = body?.zip === true || body?.zip === "1";
       downloadUrl = body?.download_url ?? null;
       downloadName = body?.download_name ?? null;
+      force = body?.force === true || body?.force === "1";
     }
 
     if (!orderItemId && !zakekeOrderId) {
@@ -125,8 +128,19 @@ Deno.serve(async (req) => {
       }
       zipFilename = `print-files-${(row.product_name || "item").replace(/[^a-z0-9]+/gi, "-")}-${orderItemId.slice(0, 8)}.zip`;
 
+      // Detect "stale cache" — when the cached entry is only the design-zip
+      // fallback (no real per-side production files). In that case admins
+      // can't actually print anything, so we treat it like an empty cache.
+      const cached = Array.isArray(row.zakeke_print_files)
+        ? (row.zakeke_print_files as any[])
+        : [];
+      const cachedHasRealFiles = cached.some((f: any) => {
+        const side = String(f?.side ?? "").toLowerCase();
+        return side && side !== "production-zip" && side !== "zip";
+      });
+
       // 1) Use cached files if Zakeke webhook already filled them in.
-      if (Array.isArray(row.zakeke_print_files) && row.zakeke_print_files.length > 0) {
+      if (!force && cached.length > 0 && cachedHasRealFiles) {
         files = row.zakeke_print_files as any;
       }
       // 2) Otherwise call Zakeke directly via the order-item id.
@@ -174,6 +188,43 @@ Deno.serve(async (req) => {
           JSON.stringify({ error: "no Zakeke design on this order_item" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      // If we ended up with only the design-zip fallback but we DO have a
+      // design id, try once more by creating a real Zakeke order so the
+      // admin gets per-side production PNGs/PDFs.
+      const filesHaveRealAssets = files.some((f: any) => {
+        const side = String(f?.side ?? "").toLowerCase();
+        return side && side !== "production-zip" && side !== "zip";
+      });
+      if (!filesHaveRealAssets && row.zakeke_design_id && !row.zakeke_order_item_id) {
+        try {
+          const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
+            externalOrderId: `${row.order_id}:${row.id}`,
+            customerCode: String(row.order_id),
+            visitorCode: row.zakeke_visitor_code ?? null,
+            items: [
+              {
+                designId: String(row.zakeke_design_id),
+                quantity: row.quantity ?? 1,
+                reference: row.id,
+              },
+            ],
+          });
+          await service
+            .from("order_items")
+            .update({
+              zakeke_order_id: newOrderId,
+              zakeke_order_item_id: orderItemIds[0] ?? null,
+            })
+            .eq("id", orderItemId);
+          const fresh = orderItemIds[0]
+            ? await getZakekeOrderItemFiles(orderItemIds[0])
+            : await getZakekeOrderOutputFiles(newOrderId);
+          if (fresh && fresh.length > 0) files = fresh;
+        } catch (retryErr) {
+          console.error("zakeke-print-files retry order creation failed:", retryErr);
+        }
       }
 
       // Persist freshly-fetched files so subsequent clicks are instant.

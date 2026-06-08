@@ -460,6 +460,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
   const [downloadedAt, setDownloadedAt] = useState<string | null>(
     item.zakeke_files_downloaded_at ?? null,
   );
@@ -599,13 +600,44 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
     return `Mockup ${idx + 1}`;
   };
 
+  const regenerate = async () => {
+    setRegenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("zakeke-print-files", {
+        body: { order_item_id: item.id, force: true },
+      });
+      if (error) throw error;
+      if (data?.files) {
+        setFiles(data.files);
+        toast.success("Drukas faili atjaunoti");
+      } else {
+        toast.info("Zakeke vēl gatavo failus — pamēģini pēc minūtes");
+      }
+    } catch (e: any) {
+      toast.error(`Neizdevās atjaunot: ${e?.message ?? e}`);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   if (printable.length === 0 && fallbackPreviews.length === 0) {
     return (
-      <div className="text-[11px] text-muted-foreground italic">
-        Nav pieejamu failu
+      <div className={`flex flex-wrap items-center gap-2 ${baseClasses}`}>
+        <span className="text-[11px] text-muted-foreground italic">Nav pieejamu failu</span>
+        <button
+          type="button"
+          disabled={regenerating}
+          onClick={regenerate}
+          className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-amber-500/40 bg-amber-50 text-amber-900 hover:bg-amber-100 px-2 py-1.5 disabled:opacity-60"
+        >
+          {regenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileImage className="w-3.5 h-3.5" />}
+          <span>{regenerating ? "Pieprasām…" : "Pieprasīt drukas failus"}</span>
+        </button>
       </div>
     );
   }
+
+  const hasRealPrint = printable.length > 0;
 
   return (
     <>
@@ -709,6 +741,22 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
             <Eye className="w-3 h-3 opacity-80" />
           </button>
         ))}
+        {!hasRealPrint && (
+          <button
+            type="button"
+            disabled={regenerating}
+            onClick={regenerate}
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-amber-500/40 bg-amber-50 text-amber-900 hover:bg-amber-100 px-2 py-1.5 disabled:opacity-60"
+            title="Pieprasīt no Zakeke augstas izšķirtspējas drukas failus"
+          >
+            {regenerating ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <FileImage className="w-3.5 h-3.5" />
+            )}
+            <span>{regenerating ? "Pieprasām…" : "Pieprasīt drukas failus"}</span>
+          </button>
+        )}
       </div>
 
       {previewUrl && (
