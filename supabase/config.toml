@@ -35,6 +35,8 @@ project_id = "nkqwhiqrljwvzrivhqyh"
     verify_jwt = false
   [functions.sitemap]
     verify_jwt = false
+  [functions.generate-sitemap]
+    verify_jwt = false
   [functions.zakeke-create-order]
     verify_jwt = false
   [functions.zakeke-files-sync]
