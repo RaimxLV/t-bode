@@ -1240,8 +1240,6 @@ function StepDesigns({
             onChangeStyle={onChangeStyle}
             transparentBg={transparentBg}
             onChangeTransparentBg={onChangeTransparentBg}
-            customStyleId={customStyleId}
-            onChangeCustomStyleId={onChangeCustomStyleId}
             imageSize={imageSize}
             onChangeImageSize={onChangeImageSize}
             preferredColors={preferredColors}
