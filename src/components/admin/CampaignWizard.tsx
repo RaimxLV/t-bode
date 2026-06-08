@@ -1228,6 +1228,7 @@ function StepDesigns({
   usePalette, onChangeUsePalette, modelChoice, onChangeModelChoice,
   onSaveToLibrary, onOpenLibrary,
   favoritedIds,
+  onSaveAndRemoveBg, bgRemovingDesignId,
 }: any) {
   const starCount = designs.filter((d: DesignRow) => d.is_primary && d.image_url).length;
   const [showOnShirt, setShowOnShirt] = useState(false);
