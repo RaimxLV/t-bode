@@ -1614,7 +1614,22 @@ function ProductTuneRow({
       } finally {
         setAutoSaving(false);
       }
-    }, 1500);
+    }, 600);
+  };
+
+  // Flush save+regen immediately on pointer release so user adjustments aren't lost
+  // if they move on before the debounce timer fires.
+  const flushSave = async () => {
+    if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
+    if (lastSaved.current.y === offsetY && lastSaved.current.s === scale) return;
+    setAutoSaving(true);
+    try {
+      await onUpdatePrintAdj(product.id, { print_offset_y: offsetY, print_scale: scale });
+      lastSaved.current = { y: offsetY, s: scale };
+      await onRegenerate(product.id);
+    } finally {
+      setAutoSaving(false);
+    }
   };
 
   const updateOffset = (v: number) => {
@@ -1713,6 +1728,8 @@ function ProductTuneRow({
                 type="range" min={-0.3} max={0.3} step={0.005}
                 value={offsetY}
                 onChange={(e) => updateOffset(parseFloat(e.target.value))}
+                onPointerUp={flushSave}
+                onTouchEnd={flushSave}
                 className="w-full accent-primary"
               />
             </label>
@@ -1722,6 +1739,8 @@ function ProductTuneRow({
                 type="range" min={0.4} max={1.4} step={0.01}
                 value={scale}
                 onChange={(e) => updateScale(parseFloat(e.target.value))}
+                onPointerUp={flushSave}
+                onTouchEnd={flushSave}
                 className="w-full accent-primary"
               />
             </label>
