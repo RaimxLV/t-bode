@@ -502,8 +502,24 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       toast.info("Noņem fonu…");
       const data = await removeDesignBackground([libRef.id], true);
       const ok = data?.ok ?? 0;
-      if (ok) toast.success("Fons noņemts. Skaties dizainu bibliotēkā.");
-      else {
+      if (ok) {
+        // Sync the campaign design to use the new transparent version so the
+        // campaign view shows the same image as the library.
+        const newPath = data?.results?.find((r) => r.ok)?.file_path;
+        if (newPath) {
+          const publicUrl = supabase.storage.from("design-library").getPublicUrl(newPath).data.publicUrl;
+          const { error: updErr } = await supabase
+            .from("campaign_designs" as any)
+            .update({ image_url: publicUrl })
+            .eq("id", d.id);
+          if (updErr) console.warn("[CampaignWizard] failed to sync campaign design image_url:", updErr);
+          else {
+            setDesigns((prev) => prev.map((x) => x.id === d.id ? { ...x, image_url: publicUrl } : x));
+            setSignedUrls((prev) => ({ ...prev, [publicUrl]: publicUrl }));
+          }
+        }
+        toast.success("Fons noņemts");
+      } else {
         const firstErr = data?.results?.find((r) => !r.ok)?.error;
         toast.error(firstErr || "Neizdevās noņemt fonu");
       }
