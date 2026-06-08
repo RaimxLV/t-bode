@@ -1306,6 +1306,8 @@ function StepDesigns({
                 showOnShirt={showOnShirt}
                 shirtColor={shirtColor}
                 favorited={favoritedIds?.has?.(d.id) ?? false}
+                onSaveAndRemoveBg={onSaveAndRemoveBg}
+                bgRemoving={bgRemovingDesignId === d.id}
               />
             ))}
           </div>
