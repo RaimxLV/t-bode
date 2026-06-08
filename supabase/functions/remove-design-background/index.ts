@@ -89,14 +89,9 @@ Deno.serve(async (req) => {
         const baseName = (row.name || "design").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
         let newPath: string;
         if (replace) {
-          // Replace in place with .png extension. Remove old file if extension differs.
           const dir = row.file_path.includes("/") ? row.file_path.split("/").slice(0, -1).join("/") : (row.category_id ?? "uncat");
-          const fileName = row.file_path.split("/").pop() || `${crypto.randomUUID()}-${baseName}.png`;
-          const stem = fileName.replace(/\.[^.]+$/, "");
-          newPath = `${dir}/${stem}.png`;
-          if (newPath !== row.file_path) {
-            await svc.storage.from(BUCKET).remove([row.file_path]).catch(() => {});
-          }
+          const stamp = Date.now();
+          newPath = `${dir}/${baseName}-nobg-${stamp}.png`;
         } else {
           const dir = row.category_id ?? "uncat";
           newPath = `${dir}/${crypto.randomUUID()}-${baseName}-nobg.png`;
@@ -106,6 +101,10 @@ Deno.serve(async (req) => {
           contentType: "image/png", upsert: true,
         });
         if (upErr) throw upErr;
+
+        if (replace && newPath !== row.file_path) {
+          await svc.storage.from(BUCKET).remove([row.file_path]).catch(() => {});
+        }
 
         if (replace) {
           await svc.from("design_library").update({

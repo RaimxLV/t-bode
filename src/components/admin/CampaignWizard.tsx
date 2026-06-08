@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download, Heart, Library, Info } from "lucide-react";
+import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download, Heart, Library, Info, Eraser } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { downloadPrintReadyPng } from "@/lib/printFile";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
 import { getOptimizedSrc } from "@/lib/imageOptimization";
+import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
 /* ------------ Types ------------ */
 type Holiday = { id: string; name_lv: string; month: number; day: number };
@@ -2061,6 +2062,7 @@ function LibrarySheet({
   const [items, setItems] = useState<{ id: string; name: string; file_path: string; tags: string[]; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -2078,6 +2080,31 @@ function LibrarySheet({
 
   const publicUrl = (p: string) =>
     supabase.storage.from("design-library").getPublicUrl(p).data.publicUrl;
+
+  const handleRemoveBg = async (item: { id: string; name: string }) => {
+    if (!confirm(`Noņemt fonu "${item.name}"? Oriģināls tiks aizstāts ar caurspīdīgu PNG.`)) return;
+    setBgRemovingId(item.id);
+    try {
+      const data = await removeDesignBackground([item.id], true);
+      const ok = data?.ok ?? 0;
+      const failed = data?.failed ?? 0;
+      if (ok) toast.success("Fons noņemts");
+      if (failed) {
+        const firstError = data?.results?.find((row) => !row.ok)?.error;
+        toast.error(firstError || "Neizdevās noņemt fonu");
+      }
+      const { data: refreshed } = await supabase
+        .from("design_library")
+        .select("id, name, file_path, tags, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setItems((refreshed as any) ?? []);
+    } catch (e: any) {
+      toast.error(e?.message || "Fona noņemšana neizdevās");
+    } finally {
+      setBgRemovingId(null);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -2099,15 +2126,30 @@ function LibrarySheet({
         ) : (
           <div className="grid grid-cols-2 gap-2 mt-3">
             {items.map((it) => (
-              <button
+              <div
                 key={it.id}
-                type="button"
-                disabled={adding === it.id}
-                onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
                 className="relative aspect-square rounded border bg-white overflow-hidden hover:ring-2 hover:ring-primary transition"
                 title={it.name}
               >
+                <button
+                  type="button"
+                  disabled={adding === it.id}
+                  onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
+                  className="absolute inset-0"
+                  aria-label={`Pievienot dizainu ${it.name}`}
+                >
                 <img src={publicUrl(it.file_path)} alt={it.name} loading="lazy" className="w-full h-full object-contain" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); void handleRemoveBg(it); }}
+                  disabled={bgRemovingId === it.id}
+                  className="absolute right-1 top-1 z-10 rounded bg-black/70 p-1 text-white hover:bg-primary transition-all"
+                  title="Noņemt fonu"
+                  aria-label="Noņemt fonu"
+                >
+                  {bgRemovingId === it.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eraser className="w-3 h-3" />}
+                </button>
                 {adding === it.id && (
                   <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                     <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -2116,7 +2158,7 @@ function LibrarySheet({
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate text-left">
                   {it.name}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Upload, Trash2, Search, Loader2, Image as ImageIcon, Plus, Printer, Eraser } from "lucide-react";
 import { cropTransparentPng, pool } from "@/lib/imageCrop";
 import { PrintExportDialog } from "./PrintExportDialog";
+import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
 interface DesignCategory {
   id: string;
@@ -148,14 +149,14 @@ export function DesignLibrary() {
     setBgRemoving(true);
     if (!isBulk) setBgRemovingId(ids[0]);
     try {
-      const { data, error } = await supabase.functions.invoke("remove-design-background", {
-        body: { design_ids: ids, replace },
-      });
-      if (error) throw error;
-      const ok = (data as any)?.ok ?? 0;
-      const failed = (data as any)?.failed ?? 0;
+      const data = await removeDesignBackground(ids, replace);
+      const ok = data?.ok ?? 0;
+      const failed = data?.failed ?? 0;
       if (ok) toast.success(`Fons noņemts ${ok} dizainiem`);
-      if (failed) toast.error(`Neizdevās ${failed} dizainiem`);
+      if (failed) {
+        const firstError = data?.results?.find((row) => !row.ok)?.error;
+        toast.error(firstError || `Neizdevās ${failed} dizainiem`);
+      }
       setSelected(new Set());
       await loadAll();
     } catch (e: any) {

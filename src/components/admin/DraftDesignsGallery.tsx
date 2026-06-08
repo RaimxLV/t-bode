@@ -8,6 +8,7 @@ import { Trash2, Sparkles, Loader2, Image as ImageIcon, Download, Eraser } from 
 import { useNavigate } from "react-router-dom";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { downloadPrintReadyPng } from "@/lib/printFile";
+import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
 type DesignItem = {
   key: string;
@@ -155,13 +156,14 @@ export function DraftDesignsGallery() {
     if (!confirm(`Noņemt fonu "${item.name}"? Oriģināls tiks aizstāts ar caurspīdīgu PNG.`)) return;
     setBgRemovingKey(item.key);
     try {
-      const { data, error } = await supabase.functions.invoke("remove-design-background", {
-        body: { design_ids: [item.id], replace: true },
-      });
-      if (error) throw error;
-      const ok = (data as any)?.ok ?? 0;
+      const data = await removeDesignBackground([item.id], true);
+      const ok = data?.ok ?? 0;
+      const failed = data?.failed ?? 0;
       if (ok) toast.success("Fons noņemts");
-      else toast.error("Neizdevās noņemt fonu");
+      if (failed) {
+        const firstError = data?.results?.find((row) => !row.ok)?.error;
+        toast.error(firstError || "Neizdevās noņemt fonu");
+      }
       await load();
     } catch (e: any) {
       toast.error(e?.message || "Fona noņemšana neizdevās");
