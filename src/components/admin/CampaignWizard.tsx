@@ -2082,7 +2082,6 @@ function LibrarySheet({
 function GenerationSettings({
   styleChoice, onChangeStyle,
   transparentBg, onChangeTransparentBg,
-  customStyleId, onChangeCustomStyleId,
   imageSize, onChangeImageSize,
   preferredColors, onChangePreferredColors,
   usePalette, onChangeUsePalette,
@@ -2092,8 +2091,6 @@ function GenerationSettings({
   onChangeStyle: (v: string) => void;
   transparentBg: boolean;
   onChangeTransparentBg: (v: boolean) => void;
-  customStyleId: string;
-  onChangeCustomStyleId: (v: string) => void;
   imageSize: string;
   onChangeImageSize: (v: string) => void;
   preferredColors: { r: number; g: number; b: number }[];
