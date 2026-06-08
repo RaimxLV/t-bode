@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move } from "lucide-react";
+import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move, Eraser } from "lucide-react";
 import { composeMockup } from "@/lib/imageCrop";
+import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
 type DesignItem = {
   id: string;
@@ -62,6 +63,7 @@ export function DesignsToProducts() {
   const [price, setPrice] = useState<string>(String(DEFAULT_PRICE));
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
   // Manual print placement adjustments (applied on top of each base's print_area)
   const [offsetY, setOffsetY] = useState(0); // -0.15 .. +0.15 of mockup height
   const [scale, setScale] = useState(1);     // 0.6 .. 1.4
@@ -258,6 +260,27 @@ export function DesignsToProducts() {
     }
   }
 
+  async function handleRemoveBg(designId: string, designName: string) {
+    const rawId = designId.replace(/^lib:/, "");
+    if (!confirm(`Noņemt fonu "${designName}"? Oriģināls tiks aizstāts ar caurspīdīgu PNG.`)) return;
+    setBgRemovingId(designId);
+    try {
+      const data = await removeDesignBackground([rawId], true);
+      const ok = data?.ok ?? 0;
+      const failed = data?.failed ?? 0;
+      if (ok) toast.success("Fons noņemts");
+      if (failed) {
+        const firstError = data?.results?.find((row) => !row.ok)?.error;
+        toast.error(firstError || "Neizdevās noņemt fonu");
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message || "Fona noņemšana neizdevās");
+    } finally {
+      setBgRemovingId(null);
+    }
+  }
+
   if (loading) {
     return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
@@ -318,6 +341,18 @@ export function DesignsToProducts() {
                           {d.source === "campaign" ? <><Sparkles className="w-2 h-2 mr-0.5" />AI</> : "Lib"}
                         </Badge>
                       </div>
+                      {d.source === "library" && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); void handleRemoveBg(d.id, d.name); }}
+                          disabled={bgRemovingId === d.id}
+                          className="absolute top-1 right-1 z-10 rounded bg-black/70 p-1 text-white hover:bg-primary transition-all"
+                          title="Noņemt fonu"
+                          aria-label="Noņemt fonu"
+                        >
+                          {bgRemovingId === d.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eraser className="w-3 h-3" />}
+                        </button>
+                      )}
                       <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] px-1 py-0.5 truncate font-body">{d.name}</div>
                     </button>
                   );
