@@ -2126,15 +2126,20 @@ function LibrarySheet({
         ) : (
           <div className="grid grid-cols-2 gap-2 mt-3">
             {items.map((it) => (
-              <button
+              <div
                 key={it.id}
-                type="button"
-                disabled={adding === it.id}
-                onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
                 className="relative aspect-square rounded border bg-white overflow-hidden hover:ring-2 hover:ring-primary transition"
                 title={it.name}
               >
+                <button
+                  type="button"
+                  disabled={adding === it.id}
+                  onClick={async () => { setAdding(it.id); try { await onPick(it); } finally { setAdding(null); } }}
+                  className="absolute inset-0"
+                  aria-label={`Pievienot dizainu ${it.name}`}
+                >
                 <img src={publicUrl(it.file_path)} alt={it.name} loading="lazy" className="w-full h-full object-contain" />
+                </button>
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); void handleRemoveBg(it); }}
@@ -2153,7 +2158,7 @@ function LibrarySheet({
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 text-[10px] text-white truncate text-left">
                   {it.name}
                 </div>
-              </button>
+              </div>
             ))}
           </div>
         )}
