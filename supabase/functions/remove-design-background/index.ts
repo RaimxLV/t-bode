@@ -105,7 +105,12 @@ Deno.serve(async (req) => {
         const cleanedUrl = await falRemoveBackground(FAL_KEY, sourceUrl);
         const imgRes = await fetch(cleanedUrl);
         if (!imgRes.ok) throw new Error(`Nevar lejupielādēt rezultātu (${imgRes.status})`);
-        const bytes = new Uint8Array(await imgRes.arrayBuffer());
+        let bytes = new Uint8Array(await imgRes.arrayBuffer());
+        try {
+          bytes = await trimTransparentPng(bytes);
+        } catch (e) {
+          console.warn("trim transparent failed (keeping uncropped):", e);
+        }
 
         const baseName = (row.name || "design").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
         let newPath: string;
