@@ -2128,7 +2128,7 @@ function GenerationSettings({
             "nano-banana": "Eksperimentāls",
             seedream: "Māksliniecisks",
           } as Record<string, string>)[modelChoice]} ·{" "}
-          {usingCustom ? "Pielāgots stila ID" : STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
+          {STYLE_PRESETS.find((s) => s.value === styleChoice)?.label || styleChoice}
           {transparentBg ? " · caurspīdīgs" : ""}
           {usePalette ? " · palete" : ""}
         </span>
