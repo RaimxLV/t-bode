@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Upload, Trash2, Search, Loader2, Image as ImageIcon, Plus, Printer } from "lucide-react";
+import { Upload, Trash2, Search, Loader2, Image as ImageIcon, Plus, Printer, Eraser } from "lucide-react";
 import { cropTransparentPng, pool } from "@/lib/imageCrop";
 import { PrintExportDialog } from "./PrintExportDialog";
 
@@ -41,6 +41,8 @@ export function DesignLibrary() {
   const [cropPng, setCropPng] = useState(false);
   const [exportDesign, setExportDesign] = useState<DesignItem | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [bgRemoving, setBgRemoving] = useState(false);
+  const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
 
   useEffect(() => { void loadAll(); }, []);
 
@@ -137,6 +139,31 @@ export function DesignLibrary() {
     toast.success("Kategorija mainīta");
     setSelected(new Set());
     await loadAll();
+  }
+
+  async function removeBackgrounds(ids: string[], replace = true) {
+    if (ids.length === 0) return;
+    const isBulk = ids.length > 1;
+    if (isBulk && !confirm(`Noņemt fonu ${ids.length} dizainiem? Oriģināli tiks aizstāti ar caurspīdīgu PNG.`)) return;
+    setBgRemoving(true);
+    if (!isBulk) setBgRemovingId(ids[0]);
+    try {
+      const { data, error } = await supabase.functions.invoke("remove-design-background", {
+        body: { design_ids: ids, replace },
+      });
+      if (error) throw error;
+      const ok = (data as any)?.ok ?? 0;
+      const failed = (data as any)?.failed ?? 0;
+      if (ok) toast.success(`Fons noņemts ${ok} dizainiem`);
+      if (failed) toast.error(`Neizdevās ${failed} dizainiem`);
+      setSelected(new Set());
+      await loadAll();
+    } catch (e: any) {
+      toast.error(e?.message || "Fona noņemšana neizdevās");
+    } finally {
+      setBgRemoving(false);
+      setBgRemovingId(null);
+    }
   }
 
   async function addCategory() {
@@ -254,6 +281,15 @@ export function DesignLibrary() {
               <Button size="sm" variant="destructive" onClick={bulkDelete}>
                 <Trash2 className="w-4 h-4 mr-1" /> Dzēst izvēlētos
               </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => removeBackgrounds(Array.from(selected), true)}
+                disabled={bgRemoving}
+              >
+                {bgRemoving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Eraser className="w-4 h-4 mr-1" />}
+                Noņemt fonu
+              </Button>
               <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Atcelt izvēli</Button>
             </div>
           )}
@@ -307,6 +343,15 @@ export function DesignLibrary() {
                   title="Sagatavot drukai"
                 >
                   <Printer className="w-3 h-3" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); void removeBackgrounds([d.id], true); }}
+                  disabled={bgRemoving}
+                  className="absolute top-1 right-[3.25rem] p-1 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 hover:bg-primary transition-all disabled:opacity-100"
+                  aria-label="Noņemt fonu"
+                  title="Noņemt fonu"
+                >
+                  {bgRemovingId === d.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eraser className="w-3 h-3" />}
                 </button>
                 {sel && (
                   <div className="absolute top-1 left-1 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px] font-bold">
