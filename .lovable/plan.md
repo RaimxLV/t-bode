@@ -1,110 +1,96 @@
-# Plāns: Campaign Wizard refaktorings
+## Mērķi
 
-## Mērķis
-Apvienot `AutopilotDashboard` + ar kampaņām saistīto `BlogManager` loģiku vienā lineārā 3-soļu vednī. Atstāt `BlogManager` tikai manuāliem rakstiem un arhīvam.
+1. Sakārtot dizainu haosu — viena vieta visiem dizainiem ar filtriem
+2. Fona noņemšana arī kampaņas dizainiem (caur auto-saglabāšanu bibliotēkā)
+3. Brīvais AI ģenerators bez kampaņas (smieklīgi kaķi u.tml.)
 
-## Jaunā struktūra
+## Pašreizējais haoss
 
-### Faili
-- **Jauns** `src/components/admin/CampaignWizard.tsx` — galvenais 3-soļu vednis (atver no kampaņas kartītes).
-- **Jauns** `src/components/admin/campaign-wizard/StepIdea.tsx` — Solis 1.
-- **Jauns** `src/components/admin/campaign-wizard/StepDesigns.tsx` — Solis 2 (dizaini + bāzes produktu vizuālās kartītes + inline tuning).
-- **Jauns** `src/components/admin/campaign-wizard/StepBlog.tsx` — Solis 3 (blog editors + expiration + "Mūsu kolekcija" checkbox + PUBLICĒT VISU).
-- **Jauns** `src/components/admin/campaign-wizard/PublishSuccess.tsx` — pēc-publicēšanas ekrāns.
-- **Atjaunots** `AutopilotDashboard.tsx` — saraksts ar kampaņām + cilvēkam draudzīgi statusi, "Atvērt vedni" poga, sarkanais aplītis pie kampaņām, kas gaida pārskatīšanu.
-- **Atjaunots** `BlogManager.tsx` — noņem kampaņu saistīto produkta picker / color-chip / sliders UI; atstāj tikai manuāla raksta CRUD + publicēto rakstu arhīva tabulu. Manuāliem rakstiem `campaign_id IS NULL`.
-- **Jauns** `src/hooks/useCampaignReviewBadge.ts` — atgriež skaitu kampaņām statusā `ready_for_review`/`designs_ready`/`blog_ready`, lai parādītu sarkano punktu Admin tab navigācijā un toast pēc login.
+| Vieta | Kas tur ir | Problēma |
+|---|---|---|
+| Autopilot → CampaignWizard | Kampaņas dizaini + (jau eksistē) bibliotēkas panelis blakus | Bg-remove tikai bibliotēkai |
+| **Melnraksti → Dizaini** (`DraftDesignsGallery`) | Apvieno `design_library` + `campaign_designs` bez `product_id` | Dublē Bulk Studio Bibliotēku |
+| **Bulk Studio → Bibliotēka** (`DesignLibrary`) | Tikai `design_library` augšupielādes | Dublē Melnraksti |
+| **Dizaini → Krekli** (`DesignsToProducts`) | Pārvērš dizainus produktos | Tas paliek — atsevišķa funkcija |
 
-### Statusu kartējums (UI tekstā)
+## Risinājums
+
+### 1. Vienota "Dizainu bibliotēka" (jauna komponente)
+
+Aizvietot `DraftDesignsGallery` un `Bulk Studio → Bibliotēka` ar vienu `UnifiedDesignLibrary` komponenti.
+
+**Filtri (chip-row):**
+- Visi
+- Augšupielādēti (`design_library` bez `campaign` tag)
+- Kampaņu ★ favorīti (`design_library` ar `campaign` tag)
+- Kampaņu melnraksti (`campaign_designs` ar `product_id IS NULL`)
+- Bez fona (PNG ar transparency tagu)
+
+**Darbības katram:** Apskatīt (lightbox) · Noņemt fonu · Lejupielādēt (cm dialogs) · Pārvērst produktā · Dzēst.
+
+Atjaunot `Melnraksti` tabu lai rāda tikai produktu melnrakstus (paslēpt `Dizaini` apakštabu — tos rādīs bibliotēka).
+`Bulk Studio → Bibliotēka` tabs paliek bet `DesignLibrary.tsx` aizvietota ar to pašu `UnifiedDesignLibrary`.
+
+### 2. Fona noņemšana kampaņas dizainiem
+
+`CampaignWizard.tsx` dizainu cell + jauns lightbox (atvērts klikšķinot bildi):
+- Poga **"Noņemt fonu"** abās vietās
+- Plūsma: ja dizains vēl nav bibliotēkā → izsauc `saveToLibrary(d)` (jau eksistē) → tad `removeDesignBackground([newLibId])` → atsvaidzina `signedUrls` ar jauno transparent PNG
+- Lietotāja teiktais: "vispirms automātiski saglabā bibliotēkā" ✓
+
+Jauns `CampaignDesignLightbox` komponents — atver dizainu pilnā izmērā ar pogām: ★ · Noņemt fonu · Lejupielādēt · Pārģenerēt · Dzēst.
+
+### 3. Brīvais AI ģenerators (jauns tabs Autopilot)
+
+Jauns `Autopilot` apakštabu sākums:
+- **Svētku kampaņas** (esošais `AutopilotDashboard`)
+- **AI Studija** (jauns) — brīvs prompts bez kampaņas
+
+`FreeDesignStudio.tsx`:
+- Liels textarea prompts ("smieklīgi kaķi astronauta tērpā…")
+- Skaits (1–8), izmērs (kvadrāts / portrets), modelis (auto / recraft / flux-pro u.c.)
+- Poga "Ģenerē" — izsauc esošu `generate-campaign-designs` edge funkciju ar **virtuālu kampaņu** (status `archived`, title "AI Studija"). Vai vienkāršāks: jauna mazāka funkcija `generate-free-design` kas izsauc fal.ai tieši un saglabā rezultātu **uzreiz `design-library` bucket + `design_library` row** ar tagu `["ai", "studio"]`.
+- Pēc ģenerēšanas: rezultāti parādās zem formas + automātiski bibliotēkā ar tagu "studio"
+
+**Tehnisks risinājums:** Izveidot jaunu mazu edge funkciju `generate-free-design` (reuses fal.ai loģiku no `generate-campaign-designs`), lai izvairītos no fake-campaign hakeriem. Saglabā tieši `design-library` ar tagu `studio`.
+
+### 4. Admin tabu sakārtošana
+
 ```
-generating              -> "Ģenerē idejas…"
-ready_for_review        -> "Gaida tavu apstiprinājumu" (1. solis)
-generating_designs      -> "Ģenerē dizainus…"
-designs_ready           -> "Gaida tavu apstiprinājumu" (2. solis)
-products_ready          -> "Gatavs publicēšanai" (3. solis)
-blog_ready              -> "Gatavs publicēšanai" (3. solis)
-published / active      -> "Publicēta"
-failed                  -> "Kļūda — pārstartē soli"
-```
-
-### Soļu plūsma
-```
-[Autopilot dashboard] - kampaņas kartītes ar statusa nosaukumu + "Atvērt"
-        |
-        v
-[CampaignWizard dialog/page] -- progress bar 1/2/3
-   |
-   +-- Step 1: Idejas
-   |     - brief.title_lv, tagline, description
-   |     - color palette swatches (no brief.color_palette)
-   |     - [Pārģenerēt ideju] -> generate-campaign-brief
-   |     - [Saglabāt un turpināt vēlāk] [Tālāk ->]
-   |
-   +-- Step 2: Dizaini un Produkti
-   |     - 4-8 AI dizaini grid ar ★ toggle
-   |     - [Pārģenerēt dizainus] -> generate-campaign-designs
-   |     - Bāzes produkti = vizuālas kartītes (color_variants[0].images[0] thumbnail)
-   |     - [Veidot mockup] -> esošā composeMockup loģika; pēc tam zem kartiņas:
-   |         * krāsu chip ar X (color_variants noņemšana)
-   |         * Y offset slider + scale slider (print_offset_y, print_scale)
-   |         * "Izslēgt no kampaņas" toggle (is_draft remain + show_in_collection=false vai delete)
-   |     - [Atjaunot šo soli no jauna] -> dzēš campaign_designs un campaign produktus
-   |     - [Atpakaļ] [Tālāk ->]
-   |
-   +-- Step 3: Blogs un Publicēšana
-         - Tiptap RichTextEditor (esošais) priekš blog_posts.content
-         - Title / excerpt / slug inputs
-         - cover_image_url auto = pirmais ★ dizains (signed URL)
-         - [Pārģenerēt blogu] -> generate-campaign-blog
-         - Expiration date picker (default: holiday_date - 1 day)
-         - [x] Pievienot pie "Mūsu kolekcija" ar "Jaunums" zīmīti
-         - [Priekšskatīt klienta skatā] -> /blog/{slug}?preview=1
-         - [PUBLICĒT VISU] - viens transaction:
-             * blog_posts: status='published', published_at=now()
-             * products (campaign_id=X): is_draft=false, status='published',
-               show_in_collection=<checkbox>, expires_at=<picker>,
-               available_from=now()
-             * campaigns.status='published', published_at=now()
-         - Pēc publicēšanas -> PublishSuccess ekrāns
+Autopilot (apakštabi: Kampaņas | AI Studija)
+Dizainu bibliotēka (jauns — aizvieto "Melnraksti → Dizaini")
+Dizaini → Krekli (paliek)
+Melnraksti (tikai produktu melnraksti — bez apakštabu)
 ```
 
-### PublishSuccess
-"Kampaņa palaista! Aktīvi: N produkti, 1 bloga raksts. Pieejami līdz [Datums]." + linki uz `/blog/{slug}` un "Mūsu kolekcija".
+`Bulk Studio → Bibliotēka` paliek bet rāda to pašu unified komponenti (vai linkojas uz galveno tabu).
 
-### Notifikāciju UX
-- `useCampaignReviewBadge` query (5 min refetch) atgriež `pending_count`.
-- `Admin.tsx`: pie "Autopilot" tab pievienot sarkanu punktu, ja `pending_count > 0`.
-- Pēc login `AuthContext` initial load -> ja admin un pending_count>0 -> `toast.info("{title} kampaņa ir gatava pārskatīšanai 2. solī!")`. Lai netraucē, glabāt `sessionStorage` flag.
+## Tehniskas detaļas
 
-### State retention
-- Soļi automātiski saglabājas DB (kā šobrīd) — nav atsevišķa wizard state tabula.
-- "Saglabāt un turpināt vēlāk" = vienkārši aizver dialogu.
-- "Atjaunot šo soli no jauna":
-   * Step 1 -> dzēš brief, set status='generating', re-run generate-campaign-brief
-   * Step 2 -> dzēš campaign_designs un products kur campaign_id=X un is_draft=true
-   * Step 3 -> dzēš blog_posts kur campaign_id=X un status!='published'
+- **Tags konvencija `design_library.tags`:** `upload` (manuāls augšupl.), `campaign` (saglabāts no kampaņas), `studio` (no AI Studio), `transparent` (pēc bg-remove).
+- **`removeDesignBackground`** funkcija jau strādā — pielietot to no UnifiedDesignLibrary un no CampaignWizard pēc auto-save.
+- **`DownloadSizeDialog`** atkārtoti izmantot abās vietās.
+- **Migrācijas:** Nav vajadzīgas — visas datu struktūras jau eksistē. Tikai pievienojam tagus.
 
-### Blog Manager izmaiņas
-- Noņemt: product picker dialog, color variant chip removal, print_offset_y/print_scale slideri, publish workflow ar campaign products.
-- Paturēt: title, slug, excerpt, content (Tiptap), cover_image_url upload, status, scheduled_for, manuāla blog_post_products saite (vienkāršs select).
-- Filtrs: rādīt tikai `campaign_id IS NULL` rakstus + tab "Arhīvs" = visi published.
+## Failu izmaiņas
 
-## Tehniskās detaļas
+**Jauni:**
+- `src/components/admin/UnifiedDesignLibrary.tsx` — galvenā jaunā komponente
+- `src/components/admin/FreeDesignStudio.tsx` — AI ģenerators bez kampaņas
+- `src/components/admin/CampaignDesignLightbox.tsx` — lightbox ar darbībām
+- `supabase/functions/generate-free-design/index.ts` — viena bilde, tieši uz library
 
-### DB izmaiņas
-Nav jaunas tabulas vai kolonnas. Visas vajadzīgās jau ir (`campaign_id`, `show_in_collection`, `print_offset_y`, `print_scale`, `expires_at`, `available_from`, `holiday_id`).
+**Maina:**
+- `src/components/admin/AutopilotDashboard.tsx` — pievienot apakštabu (Kampaņas / AI Studija)
+- `src/components/admin/CampaignWizard.tsx` — pievienot bg-remove pogu dizainu cell + atvērt lightbox uz klikšķa
+- `src/pages/Admin.tsx` — pārdēvēt "Melnraksti → Dizaini" → atsevišķs "Dizainu bibliotēka" tabs; melnraksti = tikai produkti
+- `src/components/admin/BulkStudio.tsx` — Bibliotēka tabs izsauc UnifiedDesignLibrary
 
-### Edge functions
-Bez izmaiņām — turpinām saukt esošos `generate-campaign-brief`, `generate-campaign-designs`, `generate-campaign-blog`, `publish-campaign-products` (vai inline logic, kā šobrīd `runPublishProducts`). Pievienosim vienu DB UPDATE batch priekš atomic publish.
+**Aizvietots (paliek import-savietojams):**
+- `src/components/admin/DraftDesignsGallery.tsx` — kļūst plāns wrapper ap UnifiedDesignLibrary (vai dzēsts)
+- `src/components/admin/bulk/DesignLibrary.tsx` — tāpat
 
-### Izpildes plāns
-1. Izveidot `CampaignWizard.tsx` + 3 step komponentes + `PublishSuccess.tsx`.
-2. Pārveidot `AutopilotDashboard.tsx` — saraksts + status badge mapping + "Atvērt vedni" poga.
-3. Sagatavot `useCampaignReviewBadge` hook + integrēt `Admin.tsx` tab dot + login toast.
-4. Sašaurināt `BlogManager.tsx` — noņemt kampaņu-specific UI, filtrēt `campaign_id IS NULL`.
-5. Manuāli iziet cauri katram solim preview, pārbaudīt build.
+## Pieņēmumi / atvērtie
 
-## Apjoms
-~6 jauni faili, 3 esošo failu atjauninājumi. Tā nav triviāla izmaiņa — apmēram 800-1000 jaunu rindu, ~400 rindu noņemtas no BlogManager.
-
-Vai apstiprini, ka eju šajā virzienā? Pēc apstiprinājuma sākšu būvēt.
+- AI Studio rezultāti iet **uzreiz uz bibliotēku** (ne uz "starprezultātu sarakstu"). Ja gribi pirms-apstiprināšanu, pasaki.
+- "Transparent" tag tiks pievienots automātiski pēc bg-remove (lai filtrs strādā).
