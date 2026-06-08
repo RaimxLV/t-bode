@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon, Image as ImageIcon } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +40,7 @@ const BlogManager = lazy(() => import("@/components/admin/BlogManager").then(m =
 const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManager").then(m => ({ default: m.PrintZonesManager })));
 const DesignsToProducts = lazy(() => import("@/components/admin/DesignsToProducts").then(m => ({ default: m.DesignsToProducts })));
 const DraftDesignsGallery = lazy(() => import("@/components/admin/DraftDesignsGallery").then(m => ({ default: m.DraftDesignsGallery })));
+const DesignLibrary = lazy(() => import("@/components/admin/bulk/DesignLibrary").then(m => ({ default: m.DesignLibrary })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
