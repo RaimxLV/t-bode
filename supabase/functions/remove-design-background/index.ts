@@ -13,13 +13,45 @@ const BUCKET = "design-library";
  * Crop fully-transparent borders from a PNG so the design fills the canvas.
  * Adds a small safe padding so edges aren't flush against the bitmap edge.
  */
-async function trimTransparentPng(bytes: Uint8Array, alphaThreshold = 8, padPct = 0.02): Promise<Uint8Array> {
+/**
+ * Post-process the birefnet output:
+ *  1) Knock out residual near-white / low-alpha halo pixels (fal.ai often
+ *     leaves a soft white fringe around logos and text).
+ *  2) Tightly crop to the first non-transparent pixel with zero padding so the
+ *     design fills the canvas edge-to-edge.
+ */
+async function cleanAndTrimPng(
+  bytes: Uint8Array,
+  alphaThreshold = 24,
+  whiteCutoff = 238,
+): Promise<Uint8Array> {
   const img = await Image.decode(bytes);
   const w = img.width, h = img.height;
+
+  // 1) Halo removal: any pixel that is near-white AND already semi-transparent
+  //    becomes fully transparent. Pure opaque whites inside the design are kept.
+  for (let y = 1; y <= h; y++) {
+    for (let x = 1; x <= w; x++) {
+      const px = img.getPixelAt(x, y);
+      const r = (px >>> 24) & 0xff;
+      const g = (px >>> 16) & 0xff;
+      const b = (px >>> 8) & 0xff;
+      const a = px & 0xff;
+      if (a === 0) continue;
+      const nearWhite = r >= whiteCutoff && g >= whiteCutoff && b >= whiteCutoff;
+      if (nearWhite && a < 250) {
+        img.setPixelAt(x, y, 0x00000000);
+      } else if (a < alphaThreshold) {
+        img.setPixelAt(x, y, 0x00000000);
+      }
+    }
+  }
+
+  // 2) Tight crop to first opaque pixel — zero padding.
   let minX = w, minY = h, maxX = -1, maxY = -1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const px = img.getPixelAt(x + 1, y + 1); // 1-indexed RGBA
+      const px = img.getPixelAt(x + 1, y + 1);
       const a = px & 0xff;
       if (a > alphaThreshold) {
         if (x < minX) minX = x;
@@ -29,16 +61,11 @@ async function trimTransparentPng(bytes: Uint8Array, alphaThreshold = 8, padPct 
       }
     }
   }
-  if (maxX < 0) return bytes; // fully transparent — leave alone
+  if (maxX < 0) return await img.encode();
   const cw = maxX - minX + 1;
   const ch = maxY - minY + 1;
-  if (cw === w && ch === h) return bytes;
-  const pad = Math.round(Math.max(cw, ch) * padPct);
-  const x0 = Math.max(0, minX - pad);
-  const y0 = Math.max(0, minY - pad);
-  const x1 = Math.min(w, maxX + 1 + pad);
-  const y1 = Math.min(h, maxY + 1 + pad);
-  const cropped = img.clone().crop(x0, y0, x1 - x0, y1 - y0);
+  if (cw === w && ch === h) return await img.encode();
+  const cropped = img.clone().crop(minX, minY, cw, ch);
   return await cropped.encode();
 }
 
@@ -141,9 +168,9 @@ Deno.serve(async (req) => {
         if (!imgRes.ok) throw new Error(`Nevar lejupielādēt rezultātu (${imgRes.status})`);
         let bytes = new Uint8Array(await imgRes.arrayBuffer());
         try {
-          bytes = await trimTransparentPng(bytes);
+          bytes = await cleanAndTrimPng(bytes);
         } catch (e) {
-          console.warn("trim transparent failed (keeping uncropped):", e);
+          console.warn("clean+trim failed (keeping original):", e);
         }
 
         const baseName = (row.name || "design").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 60);
