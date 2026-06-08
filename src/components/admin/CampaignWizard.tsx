@@ -2062,6 +2062,7 @@ function LibrarySheet({
   const [items, setItems] = useState<{ id: string; name: string; file_path: string; tags: string[]; created_at: string }[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -2079,6 +2080,31 @@ function LibrarySheet({
 
   const publicUrl = (p: string) =>
     supabase.storage.from("design-library").getPublicUrl(p).data.publicUrl;
+
+  const handleRemoveBg = async (item: { id: string; name: string }) => {
+    if (!confirm(`Noņemt fonu "${item.name}"? Oriģināls tiks aizstāts ar caurspīdīgu PNG.`)) return;
+    setBgRemovingId(item.id);
+    try {
+      const data = await removeDesignBackground([item.id], true);
+      const ok = data?.ok ?? 0;
+      const failed = data?.failed ?? 0;
+      if (ok) toast.success("Fons noņemts");
+      if (failed) {
+        const firstError = data?.results?.find((row) => !row.ok)?.error;
+        toast.error(firstError || "Neizdevās noņemt fonu");
+      }
+      const { data: refreshed } = await supabase
+        .from("design_library")
+        .select("id, name, file_path, tags, created_at")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      setItems((refreshed as any) ?? []);
+    } catch (e: any) {
+      toast.error(e?.message || "Fona noņemšana neizdevās");
+    } finally {
+      setBgRemovingId(null);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -2109,6 +2135,16 @@ function LibrarySheet({
                 title={it.name}
               >
                 <img src={publicUrl(it.file_path)} alt={it.name} loading="lazy" className="w-full h-full object-contain" />
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); void handleRemoveBg(it); }}
+                  disabled={bgRemovingId === it.id}
+                  className="absolute right-1 top-1 z-10 rounded bg-black/70 p-1 text-white hover:bg-primary transition-all"
+                  title="Noņemt fonu"
+                  aria-label="Noņemt fonu"
+                >
+                  {bgRemovingId === it.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Eraser className="w-3 h-3" />}
+                </button>
                 {adding === it.id && (
                   <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
                     <Loader2 className="w-5 h-5 animate-spin text-primary" />
