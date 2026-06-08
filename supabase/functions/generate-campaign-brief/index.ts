@@ -164,19 +164,17 @@ Return JSON with this exact shape:
   "target_audience": "Short description of target audience in Latvian",
   "color_palette": ["#hex1", "#hex2", "#hex3", "#hex4"],
   "design_ideas": [
-    { "title": "Short LV name", "prompt": "Detailed cinematic English image-gen prompt: composition, palette, illustration style, mood, decorative elements. No garment/mockup.", "slogan": "REQUIRED Latvian slogan (2-6 words) rendered as dominant typography" },
-    { "title": "...", "prompt": "...", "slogan": "..." },
-    { "title": "...", "prompt": "...", "slogan": "..." },
-    { "title": "...", "prompt": "...", "slogan": "..." }
+    { "title": "Short LV name", "prompt": "Long, richly detailed cinematic English image-gen prompt. See REQUIREMENTS below.", "slogan": "REQUIRED Latvian slogan (2-6 words) rendered as dominant typography" }
   ],
   "product_types": ["t-shirt", "hoodie", "mug", "tote-bag"]
 }
 
 REQUIREMENTS for design_ideas:
-- Generate 4 distinct, BOLD, MODERN ideas — each in a different visual style (e.g. one bold flat vector, one retro screen-print, one neo-folk illustration, one pop-art / risograph).
-- ALL 4 ideas MUST include a non-empty "slogan" field with an original, witty Latvian phrase (2-6 words) that will be rendered as the dominant typography of the artwork (vintage / distressed lettering style). Slogans must be UNIQUE across the 4 ideas — no repeats, no near-duplicates.
-- Slogans must be in natural, contemporary Latvian — humorous, ironic, or culturally specific. Reference Latvian folk traditions, weather, sauna, jāņi, midsummer, food, drinking culture, regional slang where it fits the holiday. Do NOT use English. Do NOT use the cliché "Kur Janka, tur pjanka" unless the holiday truly is about partying — invent fresh ones.
-- Prompts (English) must be richly detailed: specify the illustration style, exact composition, lighting/mood, 3-5 color words, and 2-3 decorative motifs. 30-60 words each.
+- Generate EXACTLY 1 idea (one element in the design_ideas array). Make it the strongest, most stylish concept — not generic, not obvious, not the first cliché that comes to mind (e.g. NEVER default to "jāņu vainags / oak wreath / Latvian flag colors" unless the brief genuinely demands it).
+- The "slogan" field is REQUIRED: an original, witty, culturally rich Latvian phrase (2-6 words) rendered as the dominant typography of the artwork (vintage / hand-drawn / distressed lettering style). Must be in natural contemporary Latvian — humorous, ironic, poetic, or culturally specific. Reference Latvian folk traditions, weather, sauna, food, regional slang where the holiday fits — but invent fresh phrases, never the cliché "Kur Janka, tur pjanka". No English.
+- The "prompt" field (English) must be a LONG, dense, cinematic image-generation prompt of 120-220 words. Use every word to build atmosphere. Specify ALL of: (a) the illustration / printmaking style with a named visual reference (e.g. "in the style of vintage botanical engraving", "neo-folk linocut", "Mucha-inspired art-nouveau", "Japanese ukiyo-e woodblock", "1970s European nature documentary poster", "muted risograph two-color print", "Scandinavian-folk paper-cut illustration"); (b) the exact composition (focal subject, framing, foreground/background layering, negative space, where the slogan typography sits); (c) lighting and mood (time of day, weather, golden hour, mist, moonlight, dappled forest light, etc.); (d) a tight 4-6 colour palette named explicitly (e.g. "deep moss green, antique ivory, oxblood, burnished gold"); (e) 3-6 decorative motifs and textures (grain, halftone, woodcut hatching, hand-drawn vignette borders).
+- STRONGLY prefer subjects rooted in NATURE: native Latvian flora and fauna (oak, linden, birch, ferns, wild strawberries, cornflower, daisies, chamomile, mosses, mushrooms), animals in their natural habitat (lynx, wolf, fox, owl, hare, stork, woodpecker, bees, deer, beavers), botanical compositions (wildflower bouquets, herb wreaths, seasonal still-life), atmospheric landscapes (pine forests, bogs, dunes, meadows, river bends). Latvian folk ornaments and Latvju raksti (Saule, Māra, Jumis, Ūsiņš, Pērkons, Auseklis, Laima signs) can be woven in as borders or background pattern when they enhance the concept — but they are an accent, NOT the headline. Avoid generic flags, generic wreaths, and tourist-souvenir clichés.
+- Do NOT describe the garment, mockup, model, hanger, or product photography — only the standalone artwork.
 
 Choose product_types most relevant to this holiday (typically 2-3 from: t-shirt, hoodie, mug, tote-bag, kids-shirt).`;
 
