@@ -1805,6 +1805,8 @@ function DesignCard({
   showOnShirt,
   shirtColor,
   favorited,
+  onSaveAndRemoveBg,
+  bgRemoving,
 }: {
   d: DesignRow;
   signedUrls: Record<string, string>;
@@ -1816,6 +1818,8 @@ function DesignCard({
   showOnShirt?: boolean;
   shirtColor?: "white" | "black";
   favorited?: boolean;
+  onSaveAndRemoveBg?: (d: DesignRow) => void;
+  bgRemoving?: boolean;
 }) {
   // local helper rendered inline below; defined here to keep it scoped
   const ShirtPreview = ({ src, color, busy: b, children }: { src: string; color: "white" | "black"; busy: boolean; children?: React.ReactNode }) => (
