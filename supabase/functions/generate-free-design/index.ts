@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { Image } from "https://deno.land/x/imagescript@1.2.17/mod.ts";
 import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
@@ -6,7 +7,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-type FalModel = "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "seedream";
+type FalModel =
+  | "auto"
+  | "ideogram"
+  | "recraft"
+  | "flux-pro"
+  | "flux-schnell"
+  | "seedream"
+  | "nano-banana";
 
 interface Body {
   prompt: string;
@@ -27,6 +35,7 @@ function resolveEndpoint(model: FalModel | undefined, hasLatvian: boolean): stri
     case "flux-pro": return "fal-ai/flux-pro/v1.1";
     case "flux-schnell": return "fal-ai/flux/schnell";
     case "seedream": return "fal-ai/bytedance/seedream/v3/text-to-image";
+    case "nano-banana": return "fal-ai/gemini-25-flash-image";
     case "recraft": return "fal-ai/recraft-v3";
     case "auto":
     default:
@@ -40,7 +49,7 @@ function buildPrompt(raw: string, transparent: boolean): string {
     ? "Isolated subject on a fully transparent background, no white box, no halo, no edge shadow."
     : "Clean simple background.";
   const frame =
-    "FLAT 2D ARTWORK ONLY. NOT a t-shirt, NOT a hoodie, NOT a mockup, no fabric, no person, no model. Standalone design centered with 10% safe padding. DTF print file.";
+    "FLAT 2D ARTWORK ONLY. NOT a t-shirt, NOT a hoodie, NOT a mockup, no fabric, no person, no model. Standalone design that FILLS the frame edge-to-edge, no internal margins, no safe padding, no border. DTF print file.";
   const quality =
     "Premium gallery-grade illustration, refined detail, boutique streetwear. NEGATIVE: no clip-art, no stock, no kindergarten cartoon, no watermark, no signature.";
   return `${base}. ${bg} ${frame} ${quality}`.slice(0, 990);
