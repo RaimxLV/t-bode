@@ -36,11 +36,11 @@ export const CartSidebar = () => {
               <div className="flex flex-col gap-4 py-4">
                 {items.map((item) => (
                   <div key={`${item.productId}-${item.size}-${item.color}`} className="flex gap-3">
-                    <Link to={`/product/${item.slug}`} onClick={() => setIsOpen(false)} className="w-20 h-20 rounded-md overflow-hidden bg-card border border-border flex-shrink-0">
+                    <Link to={`/produkti/${item.slug}`} onClick={() => setIsOpen(false)} className="w-20 h-20 rounded-md overflow-hidden bg-card border border-border flex-shrink-0">
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </Link>
                     <div className="flex-1 min-w-0">
-                      <Link to={`/product/${item.slug}`} onClick={() => setIsOpen(false)} className="font-body font-semibold text-sm truncate block hover:text-primary transition-colors">
+                      <Link to={`/produkti/${item.slug}`} onClick={() => setIsOpen(false)} className="font-body font-semibold text-sm truncate block hover:text-primary transition-colors">
                         {item.name}
                       </Link>
                       <p className="text-xs text-muted-foreground font-body">

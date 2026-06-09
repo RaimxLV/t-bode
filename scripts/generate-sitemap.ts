@@ -62,7 +62,7 @@ async function fetchProducts(env: { url: string; key: string }): Promise<Sitemap
     return rows
       .filter((r) => r.slug)
       .map((r) => ({
-        path: `/product/${r.slug}`,
+        path: `/produkti/${r.slug}`,
         lastmod: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
         changefreq: "weekly" as const,
         priority: "0.8",

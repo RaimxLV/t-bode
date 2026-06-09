@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 import { useExistingColors } from "@/hooks/useExistingColors";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
 export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
@@ -95,7 +96,9 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     }
   }
 
-  const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  // Use shared slugify util — handles Latvian diacritics (ā→a, š→s, …)
+  // so admin-generated slugs match the URL convention.
+  const generateSlug = (name: string) => slugifyShared(name);
 
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
