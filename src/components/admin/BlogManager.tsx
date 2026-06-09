@@ -101,8 +101,21 @@ export const BlogManager = () => {
         .upload(path, file, { contentType: file.type, upsert: true });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
-      setEditing({ ...editing, cover_image_url: pub.publicUrl });
-      toast.success("Vāka attēls augšupielādēts");
+      const newUrl = pub.publicUrl;
+      setEditing({ ...editing, cover_image_url: newUrl });
+      // If the post already exists, persist the cover immediately so users
+      // don't lose the upload if they close the dialog without pressing Save.
+      if (editing.id) {
+        const { error: updErr } = await supabase
+          .from("blog_posts")
+          .update({ cover_image_url: newUrl })
+          .eq("id", editing.id);
+        if (updErr) throw updErr;
+        await load();
+        toast.success("Vāka attēls nomainīts un saglabāts");
+      } else {
+        toast.success("Vāka attēls augšupielādēts — spied Saglabāt");
+      }
     } catch (e: any) {
       toast.error(e?.message || "Augšupielāde neizdevās");
     } finally {
@@ -240,28 +253,23 @@ export const BlogManager = () => {
                       value={editing.cover_image_url ?? ""}
                       onChange={(e) => setEditing({ ...editing, cover_image_url: e.target.value })}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={uploadingCover}
-                      onClick={() => document.getElementById("blog-cover-upload")?.click()}
-                      className="gap-1.5 shrink-0"
+                    <label
+                      className={`inline-flex items-center gap-1.5 shrink-0 h-9 px-3 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer ${uploadingCover ? "opacity-60 pointer-events-none" : ""}`}
                     >
                       {uploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                      Augšupielādēt
-                    </Button>
-                    <input
-                      id="blog-cover-upload"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) uploadCover(f);
-                        e.target.value = "";
-                      }}
-                    />
+                      {editing.cover_image_url ? "Nomainīt" : "Augšupielādēt"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        disabled={uploadingCover}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) uploadCover(f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
                   </div>
                   {editing.cover_image_url && (
                     <div className="mt-2 relative inline-block">
