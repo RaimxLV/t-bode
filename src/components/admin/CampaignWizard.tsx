@@ -601,6 +601,25 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     const baseTitle = brief.title_lv ?? campaign.title ?? "Kampaņas produkts";
 
     try {
+      // Generate one unique poetic name per design (cached for all bases)
+      const designNames = new Map<string, string>();
+      for (let di = 0; di < starred.length; di++) {
+        const design = starred[di];
+        try {
+          const { data: nameRes } = await supabase.functions.invoke("generate-design-name", {
+            body: {
+              baseTitle,
+              prompt: (design as any).prompt ?? null,
+              imageUrl: signedUrls[design.image_url!] ?? null,
+            },
+          });
+          const aiName = (nameRes as any)?.name as string | null;
+          designNames.set(design.id, aiName || `${baseTitle} ${di + 1}`);
+        } catch {
+          designNames.set(design.id, `${baseTitle} ${di + 1}`);
+        }
+      }
+
       for (let di = 0; di < starred.length; di++) {
         const design = starred[di];
         const signed = signedUrls[design.image_url!];
@@ -627,8 +646,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           }
           if (!variants.length) continue;
           const baseName = bp.name_lv || bp.name;
-          const productName = starred.length > 1 ? `${baseTitle} — ${baseName} #${di + 1}` : `${baseTitle} — ${baseName}`;
-          const slug = `${slugify(baseTitle)}-${slugify(baseName)}-${campaign.year}-${di + 1}-${Date.now().toString(36)}`;
+          const productName = designNames.get(design.id) || `${baseTitle} ${di + 1}`;
+          const slug = `${slugify(productName)}-${slugify(baseName)}-${campaign.year}-${Date.now().toString(36)}`;
           const payload: any = {
             name: productName, name_lv: productName, slug,
             description: bp.description ?? brief.description_lv ?? null,
