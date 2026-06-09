@@ -894,7 +894,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     finally { setBusy(null); }
   };
 
-  const saveBlog = async () => {
+  const saveBlog = async (options?: { throwOnError?: boolean }) => {
     if (!blogPost) return;
     setBusy("save-blog");
     const { error } = await supabase.from("blog_posts").update({
@@ -904,7 +904,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setBusy(null);
     if (error) {
       toast.error(error.message);
-      throw error;
+      if (options?.throwOnError) throw error;
+      return;
     }
     toast.success("Saglabāts");
   };
@@ -940,7 +941,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     if (!campaign || !blogPost) { toast.error("Nav blog raksta"); return; }
     setBusy("publish");
     try {
-      await saveBlog();
+      await saveBlog({ throwOnError: true });
       const expIso = expiresAt ? new Date(expiresAt + "T23:59:59Z").toISOString() : null;
       const { error: pErr, count } = await supabase.from("products")
         .update({
