@@ -348,7 +348,7 @@ function buildPrompt(
   rawPrompt: string,
   style: string,
   transparent: boolean,
-  opts: { slogan?: string; fitInFrame?: boolean } = {},
+  opts: { slogan?: string; fitInFrame?: boolean; typographyVariant?: string } = {},
 ): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
@@ -360,6 +360,7 @@ function buildPrompt(
     .trim()
     .slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
+  const typographyVariant = opts.typographyVariant?.trim();
   const bgHint = transparent
     ? "Isolated subject on a fully transparent background, no white box, no halo, no edge shadow, no drop shadow."
     : "Centered on a SOLID PURE WHITE background (#FFFFFF) for clean masking. No border, no paper texture, no paper edges, no frame, no vignette, no drop shadow.";
@@ -373,9 +374,10 @@ function buildPrompt(
   // ===== Slogan / typography-led design =====
   if (slogan) {
     const out =
-      `Typographic poster artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
+      `Typographic apparel artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
       `MAXIMALLY ARTISTIC custom hand-lettering — NEVER use generic, standard, default or system fonts (no Helvetica, Arial, Inter, Roboto, Times, Impact, Bebas). ` +
-      `Pick a daring expressive lettering style: blackletter gothic, baroque flourished script, art-nouveau Mucha lettering, psychedelic 70s warped type, brutalist woodcut, distressed punk stencil, vintage Latvian folk ornament type, art-deco geometric, surreal melting type, woodblock circus poster, riso-grain grunge, or hand-carved engraving. Choose ONE style that fits the mood and execute it with virtuoso craftsmanship — irregular weights, ligatures, custom swashes, decorative terminals, texture, character. Letters stacked in bold hierarchy, fills most of canvas. ` +
+      `Use this typography direction for this specific variation: ${typographyVariant || "daring expressive custom lettering with strong hierarchy"}. ` +
+      `Pick a daring expressive lettering style: blackletter gothic, baroque flourished script, art-nouveau lettering, psychedelic 70s warped type, brutalist woodcut, distressed punk stencil, vintage Latvian folk ornament type, art-deco geometric, surreal melting type, riso-grain grunge, or hand-carved engraving. Choose ONE style that fits the mood and execute it with virtuoso craftsmanship — irregular weights, ligatures, custom swashes, decorative terminals, texture, character. Letters stacked in bold hierarchy and integrated as a clean shirt graphic. ` +
       `Decorative motif behind the text: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
       `Do NOT add any other words, banners, ribbons with text, signatures or watermarks — only the exact phrase "${slogan}".`;
