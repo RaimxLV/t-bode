@@ -1745,8 +1745,10 @@ function ProductTuneRow({
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
   const [autoSaving, setAutoSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const lastSaved = useRef<{ y: number; s: number }>({ y: offsetY, s: scale });
+  const deleting = busyKey === `delete-${product.id}`;
 
   // Reset local state when product changes (e.g. after regen reload)
   useEffect(() => {
@@ -1782,6 +1784,7 @@ function ProductTuneRow({
   // Flush save+regen immediately on pointer release so user adjustments aren't lost
   // if they move on before the debounce timer fires.
   const flushSave = async () => {
+    if (deleting) return;
     if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (lastSaved.current.y === offsetY && lastSaved.current.s === scale) return;
     setAutoSaving(true);
@@ -1795,14 +1798,25 @@ function ProductTuneRow({
   };
 
   const updateOffset = (v: number) => {
+    if (deleting) return;
     const clamped = Math.max(-0.3, Math.min(0.3, v));
     setOffsetY(clamped);
     scheduleSave(clamped, scale);
   };
   const updateScale = (v: number) => {
+    if (deleting) return;
     const clamped = Math.max(0.4, Math.min(1.4, v));
     setScale(clamped);
     scheduleSave(offsetY, clamped);
+  };
+
+  const confirmDelete = async () => {
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    setDeleteOpen(false);
+    await onExcludeProduct(product.id);
   };
 
   // Sliders only — touch/pinch/wheel intentionally disabled to avoid accidental drag while scrolling.
@@ -1973,8 +1987,8 @@ function ProductTuneRow({
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(product.id)} title="Izslēgt no kampaņas">
-            <Trash2 className="w-3.5 h-3.5" />
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleting} onClick={() => setDeleteOpen(true)} title="Izslēgt no kampaņas">
+            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </Button>
         </div>
       </div>
@@ -2025,6 +2039,25 @@ function ProductTuneRow({
           <Loader2 className="w-3 h-3 animate-spin" /> Atjauno visu krāsu mockups…
         </p>
       )}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Izslēgt šo produktu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Produkta melnraksts tiks dzēsts no šīs kampaņas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Atcelt</AlertDialogCancel>
+            <AlertDialogAction disabled={deleting} onClick={(e) => {
+              e.preventDefault();
+              void confirmDelete();
+            }}>
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dzēst"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
