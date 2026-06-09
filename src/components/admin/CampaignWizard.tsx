@@ -140,6 +140,27 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
 }
 
+function extractDesignIdFromProductAsset(url?: string | null) {
+  if (!url) return null;
+  const match = url.match(/\/campaigns\/(?:[^/]+)\/([0-9a-f-]{36})(?:\/|\.)/i);
+  return match?.[1] ?? null;
+}
+
+function resolveDesignForProduct(product: CampProduct, designs: DesignRow[]) {
+  const explicitDesignId = (product as any).design_id ?? null;
+  const derivedDesignId =
+    explicitDesignId ||
+    extractDesignIdFromProductAsset(product.image_url) ||
+    extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0]);
+
+  return (
+    designs.find((d) => d.id === derivedDesignId && d.image_url) ||
+    designs.find((d) => d.product_id === product.id && d.image_url) ||
+    designs.find((d) => d.is_primary && d.image_url) ||
+    null
+  );
+}
+
 function holidayExpiryISO(holiday: Holiday | null, year: number): string | null {
   if (!holiday) return null;
   const d = new Date(Date.UTC(year, holiday.month - 1, holiday.day));
@@ -274,7 +295,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Campaign products
       const { data: cpRaw } = await supabase.from("products")
-        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id, design_id")
+        .select("*")
         .eq("campaign_id", campaignId)
         .order("created_at");
       setCampProducts(((cpRaw as any[]) ?? []).map((p) => ({
@@ -658,7 +679,6 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             image_url: variants[0].images[0], in_stock: true, is_draft: true, status: "draft",
             holiday_id: campaign.holiday_id, campaign_id: campaign.id,
             base_product_id: bp.id,
-            design_id: design.id,
             print_area: printArea,
           };
           const { data: prod, error } = await supabase.from("products").insert(payload).select("id").maybeSingle();
@@ -725,9 +745,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       return;
     }
     // Find the design assigned to this product (or first starred)
-    let designRow = designs.find((d) => d.id === (p as any).design_id && d.image_url);
-    if (!designRow) designRow = designs.find((d) => d.product_id === productId && d.image_url);
-    if (!designRow) designRow = designs.find((d) => d.is_primary && d.image_url);
+    const designRow = resolveDesignForProduct(p, designs);
     if (!designRow?.image_url) { toast.error("Nav saistīta dizaina"); return; }
     const designSigned = signedUrls[designRow.image_url];
     if (!designSigned) { toast.error("Dizaina URL trūkst"); return; }
