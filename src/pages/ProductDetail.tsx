@@ -252,7 +252,7 @@ const ProductDetail = () => {
         breadcrumbs={[
           { name: "T-Bode", url: "https://www.t-bode.lv/" },
           { name: i18n.language === "en" ? "Collection" : "Kolekcija", url: "https://www.t-bode.lv/collection" },
-          { name: displayName, url: typeof window !== "undefined" ? window.location.href : `https://www.t-bode.lv/product/${product.slug}` },
+          { name: displayName, url: typeof window !== "undefined" ? window.location.href : `https://www.t-bode.lv/produkti/${product.slug}` },
         ]}
         jsonLd={{
           "@context": "https://schema.org/",
