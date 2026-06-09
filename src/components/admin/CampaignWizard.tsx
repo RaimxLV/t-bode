@@ -92,6 +92,7 @@ type CampProduct = {
   print_offset_y: number | null;
   print_scale: number | null;
   base_product_id: string | null;
+  design_id?: string | null;
 };
 
 type BlogPost = {
@@ -273,7 +274,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Campaign products
       const { data: cpRaw } = await supabase.from("products")
-        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id")
+        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id, design_id")
         .eq("campaign_id", campaignId)
         .order("created_at");
       setCampProducts(((cpRaw as any[]) ?? []).map((p) => ({
