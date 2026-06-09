@@ -1101,6 +1101,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 setBlogPost={setBlogPost}
                 designs={designs}
                 signedUrls={signedUrls}
+                campProducts={campProducts}
                 campProductsCount={campProducts.length}
                 expiresAt={expiresAt}
                 setExpiresAt={setExpiresAt}
@@ -1576,7 +1577,7 @@ function StepDesigns({
 }
 
 function StepBlog({
-  campaign, blogPost, savedBlogSlug, setBlogPost, designs, signedUrls, campProductsCount,
+  campaign, blogPost, savedBlogSlug, setBlogPost, designs, signedUrls, campProducts, campProductsCount,
   expiresAt, setExpiresAt, addToCollection, setAddToCollection,
   busy, onRegen, onSave, onUploadCover, onPublish, onBack, onClose,
 }: any) {
@@ -1672,7 +1673,7 @@ function StepBlog({
             Dzīvais bloga priekšskatījums no pašreizējiem laukiem šajā solī.
           </div>
           <div className="h-[540px] overflow-y-auto bg-background">
-            <BlogInlinePreview post={blogPost} products={[]} />
+            <BlogInlinePreview post={blogPost} products={campProducts ?? []} />
           </div>
         </div>
       )}
