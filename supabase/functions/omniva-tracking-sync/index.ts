@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
         });
         if (!resp.ok) {
           const errText = await resp.text().catch(() => "");
-          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} ${errText.slice(0, 200)}`);
+          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} content-type=${resp.headers.get("content-type")} body=[${errText.slice(0, 400)}]`);
           continue;
         }
         const data = await resp.json().catch(() => null) as any;
