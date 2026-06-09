@@ -341,14 +341,14 @@ function buildPrompt(
     .slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
   const bgHint = transparent
-    ? "Isolated, no edge shadows."
-    : "Centered on white background.";
+    ? "Isolated subject on a fully transparent background, no white box, no halo, no edge shadow, no drop shadow."
+    : "Centered on a SOLID PURE WHITE background (#FFFFFF) for clean masking. No border, no paper texture, no paper edges, no frame, no vignette, no drop shadow.";
   // Frame-fit + quality rules, kept terse so total prompt stays under 1000 chars.
   const frameRule =
-    "FLAT 2D ARTWORK ONLY. NOT a t-shirt, NOT a hoodie, NOT a garment, NOT a mockup, NOT a product photo, no fabric, no person, no model wearing anything, no apparel. Just the standalone design on the background. Fit inside canvas with 10% safe padding. DTF print file.";
+    "ISOLATED CLEAN VECTOR-STYLE GRAPHIC, crisp screen-print style for apparel. FLAT 2D ARTWORK ONLY. NOT a t-shirt, NOT a hoodie, NOT a garment, NOT a mockup, NOT a product photo, no fabric, no person, no model, no apparel. NOT a poster, NOT a framed print, NOT a postcard. Standalone design with 10% safe padding. DTF print file.";
   const qualityRule =
     "Premium editorial, gallery-grade, refined detail, boutique streetwear. " +
-    "NEGATIVE: not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon.";
+    "NEGATIVE: no drop shadows, no poster background, no paper edges, no paper texture, no photo-realistic clutter, no frames, no borders, no vignette, no scene, not childish, not infantile, not amateur, no clip-art, no stock, no kindergarten cartoon, no watermark, no signature.";
 
   // ===== Slogan / typography-led design =====
   if (slogan) {
