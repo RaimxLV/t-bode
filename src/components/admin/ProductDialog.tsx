@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 import { useExistingColors } from "@/hooks/useExistingColors";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
 export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
