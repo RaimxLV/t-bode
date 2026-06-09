@@ -1729,13 +1729,52 @@ function ProductTuneRow({
     img.src = designUrl;
   }, [designUrl]);
 
-  // Contain-fit inside print area, then user scale
-  const areaAspect = printArea.w / printArea.h;
-  let dwRel = printArea.w, dhRel = printArea.w / designAspect;
-  if (designAspect < areaAspect) { dhRel = printArea.h; dwRel = printArea.h * designAspect; }
-  dwRel *= scale; dhRel *= scale;
-  const dxRel = printArea.x + (printArea.w - dwRel) / 2;
-  const dyRel = printArea.y + (printArea.h - dhRel) / 2 + offsetY * printArea.h;
+  // Compute mockup natural aspect — composeMockup positions the print area in mockup
+  // pixel space, so we must mirror that math here (otherwise the live preview
+  // visually disagrees with the generated image).
+  const [mockAspect, setMockAspect] = useState<number>(1);
+  useEffect(() => {
+    if (!baseImg) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setMockAspect((img.naturalWidth || 1) / (img.naturalHeight || 1));
+    img.src = baseImg;
+  }, [baseImg]);
+
+  // Container is aspect-square; the mockup is object-contain inside it.
+  // Find the contained rect (as fraction of the container) for the mockup image.
+  const containerAspect = 1; // aspect-square
+  let mockRectW = 1, mockRectH = 1, mockRectX = 0, mockRectY = 0;
+  if (mockAspect >= containerAspect) {
+    mockRectW = 1;
+    mockRectH = containerAspect / mockAspect;
+    mockRectY = (1 - mockRectH) / 2;
+  } else {
+    mockRectH = 1;
+    mockRectW = mockAspect / containerAspect;
+    mockRectX = (1 - mockRectW) / 2;
+  }
+
+  // Print area in mockup-pixel ratios → container-fraction ratios
+  const paX = mockRectX + printArea.x * mockRectW;
+  const paY = mockRectY + printArea.y * mockRectH;
+  const paW = printArea.w * mockRectW;
+  const paH = printArea.h * mockRectH;
+
+  // Contain-fit in pixel space (same as composeMockup): compare in mockup pixels.
+  // Use a virtual mock size where width=1; then height=1/mockAspect.
+  const rwPx = printArea.w * 1;                 // print area width in mockup-pixel units
+  const rhPx = printArea.h * (1 / mockAspect);  // print area height in mockup-pixel units
+  let dwPx = rwPx, dhPx = rwPx / designAspect;
+  if (dhPx > rhPx) { dhPx = rhPx; dwPx = rhPx * designAspect; }
+  dwPx *= scale; dhPx *= scale;
+  // Convert design pixel dims back to fractions of mockup rect, then to container fractions
+  const dwRelMock = dwPx / 1;
+  const dhRelMock = dhPx / (1 / mockAspect);
+  const dwRel = dwRelMock * mockRectW;
+  const dhRel = dhRelMock * mockRectH;
+  const dxRel = paX + (paW - dwRel) / 2;
+  const dyRel = paY + (paH - dhRel) / 2 + offsetY * paH;
 
   return (
     <div className="border rounded p-2 sm:p-3 space-y-3">
@@ -1754,10 +1793,10 @@ function ProductTuneRow({
             <div
               className="absolute border border-dashed border-primary/60 pointer-events-none"
               style={{
-                left: `${printArea.x * 100}%`,
-                top: `${printArea.y * 100}%`,
-                width: `${printArea.w * 100}%`,
-                height: `${printArea.h * 100}%`,
+                left: `${paX * 100}%`,
+                top: `${paY * 100}%`,
+                width: `${paW * 100}%`,
+                height: `${paH * 100}%`,
               }}
             />
             {/* Design overlay */}
