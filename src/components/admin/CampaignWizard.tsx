@@ -229,6 +229,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [campProducts, setCampProducts] = useState<CampProduct[]>([]);
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [savedBlogSlug, setSavedBlogSlug] = useState<string | null>(null);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
@@ -353,6 +354,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .limit(1)
         .maybeSingle();
       setBlogPost((bpRaw as any) ?? null);
+      setSavedBlogSlug((bpRaw as any)?.slug ?? null);
 
       // Reload favorites for this campaign so heart icons stay lit on reopen.
       try {
@@ -393,6 +395,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       setDesigns([]);
       setCampProducts([]);
       setBlogPost(null);
+      setSavedBlogSlug(null);
       setExpiresAt("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
