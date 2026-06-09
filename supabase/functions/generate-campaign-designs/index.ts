@@ -200,8 +200,10 @@ async function falRemoveBackground(apiKey: string, imageUrl: string): Promise<st
   // edges (no white halo); bria is a strong commercial fallback; the legacy
   // rembg is a last resort.
   const endpoints = [
-    { path: "fal-ai/birefnet/v2", body: { image_url: imageUrl, model: "General Use (Heavy)", output_format: "png" } },
+    // Bria is the specialized commercial background-removal model — preferred
+    // when the user explicitly asks for a transparent print file.
     { path: "fal-ai/bria/background/remove", body: { image_url: imageUrl } },
+    { path: "fal-ai/birefnet/v2", body: { image_url: imageUrl, model: "General Use (Heavy)", operating_resolution: "2048x2048", output_format: "png", refine_foreground: true } },
     { path: "fal-ai/imageutils/rembg", body: { image_url: imageUrl } },
   ];
   let lastErr = "";
