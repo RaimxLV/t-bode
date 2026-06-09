@@ -15,6 +15,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Post = {
   id: string;
@@ -41,6 +51,7 @@ export const BlogManager = () => {
   const [editing, setEditing] = useState<Post | null>(null);
   const [tab, setTab] = useState<"manual" | "archive">("manual");
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Post | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -140,11 +151,15 @@ export const BlogManager = () => {
   };
 
   const remove = async (p: Post) => {
-    if (!confirm(`Dzēst "${p.title}"?`)) return;
     setBusy(p.id);
     const { error } = await supabase.from("blog_posts").delete().eq("id", p.id);
     setBusy(null);
-    if (error) toast.error(error.message); else { toast.success("Dzēsts"); load(); }
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Dzēsts");
+      setDeleteTarget(null);
+      load();
+    }
   };
 
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -192,7 +207,7 @@ export const BlogManager = () => {
                   )
                 )}
                 {!p.campaign_id && (
-                  <Button size="sm" variant="ghost" onClick={() => remove(p)} disabled={busy === p.id} className="text-destructive">
+                  <Button size="sm" variant="ghost" onClick={() => setDeleteTarget(p)} disabled={busy === p.id} className="text-destructive">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
@@ -306,6 +321,26 @@ export const BlogManager = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && !busy && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dzēst bloga rakstu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget ? `Raksts "${deleteTarget.title}" tiks neatgriezeniski dzēsts.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy === deleteTarget?.id}>Atcelt</AlertDialogCancel>
+            <AlertDialogAction disabled={busy === deleteTarget?.id} onClick={(e) => {
+              e.preventDefault();
+              if (deleteTarget) void remove(deleteTarget);
+            }}>
+              {busy === deleteTarget?.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dzēst"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
