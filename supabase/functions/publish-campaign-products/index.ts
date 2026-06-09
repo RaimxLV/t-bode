@@ -28,6 +28,39 @@ function extFromContentType(contentType: string | null): "png" | "jpg" | "svg" |
   return value.includes("jpeg") || value.includes("jpg") ? "jpg" : "png";
 }
 
+async function generateDesignName(opts: {
+  apiKey: string;
+  baseTitle: string;
+  prompt: string | null;
+  imageUrl: string | null;
+}): Promise<string | null> {
+  try {
+    const system = `Tu esi radošs latviešu kopirraitētājs. Izdomā ĪSU, poētisku produkta nosaukumu latviski (2-4 vārdi, bez pēdiņām, bez emoji, bez "T-krekls", bez numuriem). Atgriez TIKAI nosaukumu vienā rindā.`;
+    const userText = `Kampaņas tēma: ${opts.baseTitle}. Dizaina apraksts: ${opts.prompt ?? "(nav)"}.`;
+    const content: any[] = [{ type: "text", text: userText }];
+    if (opts.imageUrl) content.push({ type: "image_url", image_url: { url: opts.imageUrl } });
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${opts.apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content },
+        ],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const raw: string = data?.choices?.[0]?.message?.content ?? "";
+    const cleaned = raw.trim().split("\n")[0].replace(/^["'`]+|["'`]+$/g, "").trim();
+    return cleaned.length >= 3 && cleaned.length <= 80 ? cleaned : null;
+  } catch (e) {
+    console.warn("name gen failed", e);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -61,6 +94,7 @@ Deno.serve(async (req) => {
     const brief: any = (campaign as any).brief ?? {};
     const baseTitle = brief.title_lv ?? campaign.title ?? "Kampaņas produkts";
     const category = (brief.product_types?.[0] ?? "t-shirts").toLowerCase();
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
     const { data: designs } = await admin
       .from("campaign_designs")
@@ -103,8 +137,16 @@ Deno.serve(async (req) => {
         const { data: pub } = admin.storage.from("product-images").getPublicUrl(publicPath);
         const publicUrl = pub.publicUrl;
 
-        const nameLv = designs.length > 1 ? `${baseTitle} #${i + 1}` : baseTitle;
-        const slug = `${slugify(baseTitle)}-${campaign.year}-${i + 1}`;
+        const aiName = lovableKey
+          ? await generateDesignName({
+              apiKey: lovableKey,
+              baseTitle,
+              prompt: d.prompt ?? null,
+              imageUrl: publicUrl,
+            })
+          : null;
+        const nameLv = aiName ?? (designs.length > 1 ? `${baseTitle} ${i + 1}` : baseTitle);
+        const slug = `${slugify(nameLv)}-${campaign.year}-${i + 1}`;
 
         const { data: product, error: insErr } = await admin
           .from("products")
