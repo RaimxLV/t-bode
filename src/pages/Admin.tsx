@@ -568,6 +568,12 @@ const Admin = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="omnivaSync">
+            <Suspense fallback={<TabFallback />}>
+              <OmnivaSyncLogs />
+            </Suspense>
+          </TabsContent>
+
         </Tabs>
       </main>
 
