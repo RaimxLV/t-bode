@@ -677,9 +677,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             },
           });
           const aiName = (nameRes as any)?.name as string | null;
-          designNames.set(design.id, aiName || `${baseTitle} ${di + 1}`);
+          designNames.set(design.id, aiName || baseTitle);
         } catch {
-          designNames.set(design.id, `${baseTitle} ${di + 1}`);
+          designNames.set(design.id, baseTitle);
         }
       }
 
