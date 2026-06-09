@@ -910,6 +910,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       if (options?.throwOnError) throw error;
       return;
     }
+    setSavedBlogSlug(blogPost.slug);
     toast.success("Saglabāts");
   };
 
@@ -1590,8 +1591,9 @@ function StepBlog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstStarUrl, blogPost?.id]);
 
-  const previewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1` : null;
-  const embeddedPreviewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1&embed=1` : null;
+  const previewSlug = savedBlogSlug ?? blogPost?.slug ?? null;
+  const previewHref = previewSlug ? `/blog/${previewSlug}?preview=1` : null;
+  const embeddedPreviewHref = previewSlug ? `/blog/${previewSlug}?preview=1&embed=1` : null;
 
   if (!blogPost) {
     return (
