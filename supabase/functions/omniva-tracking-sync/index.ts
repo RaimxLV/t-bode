@@ -48,10 +48,12 @@ Deno.serve(async (req) => {
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://service.core.epmx.application.eestipost.ee/xsd">
   <soapenv:Header/>
   <soapenv:Body>
-    <xsd:singleAddressbasedPostalParcelEventReportRequest>
+    <xsd:addressbasedPostalParcelEventReportRequest>
       <partner>${escapeXml(customerCode)}</partner>
-      <barcode>${escapeXml(order.omniva_barcode!)}</barcode>
-    </xsd:singleAddressbasedPostalParcelEventReportRequest>
+      <barcodes>
+        <barcode>${escapeXml(order.omniva_barcode!)}</barcode>
+      </barcodes>
+    </xsd:addressbasedPostalParcelEventReportRequest>
   </soapenv:Body>
 </soapenv:Envelope>`;
 
@@ -65,7 +67,8 @@ Deno.serve(async (req) => {
           body: xml,
         });
         if (!resp.ok) {
-          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status}`);
+          const errText = await resp.text().catch(() => "");
+          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} ${errText.slice(0, 300)}`);
           continue;
         }
         const respText = await resp.text();
