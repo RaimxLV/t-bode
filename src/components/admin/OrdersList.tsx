@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2 } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isOfficePickup, stripOfficePrefix } from "@/lib/officePickup";
 
@@ -108,6 +108,39 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [showCancelled, setShowCancelled] = useState(false);
   const [showUnpaid, setShowUnpaid] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // Map of product_id → blog post that sourced it (Svētku iedvesma).
+  // Used to flag the items in admin so workers know which design file to grab.
+  const [blogByProduct, setBlogByProduct] = useState<Record<string, { title: string; slug: string }>>({});
+
+  useEffect(() => {
+    const productIds = Array.from(
+      new Set(
+        Object.values(orderItems)
+          .flat()
+          .map((it: any) => it?.product_id)
+          .filter(Boolean)
+      )
+    ) as string[];
+    if (productIds.length === 0) {
+      setBlogByProduct({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("blog_post_products")
+        .select("product_id, blog_posts!inner(title, slug)")
+        .in("product_id", productIds);
+      if (cancelled || error) return;
+      const map: Record<string, { title: string; slug: string }> = {};
+      (data ?? []).forEach((row: any) => {
+        const bp = row.blog_posts;
+        if (bp && !map[row.product_id]) map[row.product_id] = { title: bp.title, slug: bp.slug };
+      });
+      setBlogByProduct(map);
+    })();
+    return () => { cancelled = true; };
+  }, [orderItems]);
 
   const handleManualRefresh = async () => {
     setRefreshing(true);
@@ -853,6 +886,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             }).filter(Boolean) as string[];
             const extraCount = Math.max(0, items.length - previewThumbs.length);
             const extraCountMobile = Math.max(0, items.length - Math.min(2, previewThumbs.length));
+            const hasBlogItem = items.some((it: any) => blogByProduct[it.product_id]);
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -939,6 +973,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           </span>
                         )}
                         <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
+                        {hasBlogItem && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-primary/15 text-primary border-primary/40 inline-flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Svētku iedvesma
+                          </span>
+                        )}
                       </div>
 
                       {/* Row 3: customer + date */}
@@ -1246,6 +1285,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                               const colorVariants = product?.color_variants as any[] | undefined;
                               const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
                               const thumbUrl = item.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+                              const blog = blogByProduct[item.product_id];
+                              const designUrl = product?.image_url || null;
                               return (
                                 <div key={item.id} className="p-2.5 space-y-2 bg-card">
                                   <div className="flex gap-2.5">
@@ -1256,6 +1297,25 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                     )}
                                     <div className="flex-1 min-w-0 space-y-1">
                                       <p className="text-xs font-body font-semibold leading-tight break-words">{item.product_name}</p>
+                                      {blog && (
+                                        <div className="flex flex-wrap items-center gap-1.5">
+                                          <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] py-0 gap-1">
+                                            <Sparkles className="w-3 h-3" /> Svētku iedvesma
+                                          </Badge>
+                                          <span className="text-[10px] text-muted-foreground break-words">{blog.title}</span>
+                                          {designUrl && (
+                                            <a
+                                              href={designUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              download
+                                              className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                                            >
+                                              <Download className="w-3 h-3" /> Dizains
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
                                       {item.zakeke_design_id && (
                                         item.is_bulk ? (
                                           <Badge className="bg-orange-100 text-orange-900 border-orange-300 text-[10px] py-0">
@@ -1308,6 +1368,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                 const colorVariants = product?.color_variants as any[] | undefined;
                                 const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
                                 const thumbUrl = item.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+                                const blog = blogByProduct[item.product_id];
+                                const designUrl = product?.image_url || null;
                                 return (
                                   <TableRow key={item.id}>
                                     <TableCell className="text-xs font-body">
@@ -1319,6 +1381,25 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
+                                          {blog && (
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                              <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] py-0 gap-1 w-fit">
+                                                <Sparkles className="w-3 h-3" /> Svētku iedvesma
+                                              </Badge>
+                                              <span className="text-[10px] text-muted-foreground truncate max-w-[180px]" title={blog.title}>{blog.title}</span>
+                                              {designUrl && (
+                                                <a
+                                                  href={designUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  download
+                                                  className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                                                >
+                                                  <Download className="w-3 h-3" /> Dizains
+                                                </a>
+                                              )}
+                                            </div>
+                                          )}
                                           {item.zakeke_design_id && (
                                             item.is_bulk ? (
                                               <Badge className="bg-orange-100 text-orange-900 border-orange-300 text-[10px] py-0 w-fit">
