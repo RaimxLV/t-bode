@@ -709,8 +709,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           }
           if (!variants.length) continue;
           const baseName = bp.name_lv || bp.name;
-          const productName = designNames.get(design.id) || `${baseTitle} ${di + 1}`;
-          const slug = `${slugify(productName)}-${slugify(baseName)}-${campaign.year}-${Date.now().toString(36)}`;
+          const designName = designNames.get(design.id) || `${baseTitle} ${di + 1}`;
+          const productName = buildDraftProductName(designName, baseName);
+          const slug = `${slugify(productName)}-${campaign.year}-${Date.now().toString(36)}`;
           const payload: any = {
             name: productName, name_lv: productName, slug,
             description: bp.description ?? brief.description_lv ?? null,
@@ -742,9 +743,15 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     const p = campProducts.find((x) => x.id === productId);
     if (!p) return;
     const next = p.color_variants.filter((c) => c.name !== colorName);
-    const { error } = await supabase.from("products").update({ color_variants: next as any }).eq("id", productId);
+    const patch: Record<string, any> = { color_variants: next as any };
+    if (next.length > 0) patch.image_url = next[0].images?.[0] ?? p.image_url;
+    const { error } = await supabase.from("products").update(patch).eq("id", productId);
     if (error) { toast.error(error.message); return; }
-    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next } : x));
+    if (next.length === 0) {
+      await excludeProduct(productId, false);
+      return;
+    }
+    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next, image_url: patch.image_url } : x));
   };
 
   const setCoverColor = async (productId: string, colorName: string) => {
@@ -769,8 +776,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, ...patch } : x));
   };
 
-  const excludeProduct = async (productId: string) => {
-    if (!confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+  const excludeProduct = async (productId: string, askConfirm = true) => {
+    if (askConfirm && !confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) { toast.error(error.message); return; }
     setCampProducts((prev) => prev.filter((x) => x.id !== productId));
@@ -781,7 +788,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     if (!campaign) return;
     const p = campProducts.find((x) => x.id === productId);
     if (!p) return;
-    if (!p.base_product_id) {
+    const resolvedBaseProductId = resolveBaseProductId(p);
+    if (!resolvedBaseProductId) {
       toast.error("Šim produktam trūkst bāzes atsauces — atjauno 2. soli un ģenerē no jauna.");
       return;
     }
@@ -794,7 +802,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     // Find the base catalog row for print_area
     const { data: baseRow } = await supabase.from("products")
       .select("id, print_area, color_variants")
-      .eq("id", p.base_product_id).maybeSingle();
+      .eq("id", resolvedBaseProductId).maybeSingle();
     if (!baseRow) { toast.error("Bāzes produkts nav atrasts"); return; }
     const printArea = (baseRow.print_area as any) ?? DEFAULT_PRINT_AREA;
     const baseVariants = Array.isArray(baseRow.color_variants) ? (baseRow.color_variants as ColorVariant[]) : [];
@@ -816,7 +824,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             offsetY: p.print_offset_y ?? 0,
             scale: p.print_scale ?? 1,
           });
-          const path = `campaigns/${campaign.id}/${designRow.id}/${p.base_product_id}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
+          const path = `campaigns/${campaign.id}/${designRow.id}/${resolvedBaseProductId}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
           const up = await supabase.storage.from("product-images").upload(path, blob, { contentType: "image/jpeg", upsert: true });
           if (up.error) throw up.error;
           const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
