@@ -14,6 +14,7 @@ import { downloadPrintReadyPng } from "@/lib/printFile";
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
+import { BlogInlinePreview } from "./BlogInlinePreview";
 import { getOptimizedSrc } from "@/lib/imageOptimization";
 import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
