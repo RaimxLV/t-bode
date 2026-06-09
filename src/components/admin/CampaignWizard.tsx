@@ -1096,6 +1096,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
               <StepBlog
                 campaign={campaign}
                 blogPost={blogPost}
+                savedBlogSlug={savedBlogSlug}
                 setBlogPost={setBlogPost}
                 designs={designs}
                 signedUrls={signedUrls}
@@ -1574,7 +1575,7 @@ function StepDesigns({
 }
 
 function StepBlog({
-  campaign, blogPost, setBlogPost, designs, signedUrls, campProductsCount,
+  campaign, blogPost, savedBlogSlug, setBlogPost, designs, signedUrls, campProductsCount,
   expiresAt, setExpiresAt, addToCollection, setAddToCollection,
   busy, onRegen, onSave, onUploadCover, onPublish, onBack, onClose,
 }: any) {
