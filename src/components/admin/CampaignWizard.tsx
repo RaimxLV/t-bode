@@ -1666,17 +1666,14 @@ function StepBlog({
         </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
-      {embeddedPreviewHref && (
+      {blogPost && (
         <div className="rounded-md border border-border overflow-hidden bg-background">
           <div className="px-3 py-2 border-b border-border text-[11px] text-muted-foreground font-body">
-            Tas pats bloga priekšskatījums, ko redz atverot jauno logu.
+            Dzīvais bloga priekšskatījums no pašreizējiem laukiem šajā solī.
           </div>
-          <iframe
-            key={embeddedPreviewHref}
-            src={embeddedPreviewHref}
-            title="Bloga priekšskatījums"
-            className="w-full h-[540px] bg-background"
-          />
+          <div className="h-[540px] overflow-y-auto bg-background">
+            <BlogInlinePreview post={blogPost} products={[]} />
+          </div>
         </div>
       )}
       <div>
