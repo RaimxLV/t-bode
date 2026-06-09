@@ -657,6 +657,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             image_url: variants[0].images[0], in_stock: true, is_draft: true, status: "draft",
             holiday_id: campaign.holiday_id, campaign_id: campaign.id,
             base_product_id: bp.id,
+            design_id: design.id,
             print_area: printArea,
           };
           const { data: prod, error } = await supabase.from("products").insert(payload).select("id").maybeSingle();
