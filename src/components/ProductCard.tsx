@@ -9,7 +9,7 @@ import { getProductName } from "@/hooks/useProducts";
 import { WishlistButton } from "@/components/WishlistButton";
 import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
 const productHref = (p: DBProduct) =>
-  `/product/${p.slug}${(p as any).is_draft ? "?preview=1" : ""}`;
+  `/produkti/${p.slug}${(p as any).is_draft ? "?preview=1" : ""}`;
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
   const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
