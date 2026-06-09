@@ -498,7 +498,12 @@ Deno.serve(async (req) => {
           ? body.slogan_override
           : ((existing as any).slogan ?? "")
       ).toString().trim();
-      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
+      const typographyVariant = slogan ? getTypographyVariation(existing?.id ?? rawPrompt) : undefined;
+      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, {
+        slogan,
+        fitInFrame: campFitInFrame,
+        typographyVariant,
+      });
 
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
@@ -567,7 +572,12 @@ Deno.serve(async (req) => {
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
       const slogan = (idea.slogan ?? "").trim();
-      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
+      const typographyVariant = slogan ? getTypographyVariation(`${campaign_id}:${i}:${idea.title}`) : undefined;
+      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, {
+        slogan,
+        fitInFrame: campFitInFrame,
+        typographyVariant,
+      });
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
           apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
