@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const system = `Tu esi radošs latviešu kopirraitētājs. Izdomā ĪSU, poētisku produkta nosaukumu latviski (2-4 vārdi, bez pēdiņām, bez emoji, bez vārdiem "T-krekls"/"Krekls"/"Stanley"/"Stella", bez numuriem, bez kokvilnas pieminēšanas). Nosaukumam jāatspoguļo dizaina vizuālais saturs. Atgriez TIKAI nosaukumu vienā rindā.`;
+    const system = `Tu esi radošs latviešu kopirraitētājs. Izdomā ĪSU, poētisku dizaina nosaukumu latviski (2-4 vārdi, bez pēdiņām, bez emoji, bez numuriem, bez krekla modeļa vai zīmola nosaukuma, bez vārdiem "T-krekls" un "Krekls", bez kokvilnas pieminēšanas). Nosaukumam jāatspoguļo dizaina vizuālais saturs. Atgriez TIKAI dizaina nosaukumu vienā rindā.`;
     const userText = `Kampaņas tēma: ${baseTitle ?? "(nav)"}. Dizaina apraksts: ${prompt ?? "(nav)"}.`;
     const content: any[] = [{ type: "text", text: userText }];
     if (imageUrl) content.push({ type: "image_url", image_url: { url: imageUrl } });

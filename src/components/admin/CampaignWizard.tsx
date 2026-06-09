@@ -57,6 +57,11 @@ type DesignRow = {
   slogan?: string | null;
 };
 
+type DesignLinkInfo = {
+  designId: string | null;
+  baseProductId: string | null;
+};
+
 type ColorVariant = { name: string; hex: string; images: string[] };
 
 function summarizeGenerationError(message: string | null | undefined) {
@@ -140,10 +145,37 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
 }
 
+function splitBaseProductName(name?: string | null) {
+  const raw = (name ?? "").trim();
+  if (!raw) return { display: "Krekls", model: "Krekls" };
+
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const parts = compact.split(/\s+-\s+|\s+—\s+/).map((p) => p.trim()).filter(Boolean);
+  const tail = parts[parts.length - 1] ?? compact;
+  const hasModelWord = /(stanley|stella|creator|cruiser|blaster|drummer|sparker|changer|radder|rocker|trekker|mover|roller|t-krekls|krekls|hoodie|džemperis|maika)/i.test(tail);
+  const model = hasModelWord ? tail : compact;
+  return { display: compact, model };
+}
+
+function buildDraftProductName(designName: string, baseProductName?: string | null) {
+  const cleanDesign = (designName || "Dizains").trim();
+  const { model } = splitBaseProductName(baseProductName);
+  return `${cleanDesign} - ${model}`;
+}
+
 function extractDesignIdFromProductAsset(url?: string | null) {
   if (!url) return null;
   const match = url.match(/\/campaigns\/(?:[^/]+)\/([0-9a-f-]{36})(?:\/|\.)/i);
   return match?.[1] ?? null;
+}
+
+function extractDesignLinkFromProductAsset(url?: string | null): DesignLinkInfo {
+  if (!url) return { designId: null, baseProductId: null };
+  const match = url.match(/\/campaigns\/(?:[^/]+)\/([0-9a-f-]{36})\/([0-9a-f-]{36})(?:\/|\.)/i);
+  return {
+    designId: match?.[1] ?? null,
+    baseProductId: match?.[2] ?? null,
+  };
 }
 
 function resolveDesignForProduct(product: CampProduct, designs: DesignRow[]) {
@@ -157,6 +189,15 @@ function resolveDesignForProduct(product: CampProduct, designs: DesignRow[]) {
     designs.find((d) => d.id === derivedDesignId && d.image_url) ||
     designs.find((d) => d.product_id === product.id && d.image_url) ||
     designs.find((d) => d.is_primary && d.image_url) ||
+    null
+  );
+}
+
+function resolveBaseProductId(product: CampProduct) {
+  return (
+    product.base_product_id ||
+    extractDesignLinkFromProductAsset(product.image_url).baseProductId ||
+    extractDesignLinkFromProductAsset(product.color_variants?.[0]?.images?.[0]).baseProductId ||
     null
   );
 }
@@ -636,9 +677,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             },
           });
           const aiName = (nameRes as any)?.name as string | null;
-          designNames.set(design.id, aiName || `${baseTitle} ${di + 1}`);
+          designNames.set(design.id, aiName || baseTitle);
         } catch {
-          designNames.set(design.id, `${baseTitle} ${di + 1}`);
+          designNames.set(design.id, baseTitle);
         }
       }
 
@@ -646,6 +687,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         const design = starred[di];
         const signed = signedUrls[design.image_url!];
         if (!signed) { toast.error(`Dizainam ${di + 1} nav URL`); continue; }
+        let linkedProductIdForDesign: string | null = null;
         for (const bp of bases) {
           const printArea = bp.print_area ?? DEFAULT_PRINT_AREA;
           const variants: ColorVariant[] = [];
@@ -668,8 +710,9 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           }
           if (!variants.length) continue;
           const baseName = bp.name_lv || bp.name;
-          const productName = designNames.get(design.id) || `${baseTitle} ${di + 1}`;
-          const slug = `${slugify(productName)}-${slugify(baseName)}-${campaign.year}-${Date.now().toString(36)}`;
+          const designName = designNames.get(design.id) || `${baseTitle} ${di + 1}`;
+          const productName = buildDraftProductName(designName, baseName);
+          const slug = `${slugify(productName)}-${campaign.year}-${Date.now().toString(36)}`;
           const payload: any = {
             name: productName, name_lv: productName, slug,
             description: bp.description ?? brief.description_lv ?? null,
@@ -685,7 +728,10 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           if (error || !prod) toast.error(`${baseName}: ${error?.message ?? "neizveidojās"}`);
           else {
             created++;
-            if (!design.product_id) await supabase.from("campaign_designs" as any).update({ product_id: (prod as any).id }).eq("id", design.id);
+            if (!linkedProductIdForDesign) {
+              linkedProductIdForDesign = (prod as any).id;
+              await supabase.from("campaign_designs" as any).update({ product_id: linkedProductIdForDesign }).eq("id", design.id);
+            }
           }
         }
       }
@@ -701,9 +747,15 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     const p = campProducts.find((x) => x.id === productId);
     if (!p) return;
     const next = p.color_variants.filter((c) => c.name !== colorName);
-    const { error } = await supabase.from("products").update({ color_variants: next as any }).eq("id", productId);
+    const patch: any = { color_variants: next as any };
+    if (next.length > 0) patch.image_url = next[0].images?.[0] ?? p.image_url;
+    const { error } = await supabase.from("products").update(patch).eq("id", productId);
     if (error) { toast.error(error.message); return; }
-    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next } : x));
+    if (next.length === 0) {
+      await excludeProduct(productId, false);
+      return;
+    }
+    setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, color_variants: next, image_url: patch.image_url } : x));
   };
 
   const setCoverColor = async (productId: string, colorName: string) => {
@@ -728,10 +780,17 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, ...patch } : x));
   };
 
-  const excludeProduct = async (productId: string) => {
-    if (!confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+  const excludeProduct = async (productId: string, askConfirm = true) => {
+    if (askConfirm && !confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+    const product = campProducts.find((x) => x.id === productId) ?? null;
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) { toast.error(error.message); return; }
+    const designId = product
+      ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
+      : null;
+    if (designId) {
+      await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+    }
     setCampProducts((prev) => prev.filter((x) => x.id !== productId));
     toast.success("Izslēgts");
   };
@@ -740,7 +799,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     if (!campaign) return;
     const p = campProducts.find((x) => x.id === productId);
     if (!p) return;
-    if (!p.base_product_id) {
+    const resolvedBaseProductId = resolveBaseProductId(p);
+    if (!resolvedBaseProductId) {
       toast.error("Šim produktam trūkst bāzes atsauces — atjauno 2. soli un ģenerē no jauna.");
       return;
     }
@@ -753,7 +813,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     // Find the base catalog row for print_area
     const { data: baseRow } = await supabase.from("products")
       .select("id, print_area, color_variants")
-      .eq("id", p.base_product_id).maybeSingle();
+      .eq("id", resolvedBaseProductId).maybeSingle();
     if (!baseRow) { toast.error("Bāzes produkts nav atrasts"); return; }
     const printArea = (baseRow.print_area as any) ?? DEFAULT_PRINT_AREA;
     const baseVariants = Array.isArray(baseRow.color_variants) ? (baseRow.color_variants as ColorVariant[]) : [];
@@ -775,7 +835,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             offsetY: p.print_offset_y ?? 0,
             scale: p.print_scale ?? 1,
           });
-          const path = `campaigns/${campaign.id}/${designRow.id}/${p.base_product_id}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
+          const path = `campaigns/${campaign.id}/${designRow.id}/${resolvedBaseProductId}/regen-${Date.now()}-${i}-${slugify(cv.name)}.jpg`;
           const up = await supabase.storage.from("product-images").upload(path, blob, { contentType: "image/jpeg", upsert: true });
           if (up.error) throw up.error;
           const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
@@ -1461,7 +1521,8 @@ function StepDesigns({
           </p>
           <div className="space-y-3">
             {campProducts.map((p: CampProduct) => {
-              const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
+              const resolvedBaseProductId = resolveBaseProductId(p);
+              const baseInfo = catalog.find((c: CatalogProduct) => c.id === resolvedBaseProductId) || null;
               const designRow = resolveDesignForProduct(p, designs);
               const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
               return (
@@ -1686,6 +1747,15 @@ function ProductTuneRow({
     setScale(product.print_scale ?? 1);
     lastSaved.current = { y: product.print_offset_y ?? 0, s: product.print_scale ?? 1 };
   }, [product.id, product.print_offset_y, product.print_scale]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
+    };
+  }, []);
 
   const scheduleSave = (y: number, s: number) => {
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
