@@ -1583,6 +1583,8 @@ function StepBlog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstStarUrl, blogPost?.id]);
 
+  const previewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1` : null;
+
   if (!blogPost) {
     return (
       <div className="space-y-4">
@@ -1611,7 +1613,7 @@ function StepBlog({
             Pārģenerēt
           </Button>
           <Button size="sm" variant="outline" asChild>
-            <a href={`/blog/${blogPost.slug}?preview=1`} target="_blank" rel="noreferrer">
+            <a href={previewHref ?? "#"} target="_blank" rel="noreferrer">
               <Eye className="w-3.5 h-3.5 mr-1.5" /> Priekšskatīt
             </a>
           </Button>
@@ -1652,6 +1654,19 @@ function StepBlog({
         </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
+      {previewHref && (
+        <div className="rounded-md border border-border overflow-hidden bg-background">
+          <div className="px-3 py-2 border-b border-border text-[11px] text-muted-foreground font-body">
+            Tas pats bloga priekšskatījums, ko redz atverot jauno logu.
+          </div>
+          <iframe
+            key={previewHref}
+            src={previewHref}
+            title="Bloga priekšskatījums"
+            className="w-full h-[540px] bg-background"
+          />
+        </div>
+      )}
       <div>
         <label className="text-xs font-semibold">Īss apraksts</label>
         <Textarea rows={2} value={blogPost.excerpt ?? ""} onChange={(e) => setBlogPost({ ...blogPost, excerpt: e.target.value })} />
