@@ -31,6 +31,8 @@ const MODELS = [
   { value: "recraft", label: "Recraft — ilustrācijas" },
   { value: "ideogram", label: "Ideogram — teksts" },
   { value: "flux-pro", label: "Flux Pro — foto-reālistiski" },
+  { value: "flux-schnell", label: "Flux Schnell — ātrs" },
+  { value: "nano-banana", label: "Nano Banana — Gemini" },
   { value: "seedream", label: "Seedream — radoši" },
 ];
 
