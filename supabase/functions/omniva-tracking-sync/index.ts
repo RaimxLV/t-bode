@@ -44,8 +44,14 @@ Deno.serve(async (req) => {
     let updated = 0;
     const trackingResults: Array<{ orderId: string; barcode: string; newStatus: string; isFirstShipped: boolean }> = [];
 
-    // Query each barcode separately (low volume per cron tick).
+    // Omniva OMX rate-limits to ~10 requests/min for barcode-based tracking.
+    // Throttle to ~8 req/min (7.5s between calls) and stop early on 429 — the
+    // next cron tick picks up where we left off.
+    const RATE_DELAY_MS = 7500;
+    let i = 0;
+    let rateLimited = false;
     for (const order of orders) {
+      if (i++ > 0) await new Promise((r) => setTimeout(r, RATE_DELAY_MS));
       try {
         const resp = await fetch(`${OMX_BASE}/${encodeURIComponent(order.omniva_barcode!)}`, {
           method: "GET",
@@ -56,7 +62,8 @@ Deno.serve(async (req) => {
         });
         if (!resp.ok) {
           const errText = await resp.text().catch(() => "");
-          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} content-type=${resp.headers.get("content-type")} body=[${errText.slice(0, 400)}]`);
+          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} ${errText.slice(0, 200)}`);
+          if (resp.status === 429) { rateLimited = true; break; }
           continue;
         }
         const data = await resp.json().catch(() => null) as any;
@@ -108,7 +115,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ updated, total: orders.length }), {
+    return new Response(JSON.stringify({ updated, total: orders.length, rateLimited }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
