@@ -393,7 +393,7 @@ const Admin = () => {
                 <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Svētku iedvesma</TabsTrigger>
+            <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Svētku iedvesmai</TabsTrigger>
             <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
             <TabsTrigger value="designlibrary" className="gap-1.5 text-sm"><ImageIcon className="w-4 h-4" /> Dizainu bibliotēka</TabsTrigger>
