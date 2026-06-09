@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -781,18 +782,24 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   };
 
   const excludeProduct = async (productId: string, askConfirm = true) => {
-    if (askConfirm && !confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+    if (askConfirm) return;
     const product = campProducts.find((x) => x.id === productId) ?? null;
-    const { error } = await supabase.from("products").delete().eq("id", productId);
-    if (error) { toast.error(error.message); return; }
-    const designId = product
-      ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
-      : null;
-    if (designId) {
-      await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+    const busyId = `delete-${productId}`;
+    setBusy(busyId);
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", productId);
+      if (error) { toast.error(error.message); return; }
+      const designId = product
+        ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
+        : null;
+      if (designId) {
+        await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+      }
+      setCampProducts((prev) => prev.filter((x) => x.id !== productId));
+      toast.success("Izslēgts");
+    } finally {
+      setBusy((prev) => prev === busyId ? null : prev);
     }
-    setCampProducts((prev) => prev.filter((x) => x.id !== productId));
-    toast.success("Izslēgts");
   };
 
   const regenerateProductMockups = async (productId: string) => {
