@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { corsHeaders, getOmnivaAuthHeader, escapeXml } from "../_shared/omniva-config.ts";
 
-const OMNIVA_TRACK_URL = "https://edixml.post.ee/epmx/services/messagesService.wsdl";
+const OMNIVA_TRACK_URL = "https://edixml.post.ee/epmx/services/messagesService";
 
 // Maps Omniva event status codes -> our internal status
 function mapOmnivaStatus(eventStatus: string): { tracking: string; orderStatus?: string } {
