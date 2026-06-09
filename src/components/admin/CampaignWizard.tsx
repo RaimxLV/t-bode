@@ -1903,25 +1903,29 @@ function ProductTuneRow({
     <div className="border rounded p-2 sm:p-3 space-y-3">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
         {/* Live preview */}
-        <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none flex items-center justify-center">
+        <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none">
           {canLivePreview ? (
-            <div className="relative inline-block max-w-full max-h-full">
-              <img
-                src={baseImg!}
-                alt=""
-                className="block max-w-full max-h-full pointer-events-none"
-                style={{ width: "auto", height: "auto" }}
-                draggable={false}
-              />
-              {overlayStyle && designUrl && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div
+                className="relative"
+                style={{ width: "100%", height: "100%", aspectRatio: baseAspect, maxWidth: "100%", maxHeight: "100%" }}
+              >
                 <img
-                  src={designUrl}
+                  src={baseImg!}
                   alt=""
-                  style={overlayStyle}
-                  className="object-contain pointer-events-none"
+                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
                   draggable={false}
                 />
-              )}
+                {overlayStyle && designUrl && (
+                  <img
+                    src={designUrl}
+                    alt=""
+                    style={overlayStyle}
+                    className="object-contain pointer-events-none"
+                    draggable={false}
+                  />
+                )}
+              </div>
             </div>
           ) : exactMockupUrl ? (
             <img
