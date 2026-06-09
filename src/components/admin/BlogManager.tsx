@@ -195,7 +195,7 @@ export const BlogManager = () => {
     <div className="space-y-3">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
-          Kampaņu raksti tiek pārvaldīti caur <strong>Autopilot</strong>. Šeit veido manuālus rakstus (kopšanas padomi, veikala jaunumi).
+          <strong>Svētku iedvesmas</strong> rakstus var veidot manuāli vai automātiski caur <strong>Autopilot</strong>. Vāka attēlu vari jebkurā brīdī nomainīt — spied <em>Rediģēt</em>.
         </CardContent>
       </Card>
 
