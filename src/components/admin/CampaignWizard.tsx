@@ -1905,14 +1905,12 @@ function ProductTuneRow({
         {/* Live preview */}
         <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none flex items-center justify-center">
           {canLivePreview ? (
-            <div
-              className="relative"
-              style={{ aspectRatio: baseAspect, maxWidth: "100%", maxHeight: "100%", width: "100%", height: "100%" }}
-            >
+            <div className="relative inline-block max-w-full max-h-full">
               <img
                 src={baseImg!}
                 alt=""
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                className="block max-w-full max-h-full pointer-events-none"
+                style={{ width: "auto", height: "auto" }}
                 draggable={false}
               />
               {overlayStyle && designUrl && (
