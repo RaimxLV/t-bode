@@ -1,16 +1,25 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
-import { corsHeaders, getOmnivaAuthHeader, escapeXml } from "../_shared/omniva-config.ts";
+import { corsHeaders, getOmnivaAuthHeader } from "../_shared/omniva-config.ts";
 
-const OMNIVA_TRACK_URL = "https://edixml.post.ee/epmx/services/messagesService.wsdl";
+// New OMX JSON API (per Omniva OMX API manual section 1.10.2 — barcode-based tracking).
+// LIVE: https://omx.omniva.eu/api/v01/omx/shipments/{barcode}
+const OMX_BASE = "https://omx.omniva.eu/api/v01/omx/shipments";
 
-// Maps Omniva event status codes -> our internal status
-function mapOmnivaStatus(eventStatus: string): { tracking: string; orderStatus?: string } {
-  const s = eventStatus.toUpperCase();
-  if (s.includes("DELIVERED") || s === "21") return { tracking: "delivered", orderStatus: "delivered" };
-  if (s.includes("IN_DELIVERY") || s.includes("OUT_FOR_DELIVERY")) return { tracking: "out_for_delivery", orderStatus: "shipped" };
-  if (s.includes("IN_TRANSIT") || s.includes("ACCEPTED")) return { tracking: "in_transit", orderStatus: "shipped" };
+// Maps an Omniva event (code or name) -> our internal status.
+function mapOmnivaEvent(code: string, name: string): { tracking: string; orderStatus?: string } {
+  const s = `${code} ${name}`.toUpperCase();
+  if (s.includes("DELIVERED")) return { tracking: "delivered", orderStatus: "delivered" };
+  if (s.includes("ARRIVAL_PM") || s.includes("ARRIVED_PM") || s.includes("ARRIVED AT PARCEL") || s.includes("AWAITING")) {
+    return { tracking: "awaiting_pickup", orderStatus: "shipped" };
+  }
+  if (s.includes("OUT_FOR_DELIVERY") || s.includes("OUT FOR DELIVERY") || s.includes("IN_DELIVERY")) {
+    return { tracking: "out_for_delivery", orderStatus: "shipped" };
+  }
+  if (s.includes("ARRIVED") || s.includes("IN_TRANSIT") || s.includes("IN TRANSIT") || s.includes("ACCEPTED") || s.includes("SORTING") || s.includes("DEPARTED")) {
+    return { tracking: "in_transit", orderStatus: "shipped" };
+  }
   if (s.includes("RETURN")) return { tracking: "returned" };
-  return { tracking: s.toLowerCase() };
+  return { tracking: (code || name || "unknown").toLowerCase() };
 }
 
 Deno.serve(async (req) => {
@@ -35,45 +44,47 @@ Deno.serve(async (req) => {
       });
     }
 
-    const customerCode = Deno.env.get("OMNIVA_CUSTOMER_CODE");
-    if (!customerCode) throw new Error("OMNIVA_CUSTOMER_CODE not configured");
-
     let updated = 0;
     const trackingResults: Array<{ orderId: string; barcode: string; newStatus: string; isFirstShipped: boolean }> = [];
 
-    // Omniva supports batch tracking — but we go one-by-one for simplicity & error isolation
+    // Omniva OMX rate-limits to ~10 requests/min for barcode-based tracking.
+    // Throttle to ~8 req/min (7.5s between calls) and stop early on 429 — the
+    // next cron tick picks up where we left off.
+    const RATE_DELAY_MS = 7500;
+    let i = 0;
+    let rateLimited = false;
     for (const order of orders) {
+      if (i++ > 0) await new Promise((r) => setTimeout(r, RATE_DELAY_MS));
       try {
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://service.core.epmx.application.eestipost.ee/xsd">
-  <soapenv:Header/>
-  <soapenv:Body>
-    <xsd:singleAddressbasedPostalParcelEventReportRequest>
-      <partner>${escapeXml(customerCode)}</partner>
-      <barcode>${escapeXml(order.omniva_barcode!)}</barcode>
-    </xsd:singleAddressbasedPostalParcelEventReportRequest>
-  </soapenv:Body>
-</soapenv:Envelope>`;
-
-        const resp = await fetch(OMNIVA_TRACK_URL, {
-          method: "POST",
+        const resp = await fetch(`${OMX_BASE}/${encodeURIComponent(order.omniva_barcode!)}`, {
+          method: "GET",
           headers: {
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": "",
+            "Accept": "application/json",
             "Authorization": getOmnivaAuthHeader(),
           },
-          body: xml,
         });
         if (!resp.ok) {
-          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status}`);
+          const errText = await resp.text().catch(() => "");
+          console.error(`Tracking failed for ${order.omniva_barcode}: ${resp.status} ${errText.slice(0, 200)}`);
+          if (resp.status === 429) { rateLimited = true; break; }
           continue;
         }
-        const respText = await resp.text();
-        // Get the LAST event status (latest)
-        const events = [...respText.matchAll(/<eventStatus[^>]*>([^<]+)<\/eventStatus>/g)];
-        if (events.length === 0) continue;
-        const latestStatus = events[events.length - 1][1];
-        const { tracking, orderStatus } = mapOmnivaStatus(latestStatus);
+        const data = await resp.json().catch(() => null) as any;
+        const events: Array<{ eventCode?: string; eventName?: string; eventDate?: string }> =
+          Array.isArray(data?.events) ? data.events : [];
+        if (events.length === 0) {
+          console.log(`No events for ${order.omniva_barcode}: ${JSON.stringify(data).slice(0, 300)}`);
+          continue;
+        }
+        // Pick the latest event by date when available, otherwise the last element.
+        const sorted = [...events].sort((a, b) => {
+          const ta = a.eventDate ? Date.parse(a.eventDate) : 0;
+          const tb = b.eventDate ? Date.parse(b.eventDate) : 0;
+          return ta - tb;
+        });
+        const latest = sorted[sorted.length - 1];
+        const { tracking, orderStatus } = mapOmnivaEvent(latest.eventCode || "", latest.eventName || "");
+        console.log(`Tracked ${order.omniva_barcode}: event=${latest.eventCode}/${latest.eventName} → ${tracking}`);
 
         if (tracking === order.omniva_tracking_status) continue;
 
@@ -107,7 +118,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ updated, total: orders.length }), {
+    return new Response(JSON.stringify({ updated, total: orders.length, rateLimited }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err: any) {
