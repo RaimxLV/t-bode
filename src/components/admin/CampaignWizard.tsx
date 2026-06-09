@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1874,7 +1874,7 @@ function ProductTuneRow({
   }, [designUrl]);
 
   const canLivePreview = !!designUrl && !!baseImg && !!baseDims && !!designDims;
-  let overlayStyle: React.CSSProperties | null = null;
+  let overlayStyle: CSSProperties | null = null;
   if (canLivePreview && baseDims && designDims) {
     const rw = printArea.w;
     const rh = printArea.h;
