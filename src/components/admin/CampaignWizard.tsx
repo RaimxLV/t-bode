@@ -800,6 +800,33 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     else toast.success("Saglabāts");
   };
 
+  const uploadBlogCover = async (file: File) => {
+    if (!blogPost) return;
+    setBusy("upload-blog-cover");
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `blog/${blogPost.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+
+      const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+      const { error: updErr } = await supabase
+        .from("blog_posts")
+        .update({ cover_image_url: publicUrl })
+        .eq("id", blogPost.id);
+      if (updErr) throw updErr;
+
+      setBlogPost({ ...blogPost, cover_image_url: publicUrl });
+      toast.success("Vāka attēls nomainīts");
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās augšupielādēt vāka attēlu");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const publishAll = async () => {
     if (!campaign || !blogPost) { toast.error("Nav blog raksta"); return; }
     setBusy("publish");
@@ -966,6 +993,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 busy={busy}
                 onRegen={regenBlog}
                 onSave={saveBlog}
+                onUploadCover={uploadBlogCover}
                 onPublish={publishAll}
                 onBack={() => setStep(2)}
                 onClose={closeAndRefresh}
