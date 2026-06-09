@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -1852,12 +1852,78 @@ function ProductTuneRow({
     ?? product.image_url;
   const exactMockupUrl = product.image_url ?? product.color_variants[0]?.images?.[0] ?? baseImg ?? null;
 
+  // Live overlay: render base shirt + design positioned by current slider values, mirroring composeMockup().
+  const printArea = baseInfo?.print_area ?? { x: 0.3, y: 0.25, w: 0.4, h: 0.45 };
+  const [baseDims, setBaseDims] = useState<{ w: number; h: number } | null>(null);
+  const [designDims, setDesignDims] = useState<{ w: number; h: number } | null>(null);
+  useEffect(() => {
+    setBaseDims(null);
+    if (!baseImg) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setBaseDims({ w: img.naturalWidth, h: img.naturalHeight });
+    img.src = baseImg;
+  }, [baseImg]);
+  useEffect(() => {
+    setDesignDims(null);
+    if (!designUrl) return;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setDesignDims({ w: img.naturalWidth, h: img.naturalHeight });
+    img.src = designUrl;
+  }, [designUrl]);
+
+  const canLivePreview = !!designUrl && !!baseImg && !!baseDims && !!designDims;
+  let overlayStyle: CSSProperties | null = null;
+  if (canLivePreview && baseDims && designDims) {
+    const rw = printArea.w;
+    const rh = printArea.h;
+    const aspect = designDims.w / designDims.h;
+    // contain design inside print-area rect (in image-pixel space)
+    const rectPxW = rw * baseDims.w;
+    const rectPxH = rh * baseDims.h;
+    let dwPx = rectPxW;
+    let dhPx = rectPxW / aspect;
+    if (dhPx > rectPxH) { dhPx = rectPxH; dwPx = rectPxH * aspect; }
+    dwPx *= scale; dhPx *= scale;
+    const dxPx = printArea.x * baseDims.w + (rectPxW - dwPx) / 2;
+    const dyPx = printArea.y * baseDims.h + (rectPxH - dhPx) / 2 + offsetY * rectPxH;
+    overlayStyle = {
+      position: "absolute",
+      left: `${(dxPx / baseDims.w) * 100}%`,
+      top: `${(dyPx / baseDims.h) * 100}%`,
+      width: `${(dwPx / baseDims.w) * 100}%`,
+      height: `${(dhPx / baseDims.h) * 100}%`,
+      pointerEvents: "none",
+    };
+  }
+  const baseAspect = baseDims ? `${baseDims.w} / ${baseDims.h}` : undefined;
+
   return (
     <div className="border rounded p-2 sm:p-3 space-y-3">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
         {/* Live preview */}
-        <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none">
-          {exactMockupUrl ? (
+        <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none flex items-center justify-center">
+          {canLivePreview ? (
+            <div className="relative inline-block max-w-full max-h-full">
+              <img
+                src={baseImg!}
+                alt=""
+                className="block max-w-full max-h-full pointer-events-none"
+                style={{ width: "auto", height: "auto" }}
+                draggable={false}
+              />
+              {overlayStyle && designUrl && (
+                <img
+                  src={designUrl}
+                  alt=""
+                  style={overlayStyle}
+                  className="object-contain pointer-events-none"
+                  draggable={false}
+                />
+              )}
+            </div>
+          ) : exactMockupUrl ? (
             <img
               src={exactMockupUrl}
               alt=""
