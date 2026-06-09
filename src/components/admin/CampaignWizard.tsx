@@ -1793,10 +1793,10 @@ function ProductTuneRow({
             <div
               className="absolute border border-dashed border-primary/60 pointer-events-none"
               style={{
-                left: `${printArea.x * 100}%`,
-                top: `${printArea.y * 100}%`,
-                width: `${printArea.w * 100}%`,
-                height: `${printArea.h * 100}%`,
+                left: `${paX * 100}%`,
+                top: `${paY * 100}%`,
+                width: `${paW * 100}%`,
+                height: `${paH * 100}%`,
               }}
             />
             {/* Design overlay */}
