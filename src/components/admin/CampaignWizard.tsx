@@ -902,8 +902,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       content: blogPost.content, cover_image_url: blogPost.cover_image_url,
     }).eq("id", blogPost.id);
     setBusy(null);
-    if (error) toast.error(error.message);
-    else toast.success("Saglabāts");
+    if (error) {
+      toast.error(error.message);
+      throw error;
+    }
+    toast.success("Saglabāts");
   };
 
   const uploadBlogCover = async (file: File) => {
@@ -1584,6 +1587,7 @@ function StepBlog({
   }, [firstStarUrl, blogPost?.id]);
 
   const previewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1` : null;
+  const embeddedPreviewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1&embed=1` : null;
 
   if (!blogPost) {
     return (
@@ -1654,14 +1658,14 @@ function StepBlog({
         </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
-      {previewHref && (
+      {embeddedPreviewHref && (
         <div className="rounded-md border border-border overflow-hidden bg-background">
           <div className="px-3 py-2 border-b border-border text-[11px] text-muted-foreground font-body">
             Tas pats bloga priekšskatījums, ko redz atverot jauno logu.
           </div>
           <iframe
-            key={previewHref}
-            src={previewHref}
+            key={embeddedPreviewHref}
+            src={embeddedPreviewHref}
             title="Bloga priekšskatījums"
             className="w-full h-[540px] bg-background"
           />
