@@ -399,6 +399,7 @@ const Admin = () => {
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
             <TabsTrigger value="designlibrary" className="gap-1.5 text-sm"><ImageIcon className="w-4 h-4" /> Dizainu bibliotēka</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="omnivaSync" className="gap-1.5 text-sm"><Truck className="w-4 h-4" /> Omniva sync</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
