@@ -205,6 +205,12 @@ const ProductDetail = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
+        {/* Safe branded title while product data is loading to prevent
+            crawlers / browsers seeing an empty <title> flash. */}
+        <Seo
+          title={i18n.language === "en" ? "Loading product…" : "Ielādē produktu…"}
+          noindex
+        />
         <Navbar />
         <main className="flex-1 pt-24 pb-16">
           <div className="container mx-auto px-4">
@@ -222,6 +228,10 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col">
+        <Seo
+          title={i18n.language === "en" ? "Product not found" : "Produkts nav atrasts"}
+          noindex
+        />
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
