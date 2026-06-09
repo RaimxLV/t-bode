@@ -79,6 +79,10 @@ function resolveFalEndpoint(opts: {
   mode: GenerationMode;
   model?: FalModelOverride;
 }): string {
+  if (opts.mode === "text") {
+    return opts.model === "recraft" ? "fal-ai/recraft-v3" : "fal-ai/flux-pro/v1.1";
+  }
+
   switch (opts.model) {
     case "ideogram":
       return "fal-ai/ideogram/v3";
@@ -95,9 +99,7 @@ function resolveFalEndpoint(opts: {
       return "fal-ai/recraft-v3";
     case "auto":
     default:
-      // For text: flux-pro/v1.1 — highest-quality typography with reliable
-      // Latvian diacritic rendering. For illustration: recraft-v3.
-      return opts.mode === "text" ? "fal-ai/flux-pro/v1.1" : "fal-ai/recraft-v3";
+      return "fal-ai/recraft-v3";
   }
 }
 
@@ -142,12 +144,27 @@ function resolveGenerationMode(opts: {
   slogan?: string;
   model?: "auto" | "ideogram" | "recraft" | "flux-pro" | "flux-schnell" | "nano-banana" | "seedream";
 }): GenerationMode {
-  if (opts.model === "ideogram") return "text";
-  if (opts.model && opts.model !== "auto") return "illustration";
+  const textCue = /\b(text|typography|type|lettering|slogan|quote|headline|caption|words?)\b/i;
   const lvRe = /[āēīōūčšžķļņģĀĒĪŌŪČŠŽĶĻŅĢ]/;
   if ((opts.slogan || "").trim()) return "text";
+  if (textCue.test(opts.prompt)) return "text";
   if (lvRe.test(opts.prompt)) return "text";
   return "illustration";
+}
+
+function getTypographyVariation(seed?: string | number): string {
+  const variants = [
+    "modern minimal sans-serif lettering with crisp geometry and clean hierarchy",
+    "elegant expressive script lettering with confident flowing strokes",
+    "athletic block serif lettering with bold collegiate structure",
+    "creative illustrated lettering interwoven with the graphic motif",
+  ];
+
+  if (seed === undefined || seed === null) return variants[0];
+  const source = String(seed);
+  let hash = 0;
+  for (let i = 0; i < source.length; i++) hash = (hash * 31 + source.charCodeAt(i)) >>> 0;
+  return variants[hash % variants.length];
 }
 
 function buildGatewayPrompt(opts: {
@@ -166,15 +183,16 @@ function buildGatewayPrompt(opts: {
     .join(", ");
   const extras = [
     opts.mode === "text"
-      ? "Typography is critical. If text appears, render every character exactly as written, preserve Latvian diacritics perfectly, do not paraphrase, do not translate, do not add extra letters, and keep the lettering fully legible."
+      ? "Typography is critical. If text appears, render every character exactly as written, preserve Latvian diacritics perfectly, do not paraphrase, do not translate, do not add extra letters, keep the lettering fully legible, and treat the result as isolated apparel artwork rather than a poster, paper print, or framed composition."
       : "No accidental text, no gibberish letters, no watermark, no signature.",
     opts.transparentBg
-      ? "Final asset must have a truly transparent background with no white box, no matte, no halo, no edge shadow, and no background objects."
-      : "Use a clean plain background only if absolutely necessary.",
+      ? "Final asset must have a truly transparent background with no white box, no matte, no halo, no edge shadow, no drop shadow, and no background objects."
+      : "If a background is unavoidable, use only a solid pure white background for clean masking. No poster background, no paper texture, no paper edges, and no framed scene.",
     `Visual style direction: ${styleSafe}.`,
     palette ? `Use this restrained print palette when possible: ${palette}.` : "Use a disciplined screen-print palette suited for apparel.",
     opts.customStyleId?.trim() ? `Honor this internal style reference when useful: ${opts.customStyleId.trim()}.` : "",
-    "The output must be a premium apparel print design, centered, isolated, crisp, production-ready, with clean edges and strong silhouette.",
+    "The output must be an isolated clean graphic, crisp screen-print style for apparel, centered, production-ready, with clean edges and strong silhouette.",
+    "NEGATIVE: no border, no poster background, no paper texture, no paper edges, no drop shadows, no framed image, no frames, no photo-realistic clutter.",
   ].filter(Boolean).join(" ");
   // Per fal.ai OpenAPI schemas:
   //   - recraft-v3: maxLength = 1000 (HARD LIMIT, returns 422 above)
@@ -330,7 +348,7 @@ function buildPrompt(
   rawPrompt: string,
   style: string,
   transparent: boolean,
-  opts: { slogan?: string; fitInFrame?: boolean } = {},
+  opts: { slogan?: string; fitInFrame?: boolean; typographyVariant?: string } = {},
 ): string {
   const isVector = style.startsWith("vector_illustration");
   const isIllustration = style.startsWith("digital_illustration");
@@ -342,6 +360,7 @@ function buildPrompt(
     .trim()
     .slice(0, 320);
   const slogan = opts.slogan?.trim().slice(0, 100);
+  const typographyVariant = opts.typographyVariant?.trim();
   const bgHint = transparent
     ? "Isolated subject on a fully transparent background, no white box, no halo, no edge shadow, no drop shadow."
     : "Centered on a SOLID PURE WHITE background (#FFFFFF) for clean masking. No border, no paper texture, no paper edges, no frame, no vignette, no drop shadow.";
@@ -355,9 +374,10 @@ function buildPrompt(
   // ===== Slogan / typography-led design =====
   if (slogan) {
     const out =
-      `Typographic poster artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
+      `Typographic apparel artwork. The ONLY text in the image, spelled exactly: "${slogan}". ` +
       `MAXIMALLY ARTISTIC custom hand-lettering — NEVER use generic, standard, default or system fonts (no Helvetica, Arial, Inter, Roboto, Times, Impact, Bebas). ` +
-      `Pick a daring expressive lettering style: blackletter gothic, baroque flourished script, art-nouveau Mucha lettering, psychedelic 70s warped type, brutalist woodcut, distressed punk stencil, vintage Latvian folk ornament type, art-deco geometric, surreal melting type, woodblock circus poster, riso-grain grunge, or hand-carved engraving. Choose ONE style that fits the mood and execute it with virtuoso craftsmanship — irregular weights, ligatures, custom swashes, decorative terminals, texture, character. Letters stacked in bold hierarchy, fills most of canvas. ` +
+      `Use this typography direction for this specific variation: ${typographyVariant || "daring expressive custom lettering with strong hierarchy"}. ` +
+      `Pick a daring expressive lettering style: blackletter gothic, baroque flourished script, art-nouveau lettering, psychedelic 70s warped type, brutalist woodcut, distressed punk stencil, vintage Latvian folk ornament type, art-deco geometric, surreal melting type, riso-grain grunge, or hand-carved engraving. Choose ONE style that fits the mood and execute it with virtuoso craftsmanship — irregular weights, ligatures, custom swashes, decorative terminals, texture, character. Letters stacked in bold hierarchy and integrated as a clean shirt graphic. ` +
       `Decorative motif behind the text: ${base}. ` +
       `Artisan screen-print, 2–4 disciplined colors. ${bgHint} ${frameRule} ${qualityRule} ` +
       `Do NOT add any other words, banners, ribbons with text, signatures or watermarks — only the exact phrase "${slogan}".`;
@@ -478,7 +498,12 @@ Deno.serve(async (req) => {
           ? body.slogan_override
           : ((existing as any).slogan ?? "")
       ).toString().trim();
-      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
+      const typographyVariant = slogan ? getTypographyVariation(existing?.id ?? rawPrompt) : undefined;
+      const finalPrompt = buildPrompt(rawPrompt, useStyle, useTransparent, {
+        slogan,
+        fitInFrame: campFitInFrame,
+        typographyVariant,
+      });
 
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
@@ -547,7 +572,12 @@ Deno.serve(async (req) => {
     for (let i = 0; i < ideas.length; i++) {
       const idea = ideas[i];
       const slogan = (idea.slogan ?? "").trim();
-      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, { slogan, fitInFrame: campFitInFrame });
+      const typographyVariant = slogan ? getTypographyVariation(`${campaign_id}:${i}:${idea.title}`) : undefined;
+      const finalPrompt = buildPrompt(idea.prompt, useStyle, useTransparent, {
+        slogan,
+        fitInFrame: campFitInFrame,
+        typographyVariant,
+      });
       try {
         const { bytes, contentType, extension } = await generateDesignImage({
           apiKey: FAL_KEY, prompt: finalPrompt, style: useStyle,
