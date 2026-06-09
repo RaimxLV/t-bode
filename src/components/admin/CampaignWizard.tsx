@@ -92,6 +92,7 @@ type CampProduct = {
   print_offset_y: number | null;
   print_scale: number | null;
   base_product_id: string | null;
+  design_id?: string | null;
 };
 
 type BlogPost = {
@@ -273,7 +274,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
       // Campaign products
       const { data: cpRaw } = await supabase.from("products")
-        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id")
+        .select("id, name, name_lv, image_url, color_variants, print_offset_y, print_scale, base_product_id, design_id")
         .eq("campaign_id", campaignId)
         .order("created_at");
       setCampProducts(((cpRaw as any[]) ?? []).map((p) => ({
@@ -657,6 +658,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
             image_url: variants[0].images[0], in_stock: true, is_draft: true, status: "draft",
             holiday_id: campaign.holiday_id, campaign_id: campaign.id,
             base_product_id: bp.id,
+            design_id: design.id,
             print_area: printArea,
           };
           const { data: prod, error } = await supabase.from("products").insert(payload).select("id").maybeSingle();
@@ -723,7 +725,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       return;
     }
     // Find the design assigned to this product (or first starred)
-    let designRow = designs.find((d) => d.product_id === productId && d.image_url);
+    let designRow = designs.find((d) => d.id === (p as any).design_id && d.image_url);
+    if (!designRow) designRow = designs.find((d) => d.product_id === productId && d.image_url);
     if (!designRow) designRow = designs.find((d) => d.is_primary && d.image_url);
     if (!designRow?.image_url) { toast.error("Nav saistīta dizaina"); return; }
     const designSigned = signedUrls[designRow.image_url];
@@ -1442,6 +1445,7 @@ function StepDesigns({
             {campProducts.map((p: CampProduct) => {
               const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
               const designRow =
+                designs.find((d: DesignRow) => d.id === (p as any).design_id && d.image_url) ||
                 designs.find((d: DesignRow) => d.product_id === p.id && d.image_url) ||
                 designs.find((d: DesignRow) => d.is_primary && d.image_url);
               const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
