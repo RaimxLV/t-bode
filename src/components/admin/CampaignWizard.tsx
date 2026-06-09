@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -780,19 +781,24 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, ...patch } : x));
   };
 
-  const excludeProduct = async (productId: string, askConfirm = true) => {
-    if (askConfirm && !confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+  const excludeProduct = async (productId: string, _askConfirm = true) => {
     const product = campProducts.find((x) => x.id === productId) ?? null;
-    const { error } = await supabase.from("products").delete().eq("id", productId);
-    if (error) { toast.error(error.message); return; }
-    const designId = product
-      ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
-      : null;
-    if (designId) {
-      await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+    const busyId = `delete-${productId}`;
+    setBusy(busyId);
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", productId);
+      if (error) { toast.error(error.message); return; }
+      const designId = product
+        ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
+        : null;
+      if (designId) {
+        await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+      }
+      setCampProducts((prev) => prev.filter((x) => x.id !== productId));
+      toast.success("Izslēgts");
+    } finally {
+      setBusy((prev) => prev === busyId ? null : prev);
     }
-    setCampProducts((prev) => prev.filter((x) => x.id !== productId));
-    toast.success("Izslēgts");
   };
 
   const regenerateProductMockups = async (productId: string) => {
@@ -1731,15 +1737,17 @@ function ProductTuneRow({
   onUpdatePrintAdj: (id: string, patch: { print_offset_y?: number; print_scale?: number }) => void;
   onRegenerate: (id: string) => void;
   onRemoveColor: (id: string, name: string) => void;
-  onExcludeProduct: (id: string) => void;
+  onExcludeProduct: (id: string) => Promise<void>;
   onSetCoverColor: (id: string, name: string) => void;
 }) {
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
   const [scale, setScale] = useState<number>(product.print_scale ?? 1);
   const [autoSaving, setAutoSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const saveTimer = useRef<number | null>(null);
   const lastSaved = useRef<{ y: number; s: number }>({ y: offsetY, s: scale });
+  const deleting = busyKey === `delete-${product.id}`;
 
   // Reset local state when product changes (e.g. after regen reload)
   useEffect(() => {
@@ -1775,6 +1783,7 @@ function ProductTuneRow({
   // Flush save+regen immediately on pointer release so user adjustments aren't lost
   // if they move on before the debounce timer fires.
   const flushSave = async () => {
+    if (deleting) return;
     if (saveTimer.current) { window.clearTimeout(saveTimer.current); saveTimer.current = null; }
     if (lastSaved.current.y === offsetY && lastSaved.current.s === scale) return;
     setAutoSaving(true);
@@ -1788,14 +1797,25 @@ function ProductTuneRow({
   };
 
   const updateOffset = (v: number) => {
+    if (deleting) return;
     const clamped = Math.max(-0.3, Math.min(0.3, v));
     setOffsetY(clamped);
     scheduleSave(clamped, scale);
   };
   const updateScale = (v: number) => {
+    if (deleting) return;
     const clamped = Math.max(0.4, Math.min(1.4, v));
     setScale(clamped);
     scheduleSave(offsetY, clamped);
+  };
+
+  const confirmDelete = async () => {
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    setDeleteOpen(false);
+    await onExcludeProduct(product.id);
   };
 
   // Sliders only — touch/pinch/wheel intentionally disabled to avoid accidental drag while scrolling.
@@ -1966,8 +1986,8 @@ function ProductTuneRow({
           >
             {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
           </Button>
-          <Button size="sm" variant="ghost" className="text-destructive" onClick={() => onExcludeProduct(product.id)} title="Izslēgt no kampaņas">
-            <Trash2 className="w-3.5 h-3.5" />
+          <Button size="sm" variant="ghost" className="text-destructive" disabled={deleting} onClick={() => setDeleteOpen(true)} title="Izslēgt no kampaņas">
+            {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </Button>
         </div>
       </div>
@@ -2018,6 +2038,25 @@ function ProductTuneRow({
           <Loader2 className="w-3 h-3 animate-spin" /> Atjauno visu krāsu mockups…
         </p>
       )}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Izslēgt šo produktu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Produkta melnraksts tiks dzēsts no šīs kampaņas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Atcelt</AlertDialogCancel>
+            <AlertDialogAction disabled={deleting} onClick={(e) => {
+              e.preventDefault();
+              void confirmDelete();
+            }}>
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Dzēst"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
