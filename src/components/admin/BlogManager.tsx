@@ -150,7 +150,7 @@ export const BlogManager = () => {
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   const manualPosts = posts.filter((p) => !p.campaign_id);
-  const archivePosts = posts.filter((p) => p.status === "published");
+  const archivePosts = posts.filter((p) => p.status === "published" && !p.campaign_id);
 
   const renderList = (items: Post[], emptyMsg: string) => items.length === 0 ? (
     <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">{emptyMsg}</CardContent></Card>
@@ -208,7 +208,7 @@ export const BlogManager = () => {
     <div className="space-y-3">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
-          <strong>Svētku iedvesmas</strong> rakstus var veidot manuāli vai automātiski caur <strong>Autopilot</strong>. Vāka attēlu vari jebkurā brīdī nomainīt — spied <em>Rediģēt</em>.
+          <strong>Svētku iedvesmas</strong> sadaļā rediģē tikai manuāli veidotos rakstus. Autopilot kampaņu raksti tiek rediģēti pašā <strong>Autopilot</strong> vedņa 3. solī, kur tagad ir arī vāka attēla maiņa.
         </CardContent>
       </Card>
 
