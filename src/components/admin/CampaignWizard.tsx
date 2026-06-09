@@ -781,8 +781,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     setCampProducts((prev) => prev.map((x) => x.id === productId ? { ...x, ...patch } : x));
   };
 
-  const excludeProduct = async (productId: string, askConfirm = true) => {
-    if (askConfirm) return;
+  const excludeProduct = async (productId: string, _askConfirm = true) => {
     const product = campProducts.find((x) => x.id === productId) ?? null;
     const busyId = `delete-${productId}`;
     setBusy(busyId);
@@ -1738,7 +1737,7 @@ function ProductTuneRow({
   onUpdatePrintAdj: (id: string, patch: { print_offset_y?: number; print_scale?: number }) => void;
   onRegenerate: (id: string) => void;
   onRemoveColor: (id: string, name: string) => void;
-  onExcludeProduct: (id: string) => void;
+  onExcludeProduct: (id: string) => Promise<void>;
   onSetCoverColor: (id: string, name: string) => void;
 }) {
   const [offsetY, setOffsetY] = useState<number>(product.print_offset_y ?? 0);
