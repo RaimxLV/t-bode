@@ -1463,7 +1463,7 @@ function StepDesigns({
 function StepBlog({
   campaign, blogPost, setBlogPost, designs, signedUrls, campProductsCount,
   expiresAt, setExpiresAt, addToCollection, setAddToCollection,
-  busy, onRegen, onSave, onPublish, onBack, onClose,
+  busy, onRegen, onSave, onUploadCover, onPublish, onBack, onClose,
 }: any) {
   // Auto-suggest cover from first ★ design
   const firstStarUrl = useMemo(() => {
@@ -1524,8 +1524,27 @@ function StepBlog({
         </div>
       </div>
       <div>
-        <label className="text-xs font-semibold">Vāka attēla URL</label>
-        <Input value={blogPost.cover_image_url ?? ""} onChange={(e) => setBlogPost({ ...blogPost, cover_image_url: e.target.value })} />
+        <label className="text-xs font-semibold">Vāka attēls</label>
+        <div className="mt-1 flex flex-col sm:flex-row gap-2">
+          <Input value={blogPost.cover_image_url ?? ""} onChange={(e) => setBlogPost({ ...blogPost, cover_image_url: e.target.value })} />
+          <label
+            className={`inline-flex items-center gap-1.5 shrink-0 h-10 px-3 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer ${busy === "upload-blog-cover" ? "opacity-60 pointer-events-none" : ""}`}
+          >
+            {busy === "upload-blog-cover" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {blogPost.cover_image_url ? "Nomainīt" : "Augšupielādēt"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={busy === "upload-blog-cover"}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadCover(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
       <div>
