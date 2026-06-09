@@ -40,6 +40,7 @@ const Terms = lazy(() => import("./pages/Terms.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
+const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -162,6 +163,7 @@ const App = () => {
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/admin" element={<Admin />} />
                         <Route path="/blog/:slug" element={<BlogPost />} />
+                        <Route path="/blog" element={<BlogIndex />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
