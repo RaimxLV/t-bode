@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, FileText, Eye, Trash2, Send, Save, X, Plus, Sparkles } from "lucide-react";
+import { Loader2, FileText, Eye, Trash2, Send, Save, X, Plus, Sparkles, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { RichTextEditor } from "./RichTextEditor";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -40,6 +40,7 @@ export const BlogManager = () => {
   const [busy, setBusy] = useState<string | null>(null);
   const [editing, setEditing] = useState<Post | null>(null);
   const [tab, setTab] = useState<"manual" | "archive">("manual");
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -87,6 +88,26 @@ export const BlogManager = () => {
     setBusy(null);
     if (error) toast.error(error.message);
     else { toast.success("Saglabāts"); setEditing(null); load(); }
+  };
+
+  const uploadCover = async (file: File) => {
+    if (!editing) return;
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `blog/${editing.id || "new"}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+      setEditing({ ...editing, cover_image_url: pub.publicUrl });
+      toast.success("Vāka attēls augšupielādēts");
+    } catch (e: any) {
+      toast.error(e?.message || "Augšupielāde neizdevās");
+    } finally {
+      setUploadingCover(false);
+    }
   };
 
   const publish = async (p: Post) => {
@@ -139,11 +160,9 @@ export const BlogManager = () => {
               <p className="text-[11px] text-muted-foreground font-mono">/{p.slug}</p>
               {p.excerpt && <p className="text-xs sm:text-sm text-muted-foreground font-body line-clamp-2">{p.excerpt}</p>}
               <div className="flex flex-wrap gap-1.5 pt-2">
-                {!p.campaign_id && (
-                  <Button size="sm" variant="outline" onClick={() => setEditing(p)} className="gap-1.5">
-                    <FileText className="w-3.5 h-3.5" /> Rediģēt
-                  </Button>
-                )}
+                <Button size="sm" variant="outline" onClick={() => setEditing(p)} className="gap-1.5">
+                  <FileText className="w-3.5 h-3.5" /> Rediģēt
+                </Button>
                 <Button size="sm" variant="outline" asChild className="gap-1.5">
                   <a href={`/blog/${p.slug}${p.status !== "published" ? "?preview=1" : ""}`} target="_blank" rel="noreferrer">
                     <Eye className="w-3.5 h-3.5" /> {p.status === "published" ? "Skatīt" : "Priekšskatīt"}
@@ -176,7 +195,7 @@ export const BlogManager = () => {
     <div className="space-y-3">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
-          Kampaņu raksti tiek pārvaldīti caur <strong>Autopilot</strong>. Šeit veido manuālus rakstus (kopšanas padomi, veikala jaunumi).
+          <strong>Svētku iedvesmas</strong> rakstus var veidot manuāli vai automātiski caur <strong>Autopilot</strong>. Vāka attēlu vari jebkurā brīdī nomainīt — spied <em>Rediģēt</em>.
         </CardContent>
       </Card>
 
@@ -202,7 +221,7 @@ export const BlogManager = () => {
           {editing && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display">{editing.id ? "Rediģēt rakstu" : "Jauns raksts"}</DialogTitle>
+                <DialogTitle className="font-display">{editing.id ? "Rediģēt iedvesmas rakstu" : "Jauns iedvesmas raksts"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 <div>
@@ -214,9 +233,50 @@ export const BlogManager = () => {
                   <Input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold">Vāka attēla URL</label>
-                  <Input value={editing.cover_image_url ?? ""} onChange={(e) => setEditing({ ...editing, cover_image_url: e.target.value })} />
-                  {editing.cover_image_url && <img src={editing.cover_image_url} alt="" className="mt-2 max-h-40 rounded border" />}
+                  <label className="text-xs font-semibold">Vāka attēls</label>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                    <Input
+                      placeholder="URL vai augšupielādē..."
+                      value={editing.cover_image_url ?? ""}
+                      onChange={(e) => setEditing({ ...editing, cover_image_url: e.target.value })}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingCover}
+                      onClick={() => document.getElementById("blog-cover-upload")?.click()}
+                      className="gap-1.5 shrink-0"
+                    >
+                      {uploadingCover ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      Augšupielādēt
+                    </Button>
+                    <input
+                      id="blog-cover-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadCover(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                  {editing.cover_image_url && (
+                    <div className="mt-2 relative inline-block">
+                      <img src={editing.cover_image_url} alt="" className="max-h-40 rounded border bg-muted" />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="absolute top-1 right-1 h-6 w-6 p-0 bg-background/80"
+                        onClick={() => setEditing({ ...editing, cover_image_url: "" })}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-semibold">Īss apraksts</label>

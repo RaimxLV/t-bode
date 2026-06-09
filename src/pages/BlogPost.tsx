@@ -135,7 +135,9 @@ const BlogPost = () => {
         ) : (
           <article>
             {post.cover_image_url && (
-              <img src={post.cover_image_url} alt={post.title} className="w-full aspect-video object-cover rounded-lg mb-6" />
+              <div className="w-full aspect-video rounded-lg mb-6 bg-muted flex items-center justify-center overflow-hidden">
+                <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-contain" />
+              </div>
             )}
             <h1 className="font-display text-3xl sm:text-4xl mb-3">{post.title}</h1>
             {post.published_at && (
