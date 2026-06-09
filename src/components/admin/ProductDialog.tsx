@@ -95,7 +95,9 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     }
   }
 
-  const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  // Use shared slugify util — handles Latvian diacritics (ā→a, š→s, …)
+  // so admin-generated slugs match the URL convention.
+  const generateSlug = (name: string) => slugifyShared(name);
 
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
