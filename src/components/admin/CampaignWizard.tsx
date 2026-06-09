@@ -1462,10 +1462,7 @@ function StepDesigns({
           <div className="space-y-3">
             {campProducts.map((p: CampProduct) => {
               const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
-              const designRow =
-                designs.find((d: DesignRow) => d.id === (p as any).design_id && d.image_url) ||
-                designs.find((d: DesignRow) => d.product_id === p.id && d.image_url) ||
-                designs.find((d: DesignRow) => d.is_primary && d.image_url);
+              const designRow = resolveDesignForProduct(p, designs);
               const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
               return (
                 <ProductTuneRow
