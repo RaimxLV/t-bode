@@ -85,18 +85,19 @@ function resolveFalEndpoint(opts: {
     case "flux-pro":
       return "fal-ai/flux-pro/v1.1";
     case "flux-schnell":
-      return "fal-ai/flux/schnell";
+      // Schnell is too weak for typography; if the prompt needs text, escalate to flux-pro.
+      return opts.mode === "text" ? "fal-ai/flux-pro/v1.1" : "fal-ai/flux/schnell";
     case "nano-banana":
-      return "fal-ai/flux/schnell";
+      return opts.mode === "text" ? "fal-ai/flux-pro/v1.1" : "fal-ai/flux/schnell";
     case "seedream":
-      return "fal-ai/bytedance/seedream/v3/text-to-image";
+      return opts.mode === "text" ? "fal-ai/flux-pro/v1.1" : "fal-ai/bytedance/seedream/v3/text-to-image";
     case "recraft":
       return "fal-ai/recraft-v3";
     case "auto":
     default:
-      // Ideogram v2 renders typography (incl. non-English text with diacritics)
-      // far more reliably than recraft-v3. Recraft is kept for pure illustration.
-      return opts.mode === "text" ? "fal-ai/ideogram/v3" : "fal-ai/recraft-v3";
+      // For text: flux-pro/v1.1 — highest-quality typography with reliable
+      // Latvian diacritic rendering. For illustration: recraft-v3.
+      return opts.mode === "text" ? "fal-ai/flux-pro/v1.1" : "fal-ai/recraft-v3";
   }
 }
 
