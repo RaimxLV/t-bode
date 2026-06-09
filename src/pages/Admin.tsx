@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon, Image as ImageIcon } from "lucide-react";
+import { Plus, ArrowLeft, Brush, Package, ShoppingBag, HelpCircle, AlertTriangle, Layers, Search, UserCheck, Trash2, FolderTree, Euro, Clock, BarChart3, Users, MoreHorizontal, Settings as SettingsIcon, Mail, Inbox, Tag, FileSpreadsheet, Wand2, FileEdit, Eye, Sparkles, FileText, FileEdit as FileEditIcon, Image as ImageIcon, Truck } from "lucide-react";
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +41,7 @@ const PrintZonesManager = lazy(() => import("@/components/admin/PrintZonesManage
 const DesignsToProducts = lazy(() => import("@/components/admin/DesignsToProducts").then(m => ({ default: m.DesignsToProducts })));
 const DraftDesignsGallery = lazy(() => import("@/components/admin/DraftDesignsGallery").then(m => ({ default: m.DraftDesignsGallery })));
 const DesignLibrary = lazy(() => import("@/components/admin/bulk/DesignLibrary").then(m => ({ default: m.DesignLibrary })));
+const OmnivaSyncLogs = lazy(() => import("@/components/admin/OmnivaSyncLogs").then(m => ({ default: m.OmnivaSyncLogs })));
 // BulkStudio removed from admin per request
 
 const TabFallback = () => (
@@ -398,6 +399,7 @@ const Admin = () => {
             <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
             <TabsTrigger value="designlibrary" className="gap-1.5 text-sm"><ImageIcon className="w-4 h-4" /> Dizainu bibliotēka</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
+            <TabsTrigger value="omnivaSync" className="gap-1.5 text-sm"><Truck className="w-4 h-4" /> Omniva sync</TabsTrigger>
           </TabsList>
 
           <TabsContent value="design">
@@ -564,6 +566,12 @@ const Admin = () => {
             ) : (
               renderProductGrid(draftProducts, false)
             )}
+          </TabsContent>
+
+          <TabsContent value="omnivaSync">
+            <Suspense fallback={<TabFallback />}>
+              <OmnivaSyncLogs />
+            </Suspense>
           </TabsContent>
 
         </Tabs>

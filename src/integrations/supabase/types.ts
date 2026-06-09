@@ -822,6 +822,42 @@ export type Database = {
         }
         Relationships: []
       }
+      omniva_sync_logs: {
+        Row: {
+          alert_sent: boolean
+          deliveries: Json
+          error_count: number
+          errors: Json
+          id: string
+          ran_at: string
+          rate_limited: boolean
+          total: number
+          updated: number
+        }
+        Insert: {
+          alert_sent?: boolean
+          deliveries?: Json
+          error_count?: number
+          errors?: Json
+          id?: string
+          ran_at?: string
+          rate_limited?: boolean
+          total?: number
+          updated?: number
+        }
+        Update: {
+          alert_sent?: boolean
+          deliveries?: Json
+          error_count?: number
+          errors?: Json
+          id?: string
+          ran_at?: string
+          rate_limited?: boolean
+          total?: number
+          updated?: number
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           base_unit_price: number
