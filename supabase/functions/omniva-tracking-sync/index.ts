@@ -62,7 +62,10 @@ Deno.serve(async (req) => {
         const data = await resp.json().catch(() => null) as any;
         const events: Array<{ eventCode?: string; eventName?: string; eventDate?: string }> =
           Array.isArray(data?.events) ? data.events : [];
-        if (events.length === 0) continue;
+        if (events.length === 0) {
+          console.log(`No events for ${order.omniva_barcode}: ${JSON.stringify(data).slice(0, 300)}`);
+          continue;
+        }
         // Pick the latest event by date when available, otherwise the last element.
         const sorted = [...events].sort((a, b) => {
           const ta = a.eventDate ? Date.parse(a.eventDate) : 0;
@@ -71,6 +74,7 @@ Deno.serve(async (req) => {
         });
         const latest = sorted[sorted.length - 1];
         const { tracking, orderStatus } = mapOmnivaEvent(latest.eventCode || "", latest.eventName || "");
+        console.log(`Tracked ${order.omniva_barcode}: event=${latest.eventCode}/${latest.eventName} → ${tracking}`);
 
         if (tracking === order.omniva_tracking_status) continue;
 
