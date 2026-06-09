@@ -9,6 +9,9 @@ const OMX_BASE = "https://omx.omniva.eu/api/v01/omx/shipments";
 function mapOmnivaEvent(code: string, name: string): { tracking: string; orderStatus?: string } {
   const s = `${code} ${name}`.toUpperCase();
   if (s.includes("DELIVERED")) return { tracking: "delivered", orderStatus: "delivered" };
+  if (s.includes("ARRIVAL_PM") || s.includes("ARRIVED_PM") || s.includes("ARRIVED AT PARCEL") || s.includes("AWAITING")) {
+    return { tracking: "awaiting_pickup", orderStatus: "shipped" };
+  }
   if (s.includes("OUT_FOR_DELIVERY") || s.includes("OUT FOR DELIVERY") || s.includes("IN_DELIVERY")) {
     return { tracking: "out_for_delivery", orderStatus: "shipped" };
   }
