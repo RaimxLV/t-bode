@@ -83,7 +83,7 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {!isEmbeddedPreview && <Navbar />}
-      {post && (
+      {post && !isEmbeddedPreview && (
         <Seo
           title={post.title}
           description={post.excerpt || post.title}
