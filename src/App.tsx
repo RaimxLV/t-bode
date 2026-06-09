@@ -1,7 +1,8 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
+import { resolveProductSlug } from "@/lib/slug";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -23,6 +24,17 @@ import Index from "./pages/Index.tsx";
 const LegacyRedirect = ({ to }: { to: string }) => {
   const { search } = useLocation();
   return <Navigate to={`${to}${search}`} replace />;
+};
+
+// Redirect old /product/:slug URLs (English slugs) to the new
+// localized /produkti/:slug path. Applies legacy slug remapping
+// when the old slug has been renamed.
+const LegacyProductRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const { search } = useLocation();
+  const target = resolveProductSlug(slug);
+  if (!target) return <Navigate to="/collection" replace />;
+  return <Navigate to={`/produkti/${target}${search}`} replace />;
 };
 
 // Lazy-loaded routes for code splitting
@@ -156,7 +168,10 @@ const App = () => {
                         <Route path="/" element={<Index />} />
                         <Route path="/design" element={<DesignYourOwn />} />
                         <Route path="/collection" element={<OurCollection />} />
-                        <Route path="/product/:slug" element={<ProductDetail />} />
+                        <Route path="/produkti/:slug" element={<ProductDetail />} />
+                        {/* Legacy: old English product URL → new Latvian path */}
+                        <Route path="/product/:slug" element={<LegacyProductRedirect />} />
+                        <Route path="/products/:slug" element={<LegacyProductRedirect />} />
                         <Route path="/auth" element={<Auth />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/install" element={<Install />} />
@@ -180,9 +195,6 @@ const App = () => {
                         <Route path="/configurator/*" element={<LegacyRedirect to="/design" />} />
                         <Route path="/products" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/veikals" element={<LegacyRedirect to="/collection" />} />
-                        <Route path="/products/men-t-shirt" element={<LegacyRedirect to="/collection" />} />
-                        <Route path="/products/women-t-shirt" element={<LegacyRedirect to="/collection" />} />
-                        <Route path="/products/bernu-t-krekli" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/*" element={<LegacyRedirect to="/collection" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
