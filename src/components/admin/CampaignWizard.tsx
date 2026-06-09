@@ -57,6 +57,11 @@ type DesignRow = {
   slogan?: string | null;
 };
 
+type DesignLinkInfo = {
+  designId: string | null;
+  baseProductId: string | null;
+};
+
 type ColorVariant = { name: string; hex: string; images: string[] };
 
 function summarizeGenerationError(message: string | null | undefined) {
@@ -140,10 +145,37 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
 }
 
+function splitBaseProductName(name?: string | null) {
+  const raw = (name ?? "").trim();
+  if (!raw) return { display: "Krekls", model: "Krekls" };
+
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const parts = compact.split(/\s+-\s+|\s+—\s+/).map((p) => p.trim()).filter(Boolean);
+  const tail = parts[parts.length - 1] ?? compact;
+  const hasModelWord = /(stanley|stella|creator|cruiser|blaster|drummer|sparker|changer|radder|rocker|trekker|mover|roller|t-krekls|krekls|hoodie|džemperis|maika)/i.test(tail);
+  const model = hasModelWord ? tail : compact;
+  return { display: compact, model };
+}
+
+function buildDraftProductName(designName: string, baseProductName?: string | null) {
+  const cleanDesign = (designName || "Dizains").trim();
+  const { model } = splitBaseProductName(baseProductName);
+  return `${cleanDesign} - ${model}`;
+}
+
 function extractDesignIdFromProductAsset(url?: string | null) {
   if (!url) return null;
   const match = url.match(/\/campaigns\/(?:[^/]+)\/([0-9a-f-]{36})(?:\/|\.)/i);
   return match?.[1] ?? null;
+}
+
+function extractDesignLinkFromProductAsset(url?: string | null): DesignLinkInfo {
+  if (!url) return { designId: null, baseProductId: null };
+  const match = url.match(/\/campaigns\/(?:[^/]+)\/([0-9a-f-]{36})\/([0-9a-f-]{36})(?:\/|\.)/i);
+  return {
+    designId: match?.[1] ?? null,
+    baseProductId: match?.[2] ?? null,
+  };
 }
 
 function resolveDesignForProduct(product: CampProduct, designs: DesignRow[]) {
@@ -157,6 +189,15 @@ function resolveDesignForProduct(product: CampProduct, designs: DesignRow[]) {
     designs.find((d) => d.id === derivedDesignId && d.image_url) ||
     designs.find((d) => d.product_id === product.id && d.image_url) ||
     designs.find((d) => d.is_primary && d.image_url) ||
+    null
+  );
+}
+
+function resolveBaseProductId(product: CampProduct) {
+  return (
+    product.base_product_id ||
+    extractDesignLinkFromProductAsset(product.image_url).baseProductId ||
+    extractDesignLinkFromProductAsset(product.color_variants?.[0]?.images?.[0]).baseProductId ||
     null
   );
 }
