@@ -92,9 +92,13 @@ export function DesignsToProducts() {
       }
 
       const campRows = ((camp || []) as any[]).filter((r) => r.image_url);
-      const paths = campRows.map((r) => r.image_url as string);
+      const rawUrls = campRows.map((r) => r.image_url as string);
+      const httpUrls = rawUrls.filter((u) => /^https?:\/\//i.test(u));
+      const paths = rawUrls.filter((u) => !/^https?:\/\//i.test(u));
       const signedMap: Record<string, string> = {};
+      httpUrls.forEach((u) => { signedMap[u] = u; });
       if (paths.length) {
+        await supabase.auth.refreshSession().catch(() => {});
         const { data: signed } = await supabase.storage.from("campaign-assets").createSignedUrls(paths, 60 * 60);
         (signed || []).forEach((s, i) => { if (s.signedUrl) signedMap[paths[i]] = s.signedUrl; });
       }
