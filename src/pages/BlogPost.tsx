@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/ProductCard";
 import { Seo } from "@/components/Seo";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 type Post = {
   id: string;
@@ -22,6 +23,7 @@ type Post = {
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { loading: authLoading, user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,8 @@ const BlogPost = () => {
 
   useEffect(() => {
     if (!slug) return;
+    if (isPreview && authLoading) return;
+
     (async () => {
       setLoading(true);
       const { data: p } = await supabase
@@ -78,7 +82,7 @@ const BlogPost = () => {
       setProducts(sorted);
       setLoading(false);
     })();
-  }, [slug, isPreview]);
+  }, [slug, isPreview, authLoading, user?.id]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
