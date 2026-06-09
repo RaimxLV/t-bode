@@ -21,6 +21,20 @@ function slugify(s: string): string {
     .slice(0, 60);
 }
 
+function splitBaseProductName(name?: string | null) {
+  const raw = (name ?? "").trim();
+  if (!raw) return { model: "Krekls" };
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const parts = compact.split(/\s+-\s+|\s+—\s+/).map((p) => p.trim()).filter(Boolean);
+  const tail = parts[parts.length - 1] ?? compact;
+  const hasModelWord = /(stanley|stella|creator|cruiser|blaster|drummer|sparker|changer|radder|rocker|trekker|mover|roller|t-krekls|krekls|hoodie|džemperis|maika)/i.test(tail);
+  return { model: hasModelWord ? tail : compact };
+}
+
+function buildProductName(designName: string, baseProductName?: string | null) {
+  return `${designName.trim()} - ${splitBaseProductName(baseProductName).model}`;
+}
+
 function extFromContentType(contentType: string | null): "png" | "jpg" | "svg" | "webp" {
   const value = (contentType || "").toLowerCase();
   if (value.includes("svg")) return "svg";
@@ -109,6 +123,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    const { data: baseProducts } = await admin
+      .from("products")
+      .select("id, name, name_lv")
+      .eq("customizable", true)
+      .eq("is_draft", false);
+    const defaultBaseName = (baseProducts?.[0] as any)?.name_lv || (baseProducts?.[0] as any)?.name || "Krekls";
+
     const results: { ok: boolean; design_id: string; product_id?: string; error?: string }[] = [];
 
     for (let i = 0; i < designs.length; i++) {
@@ -145,7 +166,8 @@ Deno.serve(async (req) => {
               imageUrl: publicUrl,
             })
           : null;
-        const nameLv = aiName ?? (designs.length > 1 ? `${baseTitle} ${i + 1}` : baseTitle);
+        const designName = aiName ?? baseTitle;
+        const nameLv = buildProductName(designName, defaultBaseName);
         const slug = `${slugify(nameLv)}-${campaign.year}-${i + 1}`;
 
         const { data: product, error: insErr } = await admin
