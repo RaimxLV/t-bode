@@ -687,6 +687,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         const design = starred[di];
         const signed = signedUrls[design.image_url!];
         if (!signed) { toast.error(`Dizainam ${di + 1} nav URL`); continue; }
+        let linkedProductIdForDesign: string | null = null;
         for (const bp of bases) {
           const printArea = bp.print_area ?? DEFAULT_PRINT_AREA;
           const variants: ColorVariant[] = [];
@@ -727,7 +728,10 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
           if (error || !prod) toast.error(`${baseName}: ${error?.message ?? "neizveidojās"}`);
           else {
             created++;
-            if (!design.product_id) await supabase.from("campaign_designs" as any).update({ product_id: (prod as any).id }).eq("id", design.id);
+            if (!linkedProductIdForDesign) {
+              linkedProductIdForDesign = (prod as any).id;
+              await supabase.from("campaign_designs" as any).update({ product_id: linkedProductIdForDesign }).eq("id", design.id);
+            }
           }
         }
       }
@@ -778,8 +782,15 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
 
   const excludeProduct = async (productId: string, askConfirm = true) => {
     if (askConfirm && !confirm("Izslēgt šo produktu no kampaņas (dzēsts)?")) return;
+    const product = campProducts.find((x) => x.id === productId) ?? null;
     const { error } = await supabase.from("products").delete().eq("id", productId);
     if (error) { toast.error(error.message); return; }
+    const designId = product
+      ? extractDesignIdFromProductAsset(product.image_url) || extractDesignIdFromProductAsset(product.color_variants?.[0]?.images?.[0])
+      : null;
+    if (designId) {
+      await supabase.from("campaign_designs" as any).update({ product_id: null }).eq("id", designId).eq("product_id", productId);
+    }
     setCampProducts((prev) => prev.filter((x) => x.id !== productId));
     toast.success("Izslēgts");
   };
