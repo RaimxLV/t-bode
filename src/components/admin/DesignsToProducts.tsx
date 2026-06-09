@@ -52,6 +52,20 @@ function slugify(s: string) {
     .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 60) || "produkts";
 }
 
+function splitBaseProductName(name?: string | null) {
+  const raw = (name ?? "").trim();
+  if (!raw) return { model: "Krekls" };
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const parts = compact.split(/\s+-\s+|\s+—\s+/).map((p) => p.trim()).filter(Boolean);
+  const tail = parts[parts.length - 1] ?? compact;
+  const hasModelWord = /(stanley|stella|creator|cruiser|blaster|drummer|sparker|changer|radder|rocker|trekker|mover|roller|t-krekls|krekls|hoodie|džemperis|maika)/i.test(tail);
+  return { model: hasModelWord ? tail : compact };
+}
+
+function buildDraftProductName(designName: string, baseProductName?: string | null) {
+  return `${(designName || "Dizains").trim()} - ${splitBaseProductName(baseProductName).model}`;
+}
+
 export function DesignsToProducts() {
   const [loading, setLoading] = useState(true);
   const [designs, setDesigns] = useState<DesignItem[]>([]);
@@ -219,7 +233,7 @@ export function DesignsToProducts() {
         if (variants.length === 0) continue;
 
         const baseName = baseProduct.name_lv || baseProduct.name;
-        const productName = `${selectedDesign.name} — ${baseName}`;
+        const productName = buildDraftProductName(selectedDesign.name, baseName);
         const slug = `${slugify(selectedDesign.name)}-${slugify(baseName)}-${Date.now().toString(36)}`;
         const payload: any = {
           name: productName,
