@@ -1908,7 +1908,7 @@ function ProductTuneRow({
             <div className="absolute inset-0 flex items-center justify-center">
               <div
                 className="relative"
-                style={{ width: "100%", height: "100%", aspectRatio: baseAspect, maxWidth: "100%", maxHeight: "100%" }}
+                style={{ aspectRatio: baseAspect ?? "1 / 1", maxWidth: "100%", maxHeight: "100%", width: (baseDims && baseDims.w >= baseDims.h) ? "100%" : "auto", height: (baseDims && baseDims.w < baseDims.h) ? "100%" : "auto" }}
               >
                 <img
                   src={baseImg!}
