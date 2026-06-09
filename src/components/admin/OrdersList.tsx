@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2 } from "lucide-react";
+import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isOfficePickup, stripOfficePrefix } from "@/lib/officePickup";
 
@@ -108,6 +108,39 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
   const [showCancelled, setShowCancelled] = useState(false);
   const [showUnpaid, setShowUnpaid] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  // Map of product_id → blog post that sourced it (Svētku iedvesma).
+  // Used to flag the items in admin so workers know which design file to grab.
+  const [blogByProduct, setBlogByProduct] = useState<Record<string, { title: string; slug: string }>>({});
+
+  useEffect(() => {
+    const productIds = Array.from(
+      new Set(
+        Object.values(orderItems)
+          .flat()
+          .map((it: any) => it?.product_id)
+          .filter(Boolean)
+      )
+    ) as string[];
+    if (productIds.length === 0) {
+      setBlogByProduct({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("blog_post_products")
+        .select("product_id, blog_posts!inner(title, slug)")
+        .in("product_id", productIds);
+      if (cancelled || error) return;
+      const map: Record<string, { title: string; slug: string }> = {};
+      (data ?? []).forEach((row: any) => {
+        const bp = row.blog_posts;
+        if (bp && !map[row.product_id]) map[row.product_id] = { title: bp.title, slug: bp.slug };
+      });
+      setBlogByProduct(map);
+    })();
+    return () => { cancelled = true; };
+  }, [orderItems]);
 
   const handleManualRefresh = async () => {
     setRefreshing(true);
