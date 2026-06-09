@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download, Heart, Library, Info, Eraser } from "lucide-react";
+import { Loader2, RefreshCw, Star, Wand2, Package, FileText, Eye, X, ArrowLeft, ArrowRight, RotateCcw, Sparkles, CheckCircle2, ExternalLink, Trash2, Download, Heart, Library, Info, Eraser, Upload } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { downloadPrintReadyPng } from "@/lib/printFile";
@@ -800,6 +800,33 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     else toast.success("Saglabāts");
   };
 
+  const uploadBlogCover = async (file: File) => {
+    if (!blogPost) return;
+    setBusy("upload-blog-cover");
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "png";
+      const path = `blog/${blogPost.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+
+      const publicUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+      const { error: updErr } = await supabase
+        .from("blog_posts")
+        .update({ cover_image_url: publicUrl })
+        .eq("id", blogPost.id);
+      if (updErr) throw updErr;
+
+      setBlogPost({ ...blogPost, cover_image_url: publicUrl });
+      toast.success("Vāka attēls nomainīts");
+    } catch (e: any) {
+      toast.error(e?.message || "Neizdevās augšupielādēt vāka attēlu");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const publishAll = async () => {
     if (!campaign || !blogPost) { toast.error("Nav blog raksta"); return; }
     setBusy("publish");
@@ -966,6 +993,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
                 busy={busy}
                 onRegen={regenBlog}
                 onSave={saveBlog}
+                onUploadCover={uploadBlogCover}
                 onPublish={publishAll}
                 onBack={() => setStep(2)}
                 onClose={closeAndRefresh}
@@ -1435,7 +1463,7 @@ function StepDesigns({
 function StepBlog({
   campaign, blogPost, setBlogPost, designs, signedUrls, campProductsCount,
   expiresAt, setExpiresAt, addToCollection, setAddToCollection,
-  busy, onRegen, onSave, onPublish, onBack, onClose,
+  busy, onRegen, onSave, onUploadCover, onPublish, onBack, onClose,
 }: any) {
   // Auto-suggest cover from first ★ design
   const firstStarUrl = useMemo(() => {
@@ -1496,8 +1524,27 @@ function StepBlog({
         </div>
       </div>
       <div>
-        <label className="text-xs font-semibold">Vāka attēla URL</label>
-        <Input value={blogPost.cover_image_url ?? ""} onChange={(e) => setBlogPost({ ...blogPost, cover_image_url: e.target.value })} />
+        <label className="text-xs font-semibold">Vāka attēls</label>
+        <div className="mt-1 flex flex-col sm:flex-row gap-2">
+          <Input value={blogPost.cover_image_url ?? ""} onChange={(e) => setBlogPost({ ...blogPost, cover_image_url: e.target.value })} />
+          <label
+            className={`inline-flex items-center gap-1.5 shrink-0 h-10 px-3 rounded-md border border-input bg-background text-sm font-medium hover:bg-accent hover:text-accent-foreground cursor-pointer ${busy === "upload-blog-cover" ? "opacity-60 pointer-events-none" : ""}`}
+          >
+            {busy === "upload-blog-cover" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+            {blogPost.cover_image_url ? "Nomainīt" : "Augšupielādēt"}
+            <input
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={busy === "upload-blog-cover"}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onUploadCover(file);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
       <div>
