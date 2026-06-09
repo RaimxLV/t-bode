@@ -471,8 +471,13 @@ export function DesignsToProducts() {
                   </label>
                 </div>
                 {previewBase && previewColor && selectedDesign && (
-                  <div className="relative w-full max-w-[180px] mx-auto aspect-[3/4] bg-card rounded overflow-hidden border border-border">
-                    <img src={previewColor.images[0]} alt="" className="absolute inset-0 w-full h-full object-contain" />
+                  <div className="relative w-full max-w-[180px] mx-auto bg-card rounded overflow-hidden border border-border">
+                    {/* The shirt image controls layout so the print-area overlay
+                        aligns exactly with the mockup's pixel space (matches
+                        composeMockup output). Using object-contain inside a
+                        fixed-aspect box would letterbox the shirt and shift
+                        the design vs. the generated draft. */}
+                    <img src={previewColor.images[0]} alt="" className="block w-full h-auto" />
                     <img
                       src={selectedDesign.url}
                       alt=""
