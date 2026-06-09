@@ -28,6 +28,9 @@ const BlogPost = () => {
   const isPreview =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("preview") === "1";
+  const isEmbeddedPreview =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
     if (!slug) return;
@@ -79,7 +82,7 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
+      {!isEmbeddedPreview && <Navbar />}
       {post && (
         <Seo
           title={post.title}
@@ -111,15 +114,17 @@ const BlogPost = () => {
           }}
         />
       )}
-      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-        {isPreview && (
+      <main className={`flex-1 max-w-5xl mx-auto px-4 sm:px-6 w-full ${isEmbeddedPreview ? "py-4 sm:py-5" : "py-8 sm:py-12"}`}>
+        {isPreview && !isEmbeddedPreview && (
           <div className="mb-4 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-body text-primary">
             Priekšskatījuma režīms — ietver melnraksta produktus. Klientiem šis nav redzams.
           </div>
         )}
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4" /> Atpakaļ
-        </Link>
+        {!isEmbeddedPreview && (
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
+            <ArrowLeft className="w-4 h-4" /> Atpakaļ
+          </Link>
+        )}
         {loading ? (
           <div className="space-y-3">
             <Skeleton className="h-10 w-3/4" />
@@ -171,7 +176,7 @@ const BlogPost = () => {
           </article>
         )}
       </main>
-      <Footer />
+      {!isEmbeddedPreview && <Footer />}
     </div>
   );
 };
