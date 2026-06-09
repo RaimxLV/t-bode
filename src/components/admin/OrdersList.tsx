@@ -886,6 +886,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
             }).filter(Boolean) as string[];
             const extraCount = Math.max(0, items.length - previewThumbs.length);
             const extraCountMobile = Math.max(0, items.length - Math.min(2, previewThumbs.length));
+            const hasBlogItem = items.some((it: any) => blogByProduct[it.product_id]);
 
             return (
               <Card key={order.id} className={`border transition-all ${isExpanded ? "border-primary/40 shadow-md" : urgency.card + " hover:shadow-sm"}`}>
@@ -972,6 +973,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                           </span>
                         )}
                         <Badge variant="secondary" className="text-[10px]">{items.length} preces</Badge>
+                        {hasBlogItem && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-body font-semibold border bg-primary/15 text-primary border-primary/40 inline-flex items-center gap-1">
+                            <Sparkles className="w-3 h-3" /> Svētku iedvesma
+                          </span>
+                        )}
                       </div>
 
                       {/* Row 3: customer + date */}
