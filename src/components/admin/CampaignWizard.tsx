@@ -724,7 +724,8 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       return;
     }
     // Find the design assigned to this product (or first starred)
-    let designRow = designs.find((d) => d.product_id === productId && d.image_url);
+    let designRow = designs.find((d) => d.id === (p as any).design_id && d.image_url);
+    if (!designRow) designRow = designs.find((d) => d.product_id === productId && d.image_url);
     if (!designRow) designRow = designs.find((d) => d.is_primary && d.image_url);
     if (!designRow?.image_url) { toast.error("Nav saistīta dizaina"); return; }
     const designSigned = signedUrls[designRow.image_url];
