@@ -1583,6 +1583,8 @@ function StepBlog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstStarUrl, blogPost?.id]);
 
+  const previewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1` : null;
+
   if (!blogPost) {
     return (
       <div className="space-y-4">
@@ -1611,7 +1613,7 @@ function StepBlog({
             Pārģenerēt
           </Button>
           <Button size="sm" variant="outline" asChild>
-            <a href={`/blog/${blogPost.slug}?preview=1`} target="_blank" rel="noreferrer">
+            <a href={previewHref ?? "#"} target="_blank" rel="noreferrer">
               <Eye className="w-3.5 h-3.5 mr-1.5" /> Priekšskatīt
             </a>
           </Button>
@@ -1652,6 +1654,19 @@ function StepBlog({
         </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
+      {previewHref && (
+        <div className="rounded-md border border-border overflow-hidden bg-background">
+          <div className="px-3 py-2 border-b border-border text-[11px] text-muted-foreground font-body">
+            Tas pats bloga priekšskatījums, ko redz atverot jauno logu.
+          </div>
+          <iframe
+            key={previewHref}
+            src={previewHref}
+            title="Bloga priekšskatījums"
+            className="w-full h-[540px] bg-background"
+          />
+        </div>
+      )}
       <div>
         <label className="text-xs font-semibold">Īss apraksts</label>
         <Textarea rows={2} value={blogPost.excerpt ?? ""} onChange={(e) => setBlogPost({ ...blogPost, excerpt: e.target.value })} />
@@ -1819,112 +1834,31 @@ function ProductTuneRow({
   };
 
   // Sliders only — touch/pinch/wheel intentionally disabled to avoid accidental drag while scrolling.
-  const previewRef = useRef<HTMLDivElement | null>(null);
-  const printArea = baseInfo?.print_area ?? DEFAULT_PRINT_AREA;
-  // Show the currently selected cover color's base mockup in the live preview
+  // Show the currently selected cover color's base mockup as a last-resort fallback only.
   const coverColorName = product.color_variants[0]?.name;
   const baseImg =
     baseInfo?.color_variants?.find((cv) => cv.name === coverColorName && cv.images?.[0])?.images?.[0]
     ?? baseInfo?.color_variants?.find((cv) => cv.images?.[0])?.images?.[0]
     ?? product.image_url;
-
-  // Compute design aspect for overlay sizing
-  const [designAspect, setDesignAspect] = useState<number>(1);
-  useEffect(() => {
-    if (!designUrl) return;
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => setDesignAspect(img.naturalWidth / img.naturalHeight || 1);
-    img.src = designUrl;
-  }, [designUrl]);
-
-  // Compute mockup natural aspect — composeMockup positions the print area in mockup
-  // pixel space, so we must mirror that math here (otherwise the live preview
-  // visually disagrees with the generated image).
-  const [mockAspect, setMockAspect] = useState<number>(1);
-  useEffect(() => {
-    if (!baseImg) return;
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => setMockAspect((img.naturalWidth || 1) / (img.naturalHeight || 1));
-    img.src = baseImg;
-  }, [baseImg]);
-
-  // Container is aspect-square; the mockup is object-contain inside it.
-  // Find the contained rect (as fraction of the container) for the mockup image.
-  const containerAspect = 1; // aspect-square
-  let mockRectW = 1, mockRectH = 1, mockRectX = 0, mockRectY = 0;
-  if (mockAspect >= containerAspect) {
-    mockRectW = 1;
-    mockRectH = containerAspect / mockAspect;
-    mockRectY = (1 - mockRectH) / 2;
-  } else {
-    mockRectH = 1;
-    mockRectW = mockAspect / containerAspect;
-    mockRectX = (1 - mockRectW) / 2;
-  }
-
-  // Print area in mockup-pixel ratios → container-fraction ratios
-  const paX = mockRectX + printArea.x * mockRectW;
-  const paY = mockRectY + printArea.y * mockRectH;
-  const paW = printArea.w * mockRectW;
-  const paH = printArea.h * mockRectH;
-
-  // Contain-fit in pixel space (same as composeMockup): compare in mockup pixels.
-  // Use a virtual mock size where width=1; then height=1/mockAspect.
-  const rwPx = printArea.w * 1;                 // print area width in mockup-pixel units
-  const rhPx = printArea.h * (1 / mockAspect);  // print area height in mockup-pixel units
-  let dwPx = rwPx, dhPx = rwPx / designAspect;
-  if (dhPx > rhPx) { dhPx = rhPx; dwPx = rhPx * designAspect; }
-  dwPx *= scale; dhPx *= scale;
-  // Convert design pixel dims back to fractions of mockup rect, then to container fractions
-  const dwRelMock = dwPx / 1;
-  const dhRelMock = dhPx / (1 / mockAspect);
-  const dwRel = dwRelMock * mockRectW;
-  const dhRel = dhRelMock * mockRectH;
-  const dxRel = paX + (paW - dwRel) / 2;
-  const dyRel = paY + (paH - dhRel) / 2 + offsetY * paH;
+  const exactMockupUrl = product.image_url ?? product.color_variants[0]?.images?.[0] ?? baseImg ?? null;
 
   return (
     <div className="border rounded p-2 sm:p-3 space-y-3">
       <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
         {/* Live preview */}
-        <div
-          ref={previewRef}
-          className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none"
-        >
-          {/* Shirt + print area + design overlay (kept 1:1 so shirts never crop) */}
-          <div className="absolute inset-0">
-            {baseImg && (
-              <img src={baseImg} alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" draggable={false} />
-            )}
-            {/* Print area outline */}
-            <div
-              className="absolute border border-dashed border-primary/60 pointer-events-none"
-              style={{
-                left: `${paX * 100}%`,
-                top: `${paY * 100}%`,
-                width: `${paW * 100}%`,
-                height: `${paH * 100}%`,
-              }}
+        <div className="relative w-full sm:w-56 aspect-square sm:aspect-auto sm:h-56 rounded border bg-white overflow-hidden shrink-0 select-none">
+          {exactMockupUrl ? (
+            <img
+              src={exactMockupUrl}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-opacity ${autoSaving ? "opacity-60" : "opacity-100"}`}
+              draggable={false}
             />
-            {/* Design overlay */}
-            {designUrl && (
-              <img
-                src={designUrl}
-                alt=""
-                draggable={false}
-                className="absolute pointer-events-none"
-                style={{
-                  left: `${dxRel * 100}%`,
-                  top: `${dyRel * 100}%`,
-                  width: `${dwRel * 100}%`,
-                  height: `${dhRel * 100}%`,
-                  objectFit: "contain",
-                }}
-              />
-            )}
-          </div>
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-[10px] text-muted-foreground">
+              Nav mockup attēla
+            </div>
+          )}
           {autoSaving && (
             <div className="absolute bottom-1 left-1 right-1 text-[10px] bg-background/80 rounded px-1.5 py-0.5 flex items-center gap-1">
               <Loader2 className="w-3 h-3 animate-spin" /> Saglabājas…
