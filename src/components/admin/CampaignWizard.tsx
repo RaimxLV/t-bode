@@ -743,7 +743,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     const p = campProducts.find((x) => x.id === productId);
     if (!p) return;
     const next = p.color_variants.filter((c) => c.name !== colorName);
-    const patch: Record<string, any> = { color_variants: next as any };
+    const patch: any = { color_variants: next as any };
     if (next.length > 0) patch.image_url = next[0].images?.[0] ?? p.image_url;
     const { error } = await supabase.from("products").update(patch).eq("id", productId);
     if (error) { toast.error(error.message); return; }
@@ -1510,7 +1510,8 @@ function StepDesigns({
           </p>
           <div className="space-y-3">
             {campProducts.map((p: CampProduct) => {
-              const baseInfo = catalog.find((c: CatalogProduct) => c.id === p.base_product_id) || null;
+              const resolvedBaseProductId = resolveBaseProductId(p);
+              const baseInfo = catalog.find((c: CatalogProduct) => c.id === resolvedBaseProductId) || null;
               const designRow = resolveDesignForProduct(p, designs);
               const designUrl = designRow?.image_url ? signedUrls[designRow.image_url] : null;
               return (
@@ -1735,6 +1736,15 @@ function ProductTuneRow({
     setScale(product.print_scale ?? 1);
     lastSaved.current = { y: product.print_offset_y ?? 0, s: product.print_scale ?? 1 };
   }, [product.id, product.print_offset_y, product.print_scale]);
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) {
+        window.clearTimeout(saveTimer.current);
+        saveTimer.current = null;
+      }
+    };
+  }, []);
 
   const scheduleSave = (y: number, s: number) => {
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
