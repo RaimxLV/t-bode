@@ -34,13 +34,13 @@ const BlogIndex = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Seo
-        title="Svētku iedvesma | T-Bode"
-        description="Svētku iedvesma, idejas un dāvanu ieteikumi no T-Bode."
+        title="Svētku iedvesmai | T-Bode"
+        description="Svētku iedvesmai — idejas un dāvanu ieteikumi no T-Bode."
         canonical="/blog"
       />
       <Navbar />
       <main className="flex-1 container mx-auto px-4 pt-24 pb-16">
-        <h1 className="font-display text-4xl sm:text-5xl mb-2">Svētku iedvesma</h1>
+        <h1 className="font-display text-4xl sm:text-5xl mb-2">Svētku iedvesmai</h1>
         <p className="text-muted-foreground font-body mb-8">
           Iedvesma, idejas un jaunumi no T-Bode.
         </p>
