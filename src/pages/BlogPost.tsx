@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/ProductCard";
 import { Seo } from "@/components/Seo";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 type Post = {
   id: string;
@@ -22,15 +23,21 @@ type Post = {
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { loading: authLoading, user } = useAuth();
   const [post, setPost] = useState<Post | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isPreview =
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("preview") === "1";
+  const isEmbeddedPreview =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
     if (!slug) return;
+    if (isPreview && authLoading) return;
+
     (async () => {
       setLoading(true);
       const { data: p } = await supabase
@@ -75,12 +82,12 @@ const BlogPost = () => {
       setProducts(sorted);
       setLoading(false);
     })();
-  }, [slug, isPreview]);
+  }, [slug, isPreview, authLoading, user?.id]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navbar />
-      {post && (
+      {!isEmbeddedPreview && <Navbar />}
+      {post && !isEmbeddedPreview && (
         <Seo
           title={post.title}
           description={post.excerpt || post.title}
@@ -111,15 +118,17 @@ const BlogPost = () => {
           }}
         />
       )}
-      <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12 w-full">
-        {isPreview && (
+      <main className={`flex-1 max-w-5xl mx-auto px-4 sm:px-6 w-full ${isEmbeddedPreview ? "py-4 sm:py-5" : "py-8 sm:py-12"}`}>
+        {isPreview && !isEmbeddedPreview && (
           <div className="mb-4 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-body text-primary">
             Priekšskatījuma režīms — ietver melnraksta produktus. Klientiem šis nav redzams.
           </div>
         )}
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
-          <ArrowLeft className="w-4 h-4" /> Atpakaļ
-        </Link>
+        {!isEmbeddedPreview && (
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
+            <ArrowLeft className="w-4 h-4" /> Atpakaļ
+          </Link>
+        )}
         {loading ? (
           <div className="space-y-3">
             <Skeleton className="h-10 w-3/4" />
@@ -171,7 +180,7 @@ const BlogPost = () => {
           </article>
         )}
       </main>
-      <Footer />
+      {!isEmbeddedPreview && <Footer />}
     </div>
   );
 };

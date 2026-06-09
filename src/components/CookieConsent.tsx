@@ -11,8 +11,15 @@ export const CookieConsent = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const [visible, setVisible] = useState(false);
+  const isEmbeddedPreview =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("embed") === "1";
 
   useEffect(() => {
+    if (isEmbeddedPreview) {
+      setVisible(false);
+      return;
+    }
     if (HIDDEN_ROUTES.some((r) => location.pathname.startsWith(r))) {
       setVisible(false);
       return;
@@ -22,7 +29,7 @@ export const CookieConsent = () => {
       const timer = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, [location.pathname]);
+  }, [isEmbeddedPreview, location.pathname]);
 
   const accept = () => {
     localStorage.setItem(COOKIE_KEY, "accepted");

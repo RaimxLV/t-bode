@@ -14,6 +14,7 @@ import { downloadPrintReadyPng } from "@/lib/printFile";
 import { toast } from "sonner";
 import { composeMockup } from "@/lib/imageCrop";
 import { RichTextEditor } from "./RichTextEditor";
+import { BlogInlinePreview } from "./BlogInlinePreview";
 import { getOptimizedSrc } from "@/lib/imageOptimization";
 import { removeDesignBackground } from "@/lib/removeDesignBackground";
 
@@ -229,6 +230,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
   const [catalog, setCatalog] = useState<CatalogProduct[]>([]);
   const [campProducts, setCampProducts] = useState<CampProduct[]>([]);
   const [blogPost, setBlogPost] = useState<BlogPost | null>(null);
+  const [savedBlogSlug, setSavedBlogSlug] = useState<string | null>(null);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
@@ -353,6 +355,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
         .limit(1)
         .maybeSingle();
       setBlogPost((bpRaw as any) ?? null);
+      setSavedBlogSlug((bpRaw as any)?.slug ?? null);
 
       // Reload favorites for this campaign so heart icons stay lit on reopen.
       try {
@@ -393,6 +396,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       setDesigns([]);
       setCampProducts([]);
       setBlogPost(null);
+      setSavedBlogSlug(null);
       setExpiresAt("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -894,7 +898,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     finally { setBusy(null); }
   };
 
-  const saveBlog = async () => {
+  const saveBlog = async (options?: { throwOnError?: boolean }) => {
     if (!blogPost) return;
     setBusy("save-blog");
     const { error } = await supabase.from("blog_posts").update({
@@ -902,8 +906,13 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       content: blogPost.content, cover_image_url: blogPost.cover_image_url,
     }).eq("id", blogPost.id);
     setBusy(null);
-    if (error) toast.error(error.message);
-    else toast.success("Saglabāts");
+    if (error) {
+      toast.error(error.message);
+      if (options?.throwOnError) throw error;
+      return;
+    }
+    setSavedBlogSlug(blogPost.slug);
+    toast.success("Saglabāts");
   };
 
   const uploadBlogCover = async (file: File) => {
@@ -937,7 +946,7 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
     if (!campaign || !blogPost) { toast.error("Nav blog raksta"); return; }
     setBusy("publish");
     try {
-      await saveBlog();
+      await saveBlog({ throwOnError: true });
       const expIso = expiresAt ? new Date(expiresAt + "T23:59:59Z").toISOString() : null;
       const { error: pErr, count } = await supabase.from("products")
         .update({
@@ -1088,9 +1097,11 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
               <StepBlog
                 campaign={campaign}
                 blogPost={blogPost}
+                savedBlogSlug={savedBlogSlug}
                 setBlogPost={setBlogPost}
                 designs={designs}
                 signedUrls={signedUrls}
+                campProducts={campProducts}
                 campProductsCount={campProducts.length}
                 expiresAt={expiresAt}
                 setExpiresAt={setExpiresAt}
@@ -1566,7 +1577,7 @@ function StepDesigns({
 }
 
 function StepBlog({
-  campaign, blogPost, setBlogPost, designs, signedUrls, campProductsCount,
+  campaign, blogPost, savedBlogSlug, setBlogPost, designs, signedUrls, campProducts, campProductsCount,
   expiresAt, setExpiresAt, addToCollection, setAddToCollection,
   busy, onRegen, onSave, onUploadCover, onPublish, onBack, onClose,
 }: any) {
@@ -1583,7 +1594,9 @@ function StepBlog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstStarUrl, blogPost?.id]);
 
-  const previewHref = blogPost?.slug ? `/blog/${blogPost.slug}?preview=1` : null;
+  const previewSlug = savedBlogSlug ?? blogPost?.slug ?? null;
+  const previewHref = previewSlug ? `/blog/${previewSlug}?preview=1` : null;
+  const embeddedPreviewHref = previewSlug ? `/blog/${previewSlug}?preview=1&embed=1` : null;
 
   if (!blogPost) {
     return (
@@ -1654,17 +1667,14 @@ function StepBlog({
         </div>
         {blogPost.cover_image_url && <img src={blogPost.cover_image_url} alt="" className="mt-2 max-h-32 rounded border" />}
       </div>
-      {previewHref && (
+      {blogPost && (
         <div className="rounded-md border border-border overflow-hidden bg-background">
           <div className="px-3 py-2 border-b border-border text-[11px] text-muted-foreground font-body">
-            Tas pats bloga priekšskatījums, ko redz atverot jauno logu.
+            Dzīvais bloga priekšskatījums no pašreizējiem laukiem šajā solī.
           </div>
-          <iframe
-            key={previewHref}
-            src={previewHref}
-            title="Bloga priekšskatījums"
-            className="w-full h-[540px] bg-background"
-          />
+          <div className="h-[540px] overflow-y-auto bg-background">
+            <BlogInlinePreview post={blogPost} products={campProducts ?? []} />
+          </div>
         </div>
       )}
       <div>
