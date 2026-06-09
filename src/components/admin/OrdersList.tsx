@@ -1362,6 +1362,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                 const colorVariants = product?.color_variants as any[] | undefined;
                                 const matchedVariant = item.color && colorVariants?.find((v: any) => v.name === item.color);
                                 const thumbUrl = item.zakeke_thumbnail_url || matchedVariant?.images?.[0] || product?.image_url || null;
+                                const blog = blogByProduct[item.product_id];
+                                const designUrl = product?.image_url || null;
                                 return (
                                   <TableRow key={item.id}>
                                     <TableCell className="text-xs font-body">
@@ -1373,6 +1375,25 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                         )}
                                         <div className="flex flex-col min-w-0 gap-1">
                                           <span className="truncate">{item.product_name}</span>
+                                          {blog && (
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                              <Badge className="bg-primary/15 text-primary border-primary/40 text-[10px] py-0 gap-1 w-fit">
+                                                <Sparkles className="w-3 h-3" /> Svētku iedvesma
+                                              </Badge>
+                                              <span className="text-[10px] text-muted-foreground truncate max-w-[180px]" title={blog.title}>{blog.title}</span>
+                                              {designUrl && (
+                                                <a
+                                                  href={designUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  download
+                                                  className="inline-flex items-center gap-1 text-[10px] font-medium text-primary hover:underline"
+                                                >
+                                                  <Download className="w-3 h-3" /> Dizains
+                                                </a>
+                                              )}
+                                            </div>
+                                          )}
                                           {item.zakeke_design_id && (
                                             item.is_bulk ? (
                                               <Badge className="bg-orange-100 text-orange-900 border-orange-300 text-[10px] py-0 w-fit">
