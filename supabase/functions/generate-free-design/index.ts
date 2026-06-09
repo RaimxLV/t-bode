@@ -100,7 +100,7 @@ async function genOne(apiKey: string, opts: { prompt: string; image_size: string
       const bgRes = await fetch("https://fal.run/fal-ai/birefnet/v2", {
         method: "POST",
         headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ image_url: url, operating_resolution: "1024x1024", output_format: "png", refine_foreground: true }),
+        body: JSON.stringify({ image_url: url, operating_resolution: "2048x2048", output_format: "png", refine_foreground: true }),
       });
       if (bgRes.ok) {
         const bgData = await bgRes.json();
@@ -112,8 +112,53 @@ async function genOne(apiKey: string, opts: { prompt: string; image_size: string
     }
   }
 
-  const bytes = await fetchBytes(url);
+  let bytes = await fetchBytes(url);
+  if (opts.transparent_bg) {
+    try {
+      bytes = await trimTransparent(bytes);
+    } catch (e) {
+      console.warn("trim failed (keeping original):", e);
+    }
+    return { bytes, contentType: "image/png", extension: "png" };
+  }
   return { bytes, ...detectExt(bytes) };
+}
+
+async function trimTransparent(bytes: Uint8Array, alphaThreshold = 16, whiteCutoff = 238): Promise<Uint8Array> {
+  const img = await Image.decode(bytes);
+  const w = img.width, h = img.height;
+  // Halo cleanup: near-white semi-transparent pixels -> fully transparent
+  for (let y = 1; y <= h; y++) {
+    for (let x = 1; x <= w; x++) {
+      const px = img.getPixelAt(x, y);
+      const r = (px >>> 24) & 0xff;
+      const g = (px >>> 16) & 0xff;
+      const b = (px >>> 8) & 0xff;
+      const a = px & 0xff;
+      if (a === 0) continue;
+      const nearWhite = r >= whiteCutoff && g >= whiteCutoff && b >= whiteCutoff;
+      if (nearWhite && a < 250) img.setPixelAt(x, y, 0);
+      else if (a < alphaThreshold) img.setPixelAt(x, y, 0);
+    }
+  }
+  // Tight bbox of opaque pixels
+  let minX = w, minY = h, maxX = -1, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const a = img.getPixelAt(x + 1, y + 1) & 0xff;
+      if (a > alphaThreshold) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (maxX < 0) return await img.encode();
+  const cw = maxX - minX + 1;
+  const ch = maxY - minY + 1;
+  if (cw === w && ch === h) return await img.encode();
+  return await img.clone().crop(minX, minY, cw, ch).encode();
 }
 
 Deno.serve(async (req) => {
