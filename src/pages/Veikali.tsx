@@ -33,12 +33,10 @@ const Veikali = () => {
               <MapPin className="h-6 w-6 text-cta-red" />
             </div>
             <DialogTitle className="text-center text-2xl md:text-3xl font-display tracking-wide">
-              Meklēji mūsu stendu?
+              Meklē mūsu veikalus?
             </DialogTitle>
             <DialogDescription className="text-center text-base text-muted-foreground pt-2">
-              Tev vairs nav jāmeklē mūs tirdzniecības centros Alfa, Akropole vai
-              Origo! T-Bode tagad piedāvā ērtu un modernu online rīku, kur pats
-              vari visu viegli un ātri izveidot savā ekrānā.
+              Gaidīsim ciemos! Bet, ja nevēlies stāvēt rindā, ietaupi laiku – izveido dizainu tiešsaistē no jebkuras ierīces un saņem ar piegādi.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="sm:justify-center">
