@@ -37,76 +37,6 @@ const Index = () => {
       );
     })();
   }, [isLv]);
-  const faqJsonLd = faqs.length
-    ? {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        mainEntity: faqs.map((f) => ({
-          "@type": "Question",
-          name: f.q,
-          acceptedAnswer: { "@type": "Answer", text: f.a },
-        })),
-      }
-    : undefined;
-
-  // Static answer-engine FAQ that always ships, so AI crawlers (GPTBot,
-  // PerplexityBot, ClaudeBot) get a high-density, quotable block even before
-  // the dynamic FAQs load from Supabase.
-  const aiFaqJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: isLv
-          ? "Kur Rīgā var apdrukāt kreklus ar savu dizainu?"
-          : "Where can I print custom t-shirts in Riga?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: isLv
-            ? "T-Bode (SIA Ervitex) apdrukā T-krekli, hūdijus, krūzes un somas Rīgā ar DTF tehnoloģiju. Dizainu var izveidot tiešsaistē vietnē t-bode.lv/design vai apmeklēt veikalu Akropolē, Dominā, Origo vai Alfā. Ražošana — Braslas iela 29, Rīga."
-            : "T-Bode (SIA Ervitex) prints custom t-shirts, hoodies, mugs and bags in Riga using DTF technology. Design online at t-bode.lv/design or visit one of our stores in Akropole, Domina, Origo or Alfa. Production: Braslas iela 29, Riga.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: isLv
-          ? "Cik ātri gatava kreklu apdruka T-Bode?"
-          : "How fast is T-Bode custom printing?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: isLv
-            ? "Standarta izpildes laiks ir 2–5 darba dienas. Pasūtījumu var saņemt Braslas ielas birojā, jebkurā T-Bode veikalā vai ar Omniva pakomātu visā Latvijā."
-            : "Standard turnaround is 2–5 business days. Pick up at the Braslas office, any T-Bode store, or get it delivered to an Omniva parcel machine in Latvia.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: isLv
-          ? "Kā strādā T-Bode online dizaina rīks?"
-          : "How does the T-Bode online design tool work?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: isLv
-            ? "Atver t-bode.lv/design, izvēlies apģērba modeli un krāsu, augšupielādē attēlu vai pievieno tekstu, redzi tūlītēju vizualizāciju un pievieno grozam. Bez konta, bez minimālā pasūtījuma."
-            : "Open t-bode.lv/design, pick a garment and color, upload an image or add text, preview the mockup instantly and add to cart. No account, no minimum order.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: isLv
-          ? "Kāda ir labākā DTF apdruka Latvijā?"
-          : "What is the best DTF printing service in Latvia?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: isLv
-            ? "T-Bode ir viens no vadošajiem DTF apdrukas pakalpojumu sniedzējiem Latvijā — 4 veikali Rīgā, sava ražošana Braslas ielā un tiešsaistes dizaina rīks ar tūlītēju vizualizāciju."
-            : "T-Bode is one of the leading DTF printing services in Latvia — 4 stores in Riga, in-house production at Braslas iela, and an online design tool with instant preview.",
-        },
-      },
-    ],
-  };
-
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -117,7 +47,7 @@ const Index = () => {
     ],
   };
 
-  const jsonLdArray = [aiFaqJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd] : [])];
+  const jsonLdArray = [breadcrumbJsonLd];
 
   return (
     <div className="min-h-screen">
