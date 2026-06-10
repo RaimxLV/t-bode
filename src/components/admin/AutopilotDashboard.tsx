@@ -1,13 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, Wand2 } from "lucide-react";
+import { Calendar, Sparkles, AlertCircle, Loader2, ArrowRight, CheckCircle2, Wand2, FileText, Image as ImageIcon, FileEdit as FileEditIcon } from "lucide-react";
 import { toast } from "sonner";
 import { CampaignWizard } from "./CampaignWizard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FreeDesignStudio } from "./FreeDesignStudio";
+
+const BlogManager = lazy(() => import("./BlogManager").then((m) => ({ default: m.BlogManager })));
+const PrintZonesManager = lazy(() => import("./PrintZonesManager").then((m) => ({ default: m.PrintZonesManager })));
+const DesignsToProducts = lazy(() => import("./DesignsToProducts").then((m) => ({ default: m.DesignsToProducts })));
+const DesignLibrary = lazy(() => import("./bulk/DesignLibrary").then((m) => ({ default: m.DesignLibrary })));
+
+const SubTabFallback = () => (
+  <div className="flex items-center justify-center py-16">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+  </div>
+);
 
 type Holiday = {
   id: string;
@@ -56,7 +67,17 @@ function statusLabel(status: string): { text: string; tone: "muted" | "warn" | "
 
 const PENDING = new Set(["ready_for_review", "designs_ready", "products_ready", "blog_ready"]);
 
-export const AutopilotDashboard = () => {
+type AutopilotDashboardProps = {
+  draftProducts?: any[];
+  loadingProducts?: boolean;
+  renderProductGrid?: (items: any[], forDesign: boolean) => ReactNode;
+};
+
+export const AutopilotDashboard = ({
+  draftProducts = [],
+  loadingProducts = false,
+  renderProductGrid,
+}: AutopilotDashboardProps) => {
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,12 +126,28 @@ export const AutopilotDashboard = () => {
 
   return (
     <Tabs defaultValue="holidays" className="w-full space-y-4">
-      <TabsList className="w-full sm:w-auto justify-start">
+      <TabsList className="flex flex-wrap h-auto w-full justify-start gap-1 p-1">
         <TabsTrigger value="holidays" className="gap-1.5">
           <Calendar className="w-4 h-4" /> Svētku kampaņas
         </TabsTrigger>
         <TabsTrigger value="studio" className="gap-1.5">
           <Wand2 className="w-4 h-4" /> AI Studija
+        </TabsTrigger>
+        <TabsTrigger value="blog" className="gap-1.5">
+          <FileText className="w-4 h-4" /> Svētku iedvesmai
+        </TabsTrigger>
+        <TabsTrigger value="printzones" className="gap-1.5">
+          <Wand2 className="w-4 h-4" /> Print zonas
+        </TabsTrigger>
+        <TabsTrigger value="designstoproducts" className="gap-1.5">
+          <Sparkles className="w-4 h-4" /> Dizaini → Krekli
+        </TabsTrigger>
+        <TabsTrigger value="designlibrary" className="gap-1.5">
+          <ImageIcon className="w-4 h-4" /> Dizainu bibliotēka
+        </TabsTrigger>
+        <TabsTrigger value="drafts" className="gap-1.5">
+          <FileEditIcon className="w-4 h-4" /> Melnraksti
+          {draftProducts.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge>}
         </TabsTrigger>
       </TabsList>
 
@@ -196,6 +233,42 @@ export const AutopilotDashboard = () => {
 
       <TabsContent value="studio" className="mt-0">
         <FreeDesignStudio />
+      </TabsContent>
+
+      <TabsContent value="blog" className="mt-0">
+        <Suspense fallback={<SubTabFallback />}>
+          <BlogManager />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="printzones" className="mt-0">
+        <Suspense fallback={<SubTabFallback />}>
+          <PrintZonesManager />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="designstoproducts" className="mt-0">
+        <Suspense fallback={<SubTabFallback />}>
+          <DesignsToProducts />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="designlibrary" className="mt-0">
+        <Suspense fallback={<SubTabFallback />}>
+          <DesignLibrary />
+        </Suspense>
+      </TabsContent>
+
+      <TabsContent value="drafts" className="mt-0">
+        {loadingProducts ? (
+          <p className="text-muted-foreground text-center py-12 font-body">Ielādē…</p>
+        ) : draftProducts.length === 0 ? (
+          <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
+            Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
+          </CardContent></Card>
+        ) : renderProductGrid ? (
+          renderProductGrid(draftProducts, false)
+        ) : null}
       </TabsContent>
     </Tabs>
   );
