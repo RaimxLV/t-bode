@@ -383,7 +383,6 @@ const Admin = () => {
                 <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="omnivaSync" className="gap-1.5 text-sm"><Truck className="w-4 h-4" /> Omniva sync</TabsTrigger>
           </TabsList>
 
