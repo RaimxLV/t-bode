@@ -1184,6 +1184,7 @@ export type Database = {
           image_url: string | null
           in_stock: boolean
           is_draft: boolean
+          mockup_image_url: string | null
           name: string
           name_en: string | null
           name_lv: string | null
@@ -1217,6 +1218,7 @@ export type Database = {
           image_url?: string | null
           in_stock?: boolean
           is_draft?: boolean
+          mockup_image_url?: string | null
           name: string
           name_en?: string | null
           name_lv?: string | null
@@ -1250,6 +1252,7 @@ export type Database = {
           image_url?: string | null
           in_stock?: boolean
           is_draft?: boolean
+          mockup_image_url?: string | null
           name?: string
           name_en?: string | null
           name_lv?: string | null

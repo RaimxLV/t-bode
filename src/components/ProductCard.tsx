@@ -55,6 +55,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
 
   const allImages = useMemo(() => {
     const imgs: string[] = [];
+    if ((product as any).mockup_image_url) imgs.push((product as any).mockup_image_url);
     if (product.image_url) imgs.push(product.image_url);
     product.color_variants?.forEach((cv) => {
       cv.images?.forEach((img) => {

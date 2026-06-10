@@ -18,11 +18,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", in_stock: true, is_draft: false, zakeke_model_code: "" };
+export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", mockup_image_url: "", in_stock: true, is_draft: false, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
@@ -103,7 +103,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
+    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, mockup_image_url: product.mockup_image_url || null, in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
     if (product.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) toast.error(t("admin.saveError") + ": " + error.message);
@@ -116,10 +116,10 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     setSaving(false); onOpenChange(false); onSaved();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | { colorIndex: number }) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | { colorIndex: number }) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const key = typeof target === "string" ? "main" : `color-${target.colorIndex}`;
+    const key = typeof target === "string" ? target : `color-${target.colorIndex}`;
     setUploadingImage(key);
     const ext = file.name.split(".").pop();
     const path = `${product.slug || "temp"}/${Date.now()}.${ext}`;
@@ -133,6 +133,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
     const url = urlData.publicUrl;
     if (target === "main") { onProductChange({ ...product, image_url: url }); }
+    else if (target === "mockup") { onProductChange({ ...product, mockup_image_url: url }); }
     else { const variants = [...product.color_variants]; variants[target.colorIndex].images.push(url); onProductChange({ ...product, color_variants: variants }); }
     setUploadingImage(null);
   };
@@ -337,6 +338,29 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "main")} disabled={uploadingImage === "main"} />
               </label>
               {product.image_url && <Input value={product.image_url} onChange={(e) => onProductChange({ ...product, image_url: e.target.value })} placeholder={t("admin.orEnterUrl")} className="flex-1 min-w-0" />}
+            </div>
+          </div>
+
+          <div>
+            <Label className="font-body text-sm">Mockup bilde (rāda kā pirmo kartiņā)</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-1">Reālistiska bilde, piem. krekls uz cilvēka. Ja nav, kartiņā rādīsim parasto bildi.</p>
+            <div className="mt-1 flex flex-wrap items-center gap-3">
+              {product.mockup_image_url && <img src={product.mockup_image_url} alt="Mockup" className="w-20 h-20 object-cover rounded border border-border" />}
+              <label className="cursor-pointer">
+                <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-md hover:bg-muted text-sm font-body">
+                  <Upload className="w-4 h-4" />
+                  {uploadingImage === "mockup" ? t("admin.uploading") : t("admin.upload")}
+                </div>
+                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, "mockup")} disabled={uploadingImage === "mockup"} />
+              </label>
+              {product.mockup_image_url && (
+                <>
+                  <Input value={product.mockup_image_url} onChange={(e) => onProductChange({ ...product, mockup_image_url: e.target.value })} placeholder={t("admin.orEnterUrl")} className="flex-1 min-w-0" />
+                  <Button variant="ghost" size="sm" onClick={() => onProductChange({ ...product, mockup_image_url: "" })}>
+                    <X className="w-3 h-3 mr-1" /> Noņemt
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 

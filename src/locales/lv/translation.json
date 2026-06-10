@@ -123,7 +123,10 @@
     "sizeAdults": "Pieaugušajiem",
     "sizeKids": "Bērniem",
     "sizeBaby": "Zīdaiņiem",
-    "sizeOther": "Krūzes / Citi"
+    "sizeOther": "Krūzes / Citi",
+    "collection": "Kolekcija",
+    "allCollections": "Visas",
+    "baseCollection": "Pamata kolekcija"
   },
   "productDetail": {
     "backToProducts": "Atpakaļ uz produktiem",

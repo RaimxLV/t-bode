@@ -19,12 +19,14 @@ export interface DBProduct {
   price: number;
   category: string;
   image_url: string | null;
+  mockup_image_url: string | null;
   sizes: string[] | null;
   colors: string[] | null;
   color_variants: ColorVariant[];
   customizable: boolean;
   in_stock: boolean;
   zakeke_model_code: string | null;
+  campaign_id: string | null;
   created_at: string;
   updated_at: string;
 }
