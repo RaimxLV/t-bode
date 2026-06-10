@@ -632,11 +632,12 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       // They must NOT appear as work-to-do or inflate stats. They can still be
       // reviewed in the dedicated "Nesamaksātie" tab below.
       if (o.status === "pending" && !isOrderPaid(o)) return false;
-      const items = orderItems[o.id] || [];
-      const hasPendingZakekeItem = items.some((item: any) => item.zakeke_design_id && !hasReadyPrintFiles(item.zakeke_print_files));
-      return !hasPendingZakekeItem;
+      // NB: orders with pending Zakeke print files are NOT hidden — they must
+      // remain visible in the inbox so staff can track them. A visual badge
+      // elsewhere in the row indicates the missing print files.
+      return true;
     }),
-    [orders, orderItems]
+    [orders]
   );
   const archivedOrders = useMemo(() => orders.filter(o => ARCHIVED_STATUSES.includes(o.status) && isOrderPaid(o)), [orders]);
   const cancelledOrders = useMemo(() => orders.filter(o => o.status === "cancelled"), [orders]);
