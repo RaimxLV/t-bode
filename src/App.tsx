@@ -181,6 +181,7 @@ const App = () => {
                         <Route path="/blog/:slug" element={<BlogPost />} />
                         <Route path="/blog" element={<BlogIndex />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/veikali" element={<Veikali />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
