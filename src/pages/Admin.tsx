@@ -100,19 +100,8 @@ const Admin = () => {
   const { data: pendingCampaigns = [] } = useCampaignReviewBadge();
   const pendingCount = pendingCampaigns.length;
 
-  // One-shot toast after login if there are pending review campaigns.
-  useEffect(() => {
-    if (!isAdmin || pendingCount === 0) return;
-    const key = "campaign-review-toast-shown";
-    if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, "1");
-    const first = pendingCampaigns[0];
-    if (first) {
-      toast.info(`${first.title ?? "Kampaņa"} ir gatava pārskatīšanai ${first.step}. solī!`, {
-        action: { label: "Atvērt", onClick: () => setActiveTab("autopilot") },
-      });
-    }
-  }, [isAdmin, pendingCount, pendingCampaigns]);
+  // Note: per-step "Kampaņa gatava X. solī" popup was removed by request — the
+  // Autopilot tab already shows a red badge with the pending count.
 
   const publishedProducts = products.filter((p) => !(p as any).is_draft);
   const draftProducts = products.filter((p) => (p as any).is_draft);
@@ -394,10 +383,6 @@ const Admin = () => {
                 <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="blog" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Svētku iedvesmai</TabsTrigger>
-            <TabsTrigger value="printzones" className="gap-1.5 text-sm"><Wand2 className="w-4 h-4" /> Print zonas</TabsTrigger>
-            <TabsTrigger value="designstoproducts" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> Dizaini → Krekli</TabsTrigger>
-            <TabsTrigger value="designlibrary" className="gap-1.5 text-sm"><ImageIcon className="w-4 h-4" /> Dizainu bibliotēka</TabsTrigger>
             <TabsTrigger value="drafts" className="gap-1.5 text-sm"><FileEditIcon className="w-4 h-4" /> Melnraksti<Badge variant="secondary" className="ml-1 text-xs">{draftProducts.length}</Badge></TabsTrigger>
             <TabsTrigger value="omnivaSync" className="gap-1.5 text-sm"><Truck className="w-4 h-4" /> Omniva sync</TabsTrigger>
           </TabsList>
