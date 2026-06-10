@@ -53,6 +53,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
+const Veikali = lazy(() => import("./pages/Veikali.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -180,6 +181,7 @@ const App = () => {
                         <Route path="/blog/:slug" element={<BlogPost />} />
                         <Route path="/blog" element={<BlogIndex />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/veikali" element={<Veikali />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
