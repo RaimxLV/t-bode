@@ -47,7 +47,7 @@ const Index = () => {
     ],
   };
 
-  const jsonLdArray = [aiFaqJsonLd, breadcrumbJsonLd, ...(faqJsonLd ? [faqJsonLd] : [])];
+  const jsonLdArray = [breadcrumbJsonLd];
 
   return (
     <div className="min-h-screen">
