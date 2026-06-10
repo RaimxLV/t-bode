@@ -53,6 +53,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
+const Veikali = lazy(() => import("./pages/Veikali.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
