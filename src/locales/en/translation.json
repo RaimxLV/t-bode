@@ -124,7 +124,10 @@
     "sizeAdults": "Adults",
     "sizeKids": "Kids",
     "sizeBaby": "Baby",
-    "sizeOther": "Mugs / Other"
+    "sizeOther": "Mugs / Other",
+    "collection": "Collection",
+    "allCollections": "All",
+    "baseCollection": "Base collection"
   },
   "productDetail": {
     "backToProducts": "Back to Products",
