@@ -109,6 +109,61 @@ Deno.serve(async (req) => {
 
   // 4. Stop before product publishing — that needs admin to pick bases.
 
+  // 5. Auto-archive campaigns 3 days after the holiday date has passed.
+  //    - campaign.status -> 'archived'
+  //    - products tied to the campaign -> status 'archived' + hidden from collection
+  //    - blog posts are left untouched (long-term SEO)
+  const ARCHIVE_GRACE_DAYS = 3;
+  const { data: activeCamps } = await admin
+    .from("campaigns")
+    .select("id, holiday_id, year, status")
+    .not("status", "in", "(archived,failed)");
+
+  const holidayById = new Map((holidays ?? []).map((h: any) => [h.id, h]));
+
+  for (const c of activeCamps ?? []) {
+    const h: any = holidayById.get(c.holiday_id);
+    if (!h) continue;
+    const holidayDate = new Date(Date.UTC(c.year, h.month - 1, h.day));
+    const archiveAfter = new Date(holidayDate.getTime() + ARCHIVE_GRACE_DAYS * 86400000);
+    if (Date.now() < archiveAfter.getTime()) continue;
+
+    // Archive products linked to this campaign (by campaign_id, with holiday_id fallback)
+    const { data: prodsByCampaign, error: pErr } = await admin
+      .from("products")
+      .update({ status: "archived", show_in_collection: false })
+      .eq("campaign_id", c.id)
+      .select("id");
+    if (pErr) actions.push({ step: "archive_products", id: c.id, error: pErr.message });
+    else actions.push({ step: "archive_products", id: c.id, count: (prodsByCampaign ?? []).length });
+
+    // Fallback: products tagged with the holiday for this same year window but missing campaign_id
+    if (c.holiday_id) {
+      const yearStart = new Date(Date.UTC(c.year, 0, 1)).toISOString();
+      const yearEnd = new Date(Date.UTC(c.year + 1, 0, 1)).toISOString();
+      const { data: prodsByHoliday } = await admin
+        .from("products")
+        .update({ status: "archived", show_in_collection: false })
+        .eq("holiday_id", c.holiday_id)
+        .is("campaign_id", null)
+        .gte("created_at", yearStart)
+        .lt("created_at", yearEnd)
+        .neq("status", "archived")
+        .select("id");
+      if ((prodsByHoliday ?? []).length) {
+        actions.push({ step: "archive_products_by_holiday", id: c.id, count: prodsByHoliday!.length });
+      }
+    }
+
+    // Archive the campaign itself
+    const { error: cErr } = await admin
+      .from("campaigns")
+      .update({ status: "archived" })
+      .eq("id", c.id);
+    if (cErr) actions.push({ step: "archive_campaign", id: c.id, error: cErr.message });
+    else actions.push({ step: "archive_campaign", id: c.id });
+  }
+
   return new Response(JSON.stringify({ ok: true, actions }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
