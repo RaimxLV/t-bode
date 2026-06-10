@@ -168,13 +168,13 @@ export const AutopilotDashboard = ({
         {sorted.map((h) => {
           const next = nextOccurrence(h.month, h.day);
           const days = daysUntil(next);
-          const isReady = days <= h.lead_days;
+          const isSoon = days <= h.lead_days;
           const camp = campOf(h.id, next.getFullYear());
           const label = camp ? statusLabel(camp.status) : null;
           const pending = camp && PENDING.has(camp.status);
 
           return (
-            <Card key={h.id} className={`border transition ${isReady ? "border-primary/40" : ""}`}>
+            <Card key={h.id} className={`border transition ${isSoon ? "border-primary/40" : ""}`}>
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -193,10 +193,10 @@ export const AutopilotDashboard = ({
                       {label.tone === "muted" && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
                       {label.text}
                     </Badge>
-                  ) : isReady ? (
-                    <Badge className="shrink-0"><Sparkles className="w-3 h-3 mr-1" />Gatava sākt</Badge>
+                  ) : isSoon ? (
+                    <Badge className="shrink-0"><Sparkles className="w-3 h-3 mr-1" />Tuvojas</Badge>
                   ) : (
-                    <Badge variant="outline" className="shrink-0 text-muted-foreground">Gaida</Badge>
+                    <Badge variant="outline" className="shrink-0 text-muted-foreground">Var sākt agri</Badge>
                   )}
                 </div>
 
@@ -209,7 +209,7 @@ export const AutopilotDashboard = ({
                 )}
 
                 {!camp ? (
-                  <Button size="sm" variant={isReady ? "default" : "outline"} disabled={!isReady || starting === h.id} onClick={() => handleStart(h)} className="w-full">
+                  <Button size="sm" variant={isSoon ? "default" : "outline"} disabled={starting === h.id} onClick={() => handleStart(h)} className="w-full">
                     {starting === h.id ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Veido…</> : "Sākt kampaņu"}
                   </Button>
                 ) : (
