@@ -512,44 +512,8 @@ const Admin = () => {
 
           <TabsContent value="autopilot">
             <Suspense fallback={<TabFallback />}>
-              <AutopilotDashboard />
+              <AutopilotDashboard draftProducts={draftProducts} loadingProducts={loadingProducts} renderProductGrid={renderProductGrid} />
             </Suspense>
-          </TabsContent>
-
-          <TabsContent value="blog">
-            <Suspense fallback={<TabFallback />}>
-              <BlogManager />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="printzones">
-            <Suspense fallback={<TabFallback />}>
-              <PrintZonesManager />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="designstoproducts">
-            <Suspense fallback={<TabFallback />}>
-              <DesignsToProducts />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="designlibrary">
-            <Suspense fallback={<TabFallback />}>
-              <DesignLibrary />
-            </Suspense>
-          </TabsContent>
-
-          <TabsContent value="drafts">
-            {loadingProducts ? (
-              <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p>
-            ) : draftProducts.length === 0 ? (
-              <Card><CardContent className="p-8 text-center text-sm text-muted-foreground font-body">
-                Nav neviena produkta melnraksta. Tie tiek izveidoti automātiski no Autopilot kampaņām vai pārvēršot dizainus par produktiem.
-              </CardContent></Card>
-            ) : (
-              renderProductGrid(draftProducts, false)
-            )}
           </TabsContent>
 
           <TabsContent value="omnivaSync">
