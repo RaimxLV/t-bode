@@ -64,7 +64,7 @@ async function genOpenAi(opts: { prompt: string; image_size: string; model: "ope
       model: opts.model,
       prompt,
       size: toOpenAiSize(opts.image_size),
-      quality: "high",
+      quality: "medium",
       n: 1,
     }),
   });
@@ -123,30 +123,9 @@ function detectExt(bytes: Uint8Array): { contentType: string; extension: string 
 async function genOne(apiKey: string, opts: { prompt: string; image_size: string; model?: FalModel; transparent_bg?: boolean }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
   // OpenAI models routed through Lovable AI Gateway
   if (opts.model === "openai/gpt-image-2" || opts.model === "openai/gpt-image-1-mini") {
-    let out = await genOpenAi({ prompt: opts.prompt, image_size: opts.image_size, model: opts.model, transparent_bg: opts.transparent_bg });
-    if (opts.transparent_bg) {
-      try {
-        // Upload temp to data URL? birefnet needs an URL. Use base64 data URL.
-        const dataUrl = `data:image/png;base64,${bytesToBase64(out.bytes)}`;
-        const bgRes = await fetch("https://fal.run/fal-ai/birefnet/v2", {
-          method: "POST",
-          headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ image_url: dataUrl, operating_resolution: "2048x2048", output_format: "png", refine_foreground: true }),
-        });
-        if (bgRes.ok) {
-          const bgData = await bgRes.json();
-          const newUrl = bgData?.image?.url ?? bgData?.images?.[0]?.url;
-          if (newUrl) {
-            let bytes = await fetchBytes(newUrl);
-            try { bytes = await trimTransparent(bytes); } catch (e) { console.warn("trim failed:", e); }
-            return { bytes, contentType: "image/png", extension: "png" };
-          }
-        }
-      } catch (e) {
-        console.warn("openai bg-remove failed (keeping original):", e);
-      }
-    }
-    return out;
+    // Background removal for OpenAI is handled AFTER upload (using a storage URL)
+    // to avoid base64 data-URL overhead that pushes us past the 150s edge timeout.
+    return await genOpenAi({ prompt: opts.prompt, image_size: opts.image_size, model: opts.model, transparent_bg: opts.transparent_bg });
   }
 
   const hasLatvian = /[āēīōūčšžķļņģ]/i.test(opts.prompt);
@@ -287,10 +266,42 @@ Deno.serve(async (req) => {
         contentType: out.contentType, upsert: false,
       });
       if (up.error) throw up.error;
+      let finalBytes = out.bytes;
+      let finalContentType = out.contentType;
+      // For OpenAI models with transparent_bg, do background removal AFTER upload using
+      // the public storage URL (faster than base64 data URL).
+      const isOpenAi = body.model === "openai/gpt-image-2" || body.model === "openai/gpt-image-1-mini";
+      if (isOpenAi && body.transparent_bg) {
+        try {
+          const publicUrl = admin.storage.from("design-library").getPublicUrl(path).data.publicUrl;
+          const bgRes = await fetch("https://fal.run/fal-ai/birefnet/v2", {
+            method: "POST",
+            headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ image_url: publicUrl, operating_resolution: "1024x1024", output_format: "png", refine_foreground: true }),
+          });
+          if (bgRes.ok) {
+            const bgData = await bgRes.json();
+            const newUrl = bgData?.image?.url ?? bgData?.images?.[0]?.url;
+            if (newUrl) {
+              let bytes = await fetchBytes(newUrl);
+              try { bytes = await trimTransparent(bytes); } catch (e) { console.warn("trim failed:", e); }
+              const reUp = await admin.storage.from("design-library").upload(path, bytes, {
+                contentType: "image/png", upsert: true,
+              });
+              if (!reUp.error) {
+                finalBytes = bytes;
+                finalContentType = "image/png";
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("openai post-upload bg-remove failed (keeping original):", e);
+        }
+      }
       const { data: row, error: dbErr } = await admin.from("design_library").insert({
         name,
         file_path: path,
-        file_size: out.bytes.byteLength,
+        file_size: finalBytes.byteLength,
         category_id: body.category_id ?? null,
         tags,
       }).select("id, file_path").maybeSingle();

@@ -10,6 +10,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/ProductCard";
+import { SortableProductGrid } from "@/components/admin/SortableProductGrid";
 import { useTranslation } from "react-i18next";
 import { CATEGORY_ICONS } from "@/components/CategoryIcons";
 import logo from "@/assets/logo.svg";
@@ -206,7 +207,11 @@ const Admin = () => {
 
   const loadProducts = async () => {
     setLoadingProducts(true);
-    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("display_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false });
     if (error) toast.error(t("admin.loadError"));
     else setProducts(((data ?? []) as any[]).map((product) => ({ ...product, color_variants: (product.color_variants as ColorVariant[]) || [], zakeke_model_code: product.zakeke_model_code ?? null })));
     setLoadingProducts(false);
@@ -332,11 +337,12 @@ const Admin = () => {
         {filtered.length === 0 ? (
           <div className="text-center py-12 sm:py-20"><p className="text-muted-foreground font-body">{t("admin.noProducts")}</p></div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
-            {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} onEdit={openEditDialog} onDelete={handleDelete} />
-            ))}
-          </div>
+          <SortableProductGrid
+            products={filtered}
+            onEdit={openEditDialog}
+            onDelete={handleDelete}
+            onReordered={loadProducts}
+          />
         )}
       </>
     );
