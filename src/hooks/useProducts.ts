@@ -58,6 +58,7 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
     ...p,
     color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
+    gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
   }));
 }
 
@@ -74,6 +75,7 @@ async function fetchCollectionProducts(): Promise<DBProduct[]> {
     ...p,
     color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
+    gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
   }));
 }
 
@@ -89,6 +91,7 @@ async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
     ...data,
     color_variants: (data.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (data as any).zakeke_model_code ?? null,
+    gallery_images: (Array.isArray((data as any).gallery_images) ? (data as any).gallery_images : []) as string[],
   };
 }
 
