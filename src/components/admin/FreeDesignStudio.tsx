@@ -28,6 +28,8 @@ const SIZES = [
 
 const MODELS = [
   { value: "auto", label: "Auto (ieteicams)" },
+  { value: "openai/gpt-image-2", label: "GPT Image 2 — premium (OpenAI)" },
+  { value: "openai/gpt-image-1-mini", label: "GPT Image Mini — lētāks (OpenAI)" },
   { value: "recraft", label: "Recraft — ilustrācijas" },
   { value: "ideogram", label: "Ideogram — teksts" },
   { value: "flux-pro", label: "Flux Pro — foto-reālistiski" },
