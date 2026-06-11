@@ -31,6 +31,15 @@ const ALLOWED_SIZES = new Set([
   "square_hd", "square", "portrait_4_3", "portrait_16_9", "landscape_4_3", "landscape_16_9",
 ]);
 
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
 function toOpenAiSize(s: string): "1024x1024" | "1024x1536" | "1536x1024" {
   switch (s) {
     case "portrait_4_3":
