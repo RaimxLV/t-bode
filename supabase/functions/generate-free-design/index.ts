@@ -14,7 +14,9 @@ type FalModel =
   | "flux-pro"
   | "flux-schnell"
   | "seedream"
-  | "nano-banana";
+  | "nano-banana"
+  | "openai/gpt-image-2"
+  | "openai/gpt-image-1-mini";
 
 interface Body {
   prompt: string;
@@ -28,6 +30,47 @@ interface Body {
 const ALLOWED_SIZES = new Set([
   "square_hd", "square", "portrait_4_3", "portrait_16_9", "landscape_4_3", "landscape_16_9",
 ]);
+
+function toOpenAiSize(s: string): "1024x1024" | "1024x1536" | "1536x1024" {
+  switch (s) {
+    case "portrait_4_3":
+    case "portrait_16_9":
+      return "1024x1536";
+    case "landscape_4_3":
+    case "landscape_16_9":
+      return "1536x1024";
+    default:
+      return "1024x1024";
+  }
+}
+
+async function genOpenAi(opts: { prompt: string; image_size: string; model: "openai/gpt-image-2" | "openai/gpt-image-1-mini"; transparent_bg?: boolean }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
+  const key = Deno.env.get("LOVABLE_API_KEY");
+  if (!key) throw new Error("LOVABLE_API_KEY nav konfigurēts");
+  const prompt = buildPrompt(opts.prompt, !!opts.transparent_bg);
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+    method: "POST",
+    headers: { "Lovable-API-Key": key, "Content-Type": "application/json", "X-Lovable-AIG-SDK": "edge-function" },
+    body: JSON.stringify({
+      model: opts.model,
+      prompt,
+      size: toOpenAiSize(opts.image_size),
+      quality: "high",
+      n: 1,
+    }),
+  });
+  if (res.status === 429) throw new Error("Lovable AI: pārāk daudz pieprasījumu. Mēģini vēlāk.");
+  if (res.status === 402) throw new Error("Lovable AI kredīti beigušies. Papildini workspace billing.");
+  if (!res.ok) {
+    const t = await res.text();
+    throw new Error(`Lovable AI (${res.status}): ${t.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const b64: string | undefined = data?.data?.[0]?.b64_json;
+  if (!b64) throw new Error("Lovable AI neatgrieza attēlu");
+  const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+  return { bytes, contentType: "image/png", extension: "png" };
+}
 
 function resolveEndpoint(model: FalModel | undefined, hasLatvian: boolean): string {
   switch (model) {
@@ -69,6 +112,34 @@ function detectExt(bytes: Uint8Array): { contentType: string; extension: string 
 }
 
 async function genOne(apiKey: string, opts: { prompt: string; image_size: string; model?: FalModel; transparent_bg?: boolean }): Promise<{ bytes: Uint8Array; contentType: string; extension: string }> {
+  // OpenAI models routed through Lovable AI Gateway
+  if (opts.model === "openai/gpt-image-2" || opts.model === "openai/gpt-image-1-mini") {
+    let out = await genOpenAi({ prompt: opts.prompt, image_size: opts.image_size, model: opts.model, transparent_bg: opts.transparent_bg });
+    if (opts.transparent_bg) {
+      try {
+        // Upload temp to data URL? birefnet needs an URL. Use base64 data URL.
+        const dataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...out.bytes))}`;
+        const bgRes = await fetch("https://fal.run/fal-ai/birefnet/v2", {
+          method: "POST",
+          headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ image_url: dataUrl, operating_resolution: "2048x2048", output_format: "png", refine_foreground: true }),
+        });
+        if (bgRes.ok) {
+          const bgData = await bgRes.json();
+          const newUrl = bgData?.image?.url ?? bgData?.images?.[0]?.url;
+          if (newUrl) {
+            let bytes = await fetchBytes(newUrl);
+            try { bytes = await trimTransparent(bytes); } catch (e) { console.warn("trim failed:", e); }
+            return { bytes, contentType: "image/png", extension: "png" };
+          }
+        }
+      } catch (e) {
+        console.warn("openai bg-remove failed (keeping original):", e);
+      }
+    }
+    return out;
+  }
+
   const hasLatvian = /[āēīōūčšžķļņģ]/i.test(opts.prompt);
   const endpoint = resolveEndpoint(opts.model, hasLatvian);
   const prompt = buildPrompt(opts.prompt, !!opts.transparent_bg);
