@@ -20,6 +20,7 @@ export interface DBProduct {
   category: string;
   image_url: string | null;
   mockup_image_url: string | null;
+  gallery_images: string[];
   sizes: string[] | null;
   colors: string[] | null;
   color_variants: ColorVariant[];
