@@ -376,6 +376,32 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
           </div>
 
           <div>
+            <Label className="font-body text-sm">Lifestyle galerija (cilvēki ar produktu)</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Parādās produkta lapā zem pirkšanas pogām atsevišķā sadaļā. Var augšupielādēt vairākas reizē.</p>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(product.gallery_images ?? []).map((img, idx) => (
+                <div key={idx} className="relative group">
+                  <img src={img} alt={`Galerija ${idx + 1}`} className="w-20 h-24 object-cover rounded border border-border" />
+                  <button
+                    type="button"
+                    onClick={() => onProductChange({ ...product, gallery_images: (product.gallery_images ?? []).filter((_, i) => i !== idx) })}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Dzēst bildi"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="cursor-pointer">
+                <div className="w-20 h-24 border-2 border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 hover:bg-muted transition-colors">
+                  {uploadingImage === "gallery" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
+                </div>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "gallery")} disabled={uploadingImage === "gallery"} />
+              </label>
+            </div>
+          </div>
+
+          <div>
             <Label className="font-body text-sm">{t("admin.sizes")}</Label>
             <div className="mt-2 flex flex-wrap gap-2">
               {COMMON_SIZES.map((size) => (
