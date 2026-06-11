@@ -206,7 +206,11 @@ const Admin = () => {
 
   const loadProducts = async () => {
     setLoadingProducts(true);
-    const { data, error } = await supabase.from("products").select("*").order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("display_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false });
     if (error) toast.error(t("admin.loadError"));
     else setProducts(((data ?? []) as any[]).map((product) => ({ ...product, color_variants: (product.color_variants as ColorVariant[]) || [], zakeke_model_code: product.zakeke_model_code ?? null })));
     setLoadingProducts(false);
