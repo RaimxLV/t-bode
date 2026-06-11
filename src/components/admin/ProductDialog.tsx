@@ -18,11 +18,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; gallery_images?: string[]; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", mockup_image_url: "", in_stock: true, is_draft: false, zakeke_model_code: "" };
+export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", mockup_image_url: "", gallery_images: [], in_stock: true, is_draft: false, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
