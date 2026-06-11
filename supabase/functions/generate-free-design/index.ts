@@ -127,7 +127,7 @@ async function genOne(apiKey: string, opts: { prompt: string; image_size: string
     if (opts.transparent_bg) {
       try {
         // Upload temp to data URL? birefnet needs an URL. Use base64 data URL.
-        const dataUrl = `data:image/png;base64,${btoa(String.fromCharCode(...out.bytes))}`;
+        const dataUrl = `data:image/png;base64,${bytesToBase64(out.bytes)}`;
         const bgRes = await fetch("https://fal.run/fal-ai/birefnet/v2", {
           method: "POST",
           headers: { Authorization: `Key ${apiKey}`, "Content-Type": "application/json" },
