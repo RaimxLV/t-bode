@@ -18,11 +18,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; }
-export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; gallery_images?: string[]; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
 
-export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", mockup_image_url: "", in_stock: true, is_draft: false, zakeke_model_code: "" };
+export const EMPTY_PRODUCT: ProductForm = { name: "", name_lv: "", name_en: "", slug: "", description: "", description_lv: "", description_en: "", price: 0, category: "t-shirts", sizes: [], customizable: false, color_variants: [], image_url: "", mockup_image_url: "", gallery_images: [], in_stock: true, is_draft: false, zakeke_model_code: "" };
 
 interface ProductDialogProps {
   open: boolean;
@@ -103,7 +103,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     setSaving(true);
-    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, mockup_image_url: product.mockup_image_url || null, in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
+    const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, mockup_image_url: product.mockup_image_url || null, gallery_images: product.gallery_images ?? [], in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
     if (product.id) {
       const { error } = await supabase.from("products").update(payload).eq("id", product.id);
       if (error) toast.error(t("admin.saveError") + ": " + error.message);
@@ -116,26 +116,37 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     setSaving(false); onOpenChange(false); onSaved();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | { colorIndex: number }) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | "gallery" | { colorIndex: number }) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     const key = typeof target === "string" ? target : `color-${target.colorIndex}`;
     setUploadingImage(key);
-    const ext = file.name.split(".").pop();
-    const path = `${product.slug || "temp"}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-    if (error) {
-      console.error("Image upload error:", error);
-      toast.error(t("admin.uploadError") + ": " + (error.message || "unknown"));
-      setUploadingImage(null);
-      return;
+    const uploaded: string[] = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop();
+      const path = `${product.slug || "temp"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+      if (error) {
+        console.error("Image upload error:", error);
+        toast.error(t("admin.uploadError") + ": " + (error.message || "unknown"));
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      uploaded.push(urlData.publicUrl);
     }
-    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-    const url = urlData.publicUrl;
-    if (target === "main") { onProductChange({ ...product, image_url: url }); }
-    else if (target === "mockup") { onProductChange({ ...product, mockup_image_url: url }); }
-    else { const variants = [...product.color_variants]; variants[target.colorIndex].images.push(url); onProductChange({ ...product, color_variants: variants }); }
+    if (uploaded.length > 0) {
+      if (target === "main") { onProductChange({ ...product, image_url: uploaded[0] }); }
+      else if (target === "mockup") { onProductChange({ ...product, mockup_image_url: uploaded[0] }); }
+      else if (target === "gallery") {
+        onProductChange({ ...product, gallery_images: [...(product.gallery_images ?? []), ...uploaded] });
+      } else {
+        const variants = [...product.color_variants];
+        variants[target.colorIndex].images.push(...uploaded);
+        onProductChange({ ...product, color_variants: variants });
+      }
+    }
     setUploadingImage(null);
+    e.target.value = "";
   };
 
   const toggleSize = (size: string) => {
@@ -361,6 +372,32 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                   </Button>
                 </>
               )}
+            </div>
+          </div>
+
+          <div>
+            <Label className="font-body text-sm">Lifestyle galerija (cilvēki ar produktu)</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Parādās produkta lapā zem pirkšanas pogām atsevišķā sadaļā. Var augšupielādēt vairākas reizē.</p>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(product.gallery_images ?? []).map((img, idx) => (
+                <div key={idx} className="relative group">
+                  <img src={img} alt={`Galerija ${idx + 1}`} className="w-20 h-24 object-cover rounded border border-border" />
+                  <button
+                    type="button"
+                    onClick={() => onProductChange({ ...product, gallery_images: (product.gallery_images ?? []).filter((_, i) => i !== idx) })}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Dzēst bildi"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="cursor-pointer">
+                <div className="w-20 h-24 border-2 border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 hover:bg-muted transition-colors">
+                  {uploadingImage === "gallery" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
+                </div>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "gallery")} disabled={uploadingImage === "gallery"} />
+              </label>
             </div>
           </div>
 

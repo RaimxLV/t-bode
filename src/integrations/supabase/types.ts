@@ -1179,6 +1179,7 @@ export type Database = {
           description_en: string | null
           description_lv: string | null
           expires_at: string | null
+          gallery_images: Json
           holiday_id: string | null
           id: string
           image_url: string | null
@@ -1213,6 +1214,7 @@ export type Database = {
           description_en?: string | null
           description_lv?: string | null
           expires_at?: string | null
+          gallery_images?: Json
           holiday_id?: string | null
           id?: string
           image_url?: string | null
@@ -1247,6 +1249,7 @@ export type Database = {
           description_en?: string | null
           description_lv?: string | null
           expires_at?: string | null
+          gallery_images?: Json
           holiday_id?: string | null
           id?: string
           image_url?: string | null
