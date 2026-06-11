@@ -5,6 +5,7 @@ import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, 
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { LifestyleGallery } from "@/components/LifestyleGallery";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
