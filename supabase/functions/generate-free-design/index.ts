@@ -64,7 +64,7 @@ async function genOpenAi(opts: { prompt: string; image_size: string; model: "ope
       model: opts.model,
       prompt,
       size: toOpenAiSize(opts.image_size),
-      quality: "high",
+      quality: "medium",
       n: 1,
     }),
   });
