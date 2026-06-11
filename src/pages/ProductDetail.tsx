@@ -517,6 +517,12 @@ const ProductDetail = () => {
             </motion.div>
           </div>
 
+          {/* Lifestyle gallery — real-world photos of the product */}
+          <LifestyleGallery
+            images={product.gallery_images ?? []}
+            productName={displayName}
+          />
+
           {/* Related products */}
           <RelatedProducts category={product.category} excludeId={product.id} />
         </div>
