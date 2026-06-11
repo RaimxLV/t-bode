@@ -25,9 +25,6 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
           {t("productDetail.lifestyleEyebrow", "Galerija")}
         </span>
       </div>
-      <h2 className="font-display text-2xl md:text-3xl tracking-wide mb-1">
-        {t("productDetail.lifestyleTitle", "Kā izskatās dabā")}
-      </h2>
       <p className="text-sm text-muted-foreground font-body mb-6">
         {t("productDetail.lifestyleSubtitle", "Reāli foto ar produktu — uzklikšķini, lai apskatītos tuvāk.")}
       </p>
