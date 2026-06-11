@@ -82,7 +82,7 @@ export function SortableProductGrid({ products, onEdit, onDelete, onReordered }:
     try {
       await Promise.all(
         updates.map((u) =>
-          supabase.from("products").update({ display_order: u.display_order }).eq("id", u.id)
+          supabase.from("products").update({ display_order: u.display_order } as any).eq("id", u.id)
         )
       );
       onReordered?.();
