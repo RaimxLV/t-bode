@@ -143,7 +143,10 @@
     "notFound": "Produkts nav atrasts",
     "backLink": "← Atpakaļ uz produktiem",
     "relatedProducts": "Līdzīgie produkti",
-    "zoomImage": "Palielināt attēlu"
+    "zoomImage": "Palielināt attēlu",
+    "lifestyleEyebrow": "Galerija",
+    "lifestyleTitle": "Kā izskatās dabā",
+    "lifestyleSubtitle": "Reāli foto ar produktu — uzklikšķini, lai apskatītos tuvāk."
   },
   "cart": {
     "title": "Grozs",
