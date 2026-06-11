@@ -116,26 +116,37 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     setSaving(false); onOpenChange(false); onSaved();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | { colorIndex: number }) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | "gallery" | { colorIndex: number }) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     const key = typeof target === "string" ? target : `color-${target.colorIndex}`;
     setUploadingImage(key);
-    const ext = file.name.split(".").pop();
-    const path = `${product.slug || "temp"}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
-    if (error) {
-      console.error("Image upload error:", error);
-      toast.error(t("admin.uploadError") + ": " + (error.message || "unknown"));
-      setUploadingImage(null);
-      return;
+    const uploaded: string[] = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop();
+      const path = `${product.slug || "temp"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: true });
+      if (error) {
+        console.error("Image upload error:", error);
+        toast.error(t("admin.uploadError") + ": " + (error.message || "unknown"));
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
+      uploaded.push(urlData.publicUrl);
     }
-    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(path);
-    const url = urlData.publicUrl;
-    if (target === "main") { onProductChange({ ...product, image_url: url }); }
-    else if (target === "mockup") { onProductChange({ ...product, mockup_image_url: url }); }
-    else { const variants = [...product.color_variants]; variants[target.colorIndex].images.push(url); onProductChange({ ...product, color_variants: variants }); }
+    if (uploaded.length > 0) {
+      if (target === "main") { onProductChange({ ...product, image_url: uploaded[0] }); }
+      else if (target === "mockup") { onProductChange({ ...product, mockup_image_url: uploaded[0] }); }
+      else if (target === "gallery") {
+        onProductChange({ ...product, gallery_images: [...(product.gallery_images ?? []), ...uploaded] });
+      } else {
+        const variants = [...product.color_variants];
+        variants[target.colorIndex].images.push(...uploaded);
+        onProductChange({ ...product, color_variants: variants });
+      }
+    }
     setUploadingImage(null);
+    e.target.value = "";
   };
 
   const toggleSize = (size: string) => {
