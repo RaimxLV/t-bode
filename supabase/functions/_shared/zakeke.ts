@@ -442,10 +442,18 @@ export async function createZakekeOrder(opts: {
   if (!zakekeOrderId) {
     const echoedCode = data?.orderCode ?? null;
     if (echoedCode && String(echoedCode) === String(opts.externalOrderId)) {
-      console.log(
-        `[zakeke-create-order] no internal id in response — using orderCode=${echoedCode} as zakekeOrderId`,
-      );
-      zakekeOrderId = String(echoedCode);
+      // Zakeke didn't echo their numeric id. Re-resolve by orderCode — the
+      // /v2/order/{code} endpoint returns the canonical numeric id we need
+      // for downstream output-files calls.
+      const reResolved = await resolveZakekeOrderByCode(String(echoedCode), token);
+      const reId = reResolved ? extractOrderId(reResolved) : null;
+      if (reId) {
+        data = reResolved;
+        zakekeOrderId = String(reId);
+        console.log(
+          `[zakeke-create-order] re-resolved orderCode=${echoedCode} -> id=${reId}`,
+        );
+      }
     }
   }
   if (!zakekeOrderId) {
@@ -552,8 +560,34 @@ export async function getZakekeOrderOutputFiles(
   // Preferred V2 endpoint that returns ALL output files for an order at once.
   // NOTE: zakekeOrderId here MUST be Zakeke's own order id (NOT our UUID).
   const token = await getZakekeS2SToken();
+
+  // If the stored id is not numeric (e.g. our external orderCode "TB-0216"
+  // got persisted because Zakeke didn't echo back an internal id), resolve
+  // it to the real Zakeke numeric id via /v2/order/{code}. The output-files
+  // endpoint ONLY accepts the numeric id and otherwise returns HTTP 400.
+  let resolvedOrderId = zakekeOrderId;
+  if (!/^\d+$/.test(String(zakekeOrderId))) {
+    try {
+      const resolved = await resolveZakekeOrderByCode(String(zakekeOrderId), token);
+      const internalId = resolved ? extractOrderId(resolved) : null;
+      if (internalId && /^\d+$/.test(String(internalId))) {
+        console.log(
+          `[zakeke-output-files] resolved orderCode=${zakekeOrderId} -> id=${internalId}`,
+        );
+        resolvedOrderId = String(internalId);
+      }
+      // If the resolved payload already contains print files, return them.
+      if (resolved) {
+        const orderFiles = mapPrintingFilesFromOrder(resolved);
+        if (orderFiles.length > 0) return orderFiles;
+      }
+    } catch (e) {
+      console.error("[zakeke-output-files] code-resolve failed:", e);
+    }
+  }
+
   try {
-    const url = `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}/output-files`;
+    const url = `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(resolvedOrderId)}/output-files`;
     console.log(`[zakeke-output-files] GET ${url}`);
     const res = await fetch(url, {
       method: "GET",
@@ -592,9 +626,12 @@ export async function getZakekeOrderOutputFiles(
 
   // Fallback: resolve the order to discover its order-item ids.
   const candidates = [
-    `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(zakekeOrderId)}`,
+    `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(resolvedOrderId)}`,
+    `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(resolvedOrderId)}`,
+    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(resolvedOrderId)}`,
+    // Always try the original orderCode as a last resort (some endpoints
+    // accept either the numeric id OR the orderCode string).
     `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(zakekeOrderId)}`,
-    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}`,
   ];
   let lastError = "";
   for (const url of candidates) {
