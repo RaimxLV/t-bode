@@ -86,11 +86,20 @@ Deno.serve(async (req) => {
               zakeke_order_id: zakekeOrderId,
               zakeke_order_item_id: orderItemIds[0] ?? null,
             }).eq("id", row.id);
-            if (orderItemIds[0]) files = await getZakekeOrderItemFiles(orderItemIds[0]);
-            else files = await getZakekeOrderOutputFiles(zakekeOrderId);
-          } catch {
-            const z = await getZakekeDesignZipFile(String(row.zakeke_design_id));
-            files = z ? [z] : [];
+            // Zakeke needs a minute to generate the print files. If the
+            // immediate fetch fails (404 "not ready yet"), leave the row
+            // empty so the NEXT sync run picks it up with the stored ids —
+            // don't poison the slot with a fallback ZIP.
+            try {
+              if (orderItemIds[0]) files = await getZakekeOrderItemFiles(orderItemIds[0]);
+              else files = await getZakekeOrderOutputFiles(zakekeOrderId);
+            } catch (e) {
+              console.log("zakeke-files-sync: files not ready yet for new order", row.id, (e as Error).message);
+              files = [];
+            }
+          } catch (e) {
+            console.error("zakeke-files-sync: createZakekeOrder failed", row.id, (e as Error).message);
+            files = [];
           }
         }
 
