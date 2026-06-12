@@ -59,7 +59,15 @@ Deno.serve(async (req) => {
         const isZip = /\.zip(\?|$)/i.test(url) || x?.type === "zip" || x?.side === "production-zip";
         return !isZip;
       });
-      return !hasIndividual;
+      if (!hasIndividual) return true;
+      // Keep polling for ~2 hours so additional sides/mockups (Back, etc.)
+      // that Zakeke produces a few minutes after the Front PNG also land.
+      const createdAt = row.orders?.created_at ?? row.created_at;
+      if (createdAt) {
+        const ageMs = Date.now() - new Date(createdAt).getTime();
+        if (ageMs < 2 * 60 * 60 * 1000) return true;
+      }
+      return false;
     }).slice(0, MAX_ITEMS_PER_RUN);
 
     let attached = 0;
@@ -130,8 +138,19 @@ Deno.serve(async (req) => {
                 (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
               )
             : files;
-          await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
-          attached++;
+          // Only overwrite if we now have MORE files than before — otherwise
+          // a transient short response from Zakeke could shrink the set.
+          const existing = Array.isArray(row.zakeke_print_files)
+            ? row.zakeke_print_files
+            : (row.zakeke_print_files && typeof row.zakeke_print_files === "object"
+                ? Object.values(row.zakeke_print_files)
+                : []);
+          if (finalFiles.length >= (existing as any[]).length) {
+            await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
+            attached++;
+          } else {
+            stillPending++;
+          }
         } else {
           stillPending++;
         }
