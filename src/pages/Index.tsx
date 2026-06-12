@@ -47,7 +47,19 @@ const Index = () => {
     ],
   };
 
-  const jsonLdArray = [breadcrumbJsonLd];
+  const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  const faqJsonLd = faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: stripHtml(f.q),
+      acceptedAnswer: { "@type": "Answer", text: stripHtml(f.a) },
+    })),
+  } : null;
+
+  const jsonLdArray: Record<string, any>[] = [breadcrumbJsonLd];
+  if (faqJsonLd) jsonLdArray.push(faqJsonLd);
 
   return (
     <div className="min-h-screen">
