@@ -12,9 +12,7 @@ export function useActiveCollectionCampaigns() {
     queryKey: ["campaigns", "active-collection"],
     queryFn: async (): Promise<ActiveCampaign[]> => {
       const { data, error } = await supabase
-        .from("campaigns")
-        .select("id, title")
-        .in("status", ["products_ready", "blog_ready", "completed", "active"]);
+        .rpc("get_public_active_campaigns");
       if (error) throw error;
       return (data ?? []) as ActiveCampaign[];
     },
