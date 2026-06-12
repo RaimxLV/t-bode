@@ -70,7 +70,18 @@ Deno.serve(async (req) => {
       try {
         let files: Awaited<ReturnType<typeof getZakekeOrderItemFiles>> = [];
         if (row.zakeke_order_item_id) {
-          files = await getZakekeOrderItemFiles(row.zakeke_order_item_id);
+          try {
+            files = await getZakekeOrderItemFiles(row.zakeke_order_item_id);
+          } catch (e) {
+            const msg = (e as Error).message;
+            // 404 = files still being generated, retry next cron tick.
+            if (/\b404\b/.test(msg)) {
+              console.log("zakeke-files-sync: files not ready yet", row.id);
+              stillPending++;
+              continue;
+            }
+            throw e;
+          }
         } else if (row.zakeke_order_id) {
           files = await getZakekeOrderOutputFiles(row.zakeke_order_id);
         } else if (row.zakeke_design_id) {
