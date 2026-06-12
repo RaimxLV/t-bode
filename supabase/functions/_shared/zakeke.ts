@@ -618,9 +618,12 @@ export async function getZakekeOrderOutputFiles(
 
   // Fallback: resolve the order to discover its order-item ids.
   const candidates = [
-    `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(zakekeOrderId)}`,
+    `${ZAKEKE_BASE}/v1/orders/${encodeURIComponent(resolvedOrderId)}`,
+    `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(resolvedOrderId)}`,
+    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(resolvedOrderId)}`,
+    // Always try the original orderCode as a last resort (some endpoints
+    // accept either the numeric id OR the orderCode string).
     `${ZAKEKE_BASE}/v2/order/${encodeURIComponent(zakekeOrderId)}`,
-    `${ZAKEKE_BASE}/v2/orders/${encodeURIComponent(zakekeOrderId)}`,
   ];
   let lastError = "";
   for (const url of candidates) {
