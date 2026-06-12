@@ -158,17 +158,13 @@ function extractOrderItemId(item: any): string | null {
     item?.id ??
     item?.detailID ??
     item?.detailId ??
-    item?.orderDetailCode ??
-    item?.code ??
     null
   ) ? String(
     item?.orderItemId ??
     item?.orderItemID ??
     item?.id ??
     item?.detailID ??
-    item?.detailId ??
-    item?.orderDetailCode ??
-    item?.code
+    item?.detailId
   ) : null;
 }
 

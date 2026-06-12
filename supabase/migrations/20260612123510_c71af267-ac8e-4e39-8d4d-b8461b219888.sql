@@ -1,0 +1,1 @@
+UPDATE public.order_items SET zakeke_print_files = NULL, zakeke_order_id = NULL, zakeke_order_item_id = NULL WHERE id = 'c8e62535-568b-404a-9e20-f050d03f24b9';

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // belong to a paid order (not pending / cancelled).
     const { data: candidates, error: candErr } = await service
       .from("order_items")
-      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at)")
+      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at, order_number)")
       .gte("created_at", since)
       .not("zakeke_design_id", "is", null)
       .limit(200);
@@ -59,7 +59,15 @@ Deno.serve(async (req) => {
         const isZip = /\.zip(\?|$)/i.test(url) || x?.type === "zip" || x?.side === "production-zip";
         return !isZip;
       });
-      return !hasIndividual;
+      if (!hasIndividual) return true;
+      // Keep polling for ~2 hours so additional sides/mockups (Back, etc.)
+      // that Zakeke produces a few minutes after the Front PNG also land.
+      const createdAt = row.orders?.created_at ?? row.created_at;
+      if (createdAt) {
+        const ageMs = Date.now() - new Date(createdAt).getTime();
+        if (ageMs < 2 * 60 * 60 * 1000) return true;
+      }
+      return false;
     }).slice(0, MAX_ITEMS_PER_RUN);
 
     let attached = 0;
@@ -87,8 +95,15 @@ Deno.serve(async (req) => {
         } else if (row.zakeke_design_id) {
           // Create order on the fly so Zakeke starts producing print files.
           try {
+            // Use the same human-readable code as zakeke-create-order so the
+            // Zakeke admin UI shows "TB-0218" instead of a raw UUID pair.
+            const orderNumber = (row as any).orders?.order_number;
+            const baseCode = orderNumber != null
+              ? String(orderNumber).padStart(4, "0")
+              : String(row.order_id).slice(0, 8).toUpperCase();
+            const externalCode = `TB-${baseCode}`;
             const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
-              externalOrderId: `${row.order_id}:${row.id}`,
+              externalOrderId: externalCode,
               customerCode: String(row.order_id),
               visitorCode: row.zakeke_visitor_code ?? null,
               items: [{ designId: String(row.zakeke_design_id), quantity: row.quantity ?? 1, reference: row.id }],
@@ -123,8 +138,19 @@ Deno.serve(async (req) => {
                 (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
               )
             : files;
-          await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
-          attached++;
+          // Only overwrite if we now have MORE files than before — otherwise
+          // a transient short response from Zakeke could shrink the set.
+          const existing = Array.isArray(row.zakeke_print_files)
+            ? row.zakeke_print_files
+            : (row.zakeke_print_files && typeof row.zakeke_print_files === "object"
+                ? Object.values(row.zakeke_print_files)
+                : []);
+          if (finalFiles.length >= (existing as any[]).length) {
+            await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
+            attached++;
+          } else {
+            stillPending++;
+          }
         } else {
           stillPending++;
         }
