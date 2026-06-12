@@ -83,8 +83,29 @@ export const GallerySection = () => {
     ? "Mūsu darbi — T-Bode personalizētas apdrukas piemēri"
     : "Our work — examples of T-Bode custom prints";
 
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: heading,
+    description: isLv
+      ? "T-Bode personalizētas apģērbu un aksesuāru apdrukas darbu galerija — t-krekli, hūdiji, krūzes un somas ar DTF apdruku."
+      : "Gallery of T-Bode custom apparel and accessory prints — t-shirts, hoodies, mugs and bags with DTF printing.",
+    numberOfItems: galleryImages.length,
+    itemListElement: galleryImages.map((img, i) => ({
+      "@type": "ImageObject",
+      position: i + 1,
+      contentUrl: img.src,
+      url: img.src,
+      name: isLv ? img.altLv : img.altEn,
+      description: isLv ? img.altLv : img.altEn,
+    })),
+  };
+
   return (
     <section className="py-16 overflow-hidden" aria-labelledby="gallery-heading">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(itemListJsonLd)}</script>
+      </Helmet>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 mb-8 text-center">
         <h2 id="gallery-heading" className="font-display text-3xl md:text-4xl tracking-tight">
           {heading}
