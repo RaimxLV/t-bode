@@ -442,10 +442,18 @@ export async function createZakekeOrder(opts: {
   if (!zakekeOrderId) {
     const echoedCode = data?.orderCode ?? null;
     if (echoedCode && String(echoedCode) === String(opts.externalOrderId)) {
-      console.log(
-        `[zakeke-create-order] no internal id in response — using orderCode=${echoedCode} as zakekeOrderId`,
-      );
-      zakekeOrderId = String(echoedCode);
+      // Zakeke didn't echo their numeric id. Re-resolve by orderCode — the
+      // /v2/order/{code} endpoint returns the canonical numeric id we need
+      // for downstream output-files calls.
+      const reResolved = await resolveZakekeOrderByCode(String(echoedCode), token);
+      const reId = reResolved ? extractOrderId(reResolved) : null;
+      if (reId) {
+        data = reResolved;
+        zakekeOrderId = String(reId);
+        console.log(
+          `[zakeke-create-order] re-resolved orderCode=${echoedCode} -> id=${reId}`,
+        );
+      }
     }
   }
   if (!zakekeOrderId) {
