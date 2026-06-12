@@ -158,6 +158,7 @@ function extractOrderItemId(item: any): string | null {
     item?.id ??
     item?.detailID ??
     item?.detailId ??
+    item?.orderDetailCode ??
     item?.code ??
     null
   ) ? String(
@@ -166,6 +167,7 @@ function extractOrderItemId(item: any): string | null {
     item?.id ??
     item?.detailID ??
     item?.detailId ??
+    item?.orderDetailCode ??
     item?.code
   ) : null;
 }
@@ -452,6 +454,15 @@ export async function createZakekeOrder(opts: {
         zakekeOrderId = String(reId);
         console.log(
           `[zakeke-create-order] re-resolved orderCode=${echoedCode} -> id=${reId}`,
+        );
+      } else {
+        // Lookup endpoint sometimes returns 401 even with a valid token
+        // (different scope). Fall back to using the orderCode itself as
+        // the canonical Zakeke order id — `/v2/orders/{orderCode}/output-files`
+        // accepts it. Better than throwing away a successfully created order.
+        zakekeOrderId = String(echoedCode);
+        console.log(
+          `[zakeke-create-order] using echoed orderCode as zakekeOrderId=${zakekeOrderId}`,
         );
       }
     }
