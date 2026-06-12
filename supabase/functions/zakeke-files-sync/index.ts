@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     // belong to a paid order (not pending / cancelled).
     const { data: candidates, error: candErr } = await service
       .from("order_items")
-      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at)")
+      .select("id, order_id, quantity, zakeke_design_id, zakeke_order_id, zakeke_order_item_id, zakeke_print_files, zakeke_visitor_code, created_at, orders:order_id(status, payment_method, manually_paid_at, created_at, order_number)")
       .gte("created_at", since)
       .not("zakeke_design_id", "is", null)
       .limit(200);
@@ -87,8 +87,15 @@ Deno.serve(async (req) => {
         } else if (row.zakeke_design_id) {
           // Create order on the fly so Zakeke starts producing print files.
           try {
+            // Use the same human-readable code as zakeke-create-order so the
+            // Zakeke admin UI shows "TB-0218" instead of a raw UUID pair.
+            const orderNumber = (row as any).orders?.order_number;
+            const baseCode = orderNumber != null
+              ? String(orderNumber).padStart(4, "0")
+              : String(row.order_id).slice(0, 8).toUpperCase();
+            const externalCode = `TB-${baseCode}`;
             const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
-              externalOrderId: `${row.order_id}:${row.id}`,
+              externalOrderId: externalCode,
               customerCode: String(row.order_id),
               visitorCode: row.zakeke_visitor_code ?? null,
               items: [{ designId: String(row.zakeke_design_id), quantity: row.quantity ?? 1, reference: row.id }],
