@@ -1572,6 +1572,13 @@ export type Database = {
           payment_instructions_lv: string
         }[]
       }
+      get_public_active_campaigns: {
+        Args: never
+        Returns: {
+          id: string
+          title: string
+        }[]
+      }
       get_public_settings: {
         Args: never
         Returns: {
