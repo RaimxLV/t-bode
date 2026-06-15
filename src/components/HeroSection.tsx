@@ -32,7 +32,7 @@ export const HeroSection = () => {
   const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden min-h-[120vh]">
+    <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
       {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
       <motion.div
         className="absolute inset-0 w-full h-full"
@@ -50,7 +50,7 @@ export const HeroSection = () => {
             alt="Apdrukāts T-krekls ar savu dizainu — T-Bode DTF kreklu apdruka Rīgā"
             width={1920}
             height={1080}
-            className="absolute inset-0 w-full h-full object-cover object-bottom"
+            className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
             onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
