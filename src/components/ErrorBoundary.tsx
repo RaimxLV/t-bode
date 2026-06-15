@@ -1,7 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet-async";
 
 interface Props {
   children: ReactNode;
@@ -28,12 +27,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      if (typeof document !== "undefined") {
+        document.title = "T-Bode — kļūda";
+      }
       return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
-          <Helmet>
-            <title>T-Bode — kļūda</title>
-            <meta name="robots" content="noindex,nofollow" />
-          </Helmet>
           <div className="text-center max-w-md">
             <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-destructive" />
             <h1 className="text-2xl font-display mb-2">Kaut kas nogāja greizi</h1>
