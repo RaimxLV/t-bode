@@ -58,9 +58,12 @@ Deno.serve(async (req) => {
     const errors: Array<{ barcode: string; order_number: number | null; status?: number; message: string }> = [];
 
     // Omniva OMX rate-limits to ~10 requests/min for barcode-based tracking.
-    // Throttle to ~8 req/min (7.5s between calls) and stop early on 429 — the
-    // next cron tick picks up where we left off.
-    const RATE_DELAY_MS = 7500;
+    // Throttle to ~6-7 req/min (9s between calls). On 429 we retry the same
+    // barcode up to 2 extra times (respecting the Retry-After / "try in N s"
+    // hint), then move on to the next one instead of bailing out — the next
+    // cron tick (every 30 min) will pick up anything we still missed.
+    const RATE_DELAY_MS = 9000;
+    const MAX_RETRIES = 2; // total attempts = 1 + MAX_RETRIES
     let i = 0;
     let rateLimited = false;
     for (const order of orders) {
@@ -68,28 +71,26 @@ Deno.serve(async (req) => {
       try {
         // Try the request, and if Omniva returns 429 wait for the suggested
         // window (Retry-After header or the "try in N seconds" message) and
-        // retry once before giving up on this barcode.
-        let resp = await fetch(`${OMX_BASE}/${encodeURIComponent(order.omniva_barcode!)}`, {
-          method: "GET",
-          headers: { "Accept": "application/json", "Authorization": getOmnivaAuthHeader() },
-        });
+        // retry up to MAX_RETRIES extra times before moving on.
+        let resp!: Response;
         let errText = "";
-        if (resp.status === 429) {
-          errText = await resp.text().catch(() => "");
-          const retryAfterHeader = parseInt(resp.headers.get("Retry-After") || "", 10);
-          const msgMatch = errText.match(/try in (\d+) seconds/i);
-          const waitSec = Math.min(
-            45,
-            Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
-              ? retryAfterHeader
-              : (msgMatch ? parseInt(msgMatch[1], 10) : 40),
-          );
-          console.log(`429 for ${order.omniva_barcode} — waiting ${waitSec}s and retrying once`);
-          await new Promise((r) => setTimeout(r, (waitSec + 2) * 1000));
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
           resp = await fetch(`${OMX_BASE}/${encodeURIComponent(order.omniva_barcode!)}`, {
             method: "GET",
             headers: { "Accept": "application/json", "Authorization": getOmnivaAuthHeader() },
           });
+          if (resp.status !== 429) break;
+          errText = await resp.text().catch(() => "");
+          if (attempt === MAX_RETRIES) break; // out of retries
+          const retryAfterHeader = parseInt(resp.headers.get("Retry-After") || "", 10);
+          const msgMatch = errText.match(/try in (\d+) seconds/i);
+          const hintSec = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+            ? retryAfterHeader
+            : (msgMatch ? parseInt(msgMatch[1], 10) : 10);
+          // Clamp: at least 5s (avoid hammering), at most 30s per retry.
+          const waitSec = Math.max(5, Math.min(30, hintSec));
+          console.log(`429 for ${order.omniva_barcode} (attempt ${attempt + 1}/${MAX_RETRIES + 1}) — waiting ${waitSec}s`);
+          await new Promise((r) => setTimeout(r, (waitSec + 1) * 1000));
         }
         if (!resp.ok) {
           errText = await resp.text().catch(() => "");
@@ -100,9 +101,9 @@ Deno.serve(async (req) => {
             status: resp.status,
             message: errText.slice(0, 300) || `HTTP ${resp.status}`,
           });
-          // Still rate-limited after the wait+retry — stop this run; the next
-          // cron tick (every 30 min) will pick up the remaining barcodes.
-          if (resp.status === 429) { rateLimited = true; break; }
+          // Still rate-limited after all retries — flag it and move on to
+          // the next barcode. The next cron tick will retry this one.
+          if (resp.status === 429) rateLimited = true;
           continue;
         }
         const data = await resp.json().catch(() => null) as any;
