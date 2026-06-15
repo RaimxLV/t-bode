@@ -573,6 +573,14 @@ const ProductDetail = () => {
               onClick={() => openDesigner("individual")}
               className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
             >
+              <img
+                src={individualDesignModel.url}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-300"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/85 to-card/40" />
+              <div className="relative flex flex-col h-full">
               <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
                 ⭐ Unikāli
               </div>
@@ -581,9 +589,6 @@ const ProductDetail = () => {
                 <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
-              </div>
-              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
-                <UniqueShirtSvg motif="★" highlight />
               </div>
               <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide min-h-[32px]">
                 INDIVIDUĀLS DIZAINS
@@ -594,6 +599,7 @@ const ProductDetail = () => {
               <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed flex-1">
                 Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
               </p>
+              </div>
             </button>
 
             {/* Card B — Standard / Team bulk order */}
