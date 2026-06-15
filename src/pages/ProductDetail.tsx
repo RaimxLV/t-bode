@@ -578,28 +578,27 @@ const ProductDetail = () => {
                 src={individualDesignModel.url}
                 alt=""
                 aria-hidden="true"
-                className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-15 group-hover:opacity-25 transition-opacity duration-300"
+                className="pointer-events-none absolute inset-0 w-full h-full object-cover"
               />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card via-card/85 to-card/40" />
-              <div className="relative flex flex-col h-full">
-              <div className="absolute top-0 right-0 bg-foreground text-background text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
-                ⭐ Unikāli
-              </div>
+              <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300" />
+              <div className="relative flex flex-col h-full min-h-[420px]">
               <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                 <UserIcon className="w-5 h-5 text-cta-red" />
-                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
+                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
-              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide min-h-[32px]">
-                INDIVIDUĀLS DIZAINS
-              </h3>
-              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2 min-h-[18px]">
-                [ Katrs apģērbs ar savu odziņu ]
-              </p>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed flex-1">
-                Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
-              </p>
+              <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3">
+                <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+                  INDIVIDUĀLS DIZAINS
+                </h3>
+                <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+                  [ Katrs apģērbs ar savu odziņu ]
+                </p>
+                <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+                  Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
+                </p>
+              </div>
               </div>
             </button>
 
