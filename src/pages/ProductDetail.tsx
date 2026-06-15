@@ -573,7 +573,7 @@ const ProductDetail = () => {
             {/* Card A — Individual designs (primary) */}
             <button
               onClick={() => openDesigner("individual")}
-              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[340px]"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[420px]"
             >
               <img
                 src={individualDesignModel.url}
@@ -606,7 +606,7 @@ const ProductDetail = () => {
             {/* Card B — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[340px]"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[420px]"
             >
               <img
                 src={teamDesignModel.url}
