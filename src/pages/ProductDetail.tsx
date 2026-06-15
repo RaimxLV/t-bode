@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import individualDesignModel from "@/assets/individual-design-model.png.asset.json";
+import teamDesignModel from "@/assets/team-design-model.png.asset.json";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
 import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
@@ -607,27 +608,31 @@ const ProductDetail = () => {
               onClick={() => openDesigner("bulk")}
               className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[420px]"
             >
-              <div className="flex items-center gap-2 mb-3 min-h-[28px]">
-                <Users className="w-5 h-5 text-cta-red" />
-                <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
-                  {t("bulk.optionABadge", "Komandām / Pasākumiem")}
-                </span>
-              </div>
-              <div className="relative h-28 mb-4 flex items-end justify-center gap-2 transition-transform duration-300 group-hover:scale-105">
-                {[0, 1, 2].map((i) => (
-                  <IdenticalShirtSvg key={i} delay={i * 80} />
-                ))}
-              </div>
-              <div className="mt-auto">
-                <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
-                  STANDARTA PASŪTĪJUMS
-                </h3>
-                <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
-                  [ Viens dizains – visai komandai ]
-                </p>
-                <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                  Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
-                </p>
+              <img
+                src={teamDesignModel.url}
+                alt=""
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 w-full h-full object-cover"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300" />
+              <div className="relative flex flex-col h-full">
+                <div className="flex items-center gap-2 mb-3 min-h-[28px]">
+                  <Users className="w-5 h-5 text-cta-red" />
+                  <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+                    {t("bulk.optionABadge", "Komandām / Pasākumiem")}
+                  </span>
+                </div>
+                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3">
+                  <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+                    STANDARTA PASŪTĪJUMS
+                  </h3>
+                  <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+                    [ Viens dizains – visai komandai ]
+                  </p>
+                  <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+                    Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
+                  </p>
+                </div>
               </div>
             </button>
           </div>
