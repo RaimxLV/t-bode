@@ -589,7 +589,7 @@ const ProductDetail = () => {
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
-              <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[230px] flex flex-col justify-end">
+              <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[160px] flex flex-col justify-end">
                 <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
                   INDIVIDUĀLS DIZAINS
                 </h3>
@@ -597,7 +597,7 @@ const ProductDetail = () => {
                   [ Katrs apģērbs ar savu odziņu ]
                 </p>
                 <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                  Radošā brīvība bez robežām! Lieliski piemērots unikālām dāvanām vai gadījumiem, kad katram komandas biedram vajadzīgs savs personalizētais elements (piemēram, dažādi vārdi, numuri vai atšķirīgas bildes). Katrs apģērba gabals tiek apstrādāts kā atsevišķs mākslas darbs, saglabājot elastību un nodrošinot atlaidi, kas piemērojas pati – <span className="font-bold text-cta-red">redzēsi to savā grozā!</span>
+                  Katrai vienībai savs dizains – vārdi, numuri vai bildes katram atsevišķi. Piemērots dāvanām un personīgām komandu kolekcijām. Atlaidi <span className="font-bold text-cta-red">redzēsi grozā!</span>
                 </p>
               </div>
               </div>
@@ -622,7 +622,7 @@ const ProductDetail = () => {
                     {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                   </span>
                 </div>
-                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[230px] flex flex-col justify-end">
+                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[160px] flex flex-col justify-end">
                   <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
                     KOMANDAS DIZAINS
                   </h3>
@@ -630,7 +630,7 @@ const ProductDetail = () => {
                     [ Viens dizains – visai komandai ]
                   </p>
                   <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                    Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
+                    Vienots dizains visai komandai – ideāli uzņēmumiem, sportam un pasākumiem. Saliec izmērus tabulā un aktivizē atlaidi līdz <span className="font-bold text-cta-red">-30%</span>!
                   </p>
                 </div>
               </div>
