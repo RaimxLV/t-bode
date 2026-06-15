@@ -624,7 +624,7 @@ const ProductDetail = () => {
                 </div>
                 <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3">
                   <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
-                    STANDARTA PASŪTĪJUMS
+                    KOMANDAS DIZAINS
                   </h3>
                   <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
                     [ Viens dizains – visai komandai ]
