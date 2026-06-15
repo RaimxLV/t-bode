@@ -37,7 +37,7 @@ export const HeroSection = () => {
   const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
 
   return (
-    <section ref={sectionRef} className={`relative overflow-hidden ${showJani ? 'min-h-[120vh]' : 'min-h-[120vh]'}`} style={{ position: 'relative' }}>
+    <section ref={sectionRef} className={`relative overflow-hidden ${showJani ? 'h-[180vh] min-h-[180vh]' : 'min-h-[120vh]'}`} style={{ position: 'relative' }}>
       {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
       <motion.div
         className="absolute inset-0 w-full h-full"
@@ -50,7 +50,7 @@ export const HeroSection = () => {
           <img
             src={heroJani}
             alt="Jāņu nakts pie ugunskura ar LATVIJA hūdijiem — T-Bode Jāņu kolekcija"
-            className="absolute inset-0 w-full h-full object-cover object-[center_55%] md:object-[center_60%]"
+            className="absolute inset-0 w-full h-full object-cover object-[center_36%] md:object-[center_34%]"
             onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
