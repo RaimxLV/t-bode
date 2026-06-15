@@ -170,6 +170,17 @@ Deno.serve(async (req) => {
       } catch (e) {
         console.error("Failed to send confirmation email:", (e as Error).message);
       }
+    } else if (update.status === "cancelled") {
+      // Customer abandoned the Montonio checkout (didn't complete payment in
+      // ~30 min). Send a friendly follow-up asking if they need help or what
+      // went wrong — many of these are interested buyers who got stuck.
+      try {
+        await service.functions.invoke("send-order-cancelled", {
+          body: { order_id: orderId, lang: "lv" },
+        });
+      } catch (e) {
+        console.error("Failed to send cancellation follow-up email:", (e as Error).message);
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {

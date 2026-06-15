@@ -13,22 +13,58 @@ const t = (lang: Lang) => ({
   hi: lang === "lv" ? "Sveiki" : "Hi",
   intro:
     lang === "lv"
-      ? "Diemžēl Tavs pasūtījums ir atcelts."
-      : "Unfortunately, your order has been cancelled.",
+      ? "Pamanījām, ka Tavs pasūtījums tika atcelts, jo maksājums netika pabeigts. Ja tas notika netīšām, mēs labprāt palīdzēsim to atrisināt."
+      : "We noticed your order was cancelled because the payment wasn't completed. If that wasn't intentional, we'd be glad to help you finish it.",
   orderNo: lang === "lv" ? "Pasūtījuma Nr." : "Order No.",
   refund:
     lang === "lv"
       ? "Ja maksājums jau bija veikts, atmaksa tiks veikta uz to pašu kontu 5–10 darba dienu laikā."
       : "If a payment was made, a refund will be issued to the same account within 5–10 business days.",
+  helpHeading:
+    lang === "lv"
+      ? "Vai varam palīdzēt?"
+      : "Can we help?",
+  helpBody:
+    lang === "lv"
+      ? "Lai mēs varētu uzlabot pieredzi un, ja vēlies, pabeigt pasūtījumu, lūdzu, atbildi uz šo e-pastu vienā teikumā — kas bija iemesls? Daži biežākie:"
+      : "To help us improve and, if you'd like, complete your order, please reply to this email in one sentence — what was the reason? A few common ones:",
+  reasons:
+    lang === "lv"
+      ? [
+          "Maksājums neizdevās vai bankas aplikācija sastinga",
+          "Pārdomāju izmēru, krāsu vai dizainu",
+          "Cena ar piegādi izrādījās augstāka nekā gaidīts",
+          "Vienkārši nepaspēju pabeigt 30 minūtēs",
+        ]
+      : [
+          "Payment failed or the bank app got stuck",
+          "Changed my mind about size, colour or design",
+          "Total with shipping was higher than expected",
+          "Simply ran out of time within 30 minutes",
+        ],
+  ctaText:
+    lang === "lv"
+      ? "Rakstīt mums"
+      : "Contact us",
   questions:
     lang === "lv"
-      ? `Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>.`
-      : `If you have questions, reply to this email or contact <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a>.`,
+      ? `Atbildi vienkārši uz šo e-pastu vai raksti uz <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a> — atbildam tās pašas darba dienas laikā.`
+      : `Just reply to this email or write to <a href="mailto:info@t-bode.lv" style="color:#DC2626;white-space:nowrap;">info@t‑bode.lv</a> — we respond the same business day.`,
   team: lang === "lv" ? "T‑Bode komanda" : "T‑Bode team",
 });
 
 function renderHtml(order: any, lang: Lang) {
   const tr = t(lang);
+  const mailtoSubject = encodeURIComponent(
+    (lang === "lv" ? "Pasūtījums #" : "Order #") +
+      String(order.order_number).padStart(5, "0"),
+  );
+  const mailtoBody = encodeURIComponent(
+    lang === "lv"
+      ? "Sveiki! Mans pasūtījums tika atcelts. Iemesls bija: "
+      : "Hi! My order was cancelled. The reason was: ",
+  );
+  const mailto = `mailto:info@t-bode.lv?subject=${mailtoSubject}&body=${mailtoBody}`;
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
@@ -40,6 +76,14 @@ function renderHtml(order: any, lang: Lang) {
     <p style="margin:0 0 12px;line-height:1.5;">${tr.intro}</p>
     <p style="margin:0 0 16px;"><strong>${tr.orderNo}</strong> #${String(order.order_number).padStart(5, "0")}</p>
     <p style="margin:0 0 16px;line-height:1.5;color:#444;">${tr.refund}</p>
+    <div style="margin:24px 0;padding:16px 18px;background:#FFF5F5;border-left:3px solid #DC2626;border-radius:4px;">
+      <p style="margin:0 0 8px;font-weight:bold;color:#DC2626;">${tr.helpHeading}</p>
+      <p style="margin:0 0 10px;line-height:1.5;color:#333;">${tr.helpBody}</p>
+      <ul style="margin:0 0 14px 18px;padding:0;color:#444;line-height:1.6;">
+        ${tr.reasons.map((r) => `<li>${r}</li>`).join("")}
+      </ul>
+      <a href="${mailto}" style="display:inline-block;background:#DC2626;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-weight:bold;">${tr.ctaText}</a>
+    </div>
     <p style="margin:24px 0 8px;color:#555;">${tr.questions}</p>
     <p style="margin:0;color:#555;">— ${tr.team}</p>
   </div>
