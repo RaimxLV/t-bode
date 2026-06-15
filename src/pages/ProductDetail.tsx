@@ -597,7 +597,8 @@ const ProductDetail = () => {
                   [ Katrs apģērbs ar savu odziņu ]
                 </p>
                 <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                  Katrai vienībai savs dizains – vārdi, numuri vai bildes katram atsevišķi. Piemērots dāvanām un personīgām komandu kolekcijām. Atlaidi <span className="font-bold text-cta-red">redzēsi grozā!</span>
+                  Katrai vienībai savs dizains – vārdi vai bildes katram atsevišķi. Piemērots dāvanām un personīgām komandu kolekcijām.&nbsp;<br />
+                  Atlaidi <span className="font-bold text-cta-red">redzēsi grozā!</span>
                 </p>
               </div>
               </div>
@@ -630,7 +631,8 @@ const ProductDetail = () => {
                     [ Viens dizains – visai komandai ]
                   </p>
                   <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
-                    Vienots dizains visai komandai – ideāli uzņēmumiem, sportam un pasākumiem. Saliec izmērus tabulā un aktivizē atlaidi līdz <span className="font-bold text-cta-red">-30%</span>!
+                    Vienots dizains visai komandai – ideāli uzņēmumiem, sportam un pasākumiem.&nbsp;<br />
+                    Saliec izmērus tabulā un aktivizē atlaidi līdz <span className="font-bold text-cta-red">-30%</span>!
                   </p>
                 </div>
               </div>
