@@ -37,7 +37,7 @@ export const HeroSection = () => {
   const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
 
   return (
-    <section ref={sectionRef} className={`relative overflow-hidden ${showJani ? 'h-[180vh] min-h-[180vh]' : 'min-h-[120vh]'}`} style={{ position: 'relative' }}>
+    <section ref={sectionRef} className={`relative overflow-hidden ${showJani ? 'h-[216vh] min-h-[216vh]' : 'min-h-[120vh]'}`} style={{ position: 'relative' }}>
       {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
       <motion.div
         className="absolute inset-0 w-full h-full"
