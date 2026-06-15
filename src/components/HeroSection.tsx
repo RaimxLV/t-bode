@@ -12,7 +12,6 @@ import heroWebp768 from "@/assets/hero-768.webp";
 import heroWebp480 from "@/assets/hero-480.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
-import heroJani from "@/assets/hero-jani.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 
 export const HeroSection = () => {
@@ -28,16 +27,12 @@ export const HeroSection = () => {
 
   const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
 
-  // Jāņi takeover hero — show the bonfire artwork until June 25 (end of day, Riga time),
-  // then automatically fall back to the default hero.
-  const showJani = Date.now() < Date.parse("2026-06-26T00:00:00+03:00");
-
   const webpSrcSet = `${heroWebp480} 480w, ${heroWebp768} 768w, ${heroWebp1280} 1280w, ${heroWebp1920} 1920w`;
   const jpgSrcSet = `${heroJpgSmall} 480w, ${heroJpg} 1280w, ${heroJpgLarge} 1920w`;
   const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
 
   return (
-    <section ref={sectionRef} className={`relative overflow-hidden ${showJani ? 'h-[216vh] min-h-[216vh]' : 'min-h-[120vh]'}`} style={{ position: 'relative' }}>
+    <section ref={sectionRef} className="relative overflow-hidden min-h-[120vh]">
       {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
       <motion.div
         className="absolute inset-0 w-full h-full"
@@ -46,17 +41,6 @@ export const HeroSection = () => {
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        {showJani ? (
-          <img
-            src={heroJani}
-            alt="Jāņu nakts pie ugunskura ar LATVIJA hūdijiem — T-Bode Jāņu kolekcija"
-            className="absolute inset-0 w-full h-full object-cover object-[center_36%] md:object-[center_34%]"
-            onLoad={() => setImageLoaded(true)}
-            {...({ fetchpriority: "high" } as any)}
-            decoding="async"
-            loading="eager"
-          />
-        ) : (
         <picture>
           <source type="image/webp" srcSet={webpSrcSet} sizes={sizesAttr} />
           <img
@@ -66,14 +50,13 @@ export const HeroSection = () => {
             alt="Apdrukāts T-krekls ar savu dizainu — T-Bode DTF kreklu apdruka Rīgā"
             width={1920}
             height={1080}
-            className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
+            className="absolute inset-0 w-full h-full object-cover object-bottom"
             onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
             loading="eager"
           />
         </picture>
-        )}
       </motion.div>
       <div
         className="absolute inset-0"
