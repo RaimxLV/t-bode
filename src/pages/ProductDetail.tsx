@@ -605,11 +605,8 @@ const ProductDetail = () => {
             {/* Card B — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[420px]"
             >
-              <div className="absolute top-0 right-0 bg-cta-red text-white text-[10px] font-bold font-body uppercase tracking-wider px-3 py-1 rounded-bl-xl">
-                👑 Līdz -30%
-              </div>
               <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                 <Users className="w-5 h-5 text-cta-red" />
                 <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red">
@@ -621,15 +618,17 @@ const ProductDetail = () => {
                   <IdenticalShirtSvg key={i} delay={i * 80} />
                 ))}
               </div>
-              <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide min-h-[32px]">
-                STANDARTA PASŪTĪJUMS
-              </h3>
-              <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2 min-h-[18px]">
-                [ Viens dizains – visai komandai ]
-              </p>
-              <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed flex-1">
-                Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
-              </p>
+              <div className="mt-auto">
+                <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
+                  STANDARTA PASŪTĪJUMS
+                </h3>
+                <p className="text-[11px] font-body font-bold uppercase tracking-wider text-cta-red mb-2">
+                  [ Viens dizains – visai komandai ]
+                </p>
+                <p className="text-xs sm:text-[13px] text-muted-foreground font-body leading-relaxed">
+                  Ideāls risinājums uzņēmumiem, sporta komandām, grupām un lieliem pasākumiem. Tavs izvēlētais dizains tiek fiksēts un precīzi atkārtots uz katra <span className="font-semibold text-foreground">izstrādājuma</span>. Izvēloties šo plūsmu, Tu vari ērti vienā tabulā salikt visus nepieciešamos izmērus un automātiski aktivizēt maksimālo apjoma atlaidi līdz pat <span className="font-bold text-cta-red">-30%</span>!
+                </p>
+              </div>
             </button>
           </div>
 
