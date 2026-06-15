@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { ZakekeDesigner } from "@/components/ZakekeDesigner";
 import { RelatedProducts } from "@/components/RelatedProducts";
 import individualDesignModel from "@/assets/individual-design-model.png.asset.json";
+import teamDesignModel from "@/assets/team-design-model.png.asset.json";
 import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
 import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
