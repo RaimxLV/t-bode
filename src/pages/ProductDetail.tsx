@@ -606,7 +606,7 @@ const ProductDetail = () => {
             {/* Card B — Standard / Team bulk order */}
             <button
               onClick={() => openDesigner("bulk")}
-              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[420px]"
+              className="group relative flex flex-col text-left p-5 rounded-2xl border-2 border-border bg-card hover:border-cta-red hover:shadow-[0_10px_40px_-10px_hsl(var(--cta-red)/0.5)] hover:-translate-y-1 transition-all duration-300 overflow-hidden min-h-[340px]"
             >
               <img
                 src={teamDesignModel.url}
@@ -615,14 +615,14 @@ const ProductDetail = () => {
                 className="pointer-events-none absolute inset-0 w-full h-full object-cover"
               />
               <div className="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300" />
-              <div className="relative flex flex-col h-full">
+              <div className="relative flex flex-col h-full w-full">
                 <div className="flex items-center gap-2 mb-3 min-h-[28px]">
                   <Users className="w-5 h-5 text-cta-red" />
                   <span className="text-[10px] uppercase tracking-wider font-body font-bold text-cta-red drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                     {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                   </span>
                 </div>
-                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3">
+                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[190px] flex flex-col">
                   <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
                     KOMANDAS DIZAINS
                   </h3>
