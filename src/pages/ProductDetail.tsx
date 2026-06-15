@@ -589,7 +589,7 @@ const ProductDetail = () => {
                   {t("bulk.optionBBadge", "Dāvanas / Unikāli pasūtījumi")}
                 </span>
               </div>
-              <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[190px] flex flex-col">
+              <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[230px] flex flex-col">
                 <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
                   INDIVIDUĀLS DIZAINS
                 </h3>
@@ -622,7 +622,7 @@ const ProductDetail = () => {
                     {t("bulk.optionABadge", "Komandām / Pasākumiem")}
                   </span>
                 </div>
-                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[190px] flex flex-col">
+                <div className="mt-auto rounded-xl bg-card/85 backdrop-blur-sm p-3 min-h-[230px] flex flex-col">
                   <h3 className="font-display text-xl sm:text-2xl mb-1 leading-tight tracking-wide">
                     KOMANDAS DIZAINS
                   </h3>
