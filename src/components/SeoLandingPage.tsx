@@ -437,10 +437,10 @@ export const SeoLandingPage = ({
           />
           <div className="relative container mx-auto px-4 py-20 md:py-28 max-w-3xl text-center text-white">
             <h2 className="font-display text-4xl md:text-6xl uppercase mb-4 leading-tight drop-shadow-[0_2px_18px_rgba(0,0,0,0.5)]">
-              Gatavs sākt dizainēt?
+              Tavs maisiņš, tavs dizains
             </h2>
             <p className="text-white/85 mb-8 text-base md:text-lg max-w-xl mx-auto">
-              Izveido savu unikālo dizainu dažās minūtēs. Bez minimālā pasūtījuma, ar piegādi visā Latvijā.
+              Dažās minūtēs tiešsaistē. Bez minimālā pasūtījuma, ar piegādi visā Latvijā.
             </p>
             <div className="flex justify-center">
               <HeroCtaButton to={ctaHref} label={ctaText} />
