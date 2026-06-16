@@ -133,27 +133,29 @@ export const SeoLandingPage = ({
       />
       <Navbar />
 
-      {!published && (
-        <div className="bg-yellow-500/15 border-b border-yellow-500/40 text-yellow-200 text-center text-xs py-2 px-4">
-          Šī lapa ir melnraksts — nav indeksējama Google un nav publiski saistīta. Pieejama tikai pa tiešu URL.
-        </div>
-      )}
-
-      <main className="pt-16">
+      <main className="relative">
+        {!published && (
+          <div className="bg-yellow-500/15 border-b border-yellow-500/40 text-yellow-200 text-center text-xs py-2 px-4 pt-[calc(theme(spacing.16)+0.5rem)]">
+            Šī lapa ir melnraksts — nav indeksējama Google un nav publiski saistīta. Pieejama tikai pa tiešu URL.
+          </div>
+        )}
         {/* HERO — full-bleed dramatic intro */}
         <section className="relative overflow-hidden border-b border-border">
-          {/* Background layers */}
+          {/* Background layers — deep midnight with a focused red glow */}
           <div
             aria-hidden
             className="absolute inset-0"
-            style={{ background: "var(--gradient-brand)" }}
+            style={{
+              background:
+                "linear-gradient(180deg, hsl(0 0% 4%) 0%, hsl(220 25% 7%) 60%, hsl(0 0% 3%) 100%)",
+            }}
           />
           <div
             aria-hidden
-            className="absolute inset-0 opacity-90"
+            className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(1200px 600px at 80% -10%, hsl(0 0% 0% / 0.55), transparent 60%), linear-gradient(180deg, hsl(0 0% 0% / 0.25), hsl(0 0% 0% / 0.85))",
+                "radial-gradient(900px 500px at 85% 10%, hsl(0 72% 45% / 0.35), transparent 60%), radial-gradient(700px 400px at 10% 90%, hsl(20 90% 50% / 0.18), transparent 65%)",
             }}
           />
           <div
@@ -166,7 +168,7 @@ export const SeoLandingPage = ({
             }}
           />
 
-          <div className="relative z-10 container mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 max-w-5xl">
+          <div className="relative z-10 container mx-auto px-4 pt-28 pb-20 md:pt-36 md:pb-28 max-w-5xl">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
