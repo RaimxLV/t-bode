@@ -134,11 +134,6 @@ export const SeoLandingPage = ({
       <Navbar />
 
       <main className="relative">
-        {!published && (
-          <div className="bg-yellow-500/15 border-b border-yellow-500/40 text-yellow-200 text-center text-xs py-2 px-4 pt-[calc(theme(spacing.16)+0.5rem)]">
-            Šī lapa ir melnraksts — nav indeksējama Google un nav publiski saistīta. Pieejama tikai pa tiešu URL.
-          </div>
-        )}
         {/* HERO — full-bleed dramatic intro */}
         <section className="relative overflow-hidden border-b border-border">
           {/* Background layers — deep midnight with a focused red glow */}
@@ -169,6 +164,11 @@ export const SeoLandingPage = ({
           />
 
           <div className="relative z-10 container mx-auto px-4 pt-28 pb-20 md:pt-36 md:pb-28 max-w-5xl">
+            {!published && (
+              <div className="mb-8 inline-block rounded-full bg-yellow-500/15 border border-yellow-500/40 text-yellow-200 text-[11px] uppercase tracking-wider py-1.5 px-3">
+                Melnraksts — nav publicēts
+              </div>
+            )}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
