@@ -6,10 +6,11 @@ import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, Camera, CheckCircle2, Sparkles, Truck, Palette, Clock } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, Sparkles, Truck, Palette, Clock, Check } from "lucide-react";
 import { HeroCtaButton } from "@/components/HeroCtaButton";
-import { useCollectionProducts, useDesignProducts } from "@/hooks/useProducts";
+import { useCollectionProducts, useDesignProducts, getProductName } from "@/hooks/useProducts";
 import { useCategories, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
+import { useTranslation } from "react-i18next";
 
 export interface SeoLandingFAQ {
   q: string;
@@ -78,6 +79,7 @@ export const SeoLandingPage = ({
   stats,
   published = false,
 }: SeoLandingPageProps) => {
+  const { i18n } = useTranslation();
   const collection = useCollectionProducts();
   const design = useDesignProducts();
   const { data: cats = [] } = useCategories();
@@ -308,17 +310,17 @@ export const SeoLandingPage = ({
           <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
             <div>
               <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
-                Produkti
+                Mūsu maisiņš
               </div>
               <h2 className="font-display text-3xl md:text-5xl uppercase leading-tight">
-                Izvēlies bāzi dizainam
+                Izvēlies savu krāsu
               </h2>
             </div>
             <Link
               to={ctaHref}
               className="text-sm font-semibold uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-2"
             >
-              Visi produkti <ArrowRight className="w-4 h-4" />
+              Sākt personalizēšanu <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           {isLoading ? (
@@ -335,6 +337,84 @@ export const SeoLandingPage = ({
               </Link>
               .
             </p>
+          ) : filtered.length === 1 ? (
+            (() => {
+              const p = filtered[0];
+              const variants = p.color_variants || [];
+              const [activeIdx, _setActiveIdx] = [0, (_: number) => {}];
+              const heroImg =
+                variants[activeIdx]?.images?.[0] || p.image_url || p.gallery_images?.[0];
+              return (
+                <div className="grid md:grid-cols-2 gap-8 lg:gap-14 items-center rounded-2xl overflow-hidden border border-border bg-card">
+                  <div className="relative aspect-square md:aspect-[4/5] bg-muted/40">
+                    {heroImg ? (
+                      <img
+                        src={heroImg}
+                        alt={getProductName(p, i18n.language)}
+                        className="w-full h-full object-contain p-6 md:p-10"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Camera className="w-10 h-10 opacity-40" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6 md:p-10 lg:pr-14 space-y-6">
+                    <div className="space-y-2">
+                      <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em]">
+                        100 % kokvilna · 38 × 42 cm
+                      </div>
+                      <h3 className="font-display text-3xl md:text-4xl uppercase leading-tight">
+                        {getProductName(p, i18n.language)}
+                      </h3>
+                      <div className="text-2xl font-display text-primary">
+                        no {Number(p.price).toFixed(2).replace(".", ",")} €
+                      </div>
+                    </div>
+
+                    {variants.length > 0 && (
+                      <div>
+                        <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+                          Pieejamās krāsas ({variants.length})
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          {variants.map((cv, i) => (
+                            <div key={i} className="flex flex-col items-center gap-1.5">
+                              <span
+                                className="w-10 h-10 rounded-full border-2 border-border ring-2 ring-transparent hover:ring-primary transition-all shadow"
+                                style={{ backgroundColor: cv.hex }}
+                                title={cv.name}
+                                aria-label={cv.name}
+                              />
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                {cv.name}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <ul className="space-y-2 text-sm text-foreground/85">
+                      {[
+                        "Augšupielādē savu dizainu vai logo",
+                        "DTF apdruka — neizbalē mazgājot",
+                        "Bez minimālā pasūtījuma",
+                      ].map((line, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                          <span>{line}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="pt-2">
+                      <HeroCtaButton to={ctaHref} label={ctaText} size="default" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {filtered.map((p) => (
