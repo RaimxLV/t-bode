@@ -559,6 +559,7 @@ const Admin = () => {
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
                   ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "autopilot"].includes(activeTab)
+                  || activeTab === "omnivaSync"
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -584,6 +585,7 @@ const Admin = () => {
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
                   { value: "autopilot", icon: Sparkles, label: "Autopilot" },
+                  { value: "omnivaSync", icon: Truck, label: "Omniva sync" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>
                     <button
