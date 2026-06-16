@@ -6,7 +6,6 @@ import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { ArrowRight, Camera, CheckCircle2, Sparkles, Truck, Palette, Clock } from "lucide-react";
 import { HeroCtaButton } from "@/components/HeroCtaButton";
 import { useCollectionProducts, useDesignProducts } from "@/hooks/useProducts";
