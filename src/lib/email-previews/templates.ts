@@ -286,6 +286,16 @@ export function renderPaymentReminderHtml(order: SampleOrder, _settings?: EmailS
 
 export function renderOrderCancelledHtml(order: SampleOrder, settings?: EmailSettings | null): string {
   const c = cfg(settings);
+  const orderNumStr = String(order.order_number).padStart(5, "0");
+  const mailtoSubject = encodeURIComponent(`Pasūtījums #${orderNumStr}`);
+  const mailtoBody = encodeURIComponent("Sveiki! Mans pasūtījums tika atcelts. Iemesls bija: ");
+  const mailto = `mailto:${c.support_email}?subject=${mailtoSubject}&body=${mailtoBody}`;
+  const reasons = [
+    "Maksājums neizdevās vai bankas aplikācija sastinga",
+    "Pārdomāju izmēru, krāsu vai dizainu",
+    "Cena ar piegādi izrādījās augstāka nekā gaidīts",
+    "Vienkārši nepaspēju pabeigt 30 minūtēs",
+  ];
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
@@ -294,10 +304,18 @@ export function renderOrderCancelledHtml(order: SampleOrder, settings?: EmailSet
     </div>
     <h2 style="font-size:18px;margin:0 0 8px;color:#DC2626;">Pasūtījums atcelts</h2>
     <p style="margin:0 0 16px;">Sveiki, ${order.shipping_name}!</p>
-    <p style="margin:0 0 12px;line-height:1.5;">Diemžēl Tavs pasūtījums ir atcelts.</p>
-    <p style="margin:0 0 16px;"><strong>Pasūtījuma Nr.</strong> #${String(order.order_number).padStart(5, "0")}</p>
+    <p style="margin:0 0 12px;line-height:1.5;">Pamanījām, ka Tavs pasūtījums tika atcelts, jo maksājums netika pabeigts. Ja tas notika netīšām, mēs labprāt palīdzēsim to atrisināt.</p>
+    <p style="margin:0 0 16px;"><strong>Pasūtījuma Nr.</strong> #${orderNumStr}</p>
     <p style="margin:0 0 16px;line-height:1.5;color:#444;">Ja maksājums jau bija veikts, atmaksa tiks veikta uz to pašu kontu 5–10 darba dienu laikā.</p>
-    <p style="margin:24px 0 8px;color:#555;">Ja Tev ir jautājumi, atbildi uz šo e-pastu vai raksti mums uz <a href="mailto:${c.support_email}" style="color:#DC2626;">${c.support_email}</a>.</p>
+    <div style="margin:24px 0;padding:16px 18px;background:#FFF5F5;border-left:3px solid #DC2626;border-radius:4px;">
+      <p style="margin:0 0 8px;font-weight:bold;color:#DC2626;">Vai varam palīdzēt?</p>
+      <p style="margin:0 0 10px;line-height:1.5;color:#333;">Lai mēs varētu uzlabot pieredzi un, ja vēlies, pabeigt pasūtījumu, lūdzu, atbildi uz šo e-pastu vienā teikumā — kas bija iemesls? Daži biežākie:</p>
+      <ul style="margin:0 0 14px 18px;padding:0;color:#444;line-height:1.6;">
+        ${reasons.map((r) => `<li>${r}</li>`).join("")}
+      </ul>
+      <a href="${mailto}" style="display:inline-block;background:#DC2626;color:#ffffff;text-decoration:none;padding:10px 18px;border-radius:6px;font-weight:bold;">Rakstīt mums</a>
+    </div>
+    <p style="margin:24px 0 8px;color:#555;">Atbildi vienkārši uz šo e-pastu vai raksti uz <a href="mailto:${c.support_email}" style="color:#DC2626;white-space:nowrap;">${c.support_email}</a> — atbildam tās pašas darba dienas laikā.</p>
     <p style="margin:0;color:#555;">— T-Bode komanda</p>
   </div>
 </body></html>`;
