@@ -29,8 +29,8 @@ const registerSchema = loginSchema.extend({
 
 type FieldErrors = Record<string, string>;
 
-// Toggle to show/hide Google sign-in. Set to true when going live on the main server.
-const SHOW_GOOGLE_LOGIN = true;
+// Google sign-in temporarily hidden until the OAuth loop issue is resolved by Lovable support.
+const SHOW_GOOGLE_LOGIN = false;
 
 const Auth = () => {
   const navigate = useNavigate();
