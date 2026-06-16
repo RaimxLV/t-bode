@@ -7,7 +7,8 @@ import { Seo } from "@/components/Seo";
 import { ProductCard } from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, Sparkles, Truck, Palette, Clock } from "lucide-react";
+import { HeroCtaButton } from "@/components/HeroCtaButton";
 import { useCollectionProducts, useDesignProducts } from "@/hooks/useProducts";
 import { useCategories, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 
@@ -46,6 +47,8 @@ export interface SeoLandingPageProps {
   /** Secondary text below intro section */
   secondaryHeading?: string;
   secondaryParagraphs?: string[];
+  /** Optional stat tiles shown under the hero */
+  stats?: { value: string; label: string }[];
   /**
    * When false (default) the page renders with noindex and shows a
    * small "draft" banner. Flip to true when ready to publish to Google.
@@ -73,6 +76,7 @@ export const SeoLandingPage = ({
   ctaHref = "/design",
   secondaryHeading,
   secondaryParagraphs,
+  stats,
   published = false,
 }: SeoLandingPageProps) => {
   const collection = useCollectionProducts();
@@ -137,58 +141,185 @@ export const SeoLandingPage = ({
       )}
 
       <main className="pt-16">
-        {/* Hero */}
-        <section className="container mx-auto px-4 pt-12 pb-8 max-w-4xl">
-          {kicker && (
-            <div className="text-primary text-sm font-semibold uppercase tracking-wider mb-3">
-              {kicker}
-            </div>
-          )}
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="font-display text-4xl md:text-6xl uppercase leading-tight mb-6"
-          >
-            {h1 || title}
-          </motion.h1>
-          <div className="space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed">
-            {intro.map((p, i) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
+        {/* HERO — full-bleed dramatic intro */}
+        <section className="relative overflow-hidden border-b border-border">
+          {/* Background layers */}
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{ background: "var(--gradient-brand)" }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-90"
+            style={{
+              background:
+                "radial-gradient(1200px 600px at 80% -10%, hsl(0 0% 0% / 0.55), transparent 60%), linear-gradient(180deg, hsl(0 0% 0% / 0.25), hsl(0 0% 0% / 0.85))",
+            }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(hsl(0 0% 100% / 0.6) 1px, transparent 1px)",
+              backgroundSize: "3px 3px",
+            }}
+          />
 
-          {bullets && bullets.length > 0 && (
-            <ul className="mt-8 grid sm:grid-cols-2 gap-3">
-              {bullets.map((b, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-3 bg-card border border-border rounded-lg p-4"
-                >
-                  <span className="text-primary mt-0.5">✓</span>
-                  <span className="text-sm">{b}</span>
-                </li>
+          <div className="relative z-10 container mx-auto px-4 pt-16 pb-20 md:pt-24 md:pb-28 max-w-5xl">
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-white/90 mb-6"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              {kicker || "T-Bode personalizācija"}
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05 }}
+              className="font-display text-5xl sm:text-6xl md:text-7xl lg:text-8xl uppercase leading-[0.95] tracking-tight text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.5)]"
+            >
+              {h1 || title}
+            </motion.h1>
+
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mt-8 max-w-2xl space-y-4 text-base md:text-lg text-white/85 leading-relaxed"
+            >
+              {intro.slice(0, 1).map((p, i) => (
+                <p key={i}>{p}</p>
               ))}
-            </ul>
-          )}
+            </motion.div>
 
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg">
-              <Link to={ctaHref}>
-                {ctaText} <ArrowRight className="ml-2 h-4 w-4" />
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              className="mt-10 flex flex-col sm:flex-row gap-4 sm:items-center"
+            >
+              <HeroCtaButton to={ctaHref} label={ctaText} />
+              <Link
+                to="/collection"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-white/40 bg-black/20 backdrop-blur px-6 py-4 font-body font-bold uppercase tracking-wide text-white hover:bg-white/10 hover:border-white/70 transition-all"
+              >
+                Gatavie dizaini
+                <ArrowRight className="w-5 h-5" />
               </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/collection">Skatīt gatavos dizainus</Link>
-            </Button>
+            </motion.div>
+
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+              className="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-3"
+            >
+              {(stats && stats.length > 0
+                ? stats
+                : [
+                    { value: "1 gab.", label: "Bez min. pasūtījuma" },
+                    { value: "2–4 d.", label: "Izgatavošana Rīgā" },
+                    { value: "50+", label: "Mazgāšanas reižu" },
+                    { value: "4", label: "Veikali Rīgā" },
+                  ]
+              ).map((s, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-white/15 bg-white/5 backdrop-blur px-4 py-4 text-white"
+                >
+                  <div className="font-display text-2xl md:text-3xl">{s.value}</div>
+                  <div className="text-[11px] uppercase tracking-wider text-white/70 mt-1">
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </section>
 
-        {/* Products */}
-        <section className="container mx-auto px-4 py-12">
-          <h2 className="font-display text-2xl md:text-3xl uppercase mb-6">
-            Mūsu produkti
-          </h2>
+        {/* INTRO BODY */}
+        {intro.length > 1 && (
+          <section className="container mx-auto px-4 py-16 max-w-3xl">
+            <div className="space-y-5 text-base md:text-lg text-foreground/85 leading-relaxed">
+              {intro.slice(1).map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* BENEFITS / BULLETS */}
+        {bullets && bullets.length > 0 && (
+          <section className="container mx-auto px-4 pb-16 max-w-6xl">
+            <div className="mb-8 max-w-2xl">
+              <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+                Kāpēc T-Bode
+              </div>
+              <h2 className="font-display text-3xl md:text-5xl uppercase leading-tight">
+                Kvalitāte, kas izturēs
+              </h2>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bullets.map((b, i) => {
+                const icons = [Palette, CheckCircle2, Sparkles, Clock, Truck, Camera];
+                const Icon = icons[i % icons.length];
+                return (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-40px" }}
+                    transition={{ duration: 0.4, delay: i * 0.05 }}
+                    className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 hover:border-primary/50 transition-colors"
+                  >
+                    <div
+                      aria-hidden
+                      className="absolute -right-8 -top-8 w-32 h-32 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-2xl"
+                      style={{ background: "var(--gradient-brand)" }}
+                    />
+                    <div className="relative">
+                      <div
+                        className="inline-flex items-center justify-center w-10 h-10 rounded-lg mb-4"
+                        style={{ background: "var(--gradient-brand)" }}
+                      >
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <p className="text-sm md:text-base text-foreground/90 leading-relaxed">
+                        {b}
+                      </p>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* PRODUCTS */}
+        <section className="container mx-auto px-4 py-16 max-w-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+            <div>
+              <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+                Produkti
+              </div>
+              <h2 className="font-display text-3xl md:text-5xl uppercase leading-tight">
+                Izvēlies bāzi dizainam
+              </h2>
+            </div>
+            <Link
+              to={ctaHref}
+              className="text-sm font-semibold uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-2"
+            >
+              Visi produkti <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
           {isLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -212,39 +343,74 @@ export const SeoLandingPage = ({
           )}
         </section>
 
-        {/* Secondary content */}
+        {/* SECONDARY CONTENT — editorial split */}
         {secondaryHeading && (
-          <section className="container mx-auto px-4 py-8 max-w-4xl">
-            <h2 className="font-display text-2xl md:text-3xl uppercase mb-4">
-              {secondaryHeading}
-            </h2>
-            <div className="space-y-4 text-muted-foreground leading-relaxed">
-              {secondaryParagraphs?.map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+          <section className="bg-muted/30 border-y border-border">
+            <div className="container mx-auto px-4 py-16 max-w-6xl grid md:grid-cols-12 gap-10 items-start">
+              <div className="md:col-span-5">
+                <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+                  Pielietojums
+                </div>
+                <h2 className="font-display text-3xl md:text-5xl uppercase leading-tight">
+                  {secondaryHeading}
+                </h2>
+              </div>
+              <div className="md:col-span-7 space-y-5 text-foreground/85 leading-relaxed text-base md:text-lg">
+                {secondaryParagraphs?.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
             </div>
           </section>
         )}
 
+        {/* GALLERY PLACEHOLDER */}
+        <section className="container mx-auto px-4 py-16 max-w-6xl">
+          <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+            Galerija
+          </div>
+          <h2 className="font-display text-3xl md:text-5xl uppercase leading-tight mb-8">
+            Reālu darbu paraugi
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="relative aspect-[3/4] rounded-xl border border-dashed border-border bg-muted/30 flex items-center justify-center text-muted-foreground text-xs uppercase tracking-wider"
+              >
+                <Camera className="w-6 h-6 opacity-40" />
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            Drīzumā — pievienosim reālu pasūtījumu foto galeriju.
+          </p>
+        </section>
+
         {/* FAQ */}
         {faq && faq.length > 0 && (
-          <section className="container mx-auto px-4 py-12 max-w-4xl">
-            <h2 className="font-display text-2xl md:text-3xl uppercase mb-6">
+          <section className="container mx-auto px-4 py-16 max-w-4xl">
+            <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em] mb-2">
+              FAQ
+            </div>
+            <h2 className="font-display text-3xl md:text-5xl uppercase mb-8 leading-tight">
               Biežāk uzdotie jautājumi
             </h2>
-            <div className="space-y-4">
+            <div className="divide-y divide-border border-y border-border">
               {faq.map((f, i) => (
-                <details
-                  key={i}
-                  className="group bg-card border border-border rounded-lg p-4"
-                >
-                  <summary className="cursor-pointer font-semibold text-base list-none flex justify-between items-center">
-                    {f.q}
-                    <span className="text-primary group-open:rotate-45 transition-transform">
+                <details key={i} className="group py-5">
+                  <summary className="cursor-pointer list-none flex justify-between items-start gap-6">
+                    <span className="flex items-start gap-4 font-semibold text-base md:text-lg">
+                      <span className="text-primary font-display text-xl tabular-nums w-8 shrink-0">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span>{f.q}</span>
+                    </span>
+                    <span className="text-primary text-2xl leading-none mt-1 group-open:rotate-45 transition-transform shrink-0">
                       +
                     </span>
                   </summary>
-                  <p className="mt-3 text-muted-foreground leading-relaxed text-sm">
+                  <p className="mt-3 ml-12 text-muted-foreground leading-relaxed">
                     {f.a}
                   </p>
                 </details>
@@ -253,19 +419,28 @@ export const SeoLandingPage = ({
           </section>
         )}
 
-        {/* Final CTA */}
-        <section className="container mx-auto px-4 py-16 max-w-4xl text-center">
-          <h2 className="font-display text-3xl md:text-5xl uppercase mb-4">
-            Gatavs sākt?
-          </h2>
-          <p className="text-muted-foreground mb-6">
-            Izveido savu unikālo dizainu dažās minūtēs. Bez minimālā pasūtījuma.
-          </p>
-          <Button asChild size="lg">
-            <Link to={ctaHref}>
-              {ctaText} <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+        {/* FINAL CTA — dramatic band */}
+        <section className="relative overflow-hidden">
+          <div aria-hidden className="absolute inset-0" style={{ background: "var(--gradient-brand)" }} />
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(800px 400px at 20% 110%, hsl(0 0% 0% / 0.5), transparent 60%), linear-gradient(180deg, transparent, hsl(0 0% 0% / 0.4))",
+            }}
+          />
+          <div className="relative container mx-auto px-4 py-20 md:py-28 max-w-3xl text-center text-white">
+            <h2 className="font-display text-4xl md:text-6xl uppercase mb-4 leading-tight drop-shadow-[0_2px_18px_rgba(0,0,0,0.5)]">
+              Gatavs sākt dizainēt?
+            </h2>
+            <p className="text-white/85 mb-8 text-base md:text-lg max-w-xl mx-auto">
+              Izveido savu unikālo dizainu dažās minūtēs. Bez minimālā pasūtījuma, ar piegādi visā Latvijā.
+            </p>
+            <div className="flex justify-center">
+              <HeroCtaButton to={ctaHref} label={ctaText} />
+            </div>
+          </div>
         </section>
       </main>
 
