@@ -455,3 +455,116 @@ export const SeoLandingPage = ({
 };
 
 export default SeoLandingPage;
+
+// --- Featured single product with interactive color swatches ---
+function FeaturedProduct({
+  product: p,
+  lang,
+  ctaHref,
+  ctaText,
+}: {
+  product: any;
+  lang: string;
+  ctaHref: string;
+  ctaText: string;
+}) {
+  const variants = p.color_variants || [];
+  const [activeIdx, setActiveIdx] = useState(0);
+  const active = variants[activeIdx];
+  const heroImg =
+    active?.images?.[0] || p.image_url || p.gallery_images?.[0];
+  return (
+    <div className="grid md:grid-cols-2 gap-8 lg:gap-14 items-center rounded-2xl overflow-hidden border border-border bg-card">
+      <div className="relative aspect-square md:aspect-[4/5] bg-muted/40">
+        {heroImg ? (
+          <img
+            key={heroImg}
+            src={heroImg}
+            alt={`${getProductName(p, lang)}${active?.name ? ` — ${active.name}` : ""}`}
+            className="w-full h-full object-contain p-6 md:p-10 transition-opacity duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <Camera className="w-10 h-10 opacity-40" />
+          </div>
+        )}
+      </div>
+      <div className="p-6 md:p-10 lg:pr-14 space-y-6">
+        <div className="space-y-2">
+          <div className="text-primary text-xs font-semibold uppercase tracking-[0.2em]">
+            100 % kokvilna · 38 × 42 cm
+          </div>
+          <h3 className="font-display text-3xl md:text-4xl uppercase leading-tight">
+            {getProductName(p, lang)}
+          </h3>
+          <div className="text-2xl font-display text-primary">
+            no {Number(p.price).toFixed(2).replace(".", ",")} €
+          </div>
+        </div>
+
+        {variants.length > 0 && (
+          <div>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+              Krāsa: <span className="text-foreground font-semibold normal-case tracking-normal">{active?.name}</span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {variants.map((cv: any, i: number) => {
+                const isActive = i === activeIdx;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setActiveIdx(i)}
+                    className={`flex flex-col items-center gap-1.5 group focus:outline-none`}
+                    aria-pressed={isActive}
+                    aria-label={cv.name}
+                    title={cv.name}
+                  >
+                    <span
+                      className={`w-10 h-10 rounded-full border-2 transition-all shadow ${
+                        isActive
+                          ? "border-primary ring-2 ring-primary/50 scale-110"
+                          : "border-border ring-2 ring-transparent group-hover:ring-primary/40"
+                      }`}
+                      style={{ backgroundColor: cv.hex }}
+                    />
+                    <span
+                      className={`text-[10px] uppercase tracking-wide ${
+                        isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                      }`}
+                    >
+                      {cv.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <ul className="space-y-2 text-sm text-foreground/85">
+          {[
+            "Augšupielādē savu dizainu vai logo",
+            "DTF apdruka — neizbalē mazgājot",
+            "Bez minimālā pasūtījuma",
+          ].map((line, i) => (
+            <li key={i} className="flex items-start gap-2">
+              <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="pt-2">
+          <Link
+            to={ctaHref}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-primary px-6 py-3 font-body font-bold uppercase tracking-wide text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+          >
+            {ctaText}
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
