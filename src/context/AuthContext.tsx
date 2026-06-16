@@ -53,6 +53,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // Handle OAuth callback from Lovable Cloud broker (full-page redirect flow).
+    // When the broker returns tokens, they arrive as query params or hash fragment.
+    // We must call supabase.auth.setSession manually because the broker uses a
+    // custom param format that supabase's detectSessionInUrl does not recognize.
+    const consumeOAuthCallback = async () => {
+      try {
+        const search = new URLSearchParams(window.location.search);
+        const hash = new URLSearchParams(
+          window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash
+        );
+        const access_token = search.get("access_token") ?? hash.get("access_token");
+        const refresh_token = search.get("refresh_token") ?? hash.get("refresh_token");
+        const error = search.get("error") ?? hash.get("error");
+        if (error) {
+          // Strip error params from URL so we don't loop.
+          const url = new URL(window.location.href);
+          ["error", "error_description", "state"].forEach((k) => {
+            url.searchParams.delete(k);
+          });
+          url.hash = "";
+          window.history.replaceState({}, "", url.toString());
+          return;
+        }
+        if (access_token && refresh_token) {
+          await supabase.auth.setSession({ access_token, refresh_token });
+          const url = new URL(window.location.href);
+          ["access_token", "refresh_token", "state", "token_type", "expires_in", "expires_at", "provider_token", "provider_refresh_token"].forEach(
+            (k) => url.searchParams.delete(k),
+          );
+          url.hash = "";
+          window.history.replaceState({}, "", url.toString());
+        }
+      } catch (err) {
+        console.error("[Auth] OAuth callback consume failed:", err);
+      }
+    };
+    void consumeOAuthCallback();
+
     // Set up the listener first so we never miss a SIGNED_IN event.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       applySession(nextSession);
