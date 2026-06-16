@@ -5,7 +5,7 @@ const AudumaMaisinuApdruka = () => (
     path="/auduma-maisinu-apdruka"
     title="Auduma maisiņu apdruka Latvijā | T-Bode"
     h1="Auduma maisiņu apdruka ar tavu dizainu"
-    metaDescription="Auduma maisiņu apdruka Latvijā ar DTF tehnoloģiju. Bez minimālā pasūtījuma — pasūti pat vienu gabalu. Ātra piegāde visā Latvijā. Personalizē savu maisiņu tagad!"
+    metaDescription="Auduma maisiņu apdruka Latvijā ar DTF tehnoloģiju. Bez minimālā pasūtījuma — pasūti pat vienu gabalu. Izgatavošana Rīgā 2–4 dienās, piegāde visā Latvijā."
     kicker="DTF apdruka uz kokvilnas maisiņa"
     published={false}
     categorySlug="bags"
@@ -13,8 +13,8 @@ const AudumaMaisinuApdruka = () => (
     ctaText="Personalizēt savu maisiņu"
     ctaHref="/design?category=bags"
     intro={[
-      "Auduma maisiņa apdruka ir vienkāršākais veids, kā padarīt ikdienas iepirkšanos personiskāku, dāvanu — neaizmirstamāku, bet komandas pasākumu — atpazīstamāku. T-Bode piedāvā kvalitatīvu auduma maisiņu apdruku ar mūsdienīgu DTF (Direct-to-Film) tehnoloģiju, kas saglabā krāsu spilgtumu pat pēc desmitiem mazgāšanu.",
-      "Mēs strādājam bez minimālā pasūtījuma — vari pasūtīt vienu maisiņu sev vai 200 maisiņus uzņēmuma pasākumam. Visi maisiņi ir no 100 % kokvilnas — izturīgi, mīksti un patīkami ikdienas lietošanā. Dizainu vari izveidot pats mūsu tiešsaistes dizainerī pāris minūtēs vai augšupielādēt savu attēlu.",
+      "Auduma maisiņa apdruka ir vienkāršākais veids, kā padarīt ikdienas iepirkšanos personiskāku, dāvanu — neaizmirstamāku, bet komandas pasākumu — atpazīstamāku. T-Bode izmanto mūsdienīgu DTF (Direct-to-Film) tehnoloģiju, kas saglabā krāsu spilgtumu pat pēc desmitiem mazgāšanu.",
+      "Strādājam bez minimālā pasūtījuma — vari pasūtīt vienu gabalu sev vai 200 gabalus uzņēmuma pasākumam. Visi maisiņi ir no 100 % kokvilnas — izturīgi, mīksti un patīkami ikdienas lietošanā. Dizainu izveido pāris minūtēs tiešsaistē vai augšupielādē savu attēlu.",
       "Pasūtījums tiek izgatavots Rīgā 2–4 darba dienu laikā. Piegāde uz Omniva pakomātu visā Latvijā vai saņemšana mūsu veikalos — Akropolē, Dominā, Origo un Alfā.",
     ]}
     bullets={[
