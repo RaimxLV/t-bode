@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/Navbar";
@@ -166,11 +166,6 @@ export const SeoLandingPage = ({
           />
 
           <div className="relative z-10 container mx-auto px-4 pt-28 pb-20 md:pt-36 md:pb-28 max-w-5xl">
-            {!published && (
-              <div className="mb-8 inline-block rounded-full bg-yellow-500/15 border border-yellow-500/40 text-yellow-200 text-[11px] uppercase tracking-wider py-1.5 px-3">
-                Melnraksts — nav publicēts
-              </div>
-            )}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -317,10 +312,10 @@ export const SeoLandingPage = ({
               </h2>
             </div>
             <Link
-              to={ctaHref}
+              to="/collection"
               className="text-sm font-semibold uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-2"
             >
-              Sākt personalizēšanu <ArrowRight className="w-4 h-4" />
+              Skatīt gatavos dizainus <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           {isLoading ? (
