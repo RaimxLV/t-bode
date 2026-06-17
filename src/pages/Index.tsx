@@ -16,11 +16,11 @@ const Index = () => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "Izveido savu kreklu online — personalizēta apdruka ar piegādi visā Latvijā"
-    : "Design your own t-shirt online — custom printing with delivery across Latvia";
+    ? "T-Bode | Kvalitatīva apģērbu apdruka un personalizēti dizaini"
+    : "Custom T-shirt printing in Riga | T-Bode";
   const description = isLv
-    ? "Izveido savu t-krekla, hūdija, krūzes vai somas dizainu online un saņem to pakomātā visā Latvijā vai mūsu birojā Rīgā. Personalizēta apdruka — ātri, kvalitatīvi, no jebkuras ierīces."
-    : "Design your own t-shirt, hoodie, mug or bag online and get it delivered to any parcel locker in Latvia or pick it up at our Riga office. Custom printing, made in Riga.";
+    ? "Pasūti unikālus T-kreklus un hūdijus ar savu dizainu! T-Bode piedāvā augstākās kvalitātes apdruku, modernas tehnoloģijas un ātru izgatavošanu. Ienāc!"
+    : "Custom t-shirt, hoodie, mug & bag printing in Riga with DTF technology. Design your own or shop the T-Bode collection. Stores: Akropole, Domina, Origo, Alfa.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
     (async () => {

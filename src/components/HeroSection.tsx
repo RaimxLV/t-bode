@@ -47,7 +47,7 @@ export const HeroSection = () => {
             src={heroJpg}
             srcSet={jpgSrcSet}
             sizes={sizesAttr}
-            alt="Apdrukāts T-krekls ar savu dizainu — T-Bode kreklu apdruka Rīgā"
+            alt="Apdrukāts T-krekls ar savu dizainu — T-Bode DTF kreklu apdruka Rīgā"
             width={1920}
             height={1080}
             className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"

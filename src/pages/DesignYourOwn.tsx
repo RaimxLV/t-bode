@@ -55,14 +55,14 @@ const DesignYourOwn = () => {
             "Pievieno tekstu ar dažādiem fontiem",
             "Pielāgo izmēru un novietojumu",
             "Reālistiska tūlītēja vizualizācija",
-            "Apdruka uz krekliem, hūdijiem, krūzēm, somām",
+            "DTF apdruka uz krekliem, hūdijiem, krūzēm, somām",
           ]
         : [
             "Upload your image or logo",
             "Add text with multiple fonts",
             "Adjust size and placement",
             "Realistic instant preview",
-            "Printing on t-shirts, hoodies, mugs and bags",
+            "DTF printing on t-shirts, hoodies, mugs, bags",
           ],
     },
     {

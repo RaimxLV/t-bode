@@ -546,7 +546,7 @@ function FeaturedProduct({
         <ul className="space-y-2 text-sm text-foreground/85">
           {[
             "Augšupielādē savu dizainu vai logo",
-            "Apdruka — neizbalē mazgājot",
+            "DTF apdruka — neizbalē mazgājot",
             "Bez minimālā pasūtījuma",
           ].map((line, i) => (
             <li key={i} className="flex items-start gap-2">
