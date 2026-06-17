@@ -356,7 +356,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">Mockup bilde (rāda kā pirmo kartiņā)</Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-1">Reālistiska bilde, piem. krekls uz cilvēka. Ja nav, kartiņā rādīsim parasto bildi.</p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
               {product.mockup_image_url && <img src={product.mockup_image_url} alt="Mockup" className="w-20 h-20 object-cover rounded border border-border" />}
               <label className="cursor-pointer">
