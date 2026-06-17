@@ -524,14 +524,14 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
-            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? t("admin.saving") : t("admin.save")}
-            </Button>
-          </div>
         </div>
+        <DialogFooter className="shrink-0 px-4 sm:px-6 py-4 border-t border-border gap-2 sm:gap-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
+          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? t("admin.saving") : t("admin.save")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
