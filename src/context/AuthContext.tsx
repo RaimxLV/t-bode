@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -73,72 +73,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.warn("[Auth] Boot snapshot failed", err);
     }
 
-    const cleanupOAuthParams = () => {
+    const cleanupOAuthErrorParams = () => {
       const url = new URL(window.location.href);
-      [
-        "access_token",
-        "refresh_token",
-        "state",
-        "token_type",
-        "expires_in",
-        "expires_at",
-        "provider_token",
-        "provider_refresh_token",
-        "error",
-        "error_description",
-      ].forEach((key) => url.searchParams.delete(key));
-      url.hash = "";
-      window.history.replaceState({}, "", url.toString());
-    };
+      const search = new URLSearchParams(url.search);
+      const hash = new URLSearchParams(url.hash.startsWith("#") ? url.hash.slice(1) : url.hash);
+      const error = search.get("error") ?? hash.get("error");
+      const errorDescription = search.get("error_description") ?? hash.get("error_description");
 
-    const consumeOAuthCallback = async (): Promise<Session | null> => {
-      try {
-        const search = new URLSearchParams(window.location.search);
-        const hash = new URLSearchParams(
-          window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash
-        );
-        const access_token = search.get("access_token") ?? hash.get("access_token");
-        const refresh_token = search.get("refresh_token") ?? hash.get("refresh_token");
-        const error = search.get("error") ?? hash.get("error");
-        const code = search.get("code");
-        const hasAnyAuthParam = !!(access_token || refresh_token || error || code);
-        if (hasAnyAuthParam) {
-          console.info("[Auth] OAuth callback detected", {
-            url: window.location.href,
-            hasAccessToken: !!access_token,
-            hasRefreshToken: !!refresh_token,
-            hasCode: !!code,
-            error,
-            errorDescription: search.get("error_description") ?? hash.get("error_description"),
-          });
-        }
-        if (error) {
-          console.error("[Auth] OAuth provider returned error:", error, search.get("error_description") ?? hash.get("error_description"));
-          cleanupOAuthParams();
-          return null;
-        }
-        if (access_token && refresh_token) {
-          const { data, error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
-          if (sessionError) throw sessionError;
-          console.info("[Auth] OAuth session set successfully", { userId: data.session?.user?.id });
-          cleanupOAuthParams();
-          return data.session;
-        }
-        if (code && !access_token) {
-          try {
-            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-            if (exchangeError) throw exchangeError;
-            console.info("[Auth] PKCE code exchanged successfully", { userId: data.session?.user?.id });
-            cleanupOAuthParams();
-            return data.session;
-          } catch (err) {
-            console.error("[Auth] PKCE exchange failed:", err);
-          }
-        }
-      } catch (err) {
-        console.error("[Auth] OAuth callback consume failed:", err);
-      }
-      return null;
+      if (!error) return;
+
+      console.error("[Auth] OAuth provider returned error:", error, errorDescription);
+      ["error", "error_description", "state"].forEach((key) => url.searchParams.delete(key));
+      if (hash.has("error") || hash.has("error_description")) url.hash = "";
+      window.history.replaceState({}, "", url.toString());
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
@@ -154,10 +101,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     const initializeAuth = async () => {
-      const callbackSession = await consumeOAuthCallback();
+      cleanupOAuthErrorParams();
       const { data: { session: currentSession } } = await supabase.auth.getSession();
       if (!mounted) return;
-      applySession(callbackSession ?? currentSession);
+      applySession(currentSession);
       setLoading(false);
     };
 
