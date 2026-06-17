@@ -90,6 +90,9 @@ export const StoresSection = () => {
         >
           <h2 className="text-3xl md:text-5xl mb-3 md:mb-4">{t("stores.title")}</h2>
           <p className="text-muted-foreground font-body text-sm md:text-base">{t("stores.subtitle")}</p>
+          <p className="text-primary font-body text-sm md:text-base mt-2 font-medium">
+            Veikalos vari apskatīt produktus un veikt pasūtījumus klātienē. Pasūtījumu saņemšana notiek tikai mūsu birojā — Braslas iela 29, Ieeja D.
+          </p>
         </motion.div>
 
         {/* Store cards */}

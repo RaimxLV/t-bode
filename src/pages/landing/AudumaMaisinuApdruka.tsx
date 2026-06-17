@@ -5,25 +5,25 @@ const AudumaMaisinuApdruka = () => (
     path="/auduma-maisinu-apdruka"
     title="Auduma maisiņu apdruka Latvijā | T-Bode"
     h1="Auduma maisiņu apdruka ar tavu dizainu"
-    metaDescription="Auduma maisiņu apdruka Latvijā ar DTF tehnoloģiju. Bez minimālā pasūtījuma — pasūti pat vienu gabalu. Izgatavošana Rīgā 2–4 dienās, piegāde visā Latvijā."
-    kicker="DTF apdruka uz kokvilnas maisiņa"
+    metaDescription="Auduma maisiņu apdruka Latvijā ar profesionālo apdrukas tehnoloģiju. Bez minimālā pasūtījuma — pasūti pat vienu gabalu. Izgatavošana Rīgā 2–4 dienās, piegāde visā Latvijā."
+    kicker="Apdruka uz kokvilnas maisiņa"
     published={false}
     categorySlug="bags"
     productSource="design"
     ctaText="Personalizēt savu maisiņu"
     ctaHref="/design?category=bags"
     intro={[
-      "Auduma maisiņa apdruka ir vienkāršākais veids, kā padarīt ikdienas iepirkšanos personiskāku, dāvanu — neaizmirstamāku, bet komandas pasākumu — atpazīstamāku. T-Bode izmanto mūsdienīgu DTF (Direct-to-Film) tehnoloģiju, kas saglabā krāsu spilgtumu pat pēc desmitiem mazgāšanu.",
+      "Auduma maisiņa apdruka ir vienkāršākais veids, kā padarīt ikdienas iepirkšanos personiskāku, dāvanu — neaizmirstamāku, bet komandas pasākumu — atpazīstamāku. T-Bode izmanto mūsdienīgu apdrukas tehnoloģiju, kas saglabā krāsu spilgtumu pat pēc desmitiem mazgāšanu.",
       "Strādājam bez minimālā pasūtījuma — vari pasūtīt vienu gabalu sev vai 200 gabalus uzņēmuma pasākumam. Visi maisiņi ir no 100 % kokvilnas — izturīgi, mīksti un patīkami ikdienas lietošanā. Dizainu izveido pāris minūtēs tiešsaistē vai augšupielādē savu attēlu.",
-      "Pasūtījums tiek izgatavots Rīgā 2–4 darba dienu laikā. Piegāde uz Omniva pakomātu visā Latvijā vai saņemšana mūsu veikalos — Akropolē, Dominā, Origo un Alfā.",
+      "Pasūtījums tiek izgatavots Rīgā 2–4 darba dienu laikā. Piegāde uz Omniva pakomātu visā Latvijā vai saņemšana mūsu birojā Rīgā (Braslas iela 29, Ieeja D)."
     ]}
     bullets={[
-      "DTF apdruka — spilgtas krāsas, neizbalē pat pēc desmitiem mazgāšanu",
+      "Profesionālā apdruka — spilgtas krāsas, neizbalē pat pēc desmitiem mazgāšanu",
       "100 % kokvilnas auduma maisiņš, 5 krāsu izvēle",
       "Bez minimālā pasūtījuma — pat viens gabals",
       "Augšupielādē savu logo, foto vai zīmējumu",
       "Izgatavošana Rīgā 2–4 darba dienās",
-      "Piegāde ar Omniva vai saņemšana mūsu veikalos",
+      "Piegāde ar Omniva vai saņemšana mūsu birojā",
     ]}
     secondaryHeading="Kam piemērota auduma maisiņu apdruka?"
     secondaryParagraphs={[
@@ -49,7 +49,7 @@ const AudumaMaisinuApdruka = () => (
       },
       {
         q: "Vai apdruka izturēs mazgāšanu?",
-        a: "Jā. DTF apdruka ir izturīga — pareizi mazgājot (līdz 30 °C, izgrieztu uz otru pusi, bez balinātāja) tā saglabā krāsas un kvalitāti vairāk nekā 50 mazgāšanu.",
+        a: "Jā. Apdruka ir izturīga — pareizi mazgājot (līdz 30 °C, izgrieztu uz otru pusi, bez balinātāja) tā saglabā krāsas un kvalitāti vairāk nekā 50 mazgāšanu.",
       },
       {
         q: "Vai ir minimālais pasūtījuma daudzums?",
