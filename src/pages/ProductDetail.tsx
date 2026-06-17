@@ -377,12 +377,26 @@ const ProductDetail = () => {
                       <Palette className="w-4 h-4 text-muted-foreground" />
                       <span className="font-body font-semibold text-sm">{t("productDetail.color")} {selectedColor && `— ${selectedColor}`}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {colors.map((color) => (
-                        <button key={color.name} onClick={() => { setSelectedColor(color.name); setSelectedImageIdx(0); }} title={color.name}
-                          className={`w-9 h-9 rounded-full border-2 transition-all ${selectedColor === color.name ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border hover:border-foreground"}`}
-                          style={{ backgroundColor: color.hex }} />
-                      ))}
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {colors.map((color) => {
+                        const isLight = ["#ffffff", "#fff", "#f5f0e8", "#f5f5f5", "#fafafa"].includes(color.hex.toLowerCase());
+                        const active = selectedColor === color.name;
+                        return (
+                          <button
+                            key={color.name}
+                            onClick={() => { setSelectedColor(color.name); setSelectedImageIdx(0); }}
+                            className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all ${active ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/50"}`}
+                          >
+                            <span
+                              className={`w-7 h-7 rounded-full border-2 shrink-0 ${active ? "border-primary" : "border-border"} ${isLight ? "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]" : ""}`}
+                              style={{ backgroundColor: color.hex }}
+                            />
+                            <span className={`text-[10px] font-body leading-tight text-center truncate w-full ${active ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                              {color.name}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
