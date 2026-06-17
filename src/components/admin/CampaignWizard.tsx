@@ -1232,7 +1232,7 @@ function StepIdea({
                 className="mt-0.5"
               />
               <div className="text-sm">
-                <div className="font-medium">Bilde pilnībā ietilpst rāmī (DTF druka)</div>
+                <div className="font-medium">Bilde pilnībā ietilpst rāmī (apdruka)</div>
                 <div className="text-xs text-muted-foreground">
                   Liek AI ar drošu malu (≥8%) iederēt visu zīmējumu kadrā — nekas netiek nogriezts.
                 </div>
