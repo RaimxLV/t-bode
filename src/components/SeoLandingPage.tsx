@@ -507,29 +507,30 @@ function FeaturedProduct({
             <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
               Krāsa: <span className="text-foreground font-semibold normal-case tracking-normal">{active?.name}</span>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
               {variants.map((cv: any, i: number) => {
                 const isActive = i === activeIdx;
+                const isLight = ["#ffffff", "#fff", "#f5f0e8", "#f5f5f5", "#fafafa"].includes(cv.hex?.toLowerCase?.() || "");
                 return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setActiveIdx(i)}
-                    className={`flex flex-col items-center gap-1.5 group focus:outline-none`}
+                    className={`flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all focus:outline-none ${
+                      isActive ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/50"
+                    }`}
                     aria-pressed={isActive}
                     aria-label={cv.name}
                     title={cv.name}
                   >
                     <span
-                      className={`w-10 h-10 rounded-full border-2 transition-all shadow ${
-                        isActive
-                          ? "border-primary ring-2 ring-primary/50 scale-110"
-                          : "border-border ring-2 ring-transparent group-hover:ring-primary/40"
-                      }`}
+                      className={`w-8 h-8 rounded-full border-2 shrink-0 transition-all ${
+                        isActive ? "border-primary scale-110" : "border-border"
+                      } ${isLight ? "shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]" : ""}`}
                       style={{ backgroundColor: cv.hex }}
                     />
                     <span
-                      className={`text-[10px] uppercase tracking-wide ${
+                      className={`text-[9px] uppercase tracking-wide text-center truncate w-full ${
                         isActive ? "text-foreground font-semibold" : "text-muted-foreground"
                       }`}
                     >
