@@ -8,11 +8,11 @@ const DesignYourOwn = () => {
   const { i18n } = useTranslation();
   const isLv = i18n.language === "lv";
   const title = isLv
-    ? "Izveido savu T-kreklu dizainu | T-Bode"
-    : "Design your own T-shirt | T-Bode";
+    ? "Personalizē kreklu, hūdiju vai krūzi online | T-Bode"
+    : "Personalize your t-shirt, hoodie or mug online | T-Bode";
   const description = isLv
-    ? "Dizaina konstruktors t-kreklu, hūdiju un cepuru apdrukai. Augšupielādē attēlu vai tekstu un redzi vizualizāciju. Ražojam Rīgā."
-    : "Online design tool for t-shirts, hoodies and caps. Upload your image or text, preview instantly. Printed in Riga.";
+    ? "Personalizē savu kreklu, hūdiju, krūzi vai somu pats tiešsaistē — augšupielādē attēlu vai tekstu. Apdrukājam Rīgā, piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
+    : "Personalize your t-shirt, hoodie, mug or bag online — upload your image or text. Printed in Riga, delivered to any Omniva parcel locker in Latvia or pick up at our office.";
 
   const steps = isLv
     ? [
@@ -55,14 +55,14 @@ const DesignYourOwn = () => {
             "Pievieno tekstu ar dažādiem fontiem",
             "Pielāgo izmēru un novietojumu",
             "Reālistiska tūlītēja vizualizācija",
-            "DTF apdruka uz krekliem, hūdijiem, krūzēm, somām",
+            "Apdruka uz krekliem, hūdijiem, krūzēm un somām",
           ]
         : [
             "Upload your image or logo",
             "Add text with multiple fonts",
             "Adjust size and placement",
             "Realistic instant preview",
-            "DTF printing on t-shirts, hoodies, mugs, bags",
+            "Printing on t-shirts, hoodies, mugs and bags",
           ],
     },
     {

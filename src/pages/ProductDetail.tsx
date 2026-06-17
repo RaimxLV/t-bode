@@ -257,8 +257,8 @@ const ProductDetail = () => {
           const clean = (displayDescription || "").replace(/<[^>]+>/g, "").trim();
           if (clean.length >= 80) return clean.slice(0, 155);
           const suffix = i18n.language === "en"
-            ? ` — customize on-site in Riga. T-Bode DTF printing on t-shirts, hoodies, mugs and bags.`
-            : ` — personalizē ar savu dizainu. T-Bode DTF apdruka Rīgā uz krekliem, hūdijiem, krūzēm un somām.`;
+            ? ` — personalize online with your own design. T-Bode printing in Riga, delivery to Omniva parcel lockers across Latvia.`
+            : ` — personalizē online ar savu dizainu. T-Bode apdruka Rīgā, piegāde Omniva pakomātā visā Latvijā.`;
           return (`${displayName}${suffix}`).slice(0, 158);
         })()}
         image={displayImage || product.image_url || undefined}
