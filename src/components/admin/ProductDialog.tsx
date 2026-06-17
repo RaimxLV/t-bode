@@ -378,8 +378,8 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
           </div>
 
           <div>
-            <Label className="font-body text-sm">Lifestyle galerija (cilvēki ar produktu)</Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Parādās produkta lapā zem pirkšanas pogām atsevišķā sadaļā. Var augšupielādēt vairākas reizē.</p>
+            <Label className="font-body text-sm">Lifestyle galerija — stock / katalogs</Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Profesionālas/stock bildes, kā produkts izskatās uz cilvēkiem. Parādās sadaļā “Kā izskatās dabā”.</p>
             <div className="flex flex-wrap gap-2 mb-2">
               {(product.gallery_images ?? []).map((img, idx) => (
                 <div key={idx} className="relative group">
@@ -399,6 +399,35 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                   {uploadingImage === "gallery" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
                 </div>
                 <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "gallery")} disabled={uploadingImage === "gallery"} />
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-cta-red/30 bg-cta-red/[0.03] p-3">
+            <Label className="font-body text-sm flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-cta-red" />
+              Mūsu darbi (klientu nodrukāti pasūtījumi)
+            </Label>
+            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Reālu apdrukāto produktu foto. Parādās produkta lapā atsevišķā sadaļā “Mūsu darbi”. Ja tukšs — sekcija klientiem neparādās.</p>
+            <div className="flex flex-wrap gap-2 mb-1">
+              {(product.showcase_images ?? []).map((img, idx) => (
+                <div key={idx} className="relative group">
+                  <img src={img} alt={`Mūsu darbs ${idx + 1}`} className="w-20 h-24 object-cover rounded border border-cta-red/40" />
+                  <button
+                    type="button"
+                    onClick={() => onProductChange({ ...product, showcase_images: (product.showcase_images ?? []).filter((_, i) => i !== idx) })}
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Dzēst bildi"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="cursor-pointer">
+                <div className="w-20 h-24 border-2 border-dashed border-cta-red/40 rounded flex items-center justify-center hover:border-cta-red hover:bg-cta-red/5 transition-colors">
+                  {uploadingImage === "showcase" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-cta-red" />}
+                </div>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "showcase")} disabled={uploadingImage === "showcase"} />
               </label>
             </div>
           </div>
