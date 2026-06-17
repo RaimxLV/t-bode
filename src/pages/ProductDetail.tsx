@@ -6,6 +6,7 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { LifestyleGallery } from "@/components/LifestyleGallery";
+import { ShowcaseGallery } from "@/components/ShowcaseGallery";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -547,7 +548,13 @@ const ProductDetail = () => {
             </motion.div>
           </div>
 
-          {/* Lifestyle gallery — real-world photos of the product */}
+          {/* "Mūsu darbi" — real customer printed orders (separate from lifestyle catalog) */}
+          <ShowcaseGallery
+            images={(product as any).showcase_images ?? []}
+            productName={displayName}
+          />
+
+          {/* Lifestyle gallery — catalog/stock photos of the product */}
           <LifestyleGallery
             images={product.gallery_images ?? []}
             productName={displayName}
