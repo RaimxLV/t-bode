@@ -378,7 +378,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">Lifestyle galerija — stock / katalogs</Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Profesionālas/stock bildes, kā produkts izskatās uz cilvēkiem. Parādās sadaļā “Kā izskatās dabā”.</p>
             <div className="flex flex-wrap gap-2 mb-2">
               {(product.gallery_images ?? []).map((img, idx) => (
                 <div key={idx} className="relative group">
@@ -407,7 +406,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <span className="inline-block w-2 h-2 rounded-full bg-cta-red" />
               Mūsu darbi (klientu nodrukāti pasūtījumi)
             </Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Reālu apdrukāto produktu foto. Parādās produkta lapā atsevišķā sadaļā “Mūsu darbi”. Ja tukšs — sekcija klientiem neparādās.</p>
             <div className="flex flex-wrap gap-2 mb-1">
               {(product.showcase_images ?? []).map((img, idx) => (
                 <div key={idx} className="relative group">
