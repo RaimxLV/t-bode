@@ -19,8 +19,8 @@ const Index = () => {
     ? "Izveido savu kreklu online — personalizēta apdruka ar piegādi visā Latvijā"
     : "Design your own t-shirt online — custom printing with delivery across Latvia";
   const description = isLv
-    ? "Izveido savu t-krekla, hūdija, krūzes vai somas dizainu online un saņem to pakomātā visā Latvijā vai mūsu veikalos Rīgā. Personalizēta DTF apdruka — ātri, kvalitatīvi, no jebkuras ierīces."
-    : "Design your own t-shirt, hoodie, mug or bag online and get it delivered to any parcel locker in Latvia or pick it up at our Riga stores. Custom DTF printing, made in Riga.";
+    ? "Izveido savu t-krekla, hūdija, krūzes vai somas dizainu online un saņem to pakomātā visā Latvijā vai mūsu birojā Rīgā. Personalizēta apdruka — ātri, kvalitatīvi, no jebkuras ierīces."
+    : "Design your own t-shirt, hoodie, mug or bag online and get it delivered to any parcel locker in Latvia or pick it up at our Riga office. Custom printing, made in Riga.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
     (async () => {

@@ -13,8 +13,8 @@ interface GalleryItem {
 const galleryImages: GalleryItem[] = [
   {
     src: "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0025-scaled.jpg",
-    altLv: "T-Bode personalizēts t-krekls ar DTF apdruku",
-    altEn: "T-Bode custom t-shirt with DTF print",
+    altLv: "T-Bode personalizēts t-krekls ar apdruku",
+    altEn: "T-Bode custom t-shirt with print",
   },
   {
     src: "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20260210-WA0017-scaled.jpg",
@@ -38,8 +38,8 @@ const galleryImages: GalleryItem[] = [
   },
   {
     src: "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20251209-WA0009-scaled.jpg",
-    altLv: "Bērnu t-krekls ar krāsainu DTF apdruku",
-    altEn: "Kids t-shirt with colorful DTF print",
+    altLv: "Bērnu t-krekls ar krāsainu apdruku",
+    altEn: "Kids t-shirt with colorful print",
   },
   {
     src: "https://nkqwhiqrljwvzrivhqyh.supabase.co/storage/v1/object/public/product-images/wp/2026/02/IMG-20251209-WA0003-scaled.jpg",
@@ -88,8 +88,8 @@ export const GallerySection = () => {
     "@type": "ItemList",
     name: heading,
     description: isLv
-      ? "T-Bode personalizētas apģērbu un aksesuāru apdrukas darbu galerija — t-krekli, hūdiji, krūzes un somas ar DTF apdruku."
-      : "Gallery of T-Bode custom apparel and accessory prints — t-shirts, hoodies, mugs and bags with DTF printing.",
+      ? "T-Bode personalizētas apģērbu un aksesuāru apdrukas darbu galerija — t-krekli, hūdiji, krūzes un somas ar apdruku."
+      : "Gallery of T-Bode custom apparel and accessory prints — t-shirts, hoodies, mugs and bags with custom printing.",
     numberOfItems: galleryImages.length,
     itemListElement: galleryImages.map((img, i) => ({
       "@type": "ImageObject",
