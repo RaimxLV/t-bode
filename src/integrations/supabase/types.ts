@@ -1195,6 +1195,7 @@ export type Database = {
           print_offset_y: number | null
           print_scale: number | null
           show_in_collection: boolean
+          showcase_images: Json
           sizes: string[] | null
           slug: string
           status: Database["public"]["Enums"]["product_status"]
@@ -1231,6 +1232,7 @@ export type Database = {
           print_offset_y?: number | null
           print_scale?: number | null
           show_in_collection?: boolean
+          showcase_images?: Json
           sizes?: string[] | null
           slug: string
           status?: Database["public"]["Enums"]["product_status"]
@@ -1267,6 +1269,7 @@ export type Database = {
           print_offset_y?: number | null
           print_scale?: number | null
           show_in_collection?: boolean
+          showcase_images?: Json
           sizes?: string[] | null
           slug?: string
           status?: Database["public"]["Enums"]["product_status"]
