@@ -7,7 +7,7 @@ import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 } from "lucide-react";
@@ -174,12 +174,12 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <DialogHeader>
+      <DialogContent className="w-screen h-screen max-w-none max-h-none left-0 top-0 translate-x-0 translate-y-0 p-0 sm:rounded-none flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0 px-4 sm:px-6 py-4 border-b border-border">
           <DialogTitle className="font-display text-xl">{product.id ? t("admin.editProduct") : t("admin.newProduct")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
           {/* Bilingual name fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
@@ -356,7 +356,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">Mockup bilde (rāda kā pirmo kartiņā)</Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-1">Reālistiska bilde, piem. krekls uz cilvēka. Ja nav, kartiņā rādīsim parasto bildi.</p>
             <div className="mt-1 flex flex-wrap items-center gap-3">
               {product.mockup_image_url && <img src={product.mockup_image_url} alt="Mockup" className="w-20 h-20 object-cover rounded border border-border" />}
               <label className="cursor-pointer">
@@ -379,7 +378,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">Lifestyle galerija — stock / katalogs</Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Profesionālas/stock bildes, kā produkts izskatās uz cilvēkiem. Parādās sadaļā “Kā izskatās dabā”.</p>
             <div className="flex flex-wrap gap-2 mb-2">
               {(product.gallery_images ?? []).map((img, idx) => (
                 <div key={idx} className="relative group">
@@ -408,7 +406,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <span className="inline-block w-2 h-2 rounded-full bg-cta-red" />
               Mūsu darbi (klientu nodrukāti pasūtījumi)
             </Label>
-            <p className="text-xs text-muted-foreground mt-0.5 mb-2">Reālu apdrukāto produktu foto. Parādās produkta lapā atsevišķā sadaļā “Mūsu darbi”. Ja tukšs — sekcija klientiem neparādās.</p>
             <div className="flex flex-wrap gap-2 mb-1">
               {(product.showcase_images ?? []).map((img, idx) => (
                 <div key={idx} className="relative group">
@@ -527,14 +524,14 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-border">
-            <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
-            <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
-              <Save className="w-4 h-4 mr-2" />
-              {saving ? t("admin.saving") : t("admin.save")}
-            </Button>
-          </div>
         </div>
+        <DialogFooter className="shrink-0 px-4 sm:px-6 py-4 border-t border-border gap-2 sm:gap-3">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
+          <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? t("admin.saving") : t("admin.save")}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
