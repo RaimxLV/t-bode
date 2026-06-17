@@ -34,6 +34,20 @@ export const redirectToCanonicalHost = () => {
     return false;
   }
 
+  try {
+    const hasAuthStorage = Object.keys(window.localStorage).some((key) =>
+      key.includes("supabase") || key.startsWith("sb-")
+    );
+    if (hasAuthStorage) {
+      console.info("[Auth] Skipping canonical-host redirect: auth storage present", {
+        href: window.location.href,
+      });
+      return false;
+    }
+  } catch {
+    return false;
+  }
+
   const nextUrl = `${CANONICAL_AUTH_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`;
   window.location.replace(nextUrl);
   return true;

@@ -107,7 +107,10 @@ const Auth = () => {
     setLoading(true);
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: getAuthRedirectOrigin(),
+        // Lovable Cloud managed OAuth must return to the same origin that
+        // started the flow so the stored session is read from the same browser
+        // storage bucket after Google redirects back.
+        redirect_uri: window.location.origin,
       });
       if (result.error) {
         toast.error(t("auth.googleError"));
