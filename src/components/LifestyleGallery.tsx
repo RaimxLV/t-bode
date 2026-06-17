@@ -19,13 +19,14 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
 
   return (
     <section className="mt-20 lg:mt-28">
-      <div className="mb-8 lg:mb-10 flex items-end justify-between gap-4">
-        <div>
-          <h2 className="font-display text-3xl md:text-4xl lg:text-5xl tracking-tight leading-none">
-            {t("productDetail.lifestyleHeading", "Mūsu darbi")}
-          </h2>
-          <div className="mt-3 h-[3px] w-12 bg-cta-red rounded-full" />
-        </div>
+      <div className="mb-8 lg:mb-10">
+        <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-body mb-2">
+          {t("productDetail.lifestyleEyebrow", "Galerija")}
+        </p>
+        <h2 className="font-display text-3xl md:text-4xl lg:text-5xl tracking-tight leading-none">
+          {t("productDetail.lifestyleTitle", "Kā izskatās dabā")}
+        </h2>
+        <div className="mt-3 h-[2px] w-10 bg-foreground/40 rounded-full" />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
