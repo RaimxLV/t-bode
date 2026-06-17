@@ -167,9 +167,9 @@
       "@context": "https://schema.org",
       "@type": "Service",
       "@id": "https://www.t-bode.lv/#service-dtf",
-      "serviceType": "DTF (Direct-to-Film) apparel printing",
-      "name": "Kreklu apdruka Rīgā — DTF tehnoloģija",
-      "description": "Profesionāla DTF apdruka uz t-krekliem, hūdijiem, krūzēm un somām ar tava dizainu. Ražojam Rīgā, Braslas ielā 29. Pasūtījums tiek izgatavots parasti 2–5 darba dienu laikā.",
+      "serviceType": "Online custom apparel design and printing",
+      "name": "Izveido savu kreklu online — personalizēta apdruka ar piegādi visā Latvijā",
+      "description": "Izveido savu t-krekla, hūdija, krūzes vai somas dizainu tiešsaistē mūsu dizaina rīkā un saņem to pakomātā visā Latvijā vai mūsu veikalos Rīgā. Profesionāla DTF apdruka, ražota Rīgā (Braslas iela 29), izgatavošana 2–5 darba dienās.",
       "provider": { "@id": "https://www.t-bode.lv/#organization" },
       "areaServed": [
         { "@type": "City", "name": "Rīga" },
@@ -177,11 +177,18 @@
         { "@type": "Country", "name": "Igaunija" },
         { "@type": "Country", "name": "Lietuva" }
       ],
-      "availableChannel": {
-        "@type": "ServiceChannel",
-        "serviceUrl": "https://www.t-bode.lv/design",
-        "name": "Tiešsaistes dizaina konstruktors"
-      },
+      "availableChannel": [
+        {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.t-bode.lv/design",
+          "name": "Tiešsaistes dizaina konstruktors — izveido savu dizainu online"
+        },
+        {
+          "@type": "ServiceChannel",
+          "serviceUrl": "https://www.t-bode.lv/collection",
+          "name": "Gatavie dizaini — T-Bode kolekcija"
+        }
+      ],
       "offers": {
         "@type": "AggregateOffer",
         "priceCurrency": "EUR",
