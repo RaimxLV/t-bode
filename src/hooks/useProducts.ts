@@ -21,6 +21,7 @@ export interface DBProduct {
   image_url: string | null;
   mockup_image_url: string | null;
   gallery_images: string[];
+  showcase_images: string[];
   sizes: string[] | null;
   colors: string[] | null;
   color_variants: ColorVariant[];
@@ -64,6 +65,7 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
     color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
     gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
+    showcase_images: (Array.isArray((p as any).showcase_images) ? (p as any).showcase_images : []) as string[],
   }));
 }
 
@@ -82,6 +84,7 @@ async function fetchCollectionProducts(): Promise<DBProduct[]> {
     color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
     gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
+    showcase_images: (Array.isArray((p as any).showcase_images) ? (p as any).showcase_images : []) as string[],
   }));
 }
 
@@ -98,6 +101,7 @@ async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
     color_variants: (data.color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (data as any).zakeke_model_code ?? null,
     gallery_images: (Array.isArray((data as any).gallery_images) ? (data as any).gallery_images : []) as string[],
+    showcase_images: (Array.isArray((data as any).showcase_images) ? (data as any).showcase_images : []) as string[],
   };
 }
 
