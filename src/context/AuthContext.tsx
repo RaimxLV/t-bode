@@ -82,15 +82,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const access_token = search.get("access_token") ?? hash.get("access_token");
         const refresh_token = search.get("refresh_token") ?? hash.get("refresh_token");
         const error = search.get("error") ?? hash.get("error");
+        const code = search.get("code");
+        const hasAnyAuthParam = !!(access_token || refresh_token || error || code);
+        if (hasAnyAuthParam) {
+          console.info("[Auth] OAuth callback detected", {
+            url: window.location.href,
+            hasAccessToken: !!access_token,
+            hasRefreshToken: !!refresh_token,
+            hasCode: !!code,
+            error,
+            errorDescription: search.get("error_description") ?? hash.get("error_description"),
+          });
+        }
         if (error) {
+          console.error("[Auth] OAuth provider returned error:", error, search.get("error_description") ?? hash.get("error_description"));
           cleanupOAuthParams();
           return null;
         }
         if (access_token && refresh_token) {
           const { data, error: sessionError } = await supabase.auth.setSession({ access_token, refresh_token });
           if (sessionError) throw sessionError;
+          console.info("[Auth] OAuth session set successfully", { userId: data.session?.user?.id });
           cleanupOAuthParams();
           return data.session;
+        }
+        if (code && !access_token) {
+          try {
+            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            if (exchangeError) throw exchangeError;
+            console.info("[Auth] PKCE code exchanged successfully", { userId: data.session?.user?.id });
+            cleanupOAuthParams();
+            return data.session;
+          } catch (err) {
+            console.error("[Auth] PKCE exchange failed:", err);
+          }
         }
       } catch (err) {
         console.error("[Auth] OAuth callback consume failed:", err);
