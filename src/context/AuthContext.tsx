@@ -55,6 +55,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Boot-time snapshot so we can see exactly what the OAuth redirect delivered.
+    try {
+      const storageKeys = Object.keys(window.localStorage).filter((k) =>
+        k.includes("supabase") || k.includes("sb-")
+      );
+      console.info("[Auth] Boot snapshot", {
+        href: window.location.href,
+        host: window.location.host,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        hash: window.location.hash,
+        referrer: document.referrer,
+        supabaseStorageKeys: storageKeys,
+      });
+    } catch (err) {
+      console.warn("[Auth] Boot snapshot failed", err);
+    }
+
     const cleanupOAuthParams = () => {
       const url = new URL(window.location.href);
       [
@@ -123,8 +141,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return null;
     };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return;
+      console.info("[Auth] onAuthStateChange", {
+        event,
+        hasSession: !!nextSession,
+        userId: nextSession?.user?.id,
+        href: window.location.href,
+      });
       applySession(nextSession);
       setLoading(false);
     });

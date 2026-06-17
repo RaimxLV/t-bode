@@ -18,6 +18,22 @@ export const redirectToCanonicalHost = () => {
     return false;
   }
 
+  // CRITICAL: Never redirect across origins while an OAuth callback is being
+  // processed. localStorage is per-origin, so a hop from www.t-bode.lv to
+  // t-bode.lv would discard the session that was just stored.
+  const search = window.location.search || "";
+  const hash = window.location.hash || "";
+  const hasOAuthPayload =
+    /[?&#](access_token|refresh_token|provider_token|code|error|error_description)=/.test(
+      search + "&" + hash.replace(/^#/, "&"),
+    );
+  if (hasOAuthPayload) {
+    console.info("[Auth] Skipping canonical-host redirect: OAuth params present", {
+      href: window.location.href,
+    });
+    return false;
+  }
+
   const nextUrl = `${CANONICAL_AUTH_ORIGIN}${window.location.pathname}${window.location.search}${window.location.hash}`;
   window.location.replace(nextUrl);
   return true;
