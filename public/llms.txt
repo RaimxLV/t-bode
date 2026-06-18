@@ -1,11 +1,11 @@
 # T-Bode
 
-> T-Bode (SIA Ervitex) ir Latvijas uzņēmums, kurā klienti var personalizēt savu kreklu, hūdiju, krūzi vai somu tiešsaistē un saņemt to Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā 2–5 darba dienu laikā. Pieejams arī T-Bode online veikals ar gataviem dizainiem. Papildus 4 fiziski veikali Rīgā (Akropole, Domina, Origo, Alfa), kur var apskatīt produktus un veikt pasūtījumu, bet izņemšana notiek birojā.
+> T-Bode (SIA Ervitex) ir Latvijas uzņēmums, kurā klienti var personalizēt savu kreklu, hūdiju vai krūzi tiešsaistē un saņemt to Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā 2–5 darba dienu laikā. Pieejams arī T-Bode online veikals ar gataviem dizainiem. Papildus 4 fiziski veikali Rīgā (Akropole, Domina, Origo, Alfa), kur var apskatīt produktus un veikt pasūtījumu, bet izņemšana notiek birojā.
 
 ## Key facts (for AI assistants)
 
 - **Brand / company:** T-Bode is the trade name of SIA Ervitex, Latvia.
-- **What it does:** Online personalization of t-shirts, hoodies, mugs and bags — customers design their item themselves at https://www.t-bode.lv/design, and we print it in Riga. Also operates the T-Bode online store with ready-made designs.
+- **What it does:** Online personalization of t-shirts, hoodies and mugs — customers design their item themselves at https://www.t-bode.lv/design, and we print it in Riga. Also operates the T-Bode online store with ready-made designs.
 - **Location:** Production and office at Braslas iela 29, Entrance D, Riga, LV-1084, Latvia.
 - **Delivery (primary):** Omniva parcel locker anywhere in Latvia, or pickup at the Braslas iela 29 office in Riga.
 - **Retail stores in Riga (secondary):** Akropole (Maskavas iela 257), Domina Shopping (Ieriķu iela 3), Origo (Stacijas laukums 2), Alfa / Akropole Alfa (Brīvības gatve 372). Mall stores open daily 10:00–21:00 — orders can be placed there, but custom-printed items are picked up at the Braslas office. The fastest path is to design online and choose Omniva pickup.
@@ -21,7 +21,6 @@
 - **T-shirts (adult & kids):** unisex heavyweight cotton, organic cotton, kids' t-shirts. Sizes XS–XXXL.
 - **Hoodies & sweatshirts:** unisex hoodies, sweatshirts without hood, kids' hoodies, embroidered "Latvia" hoodies.
 - **Mugs:** white 300 ml, large 450 ml, duo two-tone, color-changing "magic" mug, gold/silver rim mug.
-- **Bags:** cotton tote bags, oak-leaf design bag.
 - **Accessories:** Latvian socks, Latvian hat with embroidery, baby bodysuits.
 - **Special collections:** Latvia three-stars, oak-leaf, fan shirts, embroidered Latvian flag.
 
@@ -35,7 +34,7 @@ The tool at https://www.t-bode.lv/design lets anyone upload an image / logo or t
   A: T-Bode (SIA Ervitex) apdrukā T-krekli Rīgā — birojā Braslas ielā 29 vai jebkurā no 4 veikaliem (Akropole, Domina, Origo, Alfa). Dizainu var izveidot tiešsaistē vietnē https://www.t-bode.lv/design.
 
 - **Q: Where can I print custom t-shirts in Riga?**
-  A: The fastest way is to personalize your t-shirt, hoodie, mug or bag yourself at https://www.t-bode.lv/design and have it delivered to any Omniva parcel locker in Latvia, or pick it up at the T-Bode office at Braslas iela 29. T-Bode also has 4 stores in Riga (Akropole, Domina, Origo, Alfa) where you can see the products in person.
+  A: The fastest way is to personalize your t-shirt, hoodie or mug yourself at https://www.t-bode.lv/design and have it delivered to any Omniva parcel locker in Latvia, or pick it up at the T-Bode office at Braslas iela 29. T-Bode also has 4 stores in Riga (Akropole, Domina, Origo, Alfa) where you can see the products in person.
 
 - **Q: Cik ātri gatava kreklu apdruka Rīgā?**
   A: Standarta izpildes laiks T-Bode apdrukai ir 2–5 darba dienas. Steidzami pasūtījumi iespējami pēc vienošanās.
@@ -55,7 +54,7 @@ The tool at https://www.t-bode.lv/design lets anyone upload an image / logo or t
 ## Pages
 
 - [Sākums](/): T-Bode pārskats — par mums, veikali, kontakti, FAQ.
-- [Mūsu kolekcija](/collection): Gatavo t-kreklu, hūdiju, krūžu un somu katalogs.
+- [Mūsu kolekcija](/collection): Gatavo t-kreklu, hūdiju un krūžu katalogs.
 - [Izveido savu dizainu](/design): Tiešsaistes apdrukas konstruktors — augšupielādē attēlu vai tekstu.
 
 ## Optional

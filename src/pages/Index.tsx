@@ -19,8 +19,8 @@ const Index = () => {
     ? "T-Bode | Personalizē kreklu, hūdiju vai krūzi online — apdruka Rīgā"
     : "Personalize your t-shirt, hoodie or mug online | T-Bode Riga";
   const description = isLv
-    ? "Personalizē kreklu, hūdiju, krūzi vai somu tiešsaistē — pats, dažās minūtēs. Saņem Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā. Iepērcies T-Bode online veikalā."
-    : "Personalize your t-shirt, hoodie, mug or bag online in minutes. Pickup at any Omniva parcel locker in Latvia or at our Riga office. Shop the T-Bode online store.";
+    ? "Personalizē kreklu, hūdiju vai krūzi tiešsaistē — pats, dažās minūtēs. Saņem Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā. Iepērcies T-Bode online veikalā."
+    : "Personalize your t-shirt, hoodie or mug online in minutes. Pickup at any Omniva parcel locker in Latvia or at our Riga office. Shop the T-Bode online store.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
     (async () => {

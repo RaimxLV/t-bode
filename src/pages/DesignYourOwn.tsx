@@ -11,8 +11,8 @@ const DesignYourOwn = () => {
     ? "Personalizē kreklu, hūdiju vai krūzi online | T-Bode"
     : "Personalize your t-shirt, hoodie or mug online | T-Bode";
   const description = isLv
-    ? "Personalizē savu kreklu, hūdiju, krūzi vai somu pats tiešsaistē — augšupielādē attēlu vai tekstu. Apdrukājam Rīgā, piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
-    : "Personalize your t-shirt, hoodie, mug or bag online — upload your image or text. Printed in Riga, delivered to any Omniva parcel locker in Latvia or pick up at our office.";
+    ? "Personalizē savu kreklu, hūdiju vai krūzi pats tiešsaistē — augšupielādē attēlu vai tekstu. Apdrukājam Rīgā, piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
+    : "Personalize your t-shirt, hoodie or mug online — upload your image or text. Printed in Riga, delivered to any Omniva parcel locker in Latvia or pick up at our office.";
 
   const steps = isLv
     ? [
@@ -55,14 +55,14 @@ const DesignYourOwn = () => {
             "Pievieno tekstu ar dažādiem fontiem",
             "Pielāgo izmēru un novietojumu",
             "Reālistiska tūlītēja vizualizācija",
-            "Apdruka uz krekliem, hūdijiem, krūzēm un somām",
+            "Apdruka uz krekliem, hūdijiem un krūzēm",
           ]
         : [
             "Upload your image or logo",
             "Add text with multiple fonts",
             "Adjust size and placement",
             "Realistic instant preview",
-            "Printing on t-shirts, hoodies, mugs and bags",
+            "Printing on t-shirts, hoodies and mugs",
           ],
     },
     {
