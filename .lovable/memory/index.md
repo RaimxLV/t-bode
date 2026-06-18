@@ -4,6 +4,7 @@
 T-Bode custom apparel e-commerce store. Light theme, white bg, near-black text. Primary: near-black for buttons/nav. Red CTA (#DC2626) only for key actions.
 Bebas Neue headings, Inter body. Latvian company SIA Ervitex. Stores in Riga: Akropole, Domina, Origo, Alfa.
 Lovable Cloud for DB/auth. Products fully migrated to DB (27 products). Static products.ts kept only for category metadata.
+Never change visible website copy/content unless the user explicitly asks; SEO work must not alter public page text.
 
 ## Memories
 - [Brand info](mem://features/brand) — Company details, store locations, contact info

@@ -144,10 +144,7 @@
     "notFound": "Product Not Found",
     "backLink": "← Back to Products",
     "relatedProducts": "Related products",
-    "zoomImage": "Zoom image",
-    "lifestyleEyebrow": "Gallery",
-    "lifestyleTitle": "How it looks in real life",
-    "lifestyleSubtitle": "Real photos of the product — click to view larger."
+    "zoomImage": "Zoom image"
   },
   "cart": {
     "title": "Cart",
