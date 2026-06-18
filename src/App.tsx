@@ -55,10 +55,6 @@ const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
 const Veikali = lazy(() => import("./pages/Veikali.tsx"));
 
-// SEO landing pages (one per targeted Google search term).
-// Hidden from navigation/sitemap and noindex'd until `published=true` on each page.
-const AudumaMaisinuApdruka = lazy(() => import("./pages/landing/AudumaMaisinuApdruka.tsx"));
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -186,8 +182,6 @@ const App = () => {
                         <Route path="/blog" element={<BlogIndex />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/veikali" element={<Veikali />} />
-                        {/* SEO landing pages — draft, not linked from nav */}
-                        <Route path="/auduma-maisinu-apdruka" element={<AudumaMaisinuApdruka />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
