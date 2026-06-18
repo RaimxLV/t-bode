@@ -29,7 +29,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
               onClick={() => { setActiveIdx(idx); setLightboxOpen(true); }}
-              className="group relative overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg aspect-square"
+              className="group relative overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg h-full"
               aria-label={`${productName} — ${idx + 1}`}
             >
               <img
