@@ -29,7 +29,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
               onClick={() => { setActiveIdx(idx); setLightboxOpen(true); }}
-              className="group relative overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg"
+              className="group relative overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg h-full"
               aria-label={`${productName} — ${idx + 1}`}
             >
               <img
@@ -39,7 +39,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
                 alt={`${productName} ${idx + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
             </motion.button>
