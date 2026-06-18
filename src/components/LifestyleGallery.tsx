@@ -16,7 +16,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
 
   return (
     <section className="mt-16 lg:mt-20">
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
         {images.map((img, idx) => {
           const optimized = isSupabaseImage(img) ? getOptimizedSrc(img, 900, 85) : img;
           const srcSet = buildSrcSet(img, [400, 600, 900, 1200], 85) || undefined;
@@ -29,7 +29,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.3) }}
               onClick={() => { setActiveIdx(idx); setLightboxOpen(true); }}
-              className="group relative overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg"
+              className="group relative aspect-[3/4] overflow-hidden rounded-xl bg-muted border border-border hover:border-foreground/30 transition-all shadow-sm hover:shadow-lg"
               aria-label={`${productName} — ${idx + 1}`}
             >
               <img
@@ -39,7 +39,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
                 alt={`${productName} ${idx + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-auto scale-[1.12] object-cover transition-transform duration-500 group-hover:scale-[1.14]"
+                className="block w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
             </motion.button>
