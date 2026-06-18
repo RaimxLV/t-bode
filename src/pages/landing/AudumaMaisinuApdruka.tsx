@@ -5,10 +5,10 @@ const AudumaMaisinuApdruka = () => (
     path="/auduma-maisinu-apdruka"
     categorySlug="bags"
     h1="Auduma maisiņu apdruka Rīgā"
-    ctaLabel="Izveido savu maisiņu"
+    ctaText="Izveido savu maisiņu"
     ctaHref="/design?category=bags"
     title="Auduma maisiņu apdruka Rīgā | T-Bode"
-    description="Personalizēta auduma maisiņu apdruka Rīgā — augšupielādē savu logo vai dizainu, apdrukājam ātri un kvalitatīvi. Piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
+    metaDescription="Personalizēta auduma maisiņu apdruka Rīgā — augšupielādē savu logo vai dizainu, apdrukājam ātri un kvalitatīvi. Piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
     intro={[
       "T-Bode (SIA Ervitex) izgatavo personalizētus auduma maisiņus Rīgā — ar tava paša logo, attēlu vai tekstu. Maisiņi ir ekoloģiska un ilgtspējīga alternatīva plastmasas maisiņiem, kas lieliski der ikdienas iepirkumiem, pasākumiem un kā korporatīva dāvana.",
       "Augšupielādē savu dizainu tiešsaistes konstruktorā vietnē www.t-bode.lv/design, izvēlies maisiņa modeli un krāsu un redzi reālistisku vizualizāciju jau pirms pasūtīšanas.",
