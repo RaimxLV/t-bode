@@ -20,6 +20,7 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
         {images.map((img, idx) => {
           const optimized = isSupabaseImage(img) ? getOptimizedSrc(img, 900, 85) : img;
           const srcSet = buildSrcSet(img, [400, 600, 900, 1200], 85) || undefined;
+          const isDetailImage = idx >= 2;
           return (
             <motion.button
               key={idx}
@@ -39,7 +40,11 @@ export const LifestyleGallery = ({ images, productName }: LifestyleGalleryProps)
                 alt={`${productName} ${idx + 1}`}
                 loading="lazy"
                 decoding="async"
-                className="block w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                className={`block w-full h-full object-cover transition-transform duration-500 ${
+                  isDetailImage
+                    ? "scale-[1.38] group-hover:scale-[1.42]"
+                    : "group-hover:scale-[1.03]"
+                }`}
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
             </motion.button>
