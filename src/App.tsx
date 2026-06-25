@@ -102,14 +102,17 @@ const ViewportRecovery = () => {
     };
 
     const resetViewport = () => {
-      if (isMobileViewport()) {
-        setViewport(MOBILE_LOCKED_VIEWPORT);
-        window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 1200);
-      } else {
-        setViewport(DEFAULT_VIEWPORT);
-      }
+      // On mobile we lock the viewport permanently so returning from Google
+      // OAuth (which sometimes restores a stale desktop-width viewport) cannot
+      // leave the page rendered zoomed-out. Desktop keeps the standard one.
+      setViewport(isMobileViewport() ? MOBILE_LOCKED_VIEWPORT : DEFAULT_VIEWPORT);
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
+
+    // Always lock on mobile, regardless of where the user came from.
+    if (isMobileViewport()) {
+      setViewport(MOBILE_LOCKED_VIEWPORT);
+    }
 
     const hasOAuthReturnParams =
       new URLSearchParams(window.location.search).has("code") ||
@@ -147,7 +150,8 @@ const ViewportRecovery = () => {
       window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      setViewport(DEFAULT_VIEWPORT);
+      // Do NOT reset to DEFAULT_VIEWPORT here — on mobile that would unlock
+      // the viewport mid-session and re-introduce the zoom-out bug.
     };
   }, [loading, user]);
 
