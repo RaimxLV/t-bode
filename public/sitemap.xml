@@ -108,37 +108,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/t-krekls-tris-zvaigznes</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/t-krekls-ozollapas</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/cepure-latvija</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/meza-gara-vaibs-stanley-stella-organiskas-kokvilnas-t-krekls-2026-mq6qz5kt</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://t-bode.lv/produkti/dzemperis-tris-zvaigznes</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/meza-vilka-klusums-stanley-stella-organiskas-kokvilnas-t-kre-2026-mq6qz8yg</loc>
+    <loc>https://t-bode.lv/produkti/cepure-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -186,18 +162,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/savvalas-klusuma-gars-stanley-stella-organiskas-kokvilnas-t--2026-mq6qzgyv</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/nakts-brieza-klusums-stanley-stella-organiskas-kokvilnas-t-k-2026-mq6qzthh</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://t-bode.lv/produkti/bernu-dzemperis-ar-izsuvumu-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -205,6 +169,18 @@
   </url>
   <url>
     <loc>https://t-bode.lv/produkti/t-krekls-ar-izsuvumu-latvija</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/t-krekls-tris-zvaigznes</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/t-krekls-ozollapas</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

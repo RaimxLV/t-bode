@@ -80,6 +80,8 @@ const DynamicLang = () => {
 };
 
 const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+const MOBILE_LOCKED_VIEWPORT =
+  "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
 
 const ViewportRecovery = () => {
   const { user, loading } = useAuth();
@@ -90,6 +92,9 @@ const ViewportRecovery = () => {
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) return;
 
+    const isMobileViewport = () =>
+      window.matchMedia?.("(max-width: 768px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
     const setViewport = (content: string) => {
       if (viewportMeta.getAttribute("content") !== content) {
         viewportMeta.setAttribute("content", content);
@@ -97,7 +102,12 @@ const ViewportRecovery = () => {
     };
 
     const resetViewport = () => {
-      setViewport(DEFAULT_VIEWPORT);
+      if (isMobileViewport()) {
+        setViewport(MOBILE_LOCKED_VIEWPORT);
+        window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 450);
+      } else {
+        setViewport(DEFAULT_VIEWPORT);
+      }
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
 
@@ -105,7 +115,7 @@ const ViewportRecovery = () => {
       new URLSearchParams(window.location.search).has("code") ||
       window.location.hash.includes("error");
 
-    const cameFromGoogle = document.referrer.includes("google.");
+    const cameFromGoogle = /google\.|accounts\.google\.|lovable\.app|t-bode\.lv/i.test(document.referrer);
 
     const handlePageShow = () => {
       if (cameFromGoogle || hasOAuthReturnParams) {
