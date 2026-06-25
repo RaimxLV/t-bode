@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +28,6 @@ const registerSchema = loginSchema.extend({
 
 type FieldErrors = Record<string, string>;
 
-// Google sign-in re-enabled to test the managed OAuth flow end-to-end.
 const SHOW_GOOGLE_LOGIN = true;
 
 const Auth = () => {
@@ -106,17 +104,18 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
-        // Lovable Cloud managed OAuth must return to the same origin that
-        // started the flow so the stored session is read from the same browser
-        // storage bucket after Google redirects back.
-        redirect_uri: window.location.origin,
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: getAuthRedirectOrigin(),
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
       });
-      if (result.error) {
+      if (error) {
         toast.error(t("auth.googleError"));
-        return;
       }
-      // If we get here without a redirect, onAuthStateChange will handle navigation.
     } catch {
       toast.error(t("auth.googleError"));
     } finally {
