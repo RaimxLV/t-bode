@@ -2,22 +2,43 @@
 <html lang="lv">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <script>
       (function () {
         var viewport = document.querySelector('meta[name="viewport"]');
         if (!viewport) return;
-        var mobileViewport = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
-        var defaultViewport = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
+        var defaultViewport = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
         var isMobile = function () {
-          return window.matchMedia && window.matchMedia('(max-width: 768px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          return (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && (screen.width || innerWidth) <= 1024);
+        };
+        var mobileWidth = function () {
+          var visualWidth = window.visualViewport ? Math.round(window.visualViewport.width * (window.visualViewport.scale || 1)) : 0;
+          var candidates = [visualWidth, screen.width || 0, document.documentElement.clientWidth || 0].filter(function (width) {
+            return width >= 320 && width <= 1024;
+          });
+          return candidates.length ? Math.min.apply(Math, candidates) : Math.min(Math.max(window.innerWidth || 390, 320), 1024);
+        };
+        var mobileViewport = function () {
+          return 'width=' + mobileWidth() + ', initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
         };
         var applyViewport = function () {
-          viewport.setAttribute('content', isMobile() ? mobileViewport : defaultViewport);
+          viewport.setAttribute('content', isMobile() ? mobileViewport() : defaultViewport);
+          if (isMobile()) {
+            document.documentElement.style.width = '100%';
+            document.documentElement.style.minWidth = '0';
+            if (document.body) {
+              document.body.style.width = '100%';
+              document.body.style.minWidth = '0';
+              document.body.style.overflowX = 'hidden';
+            }
+            requestAnimationFrame(function () { viewport.setAttribute('content', mobileViewport()); });
+          }
         };
         applyViewport();
         window.addEventListener('pageshow', applyViewport, { passive: true });
         window.addEventListener('focus', applyViewport, { passive: true });
+        window.addEventListener('resize', applyViewport, { passive: true });
+        window.addEventListener('orientationchange', applyViewport, { passive: true });
         document.addEventListener('visibilitychange', function () {
           if (document.visibilityState === 'visible') applyViewport();
         });

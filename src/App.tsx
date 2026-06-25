@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
+import { applyMobileViewportLock, getDefaultViewport, hasMobileOAuthViewportReturn, isMobileLikeViewport } from "@/lib/mobileViewport";
 import Index from "./pages/Index.tsx";
 
 // Legacy redirect: send old indexed URLs to their current equivalents.
@@ -79,10 +80,6 @@ const DynamicLang = () => {
   return null;
 };
 
-const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover";
-const MOBILE_LOCKED_VIEWPORT =
-  "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
-
 const ViewportRecovery = () => {
   const { user, loading } = useAuth();
 
@@ -92,9 +89,6 @@ const ViewportRecovery = () => {
     const viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) return;
 
-    const isMobileViewport = () =>
-      window.matchMedia?.("(max-width: 768px)").matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
     const setViewport = (content: string) => {
       if (viewportMeta.getAttribute("content") !== content) {
         viewportMeta.setAttribute("content", content);
@@ -102,56 +96,62 @@ const ViewportRecovery = () => {
     };
 
     const resetViewport = () => {
-      // On mobile we lock the viewport permanently so returning from Google
-      // OAuth (which sometimes restores a stale desktop-width viewport) cannot
-      // leave the page rendered zoomed-out. Desktop keeps the standard one.
-      setViewport(isMobileViewport() ? MOBILE_LOCKED_VIEWPORT : DEFAULT_VIEWPORT);
+      if (isMobileLikeViewport()) {
+        applyMobileViewportLock();
+      } else {
+        setViewport(getDefaultViewport());
+      }
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
 
-    // Always lock on mobile, regardless of where the user came from.
-    if (isMobileViewport()) {
-      setViewport(MOBILE_LOCKED_VIEWPORT);
-    }
+    applyMobileViewportLock();
 
     const hasOAuthReturnParams =
       new URLSearchParams(window.location.search).has("code") ||
       window.location.hash.includes("error");
 
-    const cameFromGoogle = /google\.|accounts\.google\.|lovable\.app|t-bode\.lv/i.test(document.referrer);
+    const cameFromGoogle = /google\.|accounts\.google\.|oauth\.lovable\.app|lovable\.app|t-bode\.lv/i.test(document.referrer);
+    const hasOAuthViewportFlag = hasMobileOAuthViewportReturn();
 
     const handlePageShow = () => {
-      if (cameFromGoogle || hasOAuthReturnParams) {
+      if (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || isMobileLikeViewport()) {
         resetViewport();
       }
     };
 
     const handleFocus = () => {
-      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams)) {
+      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || isMobileLikeViewport())) {
         resetViewport();
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || user)) {
+      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || user || isMobileLikeViewport())) {
         resetViewport();
       }
     };
 
-    if (!loading && (cameFromGoogle || hasOAuthReturnParams || user)) {
+    const handleOAuthReturn = () => resetViewport();
+    const handleResize = () => resetViewport();
+
+    if (!loading && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || user || isMobileLikeViewport())) {
       resetViewport();
     }
 
     window.addEventListener("pageshow", handlePageShow);
     window.addEventListener("focus", handleFocus);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("orientationchange", handleResize);
+    window.addEventListener("tbode:oauth-return", handleOAuthReturn);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("pageshow", handlePageShow);
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("orientationchange", handleResize);
+      window.removeEventListener("tbode:oauth-return", handleOAuthReturn);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      // Do NOT reset to DEFAULT_VIEWPORT here — on mobile that would unlock
-      // the viewport mid-session and re-introduce the zoom-out bug.
     };
   }, [loading, user]);
 
