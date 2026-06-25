@@ -73,7 +73,7 @@ export const shouldReloadAfterMobileOAuthReturn = () => {
 };
 
 export const cleanOAuthReturnUrl = () => {
-  if (typeof window === "undefined") return window.location?.href ?? "";
+  if (typeof window === "undefined") return "";
 
   const url = new URL(window.location.href);
   ["code", "state", "error", "error_description"].forEach((key) => url.searchParams.delete(key));
