@@ -11,15 +11,8 @@
         var isMobile = function () {
           return (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && (screen.width || innerWidth) <= 1024);
         };
-        var mobileWidth = function () {
-          var visualWidth = window.visualViewport ? Math.round(window.visualViewport.width * (window.visualViewport.scale || 1)) : 0;
-          var candidates = [visualWidth, screen.width || 0, document.documentElement.clientWidth || 0].filter(function (width) {
-            return width >= 320 && width <= 1024;
-          });
-          return candidates.length ? Math.min.apply(Math, candidates) : Math.min(Math.max(window.innerWidth || 390, 320), 1024);
-        };
         var mobileViewport = function () {
-          return 'width=' + mobileWidth() + ', initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+          return 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
         };
         var applyViewport = function () {
           viewport.setAttribute('content', isMobile() ? mobileViewport() : defaultViewport);

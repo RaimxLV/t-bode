@@ -1,23 +1,7 @@
 const MOBILE_OAUTH_VIEWPORT_FLAG = "tbode:mobile-oauth-viewport";
 
-const getMobileLayoutWidth = () => {
-  if (typeof window === "undefined") return 390;
-
-  const visualViewportWidth = window.visualViewport
-    ? Math.round(window.visualViewport.width * (window.visualViewport.scale || 1))
-    : 0;
-
-  const candidates = [
-    visualViewportWidth,
-    window.screen?.width || 0,
-    document.documentElement?.clientWidth || 0,
-  ].filter((width) => width >= 320 && width <= 1024);
-
-  return candidates.length ? Math.min(...candidates) : Math.min(Math.max(window.innerWidth || 390, 320), 1024);
-};
-
 export const getMobileLockedViewport = () =>
-  `width=${getMobileLayoutWidth()}, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover`;
+  "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
 
 export const getDefaultViewport = () => "width=device-width, initial-scale=1.0, viewport-fit=cover";
 
