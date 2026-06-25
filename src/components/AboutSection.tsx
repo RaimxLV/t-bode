@@ -29,7 +29,7 @@ export const AboutSection = () => {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {features.map((f, i) => (
             <motion.div
               key={f.titleKey}

@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
-import { applyMobileViewportLock, getDefaultViewport, hasMobileOAuthViewportReturn, isMobileLikeViewport } from "@/lib/mobileViewport";
+import { applyMobileViewportLock, cleanOAuthReturnUrl, getDefaultViewport, hasMobileOAuthViewportReturn, isMobileLikeViewport, shouldReloadAfterMobileOAuthReturn } from "@/lib/mobileViewport";
 import Index from "./pages/Index.tsx";
 
 // Legacy redirect: send old indexed URLs to their current equivalents.
@@ -136,6 +136,13 @@ const ViewportRecovery = () => {
 
     if (!loading && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || user || isMobileLikeViewport())) {
       resetViewport();
+    }
+
+    if (!loading && user && shouldReloadAfterMobileOAuthReturn()) {
+      resetViewport();
+      const cleanUrl = cleanOAuthReturnUrl();
+      requestAnimationFrame(() => window.location.replace(cleanUrl));
+      return;
     }
 
     window.addEventListener("pageshow", handlePageShow);
