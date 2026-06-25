@@ -40,9 +40,11 @@ export const applyMobileViewportLock = () => {
   viewportMeta.setAttribute("content", content);
   document.documentElement.style.width = "100%";
   document.documentElement.style.minWidth = "0";
-  document.body.style.width = "100%";
-  document.body.style.minWidth = "0";
-  document.body.style.overflowX = "hidden";
+  if (document.body) {
+    document.body.style.width = "100%";
+    document.body.style.minWidth = "0";
+    document.body.style.overflowX = "hidden";
+  }
 
   requestAnimationFrame(() => viewportMeta.setAttribute("content", getMobileLockedViewport()));
   setTimeout(() => viewportMeta.setAttribute("content", getMobileLockedViewport()), 250);
