@@ -2,7 +2,27 @@
 <html lang="lv">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <script>
+      (function () {
+        var viewport = document.querySelector('meta[name="viewport"]');
+        if (!viewport) return;
+        var mobileViewport = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+        var defaultViewport = 'width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover';
+        var isMobile = function () {
+          return window.matchMedia && window.matchMedia('(max-width: 768px)').matches || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        };
+        var applyViewport = function () {
+          viewport.setAttribute('content', isMobile() ? mobileViewport : defaultViewport);
+        };
+        applyViewport();
+        window.addEventListener('pageshow', applyViewport, { passive: true });
+        window.addEventListener('focus', applyViewport, { passive: true });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') applyViewport();
+        });
+      })();
+    </script>
     <title>T-Bode — Personalizē kreklu, hūdiju vai krūzi online | Apdruka Rīgā</title>
     <meta name="description" content="👕 Personalizē savu kreklu, hūdiju vai krūzi tiešsaistē — pats, dažās minūtēs. 🚚 Saņem Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā. 🛒 Iepērcies T-Bode online veikalā vai apskati 4 veikalos Rīgā (Akropole, Domina, Origo, Alfa)." />
     <meta name="keywords" content="kreklu apdruka, t-kreklu apdruka, personalizēts krekls, krekls ar savu dizainu, hūdija apdruka, krūzes apdruka, apģērbu apdruka, apdruka rīgā, online apdruka, pakomāts, omniva, tbode, t-bode" />
