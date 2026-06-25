@@ -16,6 +16,7 @@ import logo from "@/assets/logo.svg";
 import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getAuthRedirectOrigin, redirectToCanonicalHost } from "@/lib/authDomain";
+import { markMobileOAuthViewportReturn } from "@/lib/mobileViewport";
 import { Seo } from "@/components/Seo";
 
 const loginSchema = z.object({
@@ -104,6 +105,7 @@ const Auth = () => {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    markMobileOAuthViewportReturn();
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
@@ -115,6 +117,7 @@ const Auth = () => {
         toast.error(t("auth.googleError"));
         return;
       }
+      window.dispatchEvent(new Event("tbode:oauth-return"));
     } catch {
       toast.error(t("auth.googleError"));
     } finally {

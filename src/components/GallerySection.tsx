@@ -111,10 +111,12 @@ export const GallerySection = () => {
           {heading}
         </h2>
       </div>
-      <div className="flex gap-4 animate-[scroll_30s_linear_infinite]" style={{ width: "max-content" }}>
-        {[...galleryImages, ...galleryImages].map((img, i) => (
-          <GalleryImage key={i} src={img.src} alt={isLv ? img.altLv : img.altEn} />
-        ))}
+      <div className="w-full overflow-hidden">
+        <div className="flex gap-4 animate-[scroll_30s_linear_infinite]" style={{ width: "max-content", willChange: "transform" }}>
+          {[...galleryImages, ...galleryImages].map((img, i) => (
+            <GalleryImage key={i} src={img.src} alt={isLv ? img.altLv : img.altEn} />
+          ))}
+        </div>
       </div>
       <style>{`
         @keyframes scroll {
