@@ -28,7 +28,7 @@ const registerSchema = loginSchema.extend({
 
 type FieldErrors = Record<string, string>;
 
-const SHOW_GOOGLE_LOGIN = true;
+const SHOW_GOOGLE_LOGIN = false;
 
 const Auth = () => {
   const navigate = useNavigate();
