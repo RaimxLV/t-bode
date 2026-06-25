@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Mail, Lock, User, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ const registerSchema = loginSchema.extend({
 
 type FieldErrors = Record<string, string>;
 
-const SHOW_GOOGLE_LOGIN = false;
+const SHOW_GOOGLE_LOGIN = true;
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -104,17 +105,15 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: getAuthRedirectOrigin(),
-          queryParams: {
-            prompt: "select_account",
-          },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: {
+          prompt: "select_account",
         },
       });
-      if (error) {
+      if (result.error) {
         toast.error(t("auth.googleError"));
+        return;
       }
     } catch {
       toast.error(t("auth.googleError"));
