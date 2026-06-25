@@ -108,7 +108,7 @@ const Auth = () => {
     markMobileOAuthViewportReturn();
     try {
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: getAuthRedirectOrigin(),
         extraParams: {
           prompt: "select_account",
         },
@@ -165,7 +165,6 @@ const Auth = () => {
           </div>
 
           <div className="bg-white/[0.04] border border-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-2xl">
-            {/* Google login hidden until production deployment. Set to true to re-enable. */}
             {SHOW_GOOGLE_LOGIN && (
               <>
                 <Button
