@@ -79,7 +79,7 @@ const DynamicLang = () => {
   return null;
 };
 
-const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, viewport-fit=cover";
+const DEFAULT_VIEWPORT = "width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover";
 const MOBILE_LOCKED_VIEWPORT =
   "width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover";
 
@@ -104,7 +104,7 @@ const ViewportRecovery = () => {
     const resetViewport = () => {
       if (isMobileViewport()) {
         setViewport(MOBILE_LOCKED_VIEWPORT);
-        window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 450);
+        window.setTimeout(() => setViewport(DEFAULT_VIEWPORT), 1200);
       } else {
         setViewport(DEFAULT_VIEWPORT);
       }
