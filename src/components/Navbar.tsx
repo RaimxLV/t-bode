@@ -86,7 +86,7 @@ export const Navbar = () => {
               {showAdmin && (
                 <button
                   onClick={() => navigate("/admin")}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-xs font-body font-bold text-white bg-cta-red/90 hover:bg-cta-red rounded transition-colors"
+                  className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 text-xs font-body font-bold text-white bg-cta-red/90 hover:bg-cta-red rounded transition-colors"
                 >
                   <Shield className="w-3.5 h-3.5" />
                   Admin Panelis
