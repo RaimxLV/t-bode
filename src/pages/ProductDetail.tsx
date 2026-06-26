@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { BulkSizeMatrixDialog } from "@/components/BulkSizeMatrixDialog";
 import { Users, User as UserIcon } from "lucide-react";
 import { PricingExplainer } from "@/components/PricingExplainer";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { useCart } from "@/context/CartContext";
 import { useProductBySlug, getProductName, getProductDescription } from "@/hooks/useProducts";
 import { toast } from "sonner";
@@ -430,7 +431,7 @@ const ProductDetail = () => {
               {product.description && (
                 <div
                   className="text-sm text-muted-foreground font-body mb-6 leading-relaxed prose prose-sm max-w-none [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_strong]:text-foreground [&_em]:italic [&_u]:underline"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.description) }}
                 />
               )}
 
