@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendLovableTransactional } from "../_shared/lovable-email.ts";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
