@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendLovableTransactional } from "../_shared/lovable-email.ts";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,6 +95,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response;
+
     const { order_id, lang } = await req.json();
     if (!order_id) {
       return new Response(JSON.stringify({ error: "Missing order_id" }), {
