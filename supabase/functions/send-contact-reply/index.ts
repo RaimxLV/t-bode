@@ -74,10 +74,21 @@ Deno.serve(async (req) => {
 
     const { data: submission, error } = await service
       .from("contact_submissions")
-      .select("id, name, email, message")
+      .select("id, name, email, message, created_at")
       .eq("id", submission_id)
       .maybeSingle();
     if (error || !submission) throw new Error("Submission not found");
+    // Anti-abuse: only allow the auto-reply within a short window after the
+    // submission was created. The endpoint runs unauthenticated so this binds
+    // calls to actual contact-form events (UUIDs are unguessable). Repeats are
+    // already blocked by the idempotency key.
+    const createdMs = submission.created_at ? new Date(submission.created_at as string).getTime() : 0;
+    if (!createdMs || Date.now() - createdMs > 15 * 60 * 1000) {
+      return new Response(JSON.stringify({ error: "Submission window expired" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!submission.email) {
       return new Response(JSON.stringify({ skipped: true, reason: "no email provided" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
