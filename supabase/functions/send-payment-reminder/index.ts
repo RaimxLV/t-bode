@@ -68,6 +68,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await requireAdmin(req, corsHeaders);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json().catch(() => ({}));
     const { order_id, lang } = body as { order_id?: string; lang?: string };
 
