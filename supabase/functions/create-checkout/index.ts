@@ -65,6 +65,36 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // SECURITY: verify the caller owns this order. For authenticated users the
+    // order.user_id must match the JWT subject; for guest checkouts the order
+    // must be a guest order (user_id null) and the supplied guest_email must
+    // match what is on the order. Without this check, anyone who learned an
+    // order UUID could apply promo codes or flip order state on someone else's
+    // order.
+    const { data: ownerRow, error: ownerErr } = await serviceClient
+      .from("orders")
+      .select("user_id, guest_email")
+      .eq("id", order_id)
+      .maybeSingle();
+    if (ownerErr || !ownerRow) throw new Error("Order not found");
+    if (user) {
+      if (ownerRow.user_id !== user.id) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      const orderEmail = (ownerRow.guest_email ?? "").toLowerCase();
+      const reqEmail = (guest_email ?? "").toLowerCase();
+      if (ownerRow.user_id !== null || !orderEmail || orderEmail !== reqEmail) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // SECURITY: Recompute line items from DB. The client may send `items` for
     // metadata (image, shippingCost), but unit prices MUST come from DB.
     const { data: dbItems, error: dbItemsErr } = await serviceClient
