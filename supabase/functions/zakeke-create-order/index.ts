@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { createZakekeOrder } from "../_shared/zakeke.ts";
+import { requireServiceRole } from "../_shared/service-role-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,6 +24,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const auth = requireServiceRole(req, corsHeaders);
+    if (!auth.ok) return auth.response;
+
     const body = await req.json().catch(() => ({}));
     const orderId = body?.order_id;
     if (!orderId || typeof orderId !== "string") {

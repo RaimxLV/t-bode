@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 type PreviewProduct = {
   id: string;
@@ -43,7 +44,7 @@ export function BlogInlinePreview({ post, products }: { post: PreviewPost; produ
         {post.content ? (
           <div
             className="font-body text-foreground max-w-none [&_h1]:text-3xl [&_h1]:font-display [&_h1]:mt-4 [&_h1]:mb-2 [&_h2]:text-2xl [&_h2]:font-display [&_h2]:mt-3 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-display [&_h3]:mt-2 [&_h3]:mb-1 [&_p]:my-2 [&_p]:leading-relaxed [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
           />
         ) : (
           <div className="rounded-md border border-dashed border-border px-4 py-6 text-sm text-muted-foreground flex items-center gap-2">

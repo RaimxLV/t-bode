@@ -57,6 +57,51 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // SECURITY: verify the caller "owns" this order before triggering a
+    // Montonio payment session for it. For authenticated users the JWT
+    // subject must match orders.user_id; for guest orders the supplied
+    // customer_email must match the email on the order. Prevents an attacker
+    // who learned another user's order UUID from manipulating its state.
+    const supabaseAnon = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    );
+    let callerUserId: string | null = null;
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (token && token !== (Deno.env.get("SUPABASE_ANON_KEY") ?? "")) {
+      const { data: u } = await supabaseAnon.auth.getUser(token);
+      callerUserId = u?.user?.id ?? null;
+    }
+    const { data: ownerRow, error: ownerErr } = await service
+      .from("orders")
+      .select("user_id, guest_email")
+      .eq("id", order_id)
+      .maybeSingle();
+    if (ownerErr || !ownerRow) {
+      return new Response(JSON.stringify({ error: "Order not found" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (callerUserId) {
+      if (ownerRow.user_id !== callerUserId) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } else {
+      const orderEmail = (ownerRow.guest_email ?? "").toLowerCase();
+      const reqEmail = (customer_email ?? "").toLowerCase();
+      if (ownerRow.user_id !== null || !orderEmail || orderEmail !== reqEmail) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // SECURITY: Authoritative pricing comes from DB, never from the client.
     const { data: dbItems, error: dbItemsErr } = await service
       .from("order_items")
