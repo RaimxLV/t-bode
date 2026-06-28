@@ -73,6 +73,55 @@ Allow: /
 User-agent: YouBot
 Allow: /
 
+# ─────────────────────────────────────────────────────────────
+# Bloķēti agresīvi SEO/datu skrāpji — tie nesniedz trafiku,
+# bet rada slodzi un kropļo apmeklējumu statistiku.
+# ─────────────────────────────────────────────────────────────
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: SemrushBot-SA
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: SeznamBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: Barkrowler
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
 User-agent: *
 Allow: /
 
