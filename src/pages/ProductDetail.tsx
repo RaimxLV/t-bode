@@ -267,7 +267,7 @@ const ProductDetail = () => {
         breadcrumbs={[
           { name: "T-Bode", url: "https://www.t-bode.lv/" },
           { name: i18n.language === "en" ? "Collection" : "Kolekcija", url: "https://www.t-bode.lv/collection" },
-          { name: displayName, url: typeof window !== "undefined" ? window.location.href : `https://www.t-bode.lv/produkti/${product.slug}` },
+          { name: displayName, url: `https://www.t-bode.lv/produkti/${product.slug}` },
         ]}
         jsonLd={{
           "@context": "https://schema.org/",
@@ -281,7 +281,7 @@ const ProductDetail = () => {
           brand: { "@type": "Brand", name: "T-Bode" },
           offers: {
             "@type": "Offer",
-            url: typeof window !== "undefined" ? window.location.href : undefined,
+            url: `https://www.t-bode.lv/produkti/${product.slug}`,
             priceCurrency: "EUR",
             price: Number(product.price).toFixed(2),
             availability: product.in_stock
