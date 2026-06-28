@@ -26,6 +26,35 @@ const SITE_URL = "https://www.t-bode.lv";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 /**
+ * Normalize any URL (or current location) into a clean canonical URL on the
+ * primary domain. This is critical for SEO — without it Google sees the same
+ * page on www.t-bode.lv, t-bode.lv, t-bode.lovable.app, and preview URLs as
+ * separate pages, splitting the ranking power between them.
+ */
+const buildCanonical = (override?: string): string => {
+  if (override) {
+    // If the caller passed a full URL, normalize its host to www.t-bode.lv.
+    try {
+      const u = new URL(override, SITE_URL);
+      return `${SITE_URL}${u.pathname}${u.search}`.replace(/\/+$/, "") || SITE_URL;
+    } catch {
+      return SITE_URL;
+    }
+  }
+  if (typeof window === "undefined") return SITE_URL;
+  const path = window.location.pathname || "/";
+  // Drop tracking params (utm_*, fbclid, gclid) but keep meaningful ones.
+  const params = new URLSearchParams(window.location.search);
+  const KEEP = new Set<string>(); // currently we don't need to keep any
+  Array.from(params.keys()).forEach((k) => {
+    if (!KEEP.has(k)) params.delete(k);
+  });
+  const qs = params.toString();
+  const clean = `${SITE_URL}${path}${qs ? `?${qs}` : ""}`;
+  return clean.endsWith("/") && clean !== `${SITE_URL}/` ? clean.slice(0, -1) : clean;
+};
+
+/**
  * Centralized SEO component. Renders <title>, meta description,
  * Open Graph / Twitter tags, canonical URL, html lang, and optional JSON-LD.
  */
@@ -52,7 +81,7 @@ export const Seo = ({
       : titleKeyword
         ? `${title} | ${titleKeyword} | ${SITE_NAME}`
         : `${title} | ${SITE_NAME}`;
-  const url = canonical || (typeof window !== "undefined" ? window.location.href : SITE_URL);
+  const url = buildCanonical(canonical);
 
   const jsonLdArray: Record<string, any>[] = [];
   if (jsonLd) jsonLdArray.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
