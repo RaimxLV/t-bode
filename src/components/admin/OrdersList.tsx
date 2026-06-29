@@ -350,6 +350,8 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const downloadOmnivaLabel = async (orderId: string, barcode: string) => {
     setOmnivaLoading((p) => ({ ...p, [orderId]: "label" }));
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/omniva-label-pdf?order_id=${orderId}`;
@@ -358,6 +360,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
           Authorization: `Bearer ${session?.access_token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
+        signal: controller.signal,
       });
       if (!resp.ok) {
         let detail = `HTTP ${resp.status}`;
@@ -370,8 +373,14 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
       const blob = await resp.blob();
       triggerBlobDownload(blob, `omniva-${barcode}.pdf`);
     } catch (err: any) {
-      toast.error(`${t("admin.omnivaLabelError")}: ${err.message || err}`);
+      const isAbort = err?.name === "AbortError";
+      toast.error(
+        isAbort
+          ? "Omniva uzlīme aizņēma pārāk ilgi. Mēģini vēlreiz."
+          : `${t("admin.omnivaLabelError")}: ${err.message || err}`,
+      );
     } finally {
+      window.clearTimeout(timeoutId);
       setOmnivaLoading((p) => ({ ...p, [orderId]: null }));
     }
   };
