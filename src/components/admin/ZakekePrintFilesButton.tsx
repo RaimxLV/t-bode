@@ -407,6 +407,11 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
 };
 
 const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string) => {
+  // Hard timeout so a hanging Zakeke/edge-function stream can never lock the
+  // UI in "Lādējas…". Without this, admins had to close & reopen the order
+  // panel between every download to reset state.
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
   try {
     let res: Response;
     if (orderItemId) {
@@ -419,15 +424,16 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          signal: controller.signal,
         });
         if (!res.ok) {
-          res = await fetch(f.url);
+          res = await fetch(f.url, { signal: controller.signal });
         }
       } else {
-        res = await fetch(f.url);
+        res = await fetch(f.url, { signal: controller.signal });
       }
     } else {
-      res = await fetch(f.url);
+      res = await fetch(f.url, { signal: controller.signal });
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
@@ -450,9 +456,15 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
       }
     }
     downloadBlob(finalBlob, finalName);
-  } catch {
+  } catch (err) {
+    console.error("triggerDownload failed", err);
+    if ((err as any)?.name === "AbortError") {
+      toast.error("Lejupielāde aizņēma pārāk ilgi. Mēģini vēlreiz.");
+    }
     // Fallback: open in new tab so admin can save manually
     window.open(f.url, "_blank", "noopener");
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 };
 
