@@ -407,6 +407,11 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
 };
 
 const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string) => {
+  // Hard timeout so a hanging Zakeke/edge-function stream can never lock the
+  // UI in "Lādējas…". Without this, admins had to close & reopen the order
+  // panel between every download to reset state.
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
   try {
     let res: Response;
     if (orderItemId) {
@@ -419,15 +424,16 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          signal: controller.signal,
         });
         if (!res.ok) {
-          res = await fetch(f.url);
+          res = await fetch(f.url, { signal: controller.signal });
         }
       } else {
-        res = await fetch(f.url);
+        res = await fetch(f.url, { signal: controller.signal });
       }
     } else {
-      res = await fetch(f.url);
+      res = await fetch(f.url, { signal: controller.signal });
     }
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
@@ -450,9 +456,15 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
       }
     }
     downloadBlob(finalBlob, finalName);
-  } catch {
+  } catch (err) {
+    console.error("triggerDownload failed", err);
+    if ((err as any)?.name === "AbortError") {
+      toast.error("Lejupielāde aizņēma pārāk ilgi. Mēģini vēlreiz.");
+    }
     // Fallback: open in new tab so admin can save manually
     window.open(f.url, "_blank", "noopener");
+  } finally {
+    window.clearTimeout(timeoutId);
   }
 };
 
@@ -676,15 +688,22 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 disabled={isDownloading}
                 onClick={async () => {
                   setDownloadingUrl(f.url);
+                  // Safety: never let the spinner get stuck longer than 65s,
+                  // even if something inside triggerDownload misbehaves.
+                  const stuckGuard = window.setTimeout(() => setDownloadingUrl(null), 65_000);
                   try {
                     await triggerDownload(f, friendlyName, item.id);
-                    // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
-                    // "ready for production". Mockup previews don't.
-                    if (f.kind === "print") {
-                      await markDownloaded();
-                    }
                   } finally {
+                    window.clearTimeout(stuckGuard);
                     setDownloadingUrl(null);
+                  }
+                  // Fire-and-forget: marking the row as downloaded must NEVER
+                  // block the button reset — DB write was previously awaited
+                  // and could leave the button locked if the network stalled.
+                  if (f.kind === "print") {
+                    markDownloaded().catch((e) =>
+                      console.error("markDownloaded failed", e),
+                    );
                   }
                 }}
                 className={`inline-flex items-center gap-1.5 disabled:opacity-80 disabled:cursor-wait px-2 py-1.5 ${
