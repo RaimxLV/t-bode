@@ -688,15 +688,22 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                 disabled={isDownloading}
                 onClick={async () => {
                   setDownloadingUrl(f.url);
+                  // Safety: never let the spinner get stuck longer than 65s,
+                  // even if something inside triggerDownload misbehaves.
+                  const stuckGuard = window.setTimeout(() => setDownloadingUrl(null), 65_000);
                   try {
                     await triggerDownload(f, friendlyName, item.id);
-                    // Only print files (PDF/AI/EPS/SVG/TIFF/print) count as
-                    // "ready for production". Mockup previews don't.
-                    if (f.kind === "print") {
-                      await markDownloaded();
-                    }
                   } finally {
+                    window.clearTimeout(stuckGuard);
                     setDownloadingUrl(null);
+                  }
+                  // Fire-and-forget: marking the row as downloaded must NEVER
+                  // block the button reset — DB write was previously awaited
+                  // and could leave the button locked if the network stalled.
+                  if (f.kind === "print") {
+                    markDownloaded().catch((e) =>
+                      console.error("markDownloaded failed", e),
+                    );
                   }
                 }}
                 className={`inline-flex items-center gap-1.5 disabled:opacity-80 disabled:cursor-wait px-2 py-1.5 ${
