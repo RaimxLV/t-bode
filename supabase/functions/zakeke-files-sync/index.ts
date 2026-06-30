@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
             const baseCode = orderNumber != null
               ? String(orderNumber).padStart(4, "0")
               : String(row.order_id).slice(0, 8).toUpperCase();
-            const externalCode = `TB-${baseCode}`;
+            const externalCode = `TB-${baseCode}-${String(row.id).slice(0, 8)}`;
             const { zakekeOrderId, orderItemIds } = await createZakekeOrder({
               externalOrderId: externalCode,
               customerCode: String(row.order_id),
