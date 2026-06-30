@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
         .map((x: any) => x?.designId ?? x?.designID ?? x?.design_id ?? null)
         .filter(Boolean)
         .map(String);
-      if (rowDesign && cachedDesigns.length > 0 && !cachedDesigns.includes(rowDesign)) {
+      const cacheMismatchesDesign = rowDesign && cachedDesigns.length > 0 && !cachedDesigns.includes(rowDesign);
+      if (cacheMismatchesDesign) {
         return true;
       }
       // Treat "ZIP-only" results as still pending so we can replace them
@@ -163,7 +164,12 @@ Deno.serve(async (req) => {
             : (row.zakeke_print_files && typeof row.zakeke_print_files === "object"
                 ? Object.values(row.zakeke_print_files)
                 : []);
-          if (finalFiles.length >= (existing as any[]).length) {
+          const existingDesigns = (existing as any[])
+            .map((x: any) => x?.designId ?? x?.designID ?? x?.design_id ?? null)
+            .filter(Boolean)
+            .map(String);
+          const existingMismatchesDesign = !!rowDesign && existingDesigns.length > 0 && !existingDesigns.includes(rowDesign);
+          if (existingMismatchesDesign || finalFiles.length >= (existing as any[]).length) {
             await service.from("order_items").update({ zakeke_print_files: finalFiles }).eq("id", row.id);
             attached++;
           } else {
