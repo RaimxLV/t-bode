@@ -81,6 +81,8 @@ Deno.serve(async (req) => {
     let wantZip = false;
     let downloadUrl: string | null = null;
     let downloadName: string | null = null;
+    let downloadKind: string | null = null;
+    let downloadIndex: number | null = null;
     let force = false;
     if (req.method === "GET") {
       const u = new URL(req.url);
@@ -89,6 +91,9 @@ Deno.serve(async (req) => {
       wantZip = u.searchParams.get("zip") === "1";
       downloadUrl = u.searchParams.get("download_url");
       downloadName = u.searchParams.get("download_name");
+      downloadKind = u.searchParams.get("download_kind");
+      const rawIndex = u.searchParams.get("download_index");
+      downloadIndex = rawIndex != null && /^\d+$/.test(rawIndex) ? Number(rawIndex) : null;
       force = u.searchParams.get("force") === "1";
     } else {
       const body = await req.json().catch(() => ({}));
@@ -97,6 +102,8 @@ Deno.serve(async (req) => {
       wantZip = body?.zip === true || body?.zip === "1";
       downloadUrl = body?.download_url ?? null;
       downloadName = body?.download_name ?? null;
+      downloadKind = body?.download_kind ?? null;
+      downloadIndex = Number.isInteger(body?.download_index) ? Number(body.download_index) : null;
       force = body?.force === true || body?.force === "1";
     }
 
@@ -128,20 +135,38 @@ Deno.serve(async (req) => {
       }
       zipFilename = `print-files-${(row.product_name || "item").replace(/[^a-z0-9]+/gi, "-")}-${orderItemId.slice(0, 8)}.zip`;
 
+      const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+      const belongsToRowDesign = (f: any) => {
+        if (!rowDesign) return true;
+        const fileDesign = f?.designId ?? f?.designID ?? f?.design_id ?? null;
+        // Untagged files can only be trusted when they came from the exact
+        // Zakeke order-item endpoint. Order-level files must be tagged before
+        // we attach them to a specific row.
+        return fileDesign ? String(fileDesign) === rowDesign : false;
+      };
+      const filterForRowDesign = (candidateFiles: any[]) => {
+        if (!rowDesign) return candidateFiles;
+        const tagged = candidateFiles.filter((f) => f?.designId ?? f?.designID ?? f?.design_id);
+        if (tagged.length === 0) return candidateFiles;
+        return tagged.filter(belongsToRowDesign);
+      };
+
       // 1) Use cached files if Zakeke webhook already filled them in.
       if (!force && Array.isArray(row.zakeke_print_files) && row.zakeke_print_files.length > 0) {
         // Guard against a known historical bug where the webhook wrote the
         // same file array to multiple order_items. If every cached file
         // carries a designId that does NOT match this row's design, treat
         // the cache as stale and refetch.
-        const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
         const cached = row.zakeke_print_files as any[];
         const cachedDesigns = cached
-          .map((f) => (f?.designId ? String(f.designId) : null))
+          .map((f) => (f?.designId ?? f?.designID ?? f?.design_id ? String(f?.designId ?? f?.designID ?? f?.design_id) : null))
           .filter((x): x is string => !!x);
         const cacheBelongsToThisRow =
           !rowDesign ||
-          cachedDesigns.length === 0 ||
+          // If the cache is untagged but tied to a concrete order-item id, it
+          // is safe. If it came from an order-level fetch, untagged/mismatched
+          // cache is unsafe and must be refetched instead of re-serving duplicates.
+          (cachedDesigns.length === 0 && !!row.zakeke_order_item_id) ||
           cachedDesigns.some((d) => d === rowDesign);
         if (cacheBelongsToThisRow) {
           files = cached as any;
@@ -158,15 +183,13 @@ Deno.serve(async (req) => {
       // 3) Resolve via order endpoint and filter by THIS row's designId.
       if (files.length === 0 && row.zakeke_order_id) {
         const all = await getZakekeOrderOutputFiles(row.zakeke_order_id);
-        const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
-        files = rowDesign
-          ? all.filter((f) => f?.designId && String(f.designId) === rowDesign)
-          : all;
-        // If filter wiped everything (Zakeke didn't tag designId), keep raw.
-        if (files.length === 0) files = all;
+        files = filterForRowDesign(all);
       }
-      // 4) No Zakeke order yet but we have a designId — create one on the fly.
-      if (files.length === 0 && row.zakeke_design_id && !row.zakeke_order_id) {
+      // 4) No usable Zakeke order-item files yet but we have a designId —
+      // create a dedicated one-item Zakeke order on the fly. This is the
+      // recovery path for historical rows where multiple designs shared the
+      // same order-level id and every row cached the same file.
+      if (files.length === 0 && row.zakeke_design_id && !row.zakeke_order_item_id) {
         try {
           const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
             externalOrderId: `${row.order_id}:${row.id}`,
@@ -207,6 +230,7 @@ Deno.serve(async (req) => {
 
       // Persist freshly-fetched files so subsequent clicks are instant.
       if (files.length > 0) {
+        files = filterForRowDesign(files);
         await service
           .from("order_items")
           .update({ zakeke_print_files: files })
@@ -217,7 +241,20 @@ Deno.serve(async (req) => {
     }
 
     if (downloadUrl) {
-      const allowed = files.find((f: any) => String(f?.url ?? "") === downloadUrl);
+      const isRasterPrint = (f: any) => {
+        const url = String(f?.url ?? f?.fileUrl ?? f?.downloadUrl ?? f?.link ?? "").toLowerCase();
+        const name = String(f?.name ?? f?.fileName ?? "").toLowerCase();
+        const side = String(f?.side ?? f?.type ?? f?.kind ?? "").toLowerCase();
+        const text = `${url} ${name} ${side}`;
+        const isRaster = /\.(png|jpe?g|webp)(\?|#|$)/.test(text) || /image\/(png|jpe?g|webp)/.test(text) || side === "png";
+        const isZip = /\.zip(\?|#|$)/.test(text) || side === "production-zip" || side === "zip";
+        const isPreview = /mockup|preview|thumbnail/.test(text);
+        return isRaster && !isZip && !isPreview;
+      };
+      const downloadable = downloadKind === "print" ? files.filter(isRasterPrint) : files;
+      const allowed = typeof downloadIndex === "number" && downloadable[downloadIndex]
+        ? downloadable[downloadIndex]
+        : downloadable.find((f: any) => String(f?.url ?? "") === downloadUrl);
       if (!allowed) {
         return new Response(JSON.stringify({ error: "requested file not found" }), {
           status: 404,
