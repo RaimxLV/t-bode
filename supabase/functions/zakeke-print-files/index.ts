@@ -130,18 +130,43 @@ Deno.serve(async (req) => {
 
       // 1) Use cached files if Zakeke webhook already filled them in.
       if (!force && Array.isArray(row.zakeke_print_files) && row.zakeke_print_files.length > 0) {
-        files = row.zakeke_print_files as any;
+        // Guard against a known historical bug where the webhook wrote the
+        // same file array to multiple order_items. If every cached file
+        // carries a designId that does NOT match this row's design, treat
+        // the cache as stale and refetch.
+        const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+        const cached = row.zakeke_print_files as any[];
+        const cachedDesigns = cached
+          .map((f) => (f?.designId ? String(f.designId) : null))
+          .filter((x): x is string => !!x);
+        const cacheBelongsToThisRow =
+          !rowDesign ||
+          cachedDesigns.length === 0 ||
+          cachedDesigns.some((d) => d === rowDesign);
+        if (cacheBelongsToThisRow) {
+          files = cached as any;
+        } else {
+          console.warn(
+            `zakeke-print-files: cache mismatch on order_item ${orderItemId} (row design ${rowDesign}, cached designs ${cachedDesigns.join(",")}) — refetching`,
+          );
+        }
       }
       // 2) Otherwise call Zakeke directly via the order-item id.
-      else if (row.zakeke_order_item_id) {
+      if (files.length === 0 && row.zakeke_order_item_id) {
         files = await getZakekeOrderItemFiles(row.zakeke_order_item_id);
       }
-      // 3) Last resort: resolve via legacy order endpoint.
-      else if (row.zakeke_order_id) {
-        files = await getZakekeOrderOutputFiles(row.zakeke_order_id);
+      // 3) Resolve via order endpoint and filter by THIS row's designId.
+      if (files.length === 0 && row.zakeke_order_id) {
+        const all = await getZakekeOrderOutputFiles(row.zakeke_order_id);
+        const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+        files = rowDesign
+          ? all.filter((f) => f?.designId && String(f.designId) === rowDesign)
+          : all;
+        // If filter wiped everything (Zakeke didn't tag designId), keep raw.
+        if (files.length === 0) files = all;
       }
       // 4) No Zakeke order yet but we have a designId — create one on the fly.
-      else if (row.zakeke_design_id) {
+      if (files.length === 0 && row.zakeke_design_id && !row.zakeke_order_id) {
         try {
           const { zakekeOrderId: newOrderId, orderItemIds } = await createZakekeOrder({
             externalOrderId: `${row.order_id}:${row.id}`,
@@ -172,7 +197,8 @@ Deno.serve(async (req) => {
           const designZip = await getZakekeDesignZipFile(String(row.zakeke_design_id));
           files = designZip ? [designZip] : [];
         }
-      } else {
+      }
+      if (files.length === 0 && !row.zakeke_design_id && !row.zakeke_order_id && !row.zakeke_order_item_id) {
         return new Response(
           JSON.stringify({ error: "no Zakeke design on this order_item" }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }

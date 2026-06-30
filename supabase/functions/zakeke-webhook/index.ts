@@ -89,11 +89,24 @@ Deno.serve(async (req) => {
     let updated = 0;
     let matched = 0;
 
+    // Fetch the full set of output files ONCE so we can distribute them
+    // per-detail by matching designId / orderItemId. Previously we wrote
+    // the same array to every row, which meant 3 different designs all
+    // ended up with whichever single file Zakeke had ready at webhook time.
+    let allOrderFiles: Awaited<ReturnType<typeof getZakekeOrderOutputFiles>> = [];
+    if (zakekeOrderId) {
+      try {
+        allOrderFiles = await getZakekeOrderOutputFiles(String(zakekeOrderId));
+      } catch (e) {
+        console.error("zakeke-webhook output-files fetch failed:", e);
+      }
+    }
+
     for (const [detailCode, detail] of detailMap.entries()) {
       // Our orderDetailCode is the order_items.id (UUID)
       const { data: rows } = await service
         .from("order_items")
-        .select("id, zakeke_order_id, zakeke_print_files")
+        .select("id, zakeke_order_id, zakeke_order_item_id, zakeke_design_id, zakeke_print_files")
         .eq("id", detailCode);
 
       if (!rows || rows.length === 0) {
@@ -101,32 +114,33 @@ Deno.serve(async (req) => {
         continue;
       }
       matched += rows.length;
+      const row = rows[0] as any;
 
       const zipUrl: string | null =
         detail?.detailZipUrl ?? detail?.zipUrl ?? null;
       const update: Record<string, unknown> = {};
       if (zakekeOrderId) update.zakeke_order_id = String(zakekeOrderId);
 
-      // Prefer individual print files (front/back/mockup) over a single ZIP
-      // so the admin can download just what they need. Only fall back to
-      // the ZIP url when Zakeke hasn't exposed individual files yet.
-      let individual: Awaited<ReturnType<typeof getZakekeOrderOutputFiles>> = [];
-      if (zakekeOrderId) {
-        try {
-          individual = await getZakekeOrderOutputFiles(String(zakekeOrderId));
-        } catch (e) {
-          console.error("zakeke-webhook output-files fetch failed:", e);
-        }
-      }
+      // Pick only the files that belong to THIS order_item — match by the
+      // row's design id (preferred) or Zakeke order-item id.
+      const designId = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+      const ourItemId = row.zakeke_order_item_id ? String(row.zakeke_order_item_id) : null;
+      const mine = allOrderFiles.filter((f) => {
+        const fDesign = f.designId ? String(f.designId) : null;
+        const fItem = f.orderItemId ? String(f.orderItemId) : null;
+        if (designId && fDesign && fDesign === designId) return true;
+        if (ourItemId && fItem && fItem === ourItemId) return true;
+        return false;
+      });
       // Drop pure ZIP entries if we also have individual files.
-      const hasIndividual = individual.some(
+      const hasIndividual = mine.some(
         (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
       );
       const filtered = hasIndividual
-        ? individual.filter(
+        ? mine.filter(
             (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
           )
-        : individual;
+        : mine;
       if (filtered.length > 0) {
         update.zakeke_print_files = filtered;
       } else if (zipUrl) {
@@ -134,12 +148,14 @@ Deno.serve(async (req) => {
           { type: "zip", url: zipUrl, fileName: zipUrl.split("/").pop(), side: "production-zip" },
         ];
       }
+      // If nothing matched this design AND no zip, do NOT overwrite the
+      // row's existing files (avoids replacing good data with stale data).
 
       if (Object.keys(update).length > 0) {
         const { error: updErr } = await service
           .from("order_items")
           .update(update)
-          .eq("id", rows[0].id);
+          .eq("id", row.id);
         if (updErr) {
           console.error("zakeke-webhook update error:", updErr);
         } else {
