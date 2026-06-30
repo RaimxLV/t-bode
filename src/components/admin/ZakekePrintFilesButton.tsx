@@ -406,7 +406,7 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
   }
 };
 
-const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string) => {
+const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderItemId?: string, downloadIndex?: number) => {
   // Hard timeout so a hanging Zakeke/edge-function stream can never lock the
   // UI in "Lādējas…". Without this, admins had to close & reopen the order
   // panel between every download to reset state.
@@ -414,12 +414,21 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
   const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
   try {
     let res: Response;
+    let usedBackendProxy = false;
     if (orderItemId) {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
       if (token && projectUrl) {
-        const url = `${projectUrl}/functions/v1/zakeke-print-files?order_item_id=${encodeURIComponent(orderItemId)}&download_url=${encodeURIComponent(f.url)}&download_name=${encodeURIComponent(friendlyName)}`;
+        usedBackendProxy = true;
+        const params = new URLSearchParams({
+          order_item_id: orderItemId,
+          download_url: f.url,
+          download_name: friendlyName,
+          download_kind: "print",
+        });
+        if (typeof downloadIndex === "number") params.set("download_index", String(downloadIndex));
+        const url = `${projectUrl}/functions/v1/zakeke-print-files?${params.toString()}`;
         res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -427,7 +436,14 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
           signal: controller.signal,
         });
         if (!res.ok) {
-          res = await fetch(f.url, { signal: controller.signal });
+          let detail = `HTTP ${res.status}`;
+          try {
+            const body = await res.json();
+            if (body?.error) detail = body.error;
+          } catch {
+            // keep status fallback
+          }
+          throw new Error(detail);
         }
       } else {
         res = await fetch(f.url, { signal: controller.signal });
@@ -460,9 +476,13 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
     console.error("triggerDownload failed", err);
     if ((err as any)?.name === "AbortError") {
       toast.error("Lejupielāde aizņēma pārāk ilgi. Mēģini vēlreiz.");
+    } else {
+      toast.error(`Lejupielāde neizdevās: ${(err as Error)?.message ?? "nezināma kļūda"}`);
     }
-    // Fallback: open in new tab so admin can save manually
-    window.open(f.url, "_blank", "noopener");
+    // Only open the raw URL when there was no backend row to validate. For
+    // order items, opening the cached raw URL can download another design's
+    // stale file, which is worse than failing loudly.
+    if (!orderItemId) window.open(f.url, "_blank", "noopener");
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -692,7 +712,7 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
                   // even if something inside triggerDownload misbehaves.
                   const stuckGuard = window.setTimeout(() => setDownloadingUrl(null), 65_000);
                   try {
-                    await triggerDownload(f, friendlyName, item.id);
+                    await triggerDownload(f, friendlyName, item.id, i);
                   } finally {
                     window.clearTimeout(stuckGuard);
                     setDownloadingUrl(null);
