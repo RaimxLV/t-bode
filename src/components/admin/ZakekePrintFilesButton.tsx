@@ -414,13 +414,11 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
   const timeoutId = window.setTimeout(() => controller.abort(), 60_000);
   try {
     let res: Response;
-    let usedBackendProxy = false;
     if (orderItemId) {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       const projectUrl = import.meta.env.VITE_SUPABASE_URL;
       if (token && projectUrl) {
-        usedBackendProxy = true;
         const params = new URLSearchParams({
           order_item_id: orderItemId,
           download_url: f.url,

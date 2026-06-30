@@ -52,6 +52,14 @@ Deno.serve(async (req) => {
         ? f
         : (f && typeof f === "object" ? Object.values(f) : []);
       if (arr.length === 0) return true;
+      const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+      const cachedDesigns = arr
+        .map((x: any) => x?.designId ?? x?.designID ?? x?.design_id ?? null)
+        .filter(Boolean)
+        .map(String);
+      if (rowDesign && cachedDesigns.length > 0 && !cachedDesigns.includes(rowDesign)) {
+        return true;
+      }
       // Treat "ZIP-only" results as still pending so we can replace them
       // with individual print/mockup files once Zakeke exposes them.
       const hasIndividual = arr.some((x: any) => {
@@ -77,6 +85,13 @@ Deno.serve(async (req) => {
     for (const row of targets) {
       try {
         let files: Awaited<ReturnType<typeof getZakekeOrderItemFiles>> = [];
+        const rowDesign = row.zakeke_design_id ? String(row.zakeke_design_id) : null;
+        const filterForRowDesign = (candidateFiles: any[]) => {
+          if (!rowDesign) return candidateFiles;
+          const tagged = candidateFiles.filter((f) => f?.designId ?? f?.designID ?? f?.design_id);
+          if (tagged.length === 0) return candidateFiles;
+          return tagged.filter((f) => String(f?.designId ?? f?.designID ?? f?.design_id) === rowDesign);
+        };
         if (row.zakeke_order_item_id) {
           try {
             files = await getZakekeOrderItemFiles(row.zakeke_order_item_id);
@@ -91,8 +106,10 @@ Deno.serve(async (req) => {
             throw e;
           }
         } else if (row.zakeke_order_id) {
-          files = await getZakekeOrderOutputFiles(row.zakeke_order_id);
-        } else if (row.zakeke_design_id) {
+          const all = await getZakekeOrderOutputFiles(row.zakeke_order_id);
+          files = filterForRowDesign(all);
+        }
+        if (files.length === 0 && row.zakeke_design_id && !row.zakeke_order_item_id) {
           // Create order on the fly so Zakeke starts producing print files.
           try {
             // Use the same human-readable code as zakeke-create-order so the
@@ -130,6 +147,7 @@ Deno.serve(async (req) => {
         }
 
         if (files.length > 0) {
+          files = filterForRowDesign(files);
           const hasIndividual = files.some(
             (f) => !/\.zip(\?|$)/i.test(f.url) && f.side !== "production-zip",
           );
