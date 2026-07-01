@@ -950,6 +950,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          abandoned_reminder_sent_at: string | null
           admin_opened_at: string | null
           buyer_country: string | null
           buyer_ip: string | null
@@ -1001,6 +1002,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          abandoned_reminder_sent_at?: string | null
           admin_opened_at?: string | null
           buyer_country?: string | null
           buyer_ip?: string | null
@@ -1052,6 +1054,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          abandoned_reminder_sent_at?: string | null
           admin_opened_at?: string | null
           buyer_country?: string | null
           buyer_ip?: string | null
