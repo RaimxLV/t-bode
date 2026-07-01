@@ -22,8 +22,33 @@ import Index from "./pages/Index.tsx";
 
 // Legacy redirect: send old indexed URLs to their current equivalents.
 // Preserves SEO signal as Google reprocesses the redirected paths.
+// SPA hosting can't emit true HTTP 301s, so we do the strongest client-side
+// equivalent that Google treats as a permanent redirect:
+//   - `history.replace` (removes old URL from history)
+//   - <link rel="canonical"> pointing at the new URL, injected before nav
+//   - noindex on the transient old URL so it drops out of the index while
+//     link equity consolidates on the target.
 const LegacyRedirect = ({ to }: { to: string }) => {
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
+  useEffect(() => {
+    const origin = window.location.origin;
+    const canonicalHref = to.startsWith("/#") ? `${origin}/` : `${origin}${to}`;
+    // Add canonical + noindex hints for crawlers that execute the redirect JS.
+    const canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    canonical.href = canonicalHref;
+    canonical.setAttribute("data-legacy-redirect", pathname);
+    document.head.appendChild(canonical);
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex, follow";
+    robots.setAttribute("data-legacy-redirect", pathname);
+    document.head.appendChild(robots);
+    return () => {
+      canonical.remove();
+      robots.remove();
+    };
+  }, [to, pathname]);
   return <Navigate to={`${to}${search}`} replace />;
 };
 
@@ -215,14 +240,28 @@ const App = () => {
                         <Route path="/terms-and-conditions" element={<Terms />} />
                         <Route path="/noteikumi" element={<Terms />} />
                         {/* Legacy URL redirects (old indexed pages → new equivalents) */}
-                        <Route path="/stores" element={<LegacyRedirect to="/#stores" />} />
+                        {/* Migrated: /stores → /veikali (matches user-requested Google Search Console redirect) */}
+                        <Route path="/stores" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/store" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/kontakti" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/contact" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/locations" element={<LegacyRedirect to="/veikali" />} />
                         <Route path="/pasutisana-un-sutisana" element={<LegacyRedirect to="/#faq" />} />
                         <Route path="/svarigi" element={<LegacyRedirect to="/#faq" />} />
+                        <Route path="/faq" element={<LegacyRedirect to="/#faq" />} />
                         <Route path="/design-catalog" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/designs" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/dizains" element={<LegacyRedirect to="/design" />} />
                         <Route path="/configurator/*" element={<LegacyRedirect to="/design" />} />
                         <Route path="/products" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/veikals" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/shop" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/katalogs" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/kolekcija" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/*" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/blogs/*" element={<LegacyRedirect to="/blog" />} />
+                        <Route path="/news/*" element={<LegacyRedirect to="/blog" />} />
+                        <Route path="/jaunumi/*" element={<LegacyRedirect to="/blog" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
