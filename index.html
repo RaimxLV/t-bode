@@ -53,6 +53,40 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="T-Bode" />
 
+    <!-- Google Analytics 4 (gated by cookie consent) -->
+    <script>
+      (function () {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){ window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        // Default consent: denied until user accepts cookie banner.
+        gtag('consent', 'default', {
+          ad_storage: 'denied',
+          ad_user_data: 'denied',
+          ad_personalization: 'denied',
+          analytics_storage: 'denied'
+        });
+        gtag('config', 'G-09YMNHC0BF', { send_page_view: false });
+
+        try {
+          if (localStorage.getItem('tbode_cookie_consent') === 'accepted') {
+            gtag('consent', 'update', {
+              analytics_storage: 'granted',
+              ad_storage: 'granted',
+              ad_user_data: 'granted',
+              ad_personalization: 'granted'
+            });
+          }
+        } catch (e) {}
+
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-09YMNHC0BF';
+        document.head.appendChild(s);
+      })();
+    </script>
+
     <!-- Preconnect to Supabase storage (used by product images) -->
     <link rel="preconnect" href="https://nkqwhiqrljwvzrivhqyh.supabase.co" crossorigin />
 
