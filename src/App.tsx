@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Navigate, useLocation, useParams } from "react-router-dom";
@@ -22,8 +22,33 @@ import Index from "./pages/Index.tsx";
 
 // Legacy redirect: send old indexed URLs to their current equivalents.
 // Preserves SEO signal as Google reprocesses the redirected paths.
+// SPA hosting can't emit true HTTP 301s, so we do the strongest client-side
+// equivalent that Google treats as a permanent redirect:
+//   - `history.replace` (removes old URL from history)
+//   - <link rel="canonical"> pointing at the new URL, injected before nav
+//   - noindex on the transient old URL so it drops out of the index while
+//     link equity consolidates on the target.
 const LegacyRedirect = ({ to }: { to: string }) => {
-  const { search } = useLocation();
+  const { search, pathname } = useLocation();
+  useEffect(() => {
+    const origin = window.location.origin;
+    const canonicalHref = to.startsWith("/#") ? `${origin}/` : `${origin}${to}`;
+    // Add canonical + noindex hints for crawlers that execute the redirect JS.
+    const canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    canonical.href = canonicalHref;
+    canonical.setAttribute("data-legacy-redirect", pathname);
+    document.head.appendChild(canonical);
+    const robots = document.createElement("meta");
+    robots.name = "robots";
+    robots.content = "noindex, follow";
+    robots.setAttribute("data-legacy-redirect", pathname);
+    document.head.appendChild(robots);
+    return () => {
+      canonical.remove();
+      robots.remove();
+    };
+  }, [to, pathname]);
   return <Navigate to={`${to}${search}`} replace />;
 };
 
