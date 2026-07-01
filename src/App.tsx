@@ -240,14 +240,28 @@ const App = () => {
                         <Route path="/terms-and-conditions" element={<Terms />} />
                         <Route path="/noteikumi" element={<Terms />} />
                         {/* Legacy URL redirects (old indexed pages → new equivalents) */}
-                        <Route path="/stores" element={<LegacyRedirect to="/#stores" />} />
+                        {/* Migrated: /stores → /veikali (matches user-requested Google Search Console redirect) */}
+                        <Route path="/stores" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/store" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/kontakti" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/contact" element={<LegacyRedirect to="/veikali" />} />
+                        <Route path="/locations" element={<LegacyRedirect to="/veikali" />} />
                         <Route path="/pasutisana-un-sutisana" element={<LegacyRedirect to="/#faq" />} />
                         <Route path="/svarigi" element={<LegacyRedirect to="/#faq" />} />
+                        <Route path="/faq" element={<LegacyRedirect to="/#faq" />} />
                         <Route path="/design-catalog" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/designs" element={<LegacyRedirect to="/design" />} />
+                        <Route path="/dizains" element={<LegacyRedirect to="/design" />} />
                         <Route path="/configurator/*" element={<LegacyRedirect to="/design" />} />
                         <Route path="/products" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/veikals" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/shop" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/katalogs" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/kolekcija" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/*" element={<LegacyRedirect to="/collection" />} />
+                        <Route path="/blogs/*" element={<LegacyRedirect to="/blog" />} />
+                        <Route path="/news/*" element={<LegacyRedirect to="/blog" />} />
+                        <Route path="/jaunumi/*" element={<LegacyRedirect to="/blog" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
