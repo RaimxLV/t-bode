@@ -29,6 +29,8 @@ project_id = "nkqwhiqrljwvzrivhqyh"
     verify_jwt = false
   [functions.send-payment-reminder]
     verify_jwt = false
+  [functions.send-abandoned-checkout-reminder]
+    verify_jwt = false
   [functions.send-pickup-ready-email]
     verify_jwt = false
   [functions.send-tracking-email]
