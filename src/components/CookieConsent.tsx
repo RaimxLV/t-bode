@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, X } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { grantAnalyticsConsent, denyAnalyticsConsent } from "@/components/GaPageviews";
 
 const COOKIE_KEY = "tbode_cookie_consent";
 const HIDDEN_ROUTES = ["/auth", "/checkout", "/payment-success"];
@@ -33,11 +34,13 @@ export const CookieConsent = () => {
 
   const accept = () => {
     localStorage.setItem(COOKIE_KEY, "accepted");
+    grantAnalyticsConsent();
     setVisible(false);
   };
 
   const decline = () => {
     localStorage.setItem(COOKIE_KEY, "declined");
+    denyAnalyticsConsent();
     setVisible(false);
   };
 
