@@ -16,6 +16,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
+import { GaPageviews } from "@/components/GaPageviews";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
 import { applyMobileViewportLock, cleanOAuthReturnUrl, getDefaultViewport, hasMobileOAuthViewportReturn, isMobileLikeViewport, shouldReloadAfterMobileOAuthReturn } from "@/lib/mobileViewport";
 import Index from "./pages/Index.tsx";
@@ -213,6 +214,7 @@ const App = () => {
                     <ScrollToTop />
                     <CartSidebar />
                     <CookieConsent />
+                    <GaPageviews />
                     <Suspense fallback={<PageLoader />}>
                       <Routes>
                         <Route path="/" element={<Index />} />
