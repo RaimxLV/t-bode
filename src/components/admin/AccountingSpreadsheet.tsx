@@ -316,6 +316,20 @@ export const AccountingSpreadsheet = () => {
     const dataRows = rows.filter((r) => !r.isGroupHeader);
     let prevDate: string | null = null;
     dataRows.forEach((r) => {
+      // Insert a visible blank separator row between different days so that
+      // copy-paste from Excel never accidentally grabs the previous day's row.
+      if (prevDate !== null && prevDate !== r.date) {
+        const sep = ws.addRow({});
+        sep.height = 6;
+        for (let c = 1; c <= ws.columnCount; c++) {
+          const cell = sep.getCell(c);
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF111827" } };
+          cell.border = {
+            top: { style: "thick", color: { argb: "FF000000" } },
+            bottom: { style: "thick", color: { argb: "FF000000" } },
+          };
+        }
+      }
       const row = ws.addRow(r);
       row.getCell("products").alignment = { wrapText: true, vertical: "top" };
       row.getCell("sizes").alignment = { wrapText: true, vertical: "top" };
@@ -323,11 +337,12 @@ export const AccountingSpreadsheet = () => {
       const b = statusBucket(r.status);
       const fill = b === "paid" ? "FFD1FAE5" : b === "pending" ? "FFFEF3C7" : b === "cancelled" ? "FFFEE2E2" : null;
       if (fill) row.eachCell((c) => { c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } }; });
-      // Thick top border to visually separate each new day
+      // Also draw a thick top border on the first row of every new day.
       if (prevDate !== null && prevDate !== r.date) {
-        row.eachCell({ includeEmpty: true }, (c) => {
-          c.border = { ...(c.border || {}), top: { style: "medium", color: { argb: "FF111827" } } };
-        });
+        for (let c = 1; c <= ws.columnCount; c++) {
+          const cell = row.getCell(c);
+          cell.border = { ...(cell.border || {}), top: { style: "thick", color: { argb: "FF000000" } } };
+        }
       }
       prevDate = r.date;
     });
