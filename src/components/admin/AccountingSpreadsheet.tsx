@@ -8,7 +8,8 @@ import {
 } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet, CalendarRange, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
 
@@ -74,6 +75,27 @@ export const AccountingSpreadsheet = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeMonth, setActiveMonth] = useState<string>("");
+  const [dateFrom, setDateFrom] = useState<string>(""); // yyyy-mm-dd
+  const [dateTo, setDateTo] = useState<string>("");
+
+  const dateFilterActive = !!(dateFrom || dateTo);
+
+  const setToday = () => {
+    const t = new Date().toISOString().slice(0, 10);
+    setDateFrom(t); setDateTo(t);
+  };
+  const setYesterday = () => {
+    const d = new Date(); d.setDate(d.getDate() - 1);
+    const s = d.toISOString().slice(0, 10);
+    setDateFrom(s); setDateTo(s);
+  };
+  const setLast7 = () => {
+    const to = new Date();
+    const from = new Date(); from.setDate(from.getDate() - 6);
+    setDateFrom(from.toISOString().slice(0, 10));
+    setDateTo(to.toISOString().slice(0, 10));
+  };
+  const clearDates = () => { setDateFrom(""); setDateTo(""); };
 
   useEffect(() => {
     (async () => {
@@ -119,8 +141,19 @@ export const AccountingSpreadsheet = () => {
   }, [items]);
 
   const rows: Row[] = useMemo(() => {
+    const fromTs = dateFrom ? new Date(dateFrom + "T00:00:00").getTime() : null;
+    const toTs = dateTo ? new Date(dateTo + "T23:59:59.999").getTime() : null;
     const monthOrders = orders
-      .filter((o) => monthKey(new Date(o.created_at)) === activeMonth)
+      .filter((o) => {
+        const created = new Date(o.created_at);
+        if (dateFilterActive) {
+          const t = created.getTime();
+          if (fromTs !== null && t < fromTs) return false;
+          if (toTs !== null && t > toTs) return false;
+          return true;
+        }
+        return monthKey(created) === activeMonth;
+      })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     const byDay = new Map<string, any[]>();
@@ -202,7 +235,7 @@ export const AccountingSpreadsheet = () => {
       });
     }
     return out;
-  }, [orders, activeMonth, invoiceByOrder, itemsByOrder]);
+  }, [orders, activeMonth, invoiceByOrder, itemsByOrder, dateFrom, dateTo, dateFilterActive]);
 
   const totals = useMemo(() => {
     const r = rows.filter((x) => !x.isGroupHeader && statusBucket(x.status) === "paid");
@@ -292,7 +325,10 @@ export const AccountingSpreadsheet = () => {
 
   const exportXlsx = async () => {
     const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet(monthLabel(activeMonth));
+    const sheetName = dateFilterActive
+      ? `${dateFrom || "…"}_${dateTo || "…"}`.replace(/[^\w\-.]/g, "_").slice(0, 31)
+      : monthLabel(activeMonth);
+    const ws = wb.addWorksheet(sheetName);
     ws.columns = [
       { header: "Datums", key: "date", width: 12 },
       { header: "Pas. Nr.", key: "orderNumber", width: 14 },
@@ -354,7 +390,10 @@ export const AccountingSpreadsheet = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `T-Bode_${activeMonth}.xlsx`;
+    const filePart = dateFilterActive
+      ? `${dateFrom || "sakums"}_${dateTo || "beigas"}`
+      : activeMonth;
+    a.download = `T-Bode_${filePart}.xlsx`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -371,6 +410,44 @@ export const AccountingSpreadsheet = () => {
         <Button onClick={exportXlsx} className="bg-primary text-primary-foreground">
           <Download className="w-4 h-4 mr-2" /> Lejupielādēt .xlsx
         </Button>
+      </div>
+
+      {/* Date range filter */}
+      <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          <CalendarRange className="w-4 h-4 text-primary" />
+          Datuma filtrs
+          {dateFilterActive && (
+            <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wide">
+              Aktīvs
+            </span>
+          )}
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground">No</label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 w-[150px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Līdz</label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 w-[150px]" />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button type="button" size="sm" variant="outline" onClick={setToday} className="h-9">Šodien</Button>
+            <Button type="button" size="sm" variant="outline" onClick={setYesterday} className="h-9">Vakar</Button>
+            <Button type="button" size="sm" variant="outline" onClick={setLast7} className="h-9">Pēd. 7 dienas</Button>
+            {dateFilterActive && (
+              <Button type="button" size="sm" variant="ghost" onClick={clearDates} className="h-9 text-muted-foreground">
+                <X className="w-3.5 h-3.5 mr-1" /> Notīrīt
+              </Button>
+            )}
+          </div>
+        </div>
+        {dateFilterActive && (
+          <p className="text-[11px] text-muted-foreground">
+            Rāda pasūtījumus {dateFrom || "…"} → {dateTo || "…"}. Mēneša cilnes ir atslēgtas.
+          </p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
@@ -450,7 +527,7 @@ export const AccountingSpreadsheet = () => {
       </div>
 
       <Tabs value={activeMonth} onValueChange={setActiveMonth}>
-        <TabsList className="flex flex-wrap h-auto justify-start gap-1 p-1">
+        <TabsList className={`flex flex-wrap h-auto justify-start gap-1 p-1 ${dateFilterActive ? "opacity-50 pointer-events-none" : ""}`}>
           {months.map((m) => (
             <TabsTrigger key={m} value={m} className="text-xs">{monthLabel(m)}</TabsTrigger>
           ))}
