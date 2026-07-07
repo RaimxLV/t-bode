@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <script>
+      // App-level 301-equivalent redirect: www.t-bode.lv → t-bode.lv.
+      // We can't set a true HTTP 301 on the Cloudflare edge (managed elsewhere),
+      // so we do the strongest client-side equivalent: an immediate
+      // location.replace() before any other script runs. Googlebot follows this
+      // and, combined with the apex canonical below, treats it as permanent.
+      // Skipped when OAuth callback params are present, so the Supabase session
+      // isn't discarded by a cross-origin hop mid-callback.
+      (function () {
+        try {
+          if (window.location.hostname.toLowerCase() !== 'www.t-bode.lv') return;
+          var qs = window.location.search || '';
+          var hs = window.location.hash || '';
+          var oauth = /[?&#](access_token|refresh_token|provider_token|code|error|error_description)=/;
+          if (oauth.test(qs) || oauth.test(hs)) return;
+          var target = 'https://t-bode.lv' + window.location.pathname + qs + hs;
+          window.location.replace(target);
+        } catch (e) {}
+      })();
+    </script>
+    <script>
       (function () {
         var viewport = document.querySelector('meta[name="viewport"]');
         if (!viewport) return;
