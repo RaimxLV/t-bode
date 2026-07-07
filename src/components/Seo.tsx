@@ -22,7 +22,7 @@ interface SeoProps {
 }
 
 const SITE_NAME = "T-Bode";
-const SITE_URL = "https://www.t-bode.lv";
+const SITE_URL = "https://t-bode.lv";
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
 
 /**

@@ -2,7 +2,7 @@
 // Returns published products + published blog posts + static routes as XML.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
-const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://www.t-bode.lv").replace(/\/$/, "");
+const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://t-bode.lv").replace(/\/$/, "");
 
 const STATIC_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
