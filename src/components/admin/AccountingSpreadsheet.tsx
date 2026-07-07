@@ -406,46 +406,47 @@ export const AccountingSpreadsheet = () => {
         <div className="flex items-center gap-2">
           <FileSpreadsheet className="w-5 h-5 text-primary" />
           <h2 className="text-lg sm:text-xl font-display">Grāmatvedība</h2>
-          {dateFilterActive && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wide">
-              Filtrs aktīvs
-            </span>
-          )}
         </div>
         <Button onClick={exportXlsx} className="bg-primary text-primary-foreground">
           <Download className="w-4 h-4 mr-2" /> Lejupielādēt .xlsx
         </Button>
       </div>
 
-      {/* Compact date range filter */}
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
-        <CalendarRange className="w-4 h-4 text-primary shrink-0" />
-        <div className="flex items-center gap-1.5">
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="h-8 w-[140px] text-xs"
-            placeholder="No"
-          />
-          <span className="text-muted-foreground text-xs">→</span>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="h-8 w-[140px] text-xs"
-            placeholder="Līdz"
-          />
+      {/* Date range filter */}
+      <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+          <CalendarRange className="w-4 h-4 text-primary" />
+          Datuma filtrs
+          {dateFilterActive && (
+            <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold uppercase tracking-wide">
+              Aktīvs
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-1 ml-1">
-          <Button type="button" size="sm" variant="outline" onClick={setToday} className="h-8 text-xs px-2.5">Šodien</Button>
-          <Button type="button" size="sm" variant="outline" onClick={setYesterday} className="h-8 text-xs px-2.5">Vakar</Button>
-          <Button type="button" size="sm" variant="outline" onClick={setLast7} className="h-8 text-xs px-2.5">7 dienas</Button>
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground">No</label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 w-[150px]" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] uppercase tracking-wide text-muted-foreground">Līdz</label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 w-[150px]" />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <Button type="button" size="sm" variant="outline" onClick={setToday} className="h-9">Šodien</Button>
+            <Button type="button" size="sm" variant="outline" onClick={setYesterday} className="h-9">Vakar</Button>
+            <Button type="button" size="sm" variant="outline" onClick={setLast7} className="h-9">Pēd. 7 dienas</Button>
+            {dateFilterActive && (
+              <Button type="button" size="sm" variant="ghost" onClick={clearDates} className="h-9 text-muted-foreground">
+                <X className="w-3.5 h-3.5 mr-1" /> Notīrīt
+              </Button>
+            )}
+          </div>
         </div>
         {dateFilterActive && (
-          <Button type="button" size="sm" variant="ghost" onClick={clearDates} className="h-8 text-xs px-2 ml-auto text-muted-foreground hover:text-foreground">
-            <X className="w-3.5 h-3.5 mr-1" /> Notīrīt
-          </Button>
+          <p className="text-[11px] text-muted-foreground">
+            Rāda pasūtījumus {dateFrom || "…"} → {dateTo || "…"}. Mēneša cilnes ir atslēgtas.
+          </p>
         )}
       </div>
 
