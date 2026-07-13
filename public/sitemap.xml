@@ -36,6 +36,12 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://t-bode.lv/produkti/t-krekls-fanu</loc>
+    <lastmod>2026-07-13T06:56:33.177Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://t-bode.lv/produkti/t-krekls-ozollapas</loc>
     <lastmod>2026-07-01T06:19:58.933Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -133,12 +139,6 @@
   </url>
   <url>
     <loc>https://t-bode.lv/produkti/bernu-dzemperis-ar-uzsuvi-latvija</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/t-krekls-fanu</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
