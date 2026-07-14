@@ -28,6 +28,7 @@ export const AboutSection = () => {
             className="text-muted-foreground leading-relaxed font-body text-left sm:text-center max-w-[34rem] mx-auto"
             dangerouslySetInnerHTML={{ __html: t("about.description") }}
           />
+          {/* DTF sadaļa pagaidām paslēpta — atjaunot, kad /kas-ir-dtf lapa gatava
           <div className="mt-8 flex justify-center">
             <Link
               to="/kas-ir-dtf"
@@ -36,6 +37,7 @@ export const AboutSection = () => {
               Kas ir DTF?
             </Link>
           </div>
+          */}
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
