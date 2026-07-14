@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Palette, Zap, Package, Truck } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 export const AboutSection = () => {
   const { t } = useTranslation();
@@ -27,6 +28,14 @@ export const AboutSection = () => {
             className="text-muted-foreground leading-relaxed font-body text-left sm:text-center max-w-[34rem] mx-auto"
             dangerouslySetInnerHTML={{ __html: t("about.description") }}
           />
+          <div className="mt-8 flex justify-center">
+            <Link
+              to="/kas-ir-dtf"
+              className="inline-flex items-center justify-center rounded-md border border-foreground/30 bg-transparent px-6 py-3 font-body text-sm font-semibold uppercase tracking-wider text-foreground hover:border-primary hover:text-primary transition-colors"
+            >
+              Kas ir DTF?
+            </Link>
+          </div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
