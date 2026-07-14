@@ -81,6 +81,7 @@ const Install = lazy(() => import("./pages/Install.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
 const Veikali = lazy(() => import("./pages/Veikali.tsx"));
+const KasIrDtf = lazy(() => import("./pages/KasIrDtf.tsx"));
 
 // SEO landing pages (one per targeted Google search term).
 const AudumaMaisinuApdruka = lazy(() => import("./pages/landing/AudumaMaisinuApdruka.tsx"));
@@ -234,6 +235,7 @@ const App = () => {
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/veikali" element={<Veikali />} />
                         <Route path="/auduma-maisinu-apdruka" element={<AudumaMaisinuApdruka />} />
+                        <Route path="/kas-ir-dtf" element={<KasIrDtf />} />
                         <Route path="/profile" element={<Profile />} />
                         <Route path="/privacy" element={<PrivacyPolicy />} />
                         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
