@@ -61,7 +61,6 @@ export function DraftDesignsGallery() {
       const absoluteRows = campRows.filter((r) => r.image_url && /^https?:\/\//i.test(r.image_url));
       const signedMap: Record<string, string> = {};
       if (paths.length) {
-        await supabase.auth.refreshSession();
         const { data: signed } = await supabase.storage
           .from("campaign-assets")
           .createSignedUrls(paths, 60 * 60);

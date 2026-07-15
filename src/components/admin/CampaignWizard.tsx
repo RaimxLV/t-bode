@@ -303,9 +303,6 @@ export const CampaignWizard = ({ open, onOpenChange, campaignId, onChanged }: Pr
       const m: Record<string, string> = {};
       httpUrls.forEach((u) => { m[u] = u; });
       if (paths.length) {
-        // Make sure the session is fresh — an expired JWT silently produces
-        // empty signedUrl entries (bucket RLS depends on auth.uid()).
-        await supabase.auth.refreshSession().catch(() => {});
         const { data: signed, error: signErr } = await supabase
           .storage.from("campaign-assets")
           .createSignedUrls(paths, 60 * 60);
@@ -2143,7 +2140,6 @@ function DesignCard({
     if (!d.image_url || fallbackSrc) return;
     if (/^https?:\/\//i.test(d.image_url)) { setFallbackSrc(d.image_url); return; }
     try {
-      await supabase.auth.refreshSession().catch(() => {});
       const { data } = await supabase.storage
         .from("campaign-assets")
         .createSignedUrl(d.image_url, 60 * 60);
