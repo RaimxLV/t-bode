@@ -35,10 +35,11 @@ async function fetchPending(): Promise<PendingCampaign[]> {
   }));
 }
 
-export function useCampaignReviewBadge() {
+export function useCampaignReviewBadge(enabled = true) {
   return useQuery({
     queryKey: ["campaign-review-badge"],
     queryFn: fetchPending,
+    enabled,
     refetchInterval: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     staleTime: 60 * 1000,

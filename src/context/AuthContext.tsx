@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -14,6 +14,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_STORAGE_KEY_PREFIX = "sb-";
+const AUTH_STORAGE_KEY_SUFFIX = "-auth-token";
+
+const getStoredSession = (): Session | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (!key.startsWith(AUTH_STORAGE_KEY_PREFIX) || !key.endsWith(AUTH_STORAGE_KEY_SUFFIX)) continue;
+
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+
+      const parsed = JSON.parse(raw);
+      const session = parsed?.currentSession ?? parsed;
+      if (session?.access_token && session?.refresh_token && session?.user) {
+        return session as Session;
+      }
+    }
+  } catch (err) {
+    console.warn("[Auth] Stored session fallback failed", err);
+  }
+
+  return null;
+};
+
+const isRecentSession = (session: Session | null) => {
+  if (!session?.expires_at) return !!session;
+  return session.expires_at * 1000 > Date.now() - 5 * 60 * 1000;
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -21,6 +52,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminLoading, setAdminLoading] = useState(true);
   const [isWhitelisted, setIsWhitelisted] = useState(false);
+  const lastKnownSessionRef = useRef<Session | null>(null);
+  const explicitSignOutRef = useRef(false);
+  const initializedRef = useRef(false);
 
   const checkAdmin = async (userId: string, email: string) => {
     try {
@@ -39,6 +73,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const applySession = (nextSession: Session | null) => {
+    if (!nextSession && !explicitSignOutRef.current && isRecentSession(lastKnownSessionRef.current)) {
+      console.warn("[Auth] Ignored transient empty session; keeping last known session");
+      setLoading(false);
+      return;
+    }
+
+    if (nextSession) {
+      lastKnownSessionRef.current = nextSession;
+      explicitSignOutRef.current = false;
+    } else {
+      lastKnownSessionRef.current = null;
+    }
+
     setSession(nextSession);
     setUser(nextSession?.user ?? null);
 
@@ -96,15 +143,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         userId: nextSession?.user?.id,
         href: window.location.href,
       });
-      applySession(nextSession);
+
+      if (event === "INITIAL_SESSION" && !nextSession && !initializedRef.current) {
+        console.info("[Auth] Waiting for explicit session restore before marking auth ready");
+        return;
+      }
+
+      applySession(nextSession ?? getStoredSession());
       setLoading(false);
     });
 
     const initializeAuth = async () => {
       cleanupOAuthErrorParams();
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const storedSession = getStoredSession();
+      if (storedSession) {
+        lastKnownSessionRef.current = storedSession;
+        applySession(storedSession);
+        setLoading(false);
+      }
+
+      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
       if (!mounted) return;
-      applySession(currentSession);
+      initializedRef.current = true;
+      if (error) console.warn("[Auth] getSession failed; using stored session if available", error.message);
+      applySession(currentSession ?? storedSession);
       setLoading(false);
     };
 
@@ -126,6 +188,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.email]);
 
   const signOut = async () => {
+    explicitSignOutRef.current = true;
+    lastKnownSessionRef.current = null;
     await supabase.auth.signOut();
   };
 
