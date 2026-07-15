@@ -149,7 +149,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (event === "SIGNED_OUT") explicitSignOutRef.current = true;
       applySession(nextSession ?? getStoredSession());
       setLoading(false);
     });
