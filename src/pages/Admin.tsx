@@ -97,8 +97,8 @@ const Admin = () => {
   const [whitelistEmails, setWhitelistEmails] = useState<{ id: string; email: string }[]>([]);
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
-  const { data: allCategories = [] } = useCategories();
-  const { data: pendingCampaigns = [] } = useCampaignReviewBadge();
+  const { data: allCategories = [] } = useCategories(isAdmin);
+  const { data: pendingCampaigns = [] } = useCampaignReviewBadge(isAdmin);
   const pendingCount = pendingCampaigns.length;
 
   // Note: per-step "Kampaņa gatava X. solī" popup was removed by request — the

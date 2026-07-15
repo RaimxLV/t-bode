@@ -10,7 +10,7 @@ export interface Category {
   icon_key: string | null;
 }
 
-export function useCategories() {
+export function useCategories(enabled = true) {
   return useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -21,6 +21,7 @@ export function useCategories() {
       if (error) throw error;
       return (data ?? []) as Category[];
     },
+    enabled,
     staleTime: 5 * 60 * 1000,
   });
 }

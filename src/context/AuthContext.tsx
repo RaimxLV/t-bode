@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isWhitelisted, setIsWhitelisted] = useState(false);
   const lastKnownSessionRef = useRef<Session | null>(null);
   const explicitSignOutRef = useRef(false);
+  const initializedRef = useRef(false);
 
   const checkAdmin = async (userId: string, email: string) => {
     try {
@@ -142,6 +143,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         userId: nextSession?.user?.id,
         href: window.location.href,
       });
+
+      if (event === "INITIAL_SESSION" && !nextSession && !initializedRef.current) {
+        console.info("[Auth] Waiting for explicit session restore before marking auth ready");
+        return;
+      }
+
       if (event === "SIGNED_OUT") explicitSignOutRef.current = true;
       applySession(nextSession ?? getStoredSession());
       setLoading(false);
@@ -158,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const { data: { session: currentSession }, error } = await supabase.auth.getSession();
       if (!mounted) return;
+      initializedRef.current = true;
       if (error) console.warn("[Auth] getSession failed; using stored session if available", error.message);
       applySession(currentSession ?? storedSession);
       setLoading(false);
