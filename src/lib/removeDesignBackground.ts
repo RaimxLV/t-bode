@@ -16,8 +16,6 @@ function normalizeErrorMessage(message?: string) {
 }
 
 export async function removeDesignBackground(designIds: string[], replace = true) {
-  await supabase.auth.refreshSession().catch(() => undefined);
-
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session?.access_token) {
     throw new Error("Admin sesija vairs nav aktīva. Pārlādē lapu un ielogojies vēlreiz.");
