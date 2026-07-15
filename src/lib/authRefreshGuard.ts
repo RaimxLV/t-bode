@@ -12,6 +12,12 @@ type RefreshRequest = {
   key: string;
 };
 
+declare global {
+  interface Window {
+    __tbodeAuthRefreshGuardInstalled?: boolean;
+  }
+}
+
 const cachedRefreshes = new Map<string, CachedRefresh>();
 const inFlightRefreshes = new Map<string, Promise<Response>>();
 
@@ -77,9 +83,8 @@ const responseFromCache = (cached: CachedRefresh) =>
 
 export const installAuthRefreshGuard = () => {
   if (typeof window === "undefined") return;
-  const marker = "__tbodeAuthRefreshGuardInstalled";
-  if ((window as any)[marker]) return;
-  (window as any)[marker] = true;
+  if (window.__tbodeAuthRefreshGuardInstalled) return;
+  window.__tbodeAuthRefreshGuardInstalled = true;
 
   const nativeFetch = window.fetch.bind(window);
 
