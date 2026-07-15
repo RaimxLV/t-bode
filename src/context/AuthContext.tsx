@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 interface AuthContextType {
   user: User | null;
@@ -101,13 +100,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           roleError: roleResult.error?.message,
           whitelistError: whitelistResult.error?.message,
         });
-        recordAuthDiagnostic("AuthContext", "Admin access check partially failed", {
-          attempt,
-          roleError: roleResult.error?.message ?? null,
-          whitelistError: whitelistResult.error?.message ?? null,
-          keptAdmin: nextIsAdmin,
-          keptWhitelist: nextIsWhitelisted,
-        });
       }
 
       adminAccessRef.current = { isAdmin: nextIsAdmin, isWhitelisted: nextIsWhitelisted };
@@ -128,10 +120,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const hadAccess = adminAccessRef.current.isAdmin || adminAccessRef.current.isWhitelisted;
       console.warn("[Auth] Admin access check failed; keeping previous access state if already verified");
-      recordAuthDiagnostic("AuthContext", "Admin access check threw", {
-        attempt,
-        hadAccess,
-      });
 
       if (!hadAccess && attempt < 3) {
         keepLoadingForRetry = true;
@@ -148,10 +136,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const applySession = (nextSession: Session | null) => {
     if (!nextSession && !explicitSignOutRef.current && isRecentSession(lastKnownSessionRef.current)) {
       console.warn("[Auth] Ignored transient empty session; keeping last known session");
-      recordAuthDiagnostic("AuthContext", "Ignored transient empty session", {
-        lastKnownUserEmail: lastKnownSessionRef.current?.user?.email ?? null,
-        lastKnownExpiresAt: lastKnownSessionRef.current?.expires_at ?? null,
-      });
       setLoading(false);
       return;
     }
@@ -165,12 +149,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setSession(nextSession);
     setUser(nextSession?.user ?? null);
-    recordAuthDiagnostic("AuthContext", "Applied session", {
-      hasSession: !!nextSession,
-      userEmail: nextSession?.user?.email ?? null,
-      expiresAt: nextSession?.expires_at ?? null,
-      explicitSignOut: explicitSignOutRef.current,
-    });
 
     if (nextSession?.user) {
       if (adminCheckedUserIdRef.current !== nextSession.user.id) {
@@ -250,11 +228,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!mounted) return;
       initializedRef.current = true;
       if (error) console.warn("[Auth] getSession failed; using stored session if available", error.message);
-      recordAuthDiagnostic("AuthContext", "Initial getSession completed", {
-        hasCurrentSession: !!currentSession,
-        hasStoredSession: !!storedSession,
-        error: error?.message ?? null,
-      });
       applySession(currentSession ?? storedSession);
       setLoading(false);
     };
@@ -272,7 +245,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     explicitSignOutRef.current = true;
     lastKnownSessionRef.current = null;
     resetAdminAccess();
-    recordAuthDiagnostic("AuthContext", "Explicit sign out requested");
     await supabase.auth.signOut();
   };
 
