@@ -79,6 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAdmin = async (userId: string, email: string, attempt = 0) => {
     clearAdminRetry();
     const seq = ++adminCheckSeqRef.current;
+    let keepLoadingForRetry = false;
     setAdminLoading(true);
 
     try {
@@ -106,6 +107,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsWhitelisted(nextIsWhitelisted);
 
       if ((roleFailed || whitelistFailed) && !nextIsAdmin && !nextIsWhitelisted && attempt < 3) {
+        keepLoadingForRetry = true;
         adminRetryTimerRef.current = window.setTimeout(() => {
           void checkAdmin(userId, email, attempt + 1);
         }, 900 * (attempt + 1));
@@ -120,13 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.warn("[Auth] Admin access check failed; keeping previous access state if already verified");
 
       if (!hadAccess && attempt < 3) {
+        keepLoadingForRetry = true;
         adminRetryTimerRef.current = window.setTimeout(() => {
           void checkAdmin(userId, email, attempt + 1);
         }, 900 * (attempt + 1));
         return;
       }
     } finally {
-      if (seq === adminCheckSeqRef.current) setAdminLoading(false);
+      if (seq === adminCheckSeqRef.current && !keepLoadingForRetry) setAdminLoading(false);
     }
   };
 
