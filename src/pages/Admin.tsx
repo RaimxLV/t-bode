@@ -77,6 +77,7 @@ const Admin = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authorizedUserId, setAuthorizedUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [products, setProducts] = useState<DBProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -120,15 +121,26 @@ const Admin = () => {
 
   useEffect(() => {
     if (authLoading || adminLoading) return;
-    if (!user) { navigate("/auth"); return; }
+    if (!user) {
+      setIsAdmin(false);
+      setAuthorizedUserId(null);
+      setChecking(false);
+      navigate("/auth");
+      return;
+    }
+    if (isAdmin && authorizedUserId === user.id) {
+      setChecking(false);
+      return;
+    }
     if (!hasAdminRole && !isWhitelisted) {
       toast.error(t("admin.noAccess"));
       navigate("/");
       return;
     }
+    setAuthorizedUserId(user.id);
     setIsAdmin(true);
     setChecking(false);
-  }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, navigate, t]);
+  }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, isAdmin, authorizedUserId, navigate, t]);
 
   useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); loadWhitelist(); }, [isAdmin]);
 
