@@ -55,20 +55,78 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const lastKnownSessionRef = useRef<Session | null>(null);
   const explicitSignOutRef = useRef(false);
   const initializedRef = useRef(false);
+  const adminCheckSeqRef = useRef(0);
+  const adminCheckedUserIdRef = useRef<string | null>(null);
+  const adminAccessRef = useRef({ isAdmin: false, isWhitelisted: false });
+  const adminRetryTimerRef = useRef<number | null>(null);
 
-  const checkAdmin = async (userId: string, email: string) => {
+  const clearAdminRetry = () => {
+    if (adminRetryTimerRef.current) {
+      window.clearTimeout(adminRetryTimerRef.current);
+      adminRetryTimerRef.current = null;
+    }
+  };
+
+  const resetAdminAccess = () => {
+    adminCheckSeqRef.current += 1;
+    adminCheckedUserIdRef.current = null;
+    adminAccessRef.current = { isAdmin: false, isWhitelisted: false };
+    clearAdminRetry();
+    setIsAdmin(false);
+    setIsWhitelisted(false);
+  };
+
+  const checkAdmin = async (userId: string, email: string, attempt = 0) => {
+    clearAdminRetry();
+    const seq = ++adminCheckSeqRef.current;
+    setAdminLoading(true);
+
     try {
       const [roleResult, whitelistResult] = await Promise.all([
         supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
         supabase.rpc("is_admin_whitelisted", { _email: email }),
       ]);
-      setIsAdmin(!!roleResult.data);
-      setIsWhitelisted(!!whitelistResult.data);
+
+      if (seq !== adminCheckSeqRef.current) return;
+
+      const roleFailed = !!roleResult.error;
+      const whitelistFailed = !!whitelistResult.error;
+      const nextIsAdmin = roleFailed ? adminAccessRef.current.isAdmin : !!roleResult.data;
+      const nextIsWhitelisted = whitelistFailed ? adminAccessRef.current.isWhitelisted : !!whitelistResult.data;
+
+      if (roleFailed || whitelistFailed) {
+        console.warn("[Auth] Admin access check partially failed", {
+          roleError: roleResult.error?.message,
+          whitelistError: whitelistResult.error?.message,
+        });
+      }
+
+      adminAccessRef.current = { isAdmin: nextIsAdmin, isWhitelisted: nextIsWhitelisted };
+      setIsAdmin(nextIsAdmin);
+      setIsWhitelisted(nextIsWhitelisted);
+
+      if ((roleFailed || whitelistFailed) && !nextIsAdmin && !nextIsWhitelisted && attempt < 3) {
+        adminRetryTimerRef.current = window.setTimeout(() => {
+          void checkAdmin(userId, email, attempt + 1);
+        }, 900 * (attempt + 1));
+        return;
+      }
+
+      adminCheckedUserIdRef.current = userId;
     } catch {
-      setIsAdmin(false);
-      setIsWhitelisted(false);
+      if (seq !== adminCheckSeqRef.current) return;
+
+      const hadAccess = adminAccessRef.current.isAdmin || adminAccessRef.current.isWhitelisted;
+      console.warn("[Auth] Admin access check failed; keeping previous access state if already verified");
+
+      if (!hadAccess && attempt < 3) {
+        adminRetryTimerRef.current = window.setTimeout(() => {
+          void checkAdmin(userId, email, attempt + 1);
+        }, 900 * (attempt + 1));
+        return;
+      }
     } finally {
-      setAdminLoading(false);
+      if (seq === adminCheckSeqRef.current) setAdminLoading(false);
     }
   };
 
@@ -90,11 +148,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(nextSession?.user ?? null);
 
     if (nextSession?.user) {
-      setAdminLoading(true);
-      void checkAdmin(nextSession.user.id, nextSession.user.email ?? "");
+      if (adminCheckedUserIdRef.current !== nextSession.user.id) {
+        resetAdminAccess();
+        void checkAdmin(nextSession.user.id, nextSession.user.email ?? "");
+      }
     } else {
-      setIsAdmin(false);
-      setIsWhitelisted(false);
+      resetAdminAccess();
       setAdminLoading(false);
     }
   };
@@ -174,22 +233,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      clearAdminRetry();
       subscription.unsubscribe();
     };
   }, []);
 
-  // Re-check whitelist status when user changes (no realtime — admin_whitelist
-  // is intentionally NOT in the realtime publication to avoid leaking admin emails).
-  useEffect(() => {
-    if (!user?.email) return;
-    supabase.rpc("is_admin_whitelisted", { _email: user.email }).then(({ data }) => {
-      setIsWhitelisted(!!data);
-    });
-  }, [user?.email]);
-
   const signOut = async () => {
     explicitSignOutRef.current = true;
     lastKnownSessionRef.current = null;
+    resetAdminAccess();
     await supabase.auth.signOut();
   };
 

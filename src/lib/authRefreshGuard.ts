@@ -1,5 +1,4 @@
-const TOKEN_REFRESH_CACHE_MS = 25_000;
-const TOKEN_REFRESH_ERROR_CACHE_MS = 3_000;
+const TOKEN_REFRESH_REUSE_MS = 2_000;
 
 type CachedRefresh = {
   body: unknown;
@@ -8,29 +7,65 @@ type CachedRefresh = {
   expiresAt: number;
 };
 
-let cachedRefresh: CachedRefresh | null = null;
-let inFlightRefresh: Promise<Response> | null = null;
+type RefreshRequest = {
+  isRefresh: boolean;
+  key: string;
+};
 
-const isRefreshTokenRequest = async (input: RequestInfo | URL, init?: RequestInit) => {
+const cachedRefreshes = new Map<string, CachedRefresh>();
+const inFlightRefreshes = new Map<string, Promise<Response>>();
+
+const refreshKeyFromBody = (bodyText: string) => {
+  try {
+    const parsed = JSON.parse(bodyText);
+    if (parsed?.refresh_token) return `json:${parsed.refresh_token}`;
+  } catch {
+    // URL encoded bodies are handled below.
+  }
+
+  const params = new URLSearchParams(bodyText);
+  const refreshToken = params.get("refresh_token");
+  return refreshToken ? `form:${refreshToken}` : bodyText;
+};
+
+const getRefreshRequest = async (input: RequestInfo | URL, init?: RequestInit): Promise<RefreshRequest> => {
   try {
     const requestUrl = typeof input === "string" || input instanceof URL ? String(input) : input.url;
     const url = new URL(requestUrl, window.location.origin);
-    if (!url.pathname.endsWith("/auth/v1/token") && !url.pathname.endsWith("/token")) return false;
-    if (url.searchParams.get("grant_type") === "refresh_token") return true;
+    if (!url.pathname.endsWith("/auth/v1/token") && !url.pathname.endsWith("/token")) {
+      return { isRefresh: false, key: "" };
+    }
 
     const body = init?.body;
-    if (typeof body === "string") return body.includes("grant_type=refresh_token") || body.includes('"grant_type":"refresh_token"');
-    if (body instanceof URLSearchParams) return body.get("grant_type") === "refresh_token";
+    if (url.searchParams.get("grant_type") === "refresh_token") {
+      const key = typeof body === "string"
+        ? refreshKeyFromBody(body)
+        : body instanceof URLSearchParams
+          ? `form:${body.get("refresh_token") ?? body.toString()}`
+          : url.toString();
+      return { isRefresh: true, key };
+    }
+
+    if (typeof body === "string") {
+      const isRefresh = body.includes("grant_type=refresh_token") || body.includes('"grant_type":"refresh_token"');
+      return { isRefresh, key: isRefresh ? refreshKeyFromBody(body) : "" };
+    }
+
+    if (body instanceof URLSearchParams) {
+      const isRefresh = body.get("grant_type") === "refresh_token";
+      return { isRefresh, key: isRefresh ? `form:${body.get("refresh_token") ?? body.toString()}` : "" };
+    }
 
     if (input instanceof Request && input.method !== "GET") {
       const text = await input.clone().text().catch(() => "");
-      return text.includes("grant_type=refresh_token") || text.includes('"grant_type":"refresh_token"');
+      const isRefresh = text.includes("grant_type=refresh_token") || text.includes('"grant_type":"refresh_token"');
+      return { isRefresh, key: isRefresh ? refreshKeyFromBody(text) : "" };
     }
   } catch {
-    return false;
+    return { isRefresh: false, key: "" };
   }
 
-  return false;
+  return { isRefresh: false, key: "" };
 };
 
 const responseFromCache = (cached: CachedRefresh) =>
@@ -49,40 +84,45 @@ export const installAuthRefreshGuard = () => {
   const nativeFetch = window.fetch.bind(window);
 
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    const isRefresh = await isRefreshTokenRequest(input, init);
-    if (!isRefresh) return nativeFetch(input, init);
+    const refreshRequest = await getRefreshRequest(input, init);
+    if (!refreshRequest.isRefresh) return nativeFetch(input, init);
+
+    const refreshKey = refreshRequest.key || "unknown-refresh-request";
 
     const now = Date.now();
-    if (cachedRefresh && cachedRefresh.expiresAt > now) {
-      console.info("[Auth] Reusing recent token refresh response");
+    const cachedRefresh = cachedRefreshes.get(refreshKey);
+    if (cachedRefresh?.expiresAt && cachedRefresh.expiresAt > now) {
+      console.info("[Auth] Reusing duplicate token refresh response");
       return responseFromCache(cachedRefresh);
     }
 
+    const inFlightRefresh = inFlightRefreshes.get(refreshKey);
     if (inFlightRefresh) {
       console.info("[Auth] Joining in-flight token refresh");
       return inFlightRefresh.then((response) => response.clone());
     }
 
-    inFlightRefresh = nativeFetch(input, init)
+    const refreshPromise = nativeFetch(input, init)
       .then(async (response) => {
         const clone = response.clone();
         const body = await clone.json().catch(() => null);
 
-        if (body && (response.ok || response.status === 429)) {
-          cachedRefresh = {
+        if (body && response.ok) {
+          cachedRefreshes.set(refreshKey, {
             body,
             status: response.status,
             statusText: response.statusText,
-            expiresAt: Date.now() + (response.ok ? TOKEN_REFRESH_CACHE_MS : TOKEN_REFRESH_ERROR_CACHE_MS),
-          };
+            expiresAt: Date.now() + TOKEN_REFRESH_REUSE_MS,
+          });
         }
 
         return response;
       })
       .finally(() => {
-        inFlightRefresh = null;
+        inFlightRefreshes.delete(refreshKey);
       });
 
-    return inFlightRefresh.then((response) => response.clone());
+    inFlightRefreshes.set(refreshKey, refreshPromise);
+    return refreshPromise.then((response) => response.clone());
   };
 };
