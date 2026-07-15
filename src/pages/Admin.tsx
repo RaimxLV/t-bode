@@ -23,7 +23,6 @@ import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
 import { Seo } from "@/components/Seo";
 import { useCampaignReviewBadge } from "@/hooks/useCampaignReviewBadge";
-import { recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -123,12 +122,6 @@ const Admin = () => {
   useEffect(() => {
     if (authLoading || adminLoading) return;
     if (!user) {
-      recordAuthDiagnostic("AdminPage", "Redirecting to auth: no user", {
-        authLoading,
-        adminLoading,
-        hasAdminRole,
-        isWhitelisted,
-      });
       setIsAdmin(false);
       setAuthorizedUserId(null);
       setChecking(false);
@@ -140,21 +133,10 @@ const Admin = () => {
       return;
     }
     if (!hasAdminRole && !isWhitelisted) {
-      recordAuthDiagnostic("AdminPage", "Redirecting away: no admin access", {
-        userEmail: user.email ?? null,
-        userIdLast6: user.id.slice(-6),
-        hasAdminRole,
-        isWhitelisted,
-      });
       toast.error(t("admin.noAccess"));
       navigate("/");
       return;
     }
-    recordAuthDiagnostic("AdminPage", "Admin access granted", {
-      userEmail: user.email ?? null,
-      hasAdminRole,
-      isWhitelisted,
-    });
     setAuthorizedUserId(user.id);
     setIsAdmin(true);
     setChecking(false);

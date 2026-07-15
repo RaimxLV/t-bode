@@ -18,8 +18,6 @@ import { checkRateLimit } from "@/lib/rateLimit";
 import { getAuthRedirectOrigin, redirectToCanonicalHost } from "@/lib/authDomain";
 import { markMobileOAuthViewportReturn } from "@/lib/mobileViewport";
 import { Seo } from "@/components/Seo";
-import { AuthDebugDialog } from "@/components/security/AuthDebugDialog";
-import { recordAuthDiagnostic } from "@/lib/authDiagnostics";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Ievadiet derīgu e-pasta adresi"),
@@ -53,11 +51,6 @@ const Auth = () => {
     if (authLoading || !user || adminLoading) return;
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
-    recordAuthDiagnostic("AuthPage", "Authenticated user reached auth page", {
-      userEmail: user.email ?? null,
-      isAdmin,
-      redirect,
-    });
     if (redirect) { navigate(redirect); return; }
     if (isAdmin) navigate("/admin");
     else navigate("/");
@@ -91,13 +84,8 @@ const Auth = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password });
+        const { error } = await supabase.auth.signInWithPassword({ email: form.email.trim(), password: form.password });
         if (error) throw error;
-        recordAuthDiagnostic("AuthPage", "Email sign-in succeeded", {
-          userEmail: data.user?.email ?? form.email.trim(),
-          hasSession: !!data.session,
-          expiresAt: data.session?.expires_at ?? null,
-        });
         toast.success(t("auth.loginSuccess"));
       } else {
         const { error } = await supabase.auth.signUp({
@@ -109,7 +97,6 @@ const Auth = () => {
       }
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : t("auth.authError");
-      recordAuthDiagnostic("AuthPage", "Email auth failed", { message });
       toast.error(message || t("auth.authError"));
     } finally {
       setLoading(false);
@@ -127,11 +114,9 @@ const Auth = () => {
         },
       });
       if (result.error) {
-        recordAuthDiagnostic("AuthPage", "Google sign-in failed", { message: result.error.message });
         toast.error(t("auth.googleError"));
         return;
       }
-      recordAuthDiagnostic("AuthPage", "Google sign-in returned", { redirected: !!result.redirected });
       window.dispatchEvent(new Event("tbode:oauth-return"));
     } catch {
       toast.error(t("auth.googleError"));
@@ -177,9 +162,6 @@ const Auth = () => {
             <p className="text-sm text-white/60 font-body mt-2">
               {isLogin ? t("auth.loginSubtitle") : t("auth.registerSubtitle")}
             </p>
-            <div className="mt-3 flex justify-center">
-              <AuthDebugDialog />
-            </div>
           </div>
 
           <div className="bg-white/[0.04] border border-white/10 backdrop-blur-sm rounded-2xl p-5 sm:p-6 shadow-2xl">
