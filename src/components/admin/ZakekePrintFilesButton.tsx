@@ -343,13 +343,6 @@ const loadImageElement = (blob: Blob): Promise<HTMLImageElement> =>
   });
 
 const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
-  // Guard: production PNGs from Zakeke can be 5000×8000+ (RGBA). Scanning
-  // every pixel in JS blocks the main thread for tens of seconds and the
-  // subsequent toBlob() often fails silently — the download never fires and
-  // the button appears "stuck". Skip the trim for very large or heavy files.
-  if (blob.size > 4 * 1024 * 1024) {
-    return blob;
-  }
   const originalBytes = new Uint8Array(await blob.arrayBuffer());
   const physChunk = getPngChunk(originalBytes, "pHYs");
   const source = typeof createImageBitmap === "function"
@@ -360,9 +353,6 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
     const width = "naturalWidth" in source ? source.naturalWidth : source.width;
     const height = "naturalHeight" in source ? source.naturalHeight : source.height;
     if (!width || !height) return blob;
-    if (width * height > 8_000_000) {
-      return blob;
-    }
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
