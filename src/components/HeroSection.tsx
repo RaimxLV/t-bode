@@ -81,6 +81,7 @@ export const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
           >
+            <span className="sr-only">T-kreklu un hūdiju apdruka Rīgā — personalizē online. </span>
             <span className="block text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
               {t("hero.sloganLine1")}
             </span>
