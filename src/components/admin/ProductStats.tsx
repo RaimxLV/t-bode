@@ -77,7 +77,7 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
     return { productTotals: sorted, monthlyData: monthly, yearTotal: totalQty, yearRevenue: totalRev };
   }, [orders, orderItems, selectedYear, productNameMap]);
 
-  const maxQty = Math.max(...monthlyData.map((m) => m.qty), 1);
+  const maxRevenue = Math.max(...monthlyData.map((m) => m.revenue), 1);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -133,11 +133,11 @@ export const ProductStats = ({ orders, orderItems }: ProductStatsProps) => {
                 <div className="flex-1 h-5 bg-muted/50 rounded-sm overflow-hidden relative">
                   <div
                     className="h-full bg-primary/80 rounded-sm transition-all duration-300"
-                    style={{ width: `${(m.qty / maxQty) * 100}%` }}
+                    style={{ width: `${(m.revenue / maxRevenue) * 100}%` }}
                   />
-                  {m.qty > 0 && (
+                  {m.revenue > 0 && (
                     <span className="absolute right-1.5 top-0.5 text-[9px] font-body font-medium text-foreground">
-                      {m.qty} preces · {m.revenue.toFixed(0)} €
+                      {m.revenue.toFixed(2)} € · {m.qty} preces
                     </span>
                   )}
                 </div>
