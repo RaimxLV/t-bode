@@ -58,9 +58,6 @@ Allow: /
 User-agent: Meta-ExternalAgent
 Allow: /
 
-User-agent: Bytespider
-Allow: /
-
 User-agent: Amazonbot
 Allow: /
 
