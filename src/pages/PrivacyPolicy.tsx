@@ -16,7 +16,7 @@ const PrivacyPolicy = () => {
             ? "T-Bode (SIA Ervitex) privātuma politika — kā mēs apstrādājam jūsu personas datus saskaņā ar GDPR un Latvijas tiesību aktiem."
             : "T-Bode (SIA Ervitex) privacy policy — how we process your personal data in line with GDPR and Latvian data protection law."
         }
-        canonical="https://www.t-bode.lv/privacy"
+        canonical="https://t-bode.lv/privacy"
         noTitleSuffix
       />
       <Navbar />

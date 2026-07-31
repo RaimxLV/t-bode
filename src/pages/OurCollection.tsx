@@ -19,6 +19,9 @@ const OurCollection = () => {
       />
       <Navbar />
       <div className="pt-16">
+        <h1 className="sr-only">
+          {isLv ? "T-Bode veikals — gatavi T-krekli, hūdiji un sezonas dizaini" : "T-Bode shop — ready-made t-shirts, hoodies and seasonal designs"}
+        </h1>
         <OurCollectionSection />
       </div>
       <Footer />

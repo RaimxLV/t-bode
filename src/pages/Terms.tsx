@@ -17,7 +17,7 @@ const Terms = () => {
             ? "T-Bode interneta veikala lietošanas noteikumi un pirkuma nosacījumi — piegāde, atgriešana, garantija un maksājumi."
             : "T-Bode online store terms and conditions — delivery, returns, warranty and payment terms for orders placed in Latvia."
         }
-        canonical="https://www.t-bode.lv/terms"
+        canonical="https://t-bode.lv/terms"
         noTitleSuffix
       />
       <Navbar />

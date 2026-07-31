@@ -94,7 +94,7 @@ const BlogPost = () => {
           description={post.excerpt || post.title}
           image={post.cover_image_url || undefined}
           type="article"
-          canonical={`https://www.t-bode.lv/blog/${post.slug}`}
+          canonical={`https://t-bode.lv/blog/${post.slug}`}
           jsonLd={{
             "@context": "https://schema.org",
             "@type": "Article",
@@ -105,7 +105,7 @@ const BlogPost = () => {
             dateModified: post.published_at || undefined,
             mainEntityOfPage: {
               "@type": "WebPage",
-              "@id": `https://www.t-bode.lv/blog/${post.slug}`,
+              "@id": `https://t-bode.lv/blog/${post.slug}`,
             },
             author: { "@type": "Organization", name: "T-Bode" },
             publisher: {
@@ -113,7 +113,7 @@ const BlogPost = () => {
               name: "T-Bode",
               logo: {
                 "@type": "ImageObject",
-                url: "https://www.t-bode.lv/og-image.jpg",
+                url: "https://t-bode.lv/og-image.jpg",
               },
             },
           }}

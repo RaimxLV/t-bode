@@ -37,7 +37,7 @@ const Veikali = () => {
       <Seo
         title="T-Bode | Kreklu apdruka un dizains tiešsaistē (Alfa, Akropole, Origo)"
         description="Meklē T-Bode veikalus? Gaidīsim ciemos! Vai izveido dizainu tiešsaistē no jebkuras ierīces un saņem ar piegādi."
-        canonical="https://www.t-bode.lv/veikali"
+        canonical="https://t-bode.lv/veikali"
         noTitleSuffix
       />
       <Index />

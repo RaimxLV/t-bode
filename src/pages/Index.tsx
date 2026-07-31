@@ -41,9 +41,9 @@ const Index = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "T-Bode", item: "https://www.t-bode.lv/" },
-      { "@type": "ListItem", position: 2, name: isLv ? "Izveido savu dizainu" : "Design your own", item: "https://www.t-bode.lv/design" },
-      { "@type": "ListItem", position: 3, name: isLv ? "Kolekcija" : "Collection", item: "https://www.t-bode.lv/collection" },
+      { "@type": "ListItem", position: 1, name: "T-Bode", item: "https://t-bode.lv/" },
+      { "@type": "ListItem", position: 2, name: isLv ? "Izveido savu dizainu" : "Design your own", item: "https://t-bode.lv/design" },
+      { "@type": "ListItem", position: 3, name: isLv ? "Kolekcija" : "Collection", item: "https://t-bode.lv/collection" },
     ],
   };
 
