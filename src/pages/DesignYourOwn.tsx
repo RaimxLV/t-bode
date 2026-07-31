@@ -32,7 +32,7 @@ const DesignYourOwn = () => {
       "@type": "WebApplication",
       name: "T-Bode Apdrukas Konstruktors",
       alternateName: "T-Bode Print Designer",
-      url: "https://www.t-bode.lv/design",
+      url: "https://t-bode.lv/design",
       applicationCategory: "DesignApplication",
       applicationSubCategory: "OnlineDesignTool",
       operatingSystem: "All",
@@ -47,7 +47,7 @@ const DesignYourOwn = () => {
       provider: {
         "@type": "Organization",
         name: "T-Bode",
-        url: "https://www.t-bode.lv",
+        url: "https://t-bode.lv",
       },
       featureList: isLv
         ? [
@@ -83,7 +83,7 @@ const DesignYourOwn = () => {
         position: i + 1,
         name: s.name,
         text: s.text,
-        url: `https://www.t-bode.lv/design#step-${i + 1}`,
+        url: `https://t-bode.lv/design#step-${i + 1}`,
       })),
     },
   ];
