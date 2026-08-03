@@ -35,6 +35,8 @@ Deno.serve(async (req) => {
     const { data: products } = await supabase
       .from("products")
       .select("slug, updated_at")
+      .eq("status", "published")
+      .eq("is_draft", false)
       .order("updated_at", { ascending: false });
 
     const urls: string[] = [];
