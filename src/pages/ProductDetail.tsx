@@ -338,16 +338,22 @@ const ProductDetail = () => {
                     disabled={!selectedSize || !selectedColor}
                     className="absolute bottom-3 right-3 w-11 h-11 rounded-full bg-primary/60 backdrop-blur-sm text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-110 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed z-10 shadow-lg"
                     title={t("productDetail.customizeDesign", "Personalizēt dizainu")}
+                    aria-label={t("productDetail.customizeDesign", "Personalizēt dizainu")}
                   >
-                    <Paintbrush className="w-5 h-5" />
+                    <Paintbrush className="w-5 h-5" aria-hidden="true" />
                   </button>
                 )}
               </div>
               {displayImages.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {displayImages.map((img, idx) => (
-                    <button key={idx} onClick={() => setSelectedImageIdx(idx)}
-                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx ? "border-primary" : "border-border hover:border-foreground/50"}`}>
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImageIdx(idx)}
+                      aria-label={t("productDetail.selectImage", "Izvēlēties attēlu {{number}}", { number: idx + 1 })}
+                      aria-pressed={selectedImageIdx === idx}
+                      className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx ? "border-primary" : "border-border hover:border-foreground/50"}`}
+                    >
                       <img
                         src={img}
                         alt=""
