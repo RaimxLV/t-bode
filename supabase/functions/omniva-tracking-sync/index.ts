@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { corsHeaders, getOmnivaAuthHeader } from "../_shared/omniva-config.ts";
 import { sendLovableTransactional } from "../_shared/lovable-email.ts";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const ALERT_EMAIL = "Ofsetadruka@gmail.com";
 
@@ -33,6 +34,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Only admins (or internal cron using the service-role key) may trigger a sync.
+    const auth = await requireAdmin(req, corsHeaders, supabase);
+    if (!auth.ok) return auth.response;
 
     // Fetch all orders with barcode that aren't yet delivered
     const { data: orders, error } = await supabase
