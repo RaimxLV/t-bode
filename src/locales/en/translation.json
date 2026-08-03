@@ -144,7 +144,8 @@
     "notFound": "Product Not Found",
     "backLink": "← Back to Products",
     "relatedProducts": "Related products",
-    "zoomImage": "Zoom image"
+    "zoomImage": "Zoom image",
+    "selectImage": "Select image {{number}}"
   },
   "cart": {
     "title": "Cart",
