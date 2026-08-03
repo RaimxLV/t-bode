@@ -8,6 +8,7 @@ import {
   getZakekeOrderItemFiles,
   getZakekeOrderOutputFiles,
 } from "../_shared/zakeke.ts";
+import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,6 +27,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // Only admins (or internal cron using the service-role key) may trigger a sync.
+    const auth = await requireAdmin(req, corsHeaders, service);
+    if (!auth.ok) return auth.response;
 
     const since = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
