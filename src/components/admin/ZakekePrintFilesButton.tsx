@@ -342,6 +342,25 @@ const loadImageElement = (blob: Blob): Promise<HTMLImageElement> =>
     img.src = objectUrl;
   });
 
+// Mobile browsers silently cap canvas area (iOS/Android ~16-25 MP). Beyond that,
+// drawImage/getImageData return garbage (green/striped blocks) instead of failing,
+// which would corrupt the print file. Probe the exact size before trusting it.
+const canvasSupportsSize = (width: number, height: number): boolean => {
+  try {
+    const probe = document.createElement("canvas");
+    probe.width = width;
+    probe.height = height;
+    const ctx = probe.getContext("2d");
+    if (!ctx) return false;
+    ctx.fillStyle = "#ff0000";
+    ctx.fillRect(width - 2, height - 2, 2, 2);
+    const px = ctx.getImageData(width - 1, height - 1, 1, 1).data;
+    return px[0] === 255 && px[1] === 0 && px[2] === 0 && px[3] === 255;
+  } catch {
+    return false;
+  }
+};
+
 const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
   const originalBytes = new Uint8Array(await blob.arrayBuffer());
   const physChunk = getPngChunk(originalBytes, "pHYs");
@@ -353,6 +372,10 @@ const cropTransparentPaddingFromPng = async (blob: Blob): Promise<Blob> => {
     const width = "naturalWidth" in source ? source.naturalWidth : source.width;
     const height = "naturalHeight" in source ? source.naturalHeight : source.height;
     if (!width || !height) return blob;
+    if (!canvasSupportsSize(width, height)) {
+      toast.info("Šī ierīce nevar apstrādāt tik lielu failu — lejupielādēju oriģinālu. Izmanto datoru, lai apgrieztu malas.");
+      return blob;
+    }
 
     const canvas = document.createElement("canvas");
     canvas.width = width;
