@@ -5,6 +5,8 @@ export interface ColorVariant {
   name: string;
   hex: string;
   images: string[];
+  /** Optional per-color size availability. Empty/undefined = all product sizes. */
+  sizes?: string[];
 }
 
 export interface DBProduct {

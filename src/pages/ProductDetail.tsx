@@ -54,7 +54,14 @@ const ProductDetail = () => {
   const { addItem } = useCart();
 
   const colors = product?.color_variants ?? [];
-  const sizes = product?.sizes ?? [];
+  const allSizes = product?.sizes ?? [];
+  // Sizes can be restricted per color variant (e.g. black shirt has no XXL).
+  const sizes = useMemo(() => {
+    const variant = colors.find((c) => c.name === selectedColor);
+    const allowed = variant?.sizes;
+    if (!allowed || allowed.length === 0) return allSizes;
+    return allSizes.filter((s) => allowed.includes(s));
+  }, [allSizes, colors, selectedColor]);
   const sizes_sorted = useMemo(() => {
     const order = ["XXS","XS","S","M","L","XL","XXL","XXXL","XXXXL","XXXXXL"];
     const idx = (s: string) => {
@@ -85,15 +92,19 @@ const ProductDetail = () => {
   // Set defaults when product loads
   useEffect(() => {
     if (!product) return;
-    const productSizes = product.sizes ?? [];
     const productColors = product.color_variants ?? [];
-    if (!selectedSize && productSizes.length > 0) {
-      setSelectedSize(productSizes.includes("M") ? "M" : productSizes[0]);
-    }
     if (!selectedColor && productColors.length > 0) {
       setSelectedColor(productColors[0].name);
     }
   }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep the selected size valid for the currently selected color.
+  useEffect(() => {
+    if (sizes.length === 0) return;
+    if (!selectedSize || !sizes.includes(selectedSize)) {
+      setSelectedSize(sizes.includes("M") ? "M" : sizes[0]);
+    }
+  }, [sizes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Warm up the Zakeke script + token in the background as soon as we know
   // the product is customizable. Both have their own caches, so this is a no-op

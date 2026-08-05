@@ -17,7 +17,7 @@ import { useExistingColors } from "@/hooks/useExistingColors";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { slugify as slugifyShared } from "@/lib/slug";
 
-export interface ColorVariant { name: string; hex: string; images: string[]; }
+export interface ColorVariant { name: string; hex: string; images: string[]; sizes?: string[]; }
 export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; gallery_images?: string[]; showcase_images?: string[]; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
@@ -170,6 +170,19 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   };
   const removeColorVariant = (i: number) => onProductChange({ ...product, color_variants: product.color_variants.filter((_, idx) => idx !== i) });
   const updateColorVariant = (i: number, field: keyof ColorVariant, value: string | string[]) => { const v = [...product.color_variants]; (v[i] as any)[field] = value; onProductChange({ ...product, color_variants: v }); };
+  // Per-color size availability. An empty/undefined list means "all product sizes".
+  const toggleVariantSize = (i: number, size: string) => {
+    const v = [...product.color_variants];
+    const current = v[i].sizes && v[i].sizes!.length > 0 ? [...v[i].sizes!] : [...product.sizes];
+    const next = current.includes(size) ? current.filter((s) => s !== size) : [...current, size];
+    v[i] = { ...v[i], sizes: next };
+    onProductChange({ ...product, color_variants: v });
+  };
+  const resetVariantSizes = (i: number) => {
+    const v = [...product.color_variants];
+    v[i] = { ...v[i], sizes: [] };
+    onProductChange({ ...product, color_variants: v });
+  };
   const removeColorImage = (ci: number, ii: number) => { const v = [...product.color_variants]; v[ci].images = v[ci].images.filter((_, idx) => idx !== ii); onProductChange({ ...product, color_variants: v }); };
 
   return (
@@ -519,6 +532,35 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                     <Input value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} placeholder="#000000" className="w-24 sm:w-28" />
                     <Button variant="ghost" size="icon" onClick={() => removeColorVariant(ci)} className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
                   </div>
+                  {product.sizes.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border/60">
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <Label className="font-body text-xs text-muted-foreground">
+                          {t("admin.availableSizesForColor", "Pieejamie izmēri šai krāsai")}
+                        </Label>
+                        {variant.sizes && variant.sizes.length > 0 && (
+                          <button type="button" onClick={() => resetVariantSizes(ci)} className="text-[11px] font-body text-muted-foreground underline hover:text-foreground">
+                            {t("admin.allSizes", "Visi izmēri")}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {product.sizes.map((size) => {
+                          const active = !variant.sizes || variant.sizes.length === 0 || variant.sizes.includes(size);
+                          return (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => toggleVariantSize(ci, size)}
+                              className={`px-3 py-1 text-xs font-body rounded-md border transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground line-through hover:border-primary/40"}`}
+                            >
+                              {size}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
