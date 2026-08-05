@@ -569,8 +569,10 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {product.sizes.map((size) => {
-                          const active = !variant.sizes || variant.sizes.length === 0 || variant.sizes.includes(size);
+                        {variantSizeOptions(variant).map((size) => {
+                          const active = variant.sizes && variant.sizes.length > 0
+                            ? variant.sizes.includes(size)
+                            : product.sizes.includes(size);
                           return (
                             <button
                               key={size}
@@ -582,6 +584,16 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                             </button>
                           );
                         })}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          value={variantSizeInput[ci] ?? ""}
+                          onChange={(e) => setVariantSizeInput({ ...variantSizeInput, [ci]: e.target.value })}
+                          placeholder={t("admin.otherSize")}
+                          className="w-32 h-8 text-xs"
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addVariantCustomSize(ci))}
+                        />
+                        <Button variant="outline" size="sm" type="button" onClick={() => addVariantCustomSize(ci)}>{t("admin.add")}</Button>
                       </div>
                     </div>
                   )}
