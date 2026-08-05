@@ -171,12 +171,36 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const removeColorVariant = (i: number) => onProductChange({ ...product, color_variants: product.color_variants.filter((_, idx) => idx !== i) });
   const updateColorVariant = (i: number, field: keyof ColorVariant, value: string | string[]) => { const v = [...product.color_variants]; (v[i] as any)[field] = value; onProductChange({ ...product, color_variants: v }); };
   // Per-color size availability. An empty/undefined list means "all product sizes".
+  // Enabling a size that the product doesn't have yet adds it to the product list,
+  // but keeps it exclusive to this colour by materialising the other variants' lists.
   const toggleVariantSize = (i: number, size: string) => {
-    const v = [...product.color_variants];
-    const current = v[i].sizes && v[i].sizes!.length > 0 ? [...v[i].sizes!] : [...product.sizes];
-    const next = current.includes(size) ? current.filter((s) => s !== size) : [...current, size];
-    v[i] = { ...v[i], sizes: next };
-    onProductChange({ ...product, color_variants: v });
+    const variants = product.color_variants.map((v) => ({ ...v, sizes: v.sizes ? [...v.sizes] : v.sizes }));
+    const baseSizes = [...product.sizes];
+    const current = variants[i].sizes && variants[i].sizes!.length > 0 ? [...variants[i].sizes!] : [...baseSizes];
+    const enabling = !current.includes(size);
+    let nextProductSizes = baseSizes;
+
+    if (enabling && !baseSizes.includes(size)) {
+      variants.forEach((v, idx) => {
+        if (idx !== i && (!v.sizes || v.sizes.length === 0)) v.sizes = [...baseSizes];
+      });
+      nextProductSizes = [...baseSizes, size];
+    }
+
+    variants[i].sizes = enabling ? [...current, size] : current.filter((s) => s !== size);
+    onProductChange({ ...product, sizes: nextProductSizes, color_variants: variants });
+  };
+  const [variantSizeInput, setVariantSizeInput] = useState<Record<number, string>>({});
+  const addVariantCustomSize = (i: number) => {
+    const size = (variantSizeInput[i] ?? "").trim();
+    if (!size) return;
+    toggleVariantSize(i, size);
+    setVariantSizeInput({ ...variantSizeInput, [i]: "" });
+  };
+  // All sizes offered in the per-colour picker: common sizes + anything already used.
+  const variantSizeOptions = (variant: ColorVariant) => {
+    const extras = [...product.sizes, ...(variant.sizes ?? [])].filter((s) => !COMMON_SIZES.includes(s));
+    return [...COMMON_SIZES, ...Array.from(new Set(extras))];
   };
   const resetVariantSizes = (i: number) => {
     const v = [...product.color_variants];
@@ -545,8 +569,10 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                         )}
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {product.sizes.map((size) => {
-                          const active = !variant.sizes || variant.sizes.length === 0 || variant.sizes.includes(size);
+                        {variantSizeOptions(variant).map((size) => {
+                          const active = variant.sizes && variant.sizes.length > 0
+                            ? variant.sizes.includes(size)
+                            : product.sizes.includes(size);
                           return (
                             <button
                               key={size}
@@ -558,6 +584,16 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
                             </button>
                           );
                         })}
+                      </div>
+                      <div className="flex gap-2 mt-2">
+                        <Input
+                          value={variantSizeInput[ci] ?? ""}
+                          onChange={(e) => setVariantSizeInput({ ...variantSizeInput, [ci]: e.target.value })}
+                          placeholder={t("admin.otherSize")}
+                          className="w-32 h-8 text-xs"
+                          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addVariantCustomSize(ci))}
+                        />
+                        <Button variant="outline" size="sm" type="button" onClick={() => addVariantCustomSize(ci)}>{t("admin.add")}</Button>
                       </div>
                     </div>
                   )}
