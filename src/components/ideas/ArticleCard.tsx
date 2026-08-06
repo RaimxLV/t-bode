@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { Clock } from "lucide-react";
 
 export type ArticleCardPost = {
   id: string;
@@ -44,12 +43,6 @@ export const ArticleCard = ({ post, categoryName, featured = false }: Props) => 
     <div className={`p-5 flex flex-col flex-1 ${featured ? "sm:p-8 sm:justify-center" : ""}`}>
       <div className="flex items-center gap-3 mb-2 text-[11px] uppercase tracking-wider font-body text-muted-foreground">
         {categoryName && <span className="text-primary">{categoryName}</span>}
-        {post.reading_minutes ? (
-          <span className="inline-flex items-center gap-1">
-            <Clock className="w-3 h-3" aria-hidden="true" />
-            {post.reading_minutes} min
-          </span>
-        ) : null}
       </div>
       <h3
         className={`font-display leading-tight mb-2 group-hover:text-primary transition-colors ${
