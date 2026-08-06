@@ -223,7 +223,7 @@ export const BlogManager = () => {
     <div className="space-y-3">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
-          <strong>Svētku iedvesmas</strong> sadaļā rediģē tikai manuāli veidotos rakstus. Autopilot kampaņu raksti tiek rediģēti pašā <strong>Autopilot</strong> vedņa 3. solī, kur tagad ir arī vāka attēla maiņa.
+          Šeit rediģē <strong>Idejas un Padomi</strong> rakstus. AI sagatavotos mēneša melnrakstus ērtāk pārskatīt <strong>Mēneša kalendārā</strong>. Autopilot kampaņu raksti tiek rediģēti Autopilot vedņa 3. solī.
         </CardContent>
       </Card>
 
