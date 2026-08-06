@@ -542,6 +542,12 @@ const Admin = () => {
             </Suspense>
           </TabsContent>
 
+          <TabsContent value="content">
+            <Suspense fallback={<TabFallback />}>
+              <ContentHubManager />
+            </Suspense>
+          </TabsContent>
+
         </Tabs>
       </main>
 
