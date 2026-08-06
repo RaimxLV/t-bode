@@ -197,7 +197,6 @@ Deno.serve(async (req) => {
     const failed: any[] = [];
 
     const processTopic = async (topic: any, i: number) => {
-      const topic = topics[i];
       try {
         const article = await generateArticle(
           LOVABLE_API_KEY,
