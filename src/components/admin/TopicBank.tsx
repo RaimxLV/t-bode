@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useContentCategories } from "@/hooks/useContentCategories";
 
@@ -36,6 +36,7 @@ export const TopicBank = () => {
   const [newCategory, setNewCategory] = useState<string>("");
   const [newKeyword, setNewKeyword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const { data: topics = [], isLoading, refetch } = useQuery({
     queryKey: ["content-topics", filter],
@@ -45,7 +46,8 @@ export const TopicBank = () => {
         .select("id,title_lv,category_id,primary_keyword,angle_hint,priority,status")
         .order("priority")
         .order("created_at", { ascending: false });
-      if (filter !== "all") q = q.eq("status", filter);
+      if (filter === "idea") q = q.eq("status", "idea").is("used_post_id", null);
+      else if (filter !== "all") q = q.eq("status", filter);
       const { data, error } = await q;
       if (error) throw error;
       return (data as any) ?? [];
@@ -86,6 +88,26 @@ export const TopicBank = () => {
     else { toast.success("Atgriezta tēmu bankā"); refetch(); }
   };
 
+  const generateTopics = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-content-topics", {
+        body: { count: 12 },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const created = (data as any)?.created ?? 0;
+      toast.success(`AI pievienoja ${created} jaunas tēmas`);
+      setFilter("idea");
+      await qc.invalidateQueries({ queryKey: ["content-topics"] });
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Tēmu ģenerēšana neizdevās");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -107,7 +129,7 @@ export const TopicBank = () => {
         </CardContent>
       </Card>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -118,6 +140,10 @@ export const TopicBank = () => {
           </SelectContent>
         </Select>
         <span className="text-xs text-muted-foreground font-body">{topics.length} tēmas</span>
+        <Button variant="outline" className="gap-1.5 sm:ml-auto" onClick={generateTopics} disabled={generating}>
+          {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+          Ģenerēt tēmas ar AI
+        </Button>
       </div>
 
       {isLoading ? (

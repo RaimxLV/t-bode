@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { jsonrepair } from "npm:jsonrepair@3.13.1";
 import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
@@ -83,7 +84,15 @@ Raksti lasītājam Latvijā. Sāc ar īsu atbildi uz lasītāja jautājumu, tad 
 
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content ?? "{}";
-  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  let parsed: any = raw;
+  if (typeof raw === "string") {
+    const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/\s*```$/, "");
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      parsed = JSON.parse(jsonrepair(cleaned));
+    }
+  }
   if (!parsed?.title || !parsed?.content) throw new Error("AI returned incomplete article");
   return parsed;
 }
@@ -150,6 +159,23 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Reserve the selected topics before generation. This prevents repeated clicks
+    // from generating the same topics while an earlier request is still running.
+    const selectedIds = topics.map((topic) => topic.id);
+    const { data: reserved, error: reserveError } = await admin
+      .from("content_topics")
+      .update({ status: "generating" })
+      .in("id", selectedIds)
+      .eq("status", "idea")
+      .select("*");
+    if (reserveError) throw reserveError;
+    topics = reserved ?? [];
+    if (topics.length === 0) {
+      return new Response(JSON.stringify({ error: "Šīs tēmas jau tiek gatavotas. Uzgaidi un atjauno kalendāru." }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: cats } = await admin.from("content_categories").select("id, name_lv");
     const catName = new Map((cats ?? []).map((c: any) => [c.id, c.name_lv]));
 
@@ -165,11 +191,22 @@ Deno.serve(async (req) => {
     );
     const freeSlots = slots.filter((s) => !takenDays.has(s.slice(0, 10)));
 
+    if (freeSlots.length === 0) {
+      await admin.from("content_topics").update({ status: "idea" }).in("id", topics.map((topic) => topic.id));
+      return new Response(JSON.stringify({ error: "Šis mēnesis jau ir pilnībā sagatavots — visi publicēšanas datumi ir aizņemti." }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (topics.length > freeSlots.length) {
+      const unused = topics.slice(freeSlots.length);
+      await admin.from("content_topics").update({ status: "idea" }).in("id", unused.map((topic) => topic.id));
+      topics = topics.slice(0, freeSlots.length);
+    }
+
     const created: any[] = [];
     const failed: any[] = [];
 
-    for (let i = 0; i < topics.length; i++) {
-      const topic = topics[i];
+    const processTopic = async (topic: any, i: number) => {
       try {
         const article = await generateArticle(
           LOVABLE_API_KEY,
@@ -210,8 +247,15 @@ Deno.serve(async (req) => {
         created.push(post);
       } catch (e) {
         console.error("article generation failed", topic.id, e);
+        await admin.from("content_topics").update({ status: "idea" }).eq("id", topic.id);
         failed.push({ topic_id: topic.id, title: topic.title_lv, error: String(e) });
       }
+    };
+
+    // Generate in small parallel batches so the browser request finishes before
+    // the edge timeout without creating a large burst of AI requests.
+    for (let i = 0; i < topics.length; i += 3) {
+      await Promise.all(topics.slice(i, i + 3).map((topic, offset) => processTopic(topic, i + offset)));
     }
 
     return new Response(JSON.stringify({ ok: true, created, failed }), {
