@@ -1,0 +1,1 @@
+update public.blog_posts set status = 'draft', published_at = null where status = 'published';
