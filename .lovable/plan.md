@@ -1,96 +1,72 @@
-## Mērķi
+# Idejas un Padomi — satura sistēma ar mēneša partiju
 
-1. Sakārtot dizainu haosu — viena vieta visiem dizainiem ar filtriem
-2. Fona noņemšana arī kampaņas dizainiem (caur auto-saglabāšanu bibliotēkā)
-3. Brīvais AI ģenerators bez kampaņas (smieklīgi kaķi u.tml.)
+Pārbūvē esošo "Svētku iedvesmai" blogu par pilnvērtīgu SEO satura centru: idejas, dāvanas, drukas tehnoloģijas un svētki vienā vietā. Sadaļa navigācijā jau ir paslēpta, kamēr strādājam.
 
-## Pašreizējais haoss
+## Darba princips (kā tu to lietosi)
 
-| Vieta | Kas tur ir | Problēma |
-|---|---|---|
-| Autopilot → CampaignWizard | Kampaņas dizaini + (jau eksistē) bibliotēkas panelis blakus | Bg-remove tikai bibliotēkai |
-| **Melnraksti → Dizaini** (`DraftDesignsGallery`) | Apvieno `design_library` + `campaign_designs` bez `product_id` | Dublē Bulk Studio Bibliotēku |
-| **Bulk Studio → Bibliotēka** (`DesignLibrary`) | Tikai `design_library` augšupielādes | Dublē Melnraksti |
-| **Dizaini → Krekli** (`DesignsToProducts`) | Pārvērš dizainus produktos | Tas paliek — atsevišķa funkcija |
-
-## Risinājums
-
-### 1. Vienota "Dizainu bibliotēka" (jauna komponente)
-
-Aizvietot `DraftDesignsGallery` un `Bulk Studio → Bibliotēka` ar vienu `UnifiedDesignLibrary` komponenti.
-
-**Filtri (chip-row):**
-- Visi
-- Augšupielādēti (`design_library` bez `campaign` tag)
-- Kampaņu ★ favorīti (`design_library` ar `campaign` tag)
-- Kampaņu melnraksti (`campaign_designs` ar `product_id IS NULL`)
-- Bez fona (PNG ar transparency tagu)
-
-**Darbības katram:** Apskatīt (lightbox) · Noņemt fonu · Lejupielādēt (cm dialogs) · Pārvērst produktā · Dzēst.
-
-Atjaunot `Melnraksti` tabu lai rāda tikai produktu melnrakstus (paslēpt `Dizaini` apakštabu — tos rādīs bibliotēka).
-`Bulk Studio → Bibliotēka` tabs paliek bet `DesignLibrary.tsx` aizvietota ar to pašu `UnifiedDesignLibrary`.
-
-### 2. Fona noņemšana kampaņas dizainiem
-
-`CampaignWizard.tsx` dizainu cell + jauns lightbox (atvērts klikšķinot bildi):
-- Poga **"Noņemt fonu"** abās vietās
-- Plūsma: ja dizains vēl nav bibliotēkā → izsauc `saveToLibrary(d)` (jau eksistē) → tad `removeDesignBackground([newLibId])` → atsvaidzina `signedUrls` ar jauno transparent PNG
-- Lietotāja teiktais: "vispirms automātiski saglabā bibliotēkā" ✓
-
-Jauns `CampaignDesignLightbox` komponents — atver dizainu pilnā izmērā ar pogām: ★ · Noņemt fonu · Lejupielādēt · Pārģenerēt · Dzēst.
-
-### 3. Brīvais AI ģenerators (jauns tabs Autopilot)
-
-Jauns `Autopilot` apakštabu sākums:
-- **Svētku kampaņas** (esošais `AutopilotDashboard`)
-- **AI Studija** (jauns) — brīvs prompts bez kampaņas
-
-`FreeDesignStudio.tsx`:
-- Liels textarea prompts ("smieklīgi kaķi astronauta tērpā…")
-- Skaits (1–8), izmērs (kvadrāts / portrets), modelis (auto / recraft / flux-pro u.c.)
-- Poga "Ģenerē" — izsauc esošu `generate-campaign-designs` edge funkciju ar **virtuālu kampaņu** (status `archived`, title "AI Studija"). Vai vienkāršāks: jauna mazāka funkcija `generate-free-design` kas izsauc fal.ai tieši un saglabā rezultātu **uzreiz `design-library` bucket + `design_library` row** ar tagu `["ai", "studio"]`.
-- Pēc ģenerēšanas: rezultāti parādās zem formas + automātiski bibliotēkā ar tagu "studio"
-
-**Tehnisks risinājums:** Izveidot jaunu mazu edge funkciju `generate-free-design` (reuses fal.ai loģiku no `generate-campaign-designs`), lai izvairītos no fake-campaign hakeriem. Saglabā tieši `design-library` ar tagu `studio`.
-
-### 4. Admin tabu sakārtošana
-
-```
-Autopilot (apakštabi: Kampaņas | AI Studija)
-Dizainu bibliotēka (jauns — aizvieto "Melnraksti → Dizaini")
-Dizaini → Krekli (paliek)
-Melnraksti (tikai produktu melnraksti — bez apakštabu)
+```text
+1x mēnesī:  "Sagatavot nākamo mēnesi"  ->  AI uzģenerē visus mēneša rakstus (melnraksti)
+            Tu vienā sesijā: pārlasi, saliec bildes, spied OK
+2 raksti/nedēļā automātiski publicējas pēc grafika
+Ja nedēļā ir svētki -> tā nedēļa saņem 3. rakstu (svētku raksts)
 ```
 
-`Bulk Studio → Bibliotēka` paliek bet rāda to pašu unified komponenti (vai linkojas uz galveno tabu).
+## Nosaukums un adreses
 
-## Tehniskas detaļas
+- Sadaļa: **Idejas un Padomi**
+- Jauns ceļš `/idejas`, raksti `/idejas/<slug>`
+- Vecais `/blog` un `/blog/<slug>` paliek dzīvs un pāradresē uz jaunajiem (301-stila), lai Google pozīcijas nepazūd
+- Esošie svētku raksti pāriet uz jauno sistēmu ar kategoriju "Svētki" un iekļaujas kopējā plūsmā
 
-- **Tags konvencija `design_library.tags`:** `upload` (manuāls augšupl.), `campaign` (saglabāts no kampaņas), `studio` (no AI Studio), `transparent` (pēc bg-remove).
-- **`removeDesignBackground`** funkcija jau strādā — pielietot to no UnifiedDesignLibrary un no CampaignWizard pēc auto-save.
-- **`DownloadSizeDialog`** atkārtoti izmantot abās vietās.
-- **Migrācijas:** Nav vajadzīgas — visas datu struktūras jau eksistē. Tikai pievienojam tagus.
+## Kategorijas (3 pīlāri)
 
-## Failu izmaiņas
+| Kategorija | Saturs |
+|---|---|
+| Drukas tehnoloģijas | DTF, DTG, sietspiede, sublimācija, vinils, kopšana, materiāli |
+| Idejas un dāvanas | Ko dāvināt, komandām, kāzām, dzimšanas dienām, bērniem |
+| Svētki | Sezonālie raksti — automātiski no svētku kalendāra |
 
-**Jauni:**
-- `src/components/admin/UnifiedDesignLibrary.tsx` — galvenā jaunā komponente
-- `src/components/admin/FreeDesignStudio.tsx` — AI ģenerators bez kampaņas
-- `src/components/admin/CampaignDesignLightbox.tsx` — lightbox ar darbībām
-- `supabase/functions/generate-free-design/index.ts` — viena bilde, tieši uz library
+## Kā top saturs
 
-**Maina:**
-- `src/components/admin/AutopilotDashboard.tsx` — pievienot apakštabu (Kampaņas / AI Studija)
-- `src/components/admin/CampaignWizard.tsx` — pievienot bg-remove pogu dizainu cell + atvērt lightbox uz klikšķa
-- `src/pages/Admin.tsx` — pārdēvēt "Melnraksti → Dizaini" → atsevišķs "Dizainu bibliotēka" tabs; melnraksti = tikai produkti
-- `src/components/admin/BulkStudio.tsx` — Bibliotēka tabs izsauc UnifiedDesignLibrary
+1. **Tēmu banka** — jauna tabula ar tēmu, kategoriju, atslēgvārdu, prioritāti. Aizpildu to ar ~60 sākuma tēmām (reālas, LV tirgum atbilstošas). AI var piedāvāt vēl.
+2. **"Sagatavot mēnesi"** poga — paņem nākamā mēneša neizmantotās tēmas, sadala pa nedēļām (2/ned. + svētku bonuss), katrai uzģenerē pilnu LV rakstu ar virsrakstiem, sarakstiem, tabulām un FAQ. Viss kā melnraksts ar plānoto datumu.
+3. **Tava sesija** — mēneša kalendārā redzi visus rakstus, katram statuss (nav bildes / gatavs / OK / publicēts). Klikšķis atver rediģēšanu: teksts, bildes, datums. Poga "Apstiprināt visu mēnesi".
+4. **Auto-publicēšana** — plānots uzdevums reizi dienā publicē tos, kuriem pienācis datums UN ir tavs OK. Bez OK nekas nepublicējas — pilnīga kontrole.
 
-**Aizvietots (paliek import-savietojams):**
-- `src/components/admin/DraftDesignsGallery.tsx` — kļūst plāns wrapper ap UnifiedDesignLibrary (vai dzēsts)
-- `src/components/admin/bulk/DesignLibrary.tsx` — tāpat
+## Kvalitātes vārti (pret Google sodu)
 
-## Pieņēmumi / atvērtie
+- Max 2 raksti nedēļā (+1 svētku nedēļā), nekad vairāk
+- Nepublicējas bez vāka bildes un bez min. garuma
+- Aizliegts izgudrot cenas, atsauksmes, statistiku vai garantijas — tikai T-Bode reālie fakti
+- Slug un virsraksta dublikātu pārbaude pret jau esošajiem rakstiem
+- Katrs raksts obligāti saista 2–3 citus rakstus + 1 produktu (iekšējās saites = klasteris, tas ir tas, kas reāli ceļ pozīcijas)
 
-- AI Studio rezultāti iet **uzreiz uz bibliotēku** (ne uz "starprezultātu sarakstu"). Ja gribi pirms-apstiprināšanu, pasaki.
-- "Transparent" tag tiks pievienots automātiski pēc bg-remove (lai filtrs strādā).
+## Lasīšanas UI
+
+- Sadaļas sākumlapa ar 3 kategoriju kartēm + jaunākie raksti
+- Raksta lapa: vāka bilde, lasīšanas laiks, satura rādītājs, glīta tipogrāfija, tabulas, FAQ akordeons, "Saistītie raksti", CTA uz personalizāciju
+- Kategoriju lapas `/idejas/kategorija/<slug>`
+- Viss T-Bode stilā (tumšs, sarkanoranžs akcents, Bebas Neue virsraksti)
+
+## SEO
+
+- `Article` + `BreadcrumbList` + `FAQPage` JSON-LD katram rakstam
+- Kategoriju lapas ar savu title/description
+- Sitemap: viens avots, iekļauj rakstus un kategorijas
+- Iekšējās saites no galvenās lapas un produktu lapām uz relevantiem rakstiem
+
+## Tehniskā daļa
+
+- Jaunas tabulas: `content_topics` (tēmu banka), `content_categories`; `blog_posts` papildinājumi: `category_id`, `approved_at`, `reading_minutes`, `faq` (jsonb), `internal_links` (jsonb)
+- Jaunas funkcijas: `generate-month-content` (mēneša partija), `publish-scheduled-posts` (dienas cron), `suggest-content-topics`
+- Esošais `autopilot-tick` paliek svētku dizainiem/produktiem; blogu daļa pāriet uz jauno grafiku
+- Admin: `ContentCalendar` (mēneša režģis), `TopicBank`, esošais `BlogManager` kļūst par raksta redaktoru
+
+## Kārtība
+
+1. DB + kategorijas + veco rakstu migrācija, `/blog` -> `/idejas` pāradresācijas
+2. Publiskā sadaļa un raksta lapa ar jauno UI + schema
+3. Tēmu banka ar 60 sākuma tēmām
+4. Mēneša ģenerators + kalendārs + apstiprināšana
+5. Auto-publicēšanas cron + sitemap
+6. Atveram navigācijā, kad pirmais mēnesis ir gatavs
