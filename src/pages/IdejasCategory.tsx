@@ -46,7 +46,7 @@ const IdejasCategory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-paper text-paper-foreground flex flex-col">
       {category && (
         <Seo
           title={`${category.name_lv} | Idejas un Padomi | T-Bode`}
@@ -60,34 +60,36 @@ const IdejasCategory = () => {
         />
       )}
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 pt-24 pb-20">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-5 md:px-10 pt-24 pb-24">
         <Link
           to="/idejas"
-          className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6"
+          className="inline-flex items-center gap-1.5 text-[10px] font-body font-bold uppercase tracking-[0.2em] text-foreground/50 hover:text-cta-red transition-colors mb-8"
         >
-          <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Idejas un Padomi
+          <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> Idejas un Padomi
         </Link>
-        <h1 className="font-display text-4xl sm:text-5xl mb-3">{category?.name_lv ?? ""}</h1>
+        <h1 className="font-display text-5xl sm:text-7xl uppercase leading-[0.85] mb-4">
+          {category?.name_lv ?? ""}
+        </h1>
         {category?.description_lv && (
-          <p className="text-muted-foreground font-body text-lg max-w-2xl mb-10">
+          <p className="font-body font-light text-lg text-foreground/60 max-w-xl mb-14 border-b border-foreground/10 pb-10">
             {category.description_lv}
           </p>
         )}
 
         {isLoading || catLoading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-12">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-72 rounded-xl" />
+              <Skeleton key={i} className="aspect-square" />
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <p className="text-muted-foreground font-body py-16 text-center">
+          <p className="font-body text-foreground/50 py-24 text-center">
             Šajā kategorijā raksti vēl tiek sagatavoti.
           </p>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
             {posts.map((p) => (
-              <ArticleCard key={p.id} post={p} categoryName={category?.name_lv} />
+              <ArticleCard key={p.id} post={p} categoryName={category?.name_lv} variant="square" />
             ))}
           </div>
         )}
