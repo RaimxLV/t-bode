@@ -43,6 +43,11 @@
 
     --cta-red: 0 72% 51%;
 
+    /* Editorial content hub (Idejas un Padomi) */
+    --paper: 36 33% 98%;
+    --paper-foreground: 0 0% 10%;
+    --paper-muted: 30 12% 93%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 15%;
     --sidebar-primary: 0 0% 12%;

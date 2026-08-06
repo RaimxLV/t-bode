@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,12 +8,10 @@ import { Seo } from "@/components/Seo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArticleCard, type ArticleCardPost } from "@/components/ideas/ArticleCard";
 import { useContentCategories } from "@/hooks/useContentCategories";
-import { Gift, PartyPopper, Printer, ArrowRight, Sparkles } from "lucide-react";
-
-const ICONS: Record<string, typeof Printer> = { Printer, Gift, PartyPopper };
 
 const IdejasIndex = () => {
   const { data: categories = [] } = useContentCategories();
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["ideas-posts"],
     queryFn: async (): Promise<ArticleCardPost[]> => {
@@ -30,13 +29,14 @@ const IdejasIndex = () => {
   const categoryName = (id: string | null) =>
     categories.find((c) => c.id === id)?.name_lv;
 
-  const [featured, ...rest] = posts;
+  const visible = activeCategory ? posts.filter((p) => p.category_id === activeCategory) : posts;
+  const [featured, ...rest] = visible;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-paper text-paper-foreground flex flex-col">
       <Seo
-        title="Idejas un Padomi | T-Bode"
-        description="Dāvanu idejas, personalizācijas padomi un skaidrojumi par drukas tehnoloģijām — DTF, DTG, sietspiedi un sublimāciju."
+        title="Idejas un Padomi — ceļveži personalizētam apģērbam | T-Bode"
+        description="Praktiski ceļveži un dāvanu idejas: kā plānot merch komandai, klasei vai pasākumam un kā kopt apdrukātu apģērbu."
         canonical="/idejas"
         breadcrumbs={[
           { name: "Sākums", url: "/" },
@@ -45,68 +45,100 @@ const IdejasIndex = () => {
       />
       <Navbar />
       <main className="flex-1">
-        <section className="border-b border-border bg-card/40">
-          <div className="container mx-auto px-4 pt-24 pb-12">
-            <p className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-body text-primary mb-4">
-              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> T-Bode zināšanas
-            </p>
-            <h1 className="font-display text-4xl sm:text-6xl leading-[0.95] mb-4 max-w-3xl">
-              Idejas un Padomi
-            </h1>
-            <p className="text-muted-foreground font-body text-lg max-w-2xl">
-              Praktiski padomi par apdrukas tehnoloģijām un pārbaudītas dāvanu idejas.
-              Bez tukšas runas — tikai tas, kas noder, pirms pasūti personalizētu apģērbu.
-            </p>
-          </div>
-        </section>
+        <div className="max-w-7xl w-full mx-auto px-5 md:px-10 pt-24 pb-24">
+          <header className="mb-14 md:mb-16 border-b border-foreground/10 pb-10 md:pb-12">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+              <div className="max-w-2xl">
+                <h1 className="font-display text-6xl sm:text-7xl md:text-8xl leading-[0.8] uppercase tracking-tight">
+                  Idejas un <br />
+                  <span className="text-cta-red">Padomi</span>
+                </h1>
+                <p className="mt-6 font-body font-light text-lg text-foreground/60 max-w-md">
+                  Ceļveži un idejas personalizētam apģērbam — kā saplānot, ko izvēlēties un kā to saglabāt kārtīgu.
+                </p>
+              </div>
 
-        <section className="container mx-auto px-4 py-12">
-          <div className="grid sm:grid-cols-3 gap-4">
-            {categories.map((c) => {
-              const Icon = ICONS[c.icon_key ?? ""] ?? Sparkles;
-              return (
-                <Link
-                  key={c.id}
-                  to={`/idejas/kategorija/${c.slug}`}
-                  className="group bg-card border border-border rounded-xl p-6 hover:border-primary/60 transition-colors"
+              <nav
+                aria-label="Rakstu kategorijas"
+                className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-body uppercase tracking-[0.2em] font-bold"
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveCategory(null)}
+                  className={
+                    activeCategory === null
+                      ? "text-cta-red border-b-2 border-cta-red pb-0.5"
+                      : "text-foreground/60 hover:text-cta-red transition-colors pb-0.5"
+                  }
                 >
-                  <Icon className="w-7 h-7 text-primary mb-4" aria-hidden="true" />
-                  <h2 className="font-display text-xl mb-2 group-hover:text-primary transition-colors">
+                  Visi raksti
+                </button>
+                {categories.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setActiveCategory(c.id)}
+                    className={
+                      activeCategory === c.id
+                        ? "text-cta-red border-b-2 border-cta-red pb-0.5"
+                        : "text-foreground/60 hover:text-cta-red transition-colors pb-0.5"
+                    }
+                  >
                     {c.name_lv}
-                  </h2>
-                  {c.description_lv && (
-                    <p className="text-sm text-muted-foreground font-body mb-4">{c.description_lv}</p>
-                  )}
-                  <span className="inline-flex items-center gap-1 text-sm font-body text-primary">
-                    Skatīt rakstus <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </header>
 
-        <section className="container mx-auto px-4 pb-20">
-          <h2 className="font-display text-2xl sm:text-3xl mb-6">Jaunākie raksti</h2>
           {isLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-72 rounded-xl" />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-10 lg:gap-16">
+              <Skeleton className="md:col-span-8 aspect-[16/9]" />
+              <Skeleton className="md:col-span-4 aspect-[3/4]" />
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="md:col-span-4 aspect-square" />
               ))}
             </div>
-          ) : posts.length === 0 ? (
-            <p className="text-muted-foreground font-body py-16 text-center">
+          ) : visible.length === 0 ? (
+            <p className="font-body text-foreground/50 py-24 text-center">
               Pirmie raksti tiek sagatavoti — drīz būs lasāmi.
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <ArticleCard post={featured} categoryName={categoryName(featured.category_id)} featured />
-              {rest.map((p) => (
-                <ArticleCard key={p.id} post={p} categoryName={categoryName(p.category_id)} />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16">
+              <div className="md:col-span-8">
+                <ArticleCard
+                  post={featured}
+                  categoryName={categoryName(featured.category_id)}
+                  variant="lead"
+                />
+              </div>
+              {rest.map((p, i) => (
+                <div key={p.id} className={i === 0 ? "md:col-span-4" : "md:col-span-4"}>
+                  <ArticleCard
+                    post={p}
+                    categoryName={categoryName(p.category_id)}
+                    variant={i === 0 ? "portrait" : "square"}
+                    showExcerpt={i === 0}
+                  />
+                </div>
               ))}
             </div>
           )}
-        </section>
+
+          {categories.length > 0 && (
+            <div className="mt-24 pt-10 border-t border-foreground/10 flex flex-wrap justify-center gap-x-8 gap-y-3">
+              {categories.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/idejas/kategorija/${c.slug}`}
+                  className="font-body text-xs uppercase tracking-[0.2em] text-foreground/50 hover:text-cta-red transition-colors"
+                >
+                  {c.name_lv}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
       <Footer />
     </div>
