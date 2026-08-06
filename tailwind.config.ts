@@ -19,6 +19,11 @@ export default {
       },
       colors: {
         "cta-red": "hsl(var(--cta-red))",
+        paper: {
+          DEFAULT: "hsl(var(--paper))",
+          foreground: "hsl(var(--paper-foreground))",
+          muted: "hsl(var(--paper-muted))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
