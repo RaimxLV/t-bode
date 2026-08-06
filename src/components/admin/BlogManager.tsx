@@ -192,7 +192,7 @@ export const BlogManager = () => {
                   <FileText className="w-3.5 h-3.5" /> Rediģēt
                 </Button>
                 <Button size="sm" variant="outline" asChild className="gap-1.5">
-                  <a href={`/blog/${p.slug}${p.status !== "published" ? "?preview=1" : ""}`} target="_blank" rel="noreferrer">
+                  <a href={`/idejas/${p.slug}${p.status !== "published" ? "?preview=1" : ""}`} target="_blank" rel="noreferrer">
                     <Eye className="w-3.5 h-3.5" /> {p.status === "published" ? "Skatīt" : "Priekšskatīt"}
                   </a>
                 </Button>
@@ -223,7 +223,7 @@ export const BlogManager = () => {
     <div className="space-y-3">
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
-          <strong>Svētku iedvesmas</strong> sadaļā rediģē tikai manuāli veidotos rakstus. Autopilot kampaņu raksti tiek rediģēti pašā <strong>Autopilot</strong> vedņa 3. solī, kur tagad ir arī vāka attēla maiņa.
+          Šeit rediģē <strong>Idejas un Padomi</strong> rakstus. AI sagatavotos mēneša melnrakstus ērtāk pārskatīt <strong>Mēneša kalendārā</strong>. Autopilot kampaņu raksti tiek rediģēti Autopilot vedņa 3. solī.
         </CardContent>
       </Card>
 

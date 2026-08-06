@@ -134,7 +134,7 @@ export const AutopilotDashboard = ({
           <Wand2 className="w-4 h-4" /> AI Studija
         </TabsTrigger>
         <TabsTrigger value="blog" className="gap-1.5">
-          <FileText className="w-4 h-4" /> Svētku iedvesmai
+          <FileText className="w-4 h-4" /> Kampaņu raksti
         </TabsTrigger>
         <TabsTrigger value="printzones" className="gap-1.5">
           <Wand2 className="w-4 h-4" /> Print zonas

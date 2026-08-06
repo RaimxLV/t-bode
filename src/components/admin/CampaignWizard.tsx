@@ -1592,8 +1592,8 @@ function StepBlog({
   }, [firstStarUrl, blogPost?.id]);
 
   const previewSlug = savedBlogSlug ?? blogPost?.slug ?? null;
-  const previewHref = previewSlug ? `/blog/${previewSlug}?preview=1` : null;
-  const embeddedPreviewHref = previewSlug ? `/blog/${previewSlug}?preview=1&embed=1` : null;
+  const previewHref = previewSlug ? `/idejas/${previewSlug}?preview=1` : null;
+  const embeddedPreviewHref = previewSlug ? `/idejas/${previewSlug}?preview=1&embed=1` : null;
 
   if (!blogPost) {
     return (
@@ -1731,7 +1731,7 @@ function PublishSuccess({ success, onClose }: { success: { products: number; blo
       <div className="flex justify-center gap-2 pt-2 flex-wrap">
         {success.blogSlug && (
           <Button asChild variant="outline">
-            <a href={`/blog/${success.blogSlug}`} target="_blank" rel="noreferrer">
+            <a href={`/idejas/${success.blogSlug}`} target="_blank" rel="noreferrer">
               <ExternalLink className="w-4 h-4 mr-1.5" /> Atvērt blogu
             </a>
           </Button>

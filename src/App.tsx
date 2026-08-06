@@ -64,6 +64,14 @@ const LegacyProductRedirect = () => {
   return <Navigate to={`/produkti/${target}${search}`} replace />;
 };
 
+// Redirect old /blog/:slug article URLs to the new /idejas/:slug path.
+const LegacyArticleRedirect = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const { search } = useLocation();
+  if (!slug) return <Navigate to="/idejas" replace />;
+  return <Navigate to={`/idejas/${slug}${search}`} replace />;
+};
+
 // Lazy-loaded routes for code splitting
 const DesignYourOwn = lazy(() => import("./pages/DesignYourOwn.tsx"));
 const OurCollection = lazy(() => import("./pages/OurCollection.tsx"));
@@ -79,7 +87,8 @@ const Terms = lazy(() => import("./pages/Terms.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Install = lazy(() => import("./pages/Install.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
-const BlogIndex = lazy(() => import("./pages/BlogIndex.tsx"));
+const IdejasIndex = lazy(() => import("./pages/IdejasIndex.tsx"));
+const IdejasCategory = lazy(() => import("./pages/IdejasCategory.tsx"));
 const Veikali = lazy(() => import("./pages/Veikali.tsx"));
 const KasIrDtf = lazy(() => import("./pages/KasIrDtf.tsx"));
 
@@ -230,8 +239,13 @@ const App = () => {
                         <Route path="/install" element={<Install />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/admin" element={<Admin />} />
-                        <Route path="/blog/:slug" element={<BlogPost />} />
-                        <Route path="/blog" element={<BlogIndex />} />
+                        {/* Idejas un Padomi (content hub) */}
+                        <Route path="/idejas" element={<IdejasIndex />} />
+                        <Route path="/idejas/kategorija/:slug" element={<IdejasCategory />} />
+                        <Route path="/idejas/:slug" element={<BlogPost />} />
+                        {/* Legacy blog URLs → new content hub (keeps indexed equity) */}
+                        <Route path="/blog/:slug" element={<LegacyArticleRedirect />} />
+                        <Route path="/blog" element={<LegacyRedirect to="/idejas" />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/veikali" element={<Veikali />} />
                         <Route path="/auduma-maisinu-apdruka" element={<AudumaMaisinuApdruka />} />
@@ -263,9 +277,9 @@ const App = () => {
                         <Route path="/katalogs" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/kolekcija" element={<LegacyRedirect to="/collection" />} />
                         <Route path="/products/*" element={<LegacyRedirect to="/collection" />} />
-                        <Route path="/blogs/*" element={<LegacyRedirect to="/blog" />} />
-                        <Route path="/news/*" element={<LegacyRedirect to="/blog" />} />
-                        <Route path="/jaunumi/*" element={<LegacyRedirect to="/blog" />} />
+                        <Route path="/blogs/*" element={<LegacyRedirect to="/idejas" />} />
+                        <Route path="/news/*" element={<LegacyRedirect to="/idejas" />} />
+                        <Route path="/jaunumi/*" element={<LegacyRedirect to="/idejas" />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
