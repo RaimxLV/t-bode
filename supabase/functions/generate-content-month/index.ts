@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { jsonrepair } from "npm:jsonrepair@3.13.1";
 import { requireAdmin } from "../_shared/admin-auth.ts";
 
 const corsHeaders = {
@@ -89,10 +90,7 @@ Raksti lasītājam Latvijā. Sāc ar īsu atbildi uz lasītāja jautājumu, tad 
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      const start = cleaned.indexOf("{");
-      const end = cleaned.lastIndexOf("}");
-      if (start < 0 || end <= start) throw new Error("AI returned invalid JSON");
-      parsed = JSON.parse(cleaned.slice(start, end + 1));
+      parsed = JSON.parse(jsonrepair(cleaned));
     }
   }
   if (!parsed?.title || !parsed?.content) throw new Error("AI returned incomplete article");
