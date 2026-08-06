@@ -83,7 +83,18 @@ Raksti lasītājam Latvijā. Sāc ar īsu atbildi uz lasītāja jautājumu, tad 
 
   const data = await res.json();
   const raw = data?.choices?.[0]?.message?.content ?? "{}";
-  const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+  let parsed: any = raw;
+  if (typeof raw === "string") {
+    const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/\s*```$/, "");
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      const start = cleaned.indexOf("{");
+      const end = cleaned.lastIndexOf("}");
+      if (start < 0 || end <= start) throw new Error("AI returned invalid JSON");
+      parsed = JSON.parse(cleaned.slice(start, end + 1));
+    }
+  }
   if (!parsed?.title || !parsed?.content) throw new Error("AI returned incomplete article");
   return parsed;
 }
@@ -150,6 +161,23 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Reserve the selected topics before generation. This prevents repeated clicks
+    // from generating the same topics while an earlier request is still running.
+    const selectedIds = topics.map((topic) => topic.id);
+    const { data: reserved, error: reserveError } = await admin
+      .from("content_topics")
+      .update({ status: "generating" })
+      .in("id", selectedIds)
+      .eq("status", "idea")
+      .select("*");
+    if (reserveError) throw reserveError;
+    topics = reserved ?? [];
+    if (topics.length === 0) {
+      return new Response(JSON.stringify({ error: "Šīs tēmas jau tiek gatavotas. Uzgaidi un atjauno kalendāru." }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: cats } = await admin.from("content_categories").select("id, name_lv");
     const catName = new Map((cats ?? []).map((c: any) => [c.id, c.name_lv]));
 
@@ -168,7 +196,7 @@ Deno.serve(async (req) => {
     const created: any[] = [];
     const failed: any[] = [];
 
-    for (let i = 0; i < topics.length; i++) {
+    const processTopic = async (topic: any, i: number) => {
       const topic = topics[i];
       try {
         const article = await generateArticle(
@@ -210,8 +238,15 @@ Deno.serve(async (req) => {
         created.push(post);
       } catch (e) {
         console.error("article generation failed", topic.id, e);
+        await admin.from("content_topics").update({ status: "idea" }).eq("id", topic.id);
         failed.push({ topic_id: topic.id, title: topic.title_lv, error: String(e) });
       }
+    };
+
+    // Generate in small parallel batches so the browser request finishes before
+    // the edge timeout without creating a large burst of AI requests.
+    for (let i = 0; i < topics.length; i += 3) {
+      await Promise.all(topics.slice(i, i + 3).map((topic, offset) => processTopic(topic, i + offset)));
     }
 
     return new Response(JSON.stringify({ ok: true, created, failed }), {

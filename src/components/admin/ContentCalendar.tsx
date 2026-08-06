@@ -79,9 +79,12 @@ export const ContentCalendar = () => {
       if ((data as any)?.error) throw new Error((data as any).error);
       const created = (data as any)?.created?.length ?? 0;
       const failed = (data as any)?.failed?.length ?? 0;
+      if (created === 0) {
+        throw new Error(failed ? `Neizdevās sagatavot ${failed} rakstus` : "Netika sagatavots neviens raksts");
+      }
       toast.success(`Sagatavoti ${created} melnraksti${failed ? `, ${failed} neizdevās` : ""}`);
       await refetch();
-      qc.invalidateQueries({ queryKey: ["content-topics"] });
+      await qc.invalidateQueries({ queryKey: ["content-topics"] });
     } catch (e: any) {
       toast.error(e?.message || "Ģenerēšana neizdevās");
     } finally {
