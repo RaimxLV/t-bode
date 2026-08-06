@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
         .eq("planned_month", monthStart)
         .order("priority")
         .limit(count);
-      topics = planned ?? [];
+      topics = (planned ?? []).filter((t: any) => isTopicInSeason(t.season_months, month));
       if (topics.length < count) {
         const { data: backlog } = await admin
           .from("content_topics")
@@ -91,14 +91,16 @@ Deno.serve(async (req) => {
           .eq("status", "idea")
           .is("planned_month", null)
           .order("priority")
-          .limit(count - topics.length);
-        topics = [...topics, ...(backlog ?? [])];
+          .limit((count - topics.length) * 6 + 20);
+        // Seasonal topics (e.g. Christmas) may only be used in their own months.
+        const inSeason = (backlog ?? []).filter((t: any) => isTopicInSeason(t.season_months, month));
+        topics = [...topics, ...inSeason.slice(0, count - topics.length)];
       }
     }
 
     if (topics.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Tēmu bankā nav brīvu tēmu. Pievieno jaunas tēmas." }),
+        JSON.stringify({ error: "Tēmu bankā nav brīvu tēmu šim mēnesim (sezonālās tēmas ir rezervētas saviem mēnešiem). Pievieno jaunas tēmas." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
