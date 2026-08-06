@@ -131,7 +131,7 @@ const BlogPost = () => {
   const canonicalUrl = post ? `https://t-bode.lv/idejas/${post.slug}` : "";
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-paper text-paper-foreground flex flex-col">
       {!isEmbeddedPreview && <Navbar />}
       {post && !isEmbeddedPreview && (
         <Seo
@@ -183,15 +183,18 @@ const BlogPost = () => {
           ]}
         />
       )}
-      <main className={`flex-1 max-w-3xl mx-auto px-4 sm:px-6 w-full ${isEmbeddedPreview ? "py-4 sm:py-5" : "pt-24 pb-16"}`}>
+      <main className={`flex-1 max-w-3xl mx-auto px-5 sm:px-6 w-full ${isEmbeddedPreview ? "py-4 sm:py-5" : "pt-24 pb-20"}`}>
         {isPreview && !isEmbeddedPreview && (
           <div className="mb-4 rounded border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-body text-primary">
             Priekšskatījuma režīms — ietver melnraksta produktus. Klientiem šis nav redzams.
           </div>
         )}
         {!isEmbeddedPreview && (
-          <Link to="/idejas" className="inline-flex items-center gap-1.5 text-sm font-body text-muted-foreground hover:text-foreground mb-6">
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Idejas un Padomi
+          <Link
+            to="/idejas"
+            className="inline-flex items-center gap-1.5 text-[10px] font-body font-bold uppercase tracking-[0.2em] text-foreground/50 hover:text-cta-red transition-colors mb-8"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> Idejas un Padomi
           </Link>
         )}
         {loading ? (
@@ -208,11 +211,14 @@ const BlogPost = () => {
           </div>
         ) : (
           <article>
-            <div className="flex flex-wrap items-center gap-3 mb-3 text-[11px] uppercase tracking-wider font-body text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-3 mb-4 text-[10px] uppercase tracking-[0.2em] font-body font-bold text-foreground/40">
               {categoryName && categorySlug && (
-                <Link to={`/idejas/kategorija/${categorySlug}`} className="text-primary hover:underline">
+                <Link to={`/idejas/kategorija/${categorySlug}`} className="hover:text-cta-red transition-colors">
                   {categoryName}
                 </Link>
+              )}
+              {categoryName && post.published_at && (
+                <span className="w-1 h-1 rounded-full bg-cta-red" aria-hidden="true" />
               )}
               {post.published_at && (
                 <span>
@@ -224,30 +230,32 @@ const BlogPost = () => {
                 </span>
               )}
             </div>
-            <h1 className="font-display text-3xl sm:text-5xl leading-[1.05] mb-4">{post.title}</h1>
+            <h1 className="font-display text-4xl sm:text-6xl uppercase leading-[0.9] mb-5">{post.title}</h1>
             {post.excerpt && (
-              <p className="text-lg font-body text-muted-foreground mb-8">{post.excerpt}</p>
+              <p className="text-lg sm:text-xl font-body font-light leading-relaxed text-foreground/60 mb-10 pb-10 border-b border-foreground/10">
+                {post.excerpt}
+              </p>
             )}
             {post.cover_image_url && (
-              <div className="w-full aspect-video rounded-xl mb-8 bg-muted flex items-center justify-center overflow-hidden border border-border">
+              <div className="w-full aspect-[16/9] mb-10 bg-paper-muted overflow-hidden">
                 <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover" />
               </div>
             )}
             {contentHtml && (
               <div
-                className="font-body text-[17px] text-foreground max-w-none scroll-smooth [&_h1]:text-3xl [&_h1]:font-display [&_h1]:mt-10 [&_h1]:mb-3 [&_h2]:text-2xl [&_h2]:sm:text-3xl [&_h2]:font-display [&_h2]:mt-10 [&_h2]:mb-3 [&_h2]:scroll-mt-24 [&_h3]:text-xl [&_h3]:font-display [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:scroll-mt-24 [&_p]:my-4 [&_p]:leading-[1.75] [&_strong]:font-semibold [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-4 [&_ul]:space-y-1.5 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-4 [&_ol]:space-y-1.5 [&_li]:leading-relaxed [&_blockquote]:border-l-2 [&_blockquote]:border-primary [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:my-6 [&_img]:rounded-xl [&_img]:my-6 [&_table]:w-full [&_table]:my-6 [&_table]:text-sm [&_table]:border-collapse [&_th]:border [&_th]:border-border [&_th]:bg-card [&_th]:p-2.5 [&_th]:text-left [&_th]:font-display [&_td]:border [&_td]:border-border [&_td]:p-2.5 [&_td]:align-top"
+                className="font-body text-[18px] font-light text-foreground/85 max-w-none scroll-smooth [&_h1]:font-display [&_h1]:text-3xl [&_h1]:uppercase [&_h1]:mt-14 [&_h1]:mb-4 [&_h2]:font-display [&_h2]:text-3xl [&_h2]:sm:text-4xl [&_h2]:uppercase [&_h2]:leading-[0.95] [&_h2]:mt-14 [&_h2]:mb-4 [&_h2]:scroll-mt-24 [&_h3]:font-display [&_h3]:text-2xl [&_h3]:mt-10 [&_h3]:mb-3 [&_h3]:scroll-mt-24 [&_p]:my-5 [&_p]:leading-[1.8] [&_strong]:font-semibold [&_strong]:text-foreground [&_a]:text-cta-red [&_a]:underline [&_a]:underline-offset-4 [&_ul]:list-none [&_ul]:pl-0 [&_ul]:my-6 [&_ul]:space-y-3 [&_ul>li]:relative [&_ul>li]:pl-6 [&_ul>li]:before:absolute [&_ul>li]:before:left-0 [&_ul>li]:before:top-[0.7em] [&_ul>li]:before:w-2 [&_ul>li]:before:h-[2px] [&_ul>li]:before:bg-cta-red [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-6 [&_ol]:space-y-3 [&_li]:leading-[1.8] [&_blockquote]:my-10 [&_blockquote]:border-l-0 [&_blockquote]:pl-0 [&_blockquote]:font-display [&_blockquote]:text-2xl [&_blockquote]:sm:text-3xl [&_blockquote]:leading-tight [&_blockquote]:text-foreground [&_blockquote]:not-italic [&_img]:my-8 [&_table]:w-full [&_table]:my-8 [&_table]:text-sm [&_table]:border-collapse [&_th]:border-b [&_th]:border-foreground/20 [&_th]:p-3 [&_th]:text-left [&_th]:font-display [&_th]:uppercase [&_td]:border-b [&_td]:border-foreground/10 [&_td]:p-3 [&_td]:align-top"
                 dangerouslySetInnerHTML={{ __html: contentHtml }}
               />
             )}
 
             {faq.length > 0 && (
-              <section className="mt-12 pt-8 border-t border-border">
-                <h2 className="font-display text-2xl mb-4">Biežāk uzdotie jautājumi</h2>
+              <section className="mt-16 pt-10 border-t border-foreground/10">
+                <h2 className="font-display text-3xl uppercase mb-6">Biežāk uzdotie jautājumi</h2>
                 <Accordion type="single" collapsible className="w-full">
                   {faq.map((f, i) => (
-                    <AccordionItem key={i} value={`faq-${i}`}>
+                    <AccordionItem key={i} value={`faq-${i}`} className="border-foreground/10">
                       <AccordionTrigger className="font-body text-left">{f.q}</AccordionTrigger>
-                      <AccordionContent className="font-body text-muted-foreground leading-relaxed">
+                      <AccordionContent className="font-body font-light text-foreground/65 leading-relaxed">
                         {f.a}
                       </AccordionContent>
                     </AccordionItem>
@@ -257,8 +265,8 @@ const BlogPost = () => {
             )}
 
             {products.length > 0 && (
-              <section className="mt-12 pt-8 border-t border-border">
-                <h2 className="font-display text-2xl mb-4">Šī raksta dizaini</h2>
+              <section className="mt-16 pt-10 border-t border-foreground/10">
+                <h2 className="font-display text-3xl uppercase mb-6">Šī raksta dizaini</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                   {products.map((p) => (
                     <ProductCard key={p.id} product={p as any} />
@@ -268,9 +276,11 @@ const BlogPost = () => {
             )}
 
             {!isEmbeddedPreview && (
-              <section className="mt-12 rounded-xl border border-border bg-card p-6 sm:p-8">
-                <h2 className="font-display text-2xl mb-2">Uzzīmē savu ideju uz krekla</h2>
-                <p className="text-muted-foreground font-body mb-5">
+              <section className="mt-16 border-t-2 border-foreground pt-10">
+                <h2 className="font-display text-3xl sm:text-4xl uppercase leading-[0.95] mb-3">
+                  Uzzīmē savu ideju uz krekla
+                </h2>
+                <p className="font-body font-light text-foreground/60 mb-6 max-w-md">
                   Personalizācijas konstruktorā vari salikt tekstu, bildi vai dizainu un uzreiz redzēt rezultātu.
                 </p>
                 <HeroCtaButton to="/design" label="Sākt personalizēt" />
@@ -278,11 +288,17 @@ const BlogPost = () => {
             )}
 
             {related.length > 0 && !isEmbeddedPreview && (
-              <section className="mt-12 pt-8 border-t border-border">
-                <h2 className="font-display text-2xl mb-6">Saistītie raksti</h2>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <section className="mt-16 pt-10 border-t border-foreground/10">
+                <h2 className="font-display text-3xl uppercase mb-8">Saistītie raksti</h2>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
                   {related.map((r) => (
-                    <ArticleCard key={r.id} post={r} categoryName={categoryName ?? undefined} />
+                    <ArticleCard
+                      key={r.id}
+                      post={r}
+                      categoryName={categoryName ?? undefined}
+                      variant="square"
+                      showExcerpt={false}
+                    />
                   ))}
                 </div>
               </section>
