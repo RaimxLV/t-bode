@@ -13,10 +13,19 @@ const Fallback = () => (
 /** Admin home for the "Idejas un Padomi" content hub. */
 export const ContentHubManager = () => (
   <Tabs defaultValue="calendar" className="w-full space-y-4">
-    <TabsList className="flex flex-wrap h-auto w-full justify-start gap-1 p-1">
-      <TabsTrigger value="calendar" className="gap-1.5"><CalendarDays className="w-4 h-4" /> Mēneša kalendārs</TabsTrigger>
-      <TabsTrigger value="articles" className="gap-1.5"><FileText className="w-4 h-4" /> Visi raksti</TabsTrigger>
-      <TabsTrigger value="topics" className="gap-1.5"><Lightbulb className="w-4 h-4" /> Tēmu banka</TabsTrigger>
+    <TabsList className="grid grid-cols-3 h-auto w-full gap-1 p-1 sm:flex sm:flex-wrap sm:justify-start">
+      <TabsTrigger value="calendar" className="flex-col gap-1 py-2 text-[11px] sm:flex-row sm:gap-1.5 sm:text-sm">
+        <CalendarDays className="w-4 h-4" /> <span className="sm:hidden">Kalendārs</span>
+        <span className="hidden sm:inline">Mēneša kalendārs</span>
+      </TabsTrigger>
+      <TabsTrigger value="articles" className="flex-col gap-1 py-2 text-[11px] sm:flex-row sm:gap-1.5 sm:text-sm">
+        <FileText className="w-4 h-4" /> <span className="sm:hidden">Raksti</span>
+        <span className="hidden sm:inline">Visi raksti</span>
+      </TabsTrigger>
+      <TabsTrigger value="topics" className="flex-col gap-1 py-2 text-[11px] sm:flex-row sm:gap-1.5 sm:text-sm">
+        <Lightbulb className="w-4 h-4" /> <span className="sm:hidden">Tēmas</span>
+        <span className="hidden sm:inline">Tēmu banka</span>
+      </TabsTrigger>
     </TabsList>
 
     <TabsContent value="calendar" className="mt-0">

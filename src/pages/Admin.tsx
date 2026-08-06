@@ -22,7 +22,6 @@ import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
 import { Seo } from "@/components/Seo";
-import { useCampaignReviewBadge } from "@/hooks/useCampaignReviewBadge";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -100,12 +99,6 @@ const Admin = () => {
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
   const { data: allCategories = [] } = useCategories(isAdmin);
-  const { data: pendingCampaigns = [] } = useCampaignReviewBadge(isAdmin);
-  const pendingCount = pendingCampaigns.length;
-
-  // Note: per-step "Kampaņa gatava X. solī" popup was removed by request — the
-  // Autopilot tab already shows a red badge with the pending count.
-
   const publishedProducts = products.filter((p) => !(p as any).is_draft);
   const draftProducts = products.filter((p) => (p as any).is_draft);
   const designProducts = publishedProducts.filter((p) => p.customizable);
@@ -396,12 +389,7 @@ const Admin = () => {
             <TabsTrigger value="emailLog" className="gap-1.5 text-sm"><Inbox className="w-4 h-4" /> E-pastu vēsture</TabsTrigger>
             <TabsTrigger value="promo" className="gap-1.5 text-sm"><Tag className="w-4 h-4" /> Atlaides</TabsTrigger>
             <TabsTrigger value="accounting" className="gap-1.5 text-sm"><FileSpreadsheet className="w-4 h-4" /> Grāmatvedība</TabsTrigger>
-            <TabsTrigger value="autopilot" className="gap-1.5 text-sm relative">
-              <Sparkles className="w-4 h-4" /> Autopilot
-              {pendingCount > 0 && (
-                <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">{pendingCount}</span>
-              )}
-            </TabsTrigger>
+            <TabsTrigger value="autopilot" className="gap-1.5 text-sm"><Sparkles className="w-4 h-4" /> AI Studija</TabsTrigger>
             <TabsTrigger value="omnivaSync" className="gap-1.5 text-sm"><Truck className="w-4 h-4" /> Omniva sync</TabsTrigger>
             <TabsTrigger value="content" className="gap-1.5 text-sm"><FileText className="w-4 h-4" /> Idejas un Padomi</TabsTrigger>
           </TabsList>
@@ -578,8 +566,7 @@ const Admin = () => {
             <SheetTrigger asChild>
               <button
                 className={`flex flex-col items-center gap-0.5 px-1 py-1 rounded-lg text-[10px] font-body transition-colors ${
-                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "autopilot"].includes(activeTab)
-                  || activeTab === "omnivaSync"
+                  ["customers", "categories", "faq", "access", "settings", "emails", "emailLog", "promo", "accounting", "autopilot", "omnivaSync", "content"].includes(activeTab)
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
@@ -604,7 +591,8 @@ const Admin = () => {
                   { value: "emailLog", icon: Inbox, label: "E-pastu vēsture" },
                   { value: "promo", icon: Tag, label: "Atlaides" },
                   { value: "accounting", icon: FileSpreadsheet, label: "Grāmatvedība" },
-                  { value: "autopilot", icon: Sparkles, label: "Autopilot" },
+                  { value: "content", icon: FileText, label: "Idejas un Padomi" },
+                  { value: "autopilot", icon: Sparkles, label: "AI Studija" },
                   { value: "omnivaSync", icon: Truck, label: "Omniva sync" },
                 ].map(({ value, icon: Icon, label }) => (
                   <SheetClose asChild key={value}>

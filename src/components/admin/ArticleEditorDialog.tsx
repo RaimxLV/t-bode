@@ -110,14 +110,14 @@ export const ArticleEditorDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="p-0 gap-0 w-screen max-w-none h-[100dvh] rounded-none sm:w-full sm:max-w-3xl sm:h-auto sm:max-h-[92vh] sm:rounded-lg flex flex-col">
+        <DialogHeader className="px-4 pt-4 pb-3 border-b border-border shrink-0">
           <DialogTitle className="font-display">
             {draft.id ? "Rediģēt rakstu" : "Jauns raksts"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4">
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold">Virsraksts (H1)</label>
@@ -212,9 +212,6 @@ export const ArticleEditorDialog = ({
           <div>
             <label className="text-xs font-semibold">Saturs</label>
             <RichTextEditor value={draft.content ?? ""} onChange={(html) => setDraft({ ...draft, content: html })} />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Aptuvenais lasīšanas laiks: {readingMinutes(draft.content)} min
-            </p>
           </div>
 
           <div className="rounded-lg border border-border p-3 space-y-3">
@@ -275,15 +272,19 @@ export const ArticleEditorDialog = ({
             ))}
           </div>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              <X className="w-4 h-4 mr-1.5" /> Atcelt
-            </Button>
-            <Button onClick={save} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
-              Saglabāt
-            </Button>
-          </div>
+        </div>
+
+        <div
+          className="shrink-0 border-t border-border bg-card px-4 py-3 flex gap-2"
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => onOpenChange(false)}>
+            <X className="w-4 h-4 mr-1.5" /> Atcelt
+          </Button>
+          <Button onClick={save} disabled={saving} className="flex-1 sm:flex-none sm:ml-auto">
+            {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+            Saglabāt
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
