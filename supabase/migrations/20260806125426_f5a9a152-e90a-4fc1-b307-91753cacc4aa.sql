@@ -1,0 +1,1 @@
+ALTER TABLE public.content_topics ADD COLUMN IF NOT EXISTS season_months smallint[] NOT NULL DEFAULT '{}'::smallint[];

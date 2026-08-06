@@ -500,6 +500,7 @@ export type Database = {
           planned_month: string | null
           primary_keyword: string | null
           priority: number
+          season_months: number[]
           secondary_keywords: string[]
           status: string
           title_lv: string
@@ -516,6 +517,7 @@ export type Database = {
           planned_month?: string | null
           primary_keyword?: string | null
           priority?: number
+          season_months?: number[]
           secondary_keywords?: string[]
           status?: string
           title_lv: string
@@ -532,6 +534,7 @@ export type Database = {
           planned_month?: string | null
           primary_keyword?: string | null
           priority?: number
+          season_months?: number[]
           secondary_keywords?: string[]
           status?: string
           title_lv?: string
