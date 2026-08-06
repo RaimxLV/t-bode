@@ -22,7 +22,6 @@ import { InstallButton } from "@/components/InstallButton";
 import { useNewOrderNotifications } from "@/hooks/useNewOrderNotifications";
 import { NewOrderAlert, type NewOrderInfo } from "@/components/admin/NewOrderAlert";
 import { Seo } from "@/components/Seo";
-import { useCampaignReviewBadge } from "@/hooks/useCampaignReviewBadge";
 
 // Lazy-load heavy admin tab components — only fetched when admin opens that tab
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
@@ -100,12 +99,6 @@ const Admin = () => {
   const [newWhitelistEmail, setNewWhitelistEmail] = useState("");
   const [loadingWhitelist, setLoadingWhitelist] = useState(false);
   const { data: allCategories = [] } = useCategories(isAdmin);
-  const { data: pendingCampaigns = [] } = useCampaignReviewBadge(isAdmin);
-  const pendingCount = pendingCampaigns.length;
-
-  // Note: per-step "Kampaņa gatava X. solī" popup was removed by request — the
-  // Autopilot tab already shows a red badge with the pending count.
-
   const publishedProducts = products.filter((p) => !(p as any).is_draft);
   const draftProducts = products.filter((p) => (p as any).is_draft);
   const designProducts = publishedProducts.filter((p) => p.customizable);
