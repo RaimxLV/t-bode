@@ -12,6 +12,7 @@ type SuggestedTopic = {
   secondary_keywords?: string[];
   angle_hint?: string;
   category_slug: string;
+  season_months?: number[];
 };
 
 Deno.serve(async (req) => {
@@ -29,6 +30,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const requestedCount = Number(body?.count ?? 12);
     const count = Number.isFinite(requestedCount) ? Math.min(Math.max(Math.round(requestedCount), 3), 20) : 12;
+    const currentMonth = new Date().getUTCMonth() + 1;
     const admin = createClient(url, serviceKey);
 
     const [{ data: categories, error: categoryError }, { data: existing, error: existingError }] = await Promise.all([
@@ -53,7 +55,7 @@ Deno.serve(async (req) => {
           },
           {
             role: "user",
-            content: `Izveido tieši ${count} jaunas, savstarpēji atšķirīgas tēmas T-Bode satura centram.\n\nAtļautās kategorijas (category_slug):\n${categoryList}\n\nŠīs tēmas jau ir bankā, tās neatkārto:\n${existingList}\n\nAtbildes forma: {"topics":[{"title_lv":"...","primary_keyword":"...","secondary_keywords":["..."],"angle_hint":"...","category_slug":"..."}]}`,
+            content: `Izveido tieši ${count} jaunas, savstarpēji atšķirīgas tēmas T-Bode satura centram.\n\nŠobrīd ir ${currentMonth}. mēnesis. Vismaz divas trešdaļas tēmu jābūt neitrālām (visu gadu aktuālām) vai piemērotām tuvākajiem 1-2 mēnešiem.\n\nSVARĪGI par sezonalitāti: laukā "season_months" norādi mēnešu numurus (1-12), kuros tēma ir aktuāla. Neitrālām tēmām atstāj tukšu masīvu []. Svētku tēmas obligāti sasaisti ar mēnešiem, kad par tām meklē: Ziemassvētki [11,12], Jaunais gads [12,1], Valentīndiena [1,2], sieviešu diena [2,3], Lieldienas [3,4], Mātes diena [4,5], Līgo/Jāņi [5,6], skolas sākums [7,8], Ziemassvētku korporatīvie pasūtījumi [10,11,12]. Nedod Ziemassvētku vai citu tālu svētku tēmas kā galvenās, ja tie nav tuvu.\n\nAtļautās kategorijas (category_slug):\n${categoryList}\n\nŠīs tēmas jau ir bankā, tās neatkārto:\n${existingList}\n\nAtbildes forma: {"topics":[{"title_lv":"...","primary_keyword":"...","secondary_keywords":["..."],"angle_hint":"...","category_slug":"...","season_months":[11,12]}]}`,
           },
         ],
         response_format: { type: "json_object" },
@@ -80,6 +82,12 @@ Deno.serve(async (req) => {
         primary_keyword: topic.primary_keyword?.trim().slice(0, 120) || null,
         secondary_keywords: Array.isArray(topic.secondary_keywords) ? topic.secondary_keywords.slice(0, 8) : [],
         angle_hint: topic.angle_hint?.trim().slice(0, 500) || null,
+        season_months: Array.isArray(topic.season_months)
+          ? topic.season_months
+              .map((m: unknown) => Math.round(Number(m)))
+              .filter((m: number) => Number.isFinite(m) && m >= 1 && m <= 12)
+              .slice(0, 12)
+          : [],
         priority: 100 + index,
         status: "idea",
       }));
