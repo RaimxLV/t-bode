@@ -192,7 +192,7 @@ export const BlogManager = () => {
                   <FileText className="w-3.5 h-3.5" /> Rediģēt
                 </Button>
                 <Button size="sm" variant="outline" asChild className="gap-1.5">
-                  <a href={`/blog/${p.slug}${p.status !== "published" ? "?preview=1" : ""}`} target="_blank" rel="noreferrer">
+                  <a href={`/idejas/${p.slug}${p.status !== "published" ? "?preview=1" : ""}`} target="_blank" rel="noreferrer">
                     <Eye className="w-3.5 h-3.5" /> {p.status === "published" ? "Skatīt" : "Priekšskatīt"}
                   </a>
                 </Button>

@@ -121,48 +121,75 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           author_id: string | null
           campaign_id: string | null
+          category_id: string | null
           content: string | null
           cover_image_url: string | null
           created_at: string
           excerpt: string | null
+          faq: Json
           id: string
+          internal_links: Json
           published_at: string | null
+          reading_minutes: number | null
           scheduled_for: string | null
+          seo_description: string | null
+          seo_title: string | null
           slug: string
           status: Database["public"]["Enums"]["content_status"]
           title: string
+          topic_id: string | null
           updated_at: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           author_id?: string | null
           campaign_id?: string | null
+          category_id?: string | null
           content?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt?: string | null
+          faq?: Json
           id?: string
+          internal_links?: Json
           published_at?: string | null
+          reading_minutes?: number | null
           scheduled_for?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           slug: string
           status?: Database["public"]["Enums"]["content_status"]
           title: string
+          topic_id?: string | null
           updated_at?: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           author_id?: string | null
           campaign_id?: string | null
+          category_id?: string | null
           content?: string | null
           cover_image_url?: string | null
           created_at?: string
           excerpt?: string | null
+          faq?: Json
           id?: string
+          internal_links?: Json
           published_at?: string | null
+          reading_minutes?: number | null
           scheduled_for?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["content_status"]
           title?: string
+          topic_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -171,6 +198,20 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "blog_posts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "content_topics"
             referencedColumns: ["id"]
           },
         ]
@@ -408,6 +449,118 @@ export type Database = {
           status?: string
         }
         Relationships: []
+      }
+      content_categories: {
+        Row: {
+          accent: string | null
+          created_at: string
+          description_lv: string | null
+          icon_key: string | null
+          id: string
+          is_active: boolean
+          name_lv: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          accent?: string | null
+          created_at?: string
+          description_lv?: string | null
+          icon_key?: string | null
+          id?: string
+          is_active?: boolean
+          name_lv: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          accent?: string | null
+          created_at?: string
+          description_lv?: string | null
+          icon_key?: string | null
+          id?: string
+          is_active?: boolean
+          name_lv?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_topics: {
+        Row: {
+          angle_hint: string | null
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          holiday_id: string | null
+          id: string
+          planned_month: string | null
+          primary_keyword: string | null
+          priority: number
+          secondary_keywords: string[]
+          status: string
+          title_lv: string
+          updated_at: string
+          used_post_id: string | null
+        }
+        Insert: {
+          angle_hint?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          holiday_id?: string | null
+          id?: string
+          planned_month?: string | null
+          primary_keyword?: string | null
+          priority?: number
+          secondary_keywords?: string[]
+          status?: string
+          title_lv: string
+          updated_at?: string
+          used_post_id?: string | null
+        }
+        Update: {
+          angle_hint?: string | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          holiday_id?: string | null
+          id?: string
+          planned_month?: string | null
+          primary_keyword?: string | null
+          priority?: number
+          secondary_keywords?: string[]
+          status?: string
+          title_lv?: string
+          updated_at?: string
+          used_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topics_holiday_id_fkey"
+            columns: ["holiday_id"]
+            isOneToOne: false
+            referencedRelation: "holidays"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_topics_used_post_id_fkey"
+            columns: ["used_post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       design_categories: {
         Row: {
