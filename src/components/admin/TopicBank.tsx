@@ -46,7 +46,8 @@ export const TopicBank = () => {
         .select("id,title_lv,category_id,primary_keyword,angle_hint,priority,status")
         .order("priority")
         .order("created_at", { ascending: false });
-      if (filter !== "all") q = q.eq("status", filter);
+      if (filter === "idea") q = q.eq("status", "idea").is("used_post_id", null);
+      else if (filter !== "all") q = q.eq("status", filter);
       const { data, error } = await q;
       if (error) throw error;
       return (data as any) ?? [];
