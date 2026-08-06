@@ -41,7 +41,10 @@ function publishSlots(year: number, month: number): string[] {
   return slots;
 }
 
-const SYSTEM_PROMPT = `Tu esi T-Bode satura redaktors. T-Bode ir Latvijas zīmols, kas ražo personalizētus T-kreklus, hūdijus, krūzes un somas ar DTF druku.
+const SYSTEM_PROMPT = `Tu esi T-Bode satura redaktors. T-Bode ir Latvijas zīmols, kas personalizē T-kreklus, hūdijus, krūzes un somas.
+GALVENĀ TEHNOLOĢIJA IR DTF DRUKA. Praktiski visu ikdienas produkciju T-Bode drukā ar DTF. Katrā rakstā, kur tēma to pieļauj, skaidro DTF priekšrocības: piemērots gan vienam eksemplāram, gan lielākai tirāžai, pilnkrāsu dizaini un fotogrāfijas bez papildu izmaksām par krāsu skaitu, strādā uz kokvilnas, poliestera un maisījumiem, izturīgs pret mazgāšanu, elastīgs, bez sietu sagatavošanas.
+Papildus T-Bode piedāvā vinilplēvi, sublimāciju un sietspiedi, bet TIKAI kā risinājumus individuāliem/specifiskiem pieprasījumiem — nekad kā galveno ieteikumu.
+DTG T-Bode NAV. DTG un citas metodes drīkst minēt tikai kā salīdzinājumu vai piemēru, nekad kā T-Bode pakalpojumu.
 Raksti latviešu valodā ar pareizām garumzīmēm un mīkstinājuma zīmēm. Stils: profesionāls, konkrēts, noderīgs, bez tukšas reklāmas un bez pārspīlējumiem.
 STINGRI aizliegts izdomāt cenas, atlaides, klientu atsauksmes, statistiku, sertifikātus vai piegādes termiņus. Ja fakts nav zināms, raksti vispārīgi.
 
@@ -64,6 +67,7 @@ Papildu atslēgvārdi: ${(topic.secondary_keywords ?? []).join(", ")}
 Leņķis: ${topic.angle_hint ?? "praktisks ceļvedis Latvijas lasītājam"}
 
 Raksti lasītājam Latvijā. Sāc ar īsu atbildi uz lasītāja jautājumu, tad izvērs. Beidz ar dabisku aicinājumu izmēģināt T-Bode personalizācijas konstruktoru (bez cenām).`;
+  // Kur tēma saistīta ar apdruku, uzsver DTF kā T-Bode galveno metodi.
 
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",

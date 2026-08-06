@@ -6,13 +6,12 @@ import { Footer } from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductCard } from "@/components/ProductCard";
 import { Seo } from "@/components/Seo";
-import { ArrowLeft, ArrowRight, Clock, List } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
-import { readingMinutes, withHeadingAnchors } from "@/lib/articleContent";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ArticleCard, type ArticleCardPost } from "@/components/ideas/ArticleCard";
-import { Button } from "@/components/ui/button";
+import { HeroCtaButton } from "@/components/HeroCtaButton";
 
 type Post = {
   id: string;
@@ -124,11 +123,10 @@ const BlogPost = () => {
     })();
   }, [slug, isPreview, authLoading, user?.id]);
 
-  const { html: contentHtml, toc } = useMemo(
-    () => withHeadingAnchors(post?.content ? sanitizeHtml(post.content) : ""),
+  const contentHtml = useMemo(
+    () => (post?.content ? sanitizeHtml(post.content) : ""),
     [post?.content]
   );
-  const minutes = post?.reading_minutes || readingMinutes(post?.content);
   const faq = Array.isArray(post?.faq) ? post!.faq!.filter((f) => f?.q && f?.a) : [];
   const canonicalUrl = post ? `https://t-bode.lv/idejas/${post.slug}` : "";
 
@@ -216,9 +214,6 @@ const BlogPost = () => {
                   {categoryName}
                 </Link>
               )}
-              <span className="inline-flex items-center gap-1">
-                <Clock className="w-3 h-3" aria-hidden="true" /> {minutes} min lasīšana
-              </span>
               {post.published_at && (
                 <span>
                   {new Date(post.published_at).toLocaleDateString("lv-LV", {
@@ -237,22 +232,6 @@ const BlogPost = () => {
               <div className="w-full aspect-video rounded-xl mb-8 bg-muted flex items-center justify-center overflow-hidden border border-border">
                 <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover" />
               </div>
-            )}
-            {toc.length >= 3 && !isEmbeddedPreview && (
-              <nav aria-label="Satura rādītājs" className="mb-8 rounded-xl border border-border bg-card p-5">
-                <p className="inline-flex items-center gap-2 font-display text-sm uppercase tracking-wider mb-3">
-                  <List className="w-4 h-4 text-primary" aria-hidden="true" /> Saturs
-                </p>
-                <ol className="space-y-1.5 font-body text-sm">
-                  {toc.map((item) => (
-                    <li key={item.id} className={item.level === 3 ? "pl-4" : ""}>
-                      <a href={`#${item.id}`} className="text-muted-foreground hover:text-primary transition-colors">
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ol>
-              </nav>
             )}
             {contentHtml && (
               <div
@@ -294,11 +273,7 @@ const BlogPost = () => {
                 <p className="text-muted-foreground font-body mb-5">
                   Personalizācijas konstruktorā vari salikt tekstu, bildi vai dizainu un uzreiz redzēt rezultātu.
                 </p>
-                <Button asChild size="lg">
-                  <Link to="/design">
-                    Sākt personalizēt <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden="true" />
-                  </Link>
-                </Button>
+                <HeroCtaButton to="/design" label="Sākt personalizēt" />
               </section>
             )}
 
