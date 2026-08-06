@@ -26,7 +26,8 @@ export const Navbar = () => {
     { label: t("nav.ourStory"), href: "/#about" },
     { label: t("nav.designYourOwn"), href: "/design" },
     { label: t("nav.ourCollection"), href: "/collection" },
-    { label: t("nav.holidayInspiration", "Svētku iedvesmai"), href: "/blog" },
+    // Pagaidām paslēpts — sadaļa tiek pārbūvēta (jauns nosaukums + auto SEO saturs)
+    // { label: t("nav.holidayInspiration", "Svētku iedvesmai"), href: "/blog" },
     { label: t("nav.findStore"), href: "/veikali" },
     { label: t("nav.faq"), href: "/#faq" },
   ];
