@@ -8,6 +8,7 @@ const STATIC_ROUTES = [
   { path: "/collection", changefreq: "daily", priority: "0.9" },
   { path: "/design", changefreq: "weekly", priority: "0.9" },
   { path: "/veikali", changefreq: "monthly", priority: "0.8" },
+  { path: "/idejas", changefreq: "weekly", priority: "0.8" },
   { path: "/install", changefreq: "monthly", priority: "0.4" },
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
@@ -39,6 +40,17 @@ Deno.serve(async (req) => {
       .eq("is_draft", false)
       .order("updated_at", { ascending: false });
 
+    const { data: categories } = await supabase
+      .from("content_categories")
+      .select("slug")
+      .eq("is_active", true);
+
+    const { data: posts } = await supabase
+      .from("blog_posts")
+      .select("slug, updated_at, published_at")
+      .eq("status", "published")
+      .order("published_at", { ascending: false });
+
     const urls: string[] = [];
     for (const r of STATIC_ROUTES) {
       urls.push(
@@ -48,9 +60,26 @@ Deno.serve(async (req) => {
     for (const p of products ?? []) {
       const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/product/${escapeXml(p.slug)}</loc>${
+        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc>${
           lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
         }<changefreq>weekly</changefreq><priority>0.8</priority></url>`,
+      );
+    }
+    for (const c of categories ?? []) {
+      urls.push(
+        `<url><loc>${SITE_URL}/idejas/kategorija/${escapeXml(c.slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`,
+      );
+    }
+    for (const post of posts ?? []) {
+      const lastmod = post.updated_at
+        ? new Date(post.updated_at).toISOString()
+        : post.published_at
+          ? new Date(post.published_at).toISOString()
+          : undefined;
+      urls.push(
+        `<url><loc>${SITE_URL}/idejas/${escapeXml(post.slug)}</loc>${
+          lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
+        }<changefreq>monthly</changefreq><priority>0.7</priority></url>`,
       );
     }
 
