@@ -10,3 +10,4 @@ Never change visible website copy/content unless the user explicitly asks; SEO w
 - [Brand info](mem://features/brand) — Company details, store locations, contact info
 - [Product catalog](mem://features/products) — 27 products in DB: 13 design (customizable), 14 collection
 - [Planned features](mem://features/roadmap) — Auth, cart, admin, Zakeke, Omniva, Brevo, PWA
+- [Content hub](mem://features/content-hub) — DTF-first raksti, bez lasīšanas laika un TOC, hero CTA poga
