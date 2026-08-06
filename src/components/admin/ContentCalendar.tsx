@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, ImagePlus, Loader2, Send, Sparkles, Undo2,
+  CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, ImagePlus, Loader2, RefreshCw, Send, Sparkles, Undo2, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleEditorDialog, type EditablePost } from "./ArticleEditorDialog";
@@ -32,6 +32,7 @@ export const ContentCalendar = () => {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditablePost | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadTargetRef = useRef<string | null>(null);
 
@@ -138,6 +139,43 @@ export const ContentCalendar = () => {
     fileInputRef.current?.click();
   };
 
+  /** Regenerates the article text for a single post (keeps date, slug and cover). */
+  const regenerateArticle = async (p: CalendarPost) => {
+    if (!confirm(`Pārģenerēt rakstu "${p.title}"? Esošais teksts tiks aizstāts.`)) return;
+    setAiBusy(`text-${p.id}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("regenerate-article", {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Raksts pārģenerēts — pārskati un apstiprini");
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Pārģenerēšana neizdevās");
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  /** Generates a photorealistic AI cover image for a single post. */
+  const generateImage = async (p: CalendarPost) => {
+    setAiBusy(`img-${p.id}`);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-article-image", {
+        body: { post_id: p.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("AI bilde pievienota");
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Bildes ģenerēšana neizdevās");
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
   const uploadCover = async (file: File) => {
     const postId = uploadTargetRef.current;
     if (!postId) return;
@@ -182,7 +220,7 @@ export const ContentCalendar = () => {
               <ImagePlus className="w-4 h-4" /> Bilde
             </span>
           )}
-          {uploadingId === p.id && (
+          {(uploadingId === p.id || aiBusy === `img-${p.id}`) && (
             <span className="absolute inset-0 flex items-center justify-center bg-background/70">
               <Loader2 className="w-4 h-4 animate-spin text-primary" />
             </span>
@@ -211,6 +249,20 @@ export const ContentCalendar = () => {
           <div className="flex flex-wrap gap-1.5 pt-1.5">
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => pickImage(p.id)}>
               <ImagePlus className="w-3.5 h-3.5" /> Bilde
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" disabled={aiBusy === `img-${p.id}`}
+              onClick={() => generateImage(p)}>
+              {aiBusy === `img-${p.id}`
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <Wand2 className="w-3.5 h-3.5" />}
+              AI bilde
+            </Button>
+            <Button size="sm" variant="outline" className="gap-1.5" disabled={aiBusy === `text-${p.id}`}
+              onClick={() => regenerateArticle(p)}>
+              {aiBusy === `text-${p.id}`
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <RefreshCw className="w-3.5 h-3.5" />}
+              Pārģenerēt
             </Button>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(p)}>
               <FileText className="w-3.5 h-3.5" /> Rediģēt

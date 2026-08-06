@@ -1,6 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { jsonrepair } from "npm:jsonrepair@3.13.1";
 import { requireAdmin } from "../_shared/admin-auth.ts";
+import { generateArticle, isTopicInSeason } from "../_shared/article-ai.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,66 +39,6 @@ function publishSlots(year: number, month: number): string[] {
     if (dow === 2 || dow === 4) slots.push(date.toISOString());
   }
   return slots;
-}
-
-const SYSTEM_PROMPT = `Tu esi T-Bode satura redaktors. T-Bode ir Latvijas zīmols, kas personalizē T-kreklus, hūdijus, krūzes un somas.
-GALVENĀ TEHNOLOĢIJA IR DTF DRUKA. Praktiski visu ikdienas produkciju T-Bode drukā ar DTF. Katrā rakstā, kur tēma to pieļauj, skaidro DTF priekšrocības: piemērots gan vienam eksemplāram, gan lielākai tirāžai, pilnkrāsu dizaini un fotogrāfijas bez papildu izmaksām par krāsu skaitu, strādā uz kokvilnas, poliestera un maisījumiem, izturīgs pret mazgāšanu, elastīgs, bez sietu sagatavošanas.
-Papildus T-Bode piedāvā vinilplēvi, sublimāciju un sietspiedi, bet TIKAI kā risinājumus individuāliem/specifiskiem pieprasījumiem — nekad kā galveno ieteikumu.
-DTG T-Bode NAV. DTG un citas metodes drīkst minēt tikai kā salīdzinājumu vai piemēru, nekad kā T-Bode pakalpojumu.
-Raksti latviešu valodā ar pareizām garumzīmēm un mīkstinājuma zīmēm. Stils: profesionāls, konkrēts, noderīgs, bez tukšas reklāmas un bez pārspīlējumiem.
-STINGRI aizliegts izdomāt cenas, atlaides, klientu atsauksmes, statistiku, sertifikātus vai piegādes termiņus. Ja fakts nav zināms, raksti vispārīgi.
-
-Atbildi TIKAI ar JSON objektu:
-{
-  "title": "H1 virsraksts, max 70 zīmes, dabisks un ar galveno atslēgvārdu",
-  "seo_title": "max 60 zīmes",
-  "seo_description": "max 155 zīmes",
-  "excerpt": "1-2 teikumi, max 200 zīmes",
-  "content": "HTML saturs: tikai <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. BEZ <h1>. 900-1300 vārdi, 4-6 <h2> sadaļas, vismaz viens saraksts, un kur tēmai der - salīdzinājuma tabula.",
-  "faq": [{ "q": "jautājums", "a": "atbilde 2-4 teikumos" }]
-}
-faq: 3-5 reāli jautājumi, ko cilvēks meklētu Google.`;
-
-async function generateArticle(apiKey: string, topic: any, categoryName: string) {
-  const userPrompt = `Tēma: ${topic.title_lv}
-Kategorija: ${categoryName}
-Galvenais atslēgvārds: ${topic.primary_keyword ?? topic.title_lv}
-Papildu atslēgvārdi: ${(topic.secondary_keywords ?? []).join(", ")}
-Leņķis: ${topic.angle_hint ?? "praktisks ceļvedis Latvijas lasītājam"}
-
-Raksti lasītājam Latvijā. Sāc ar īsu atbildi uz lasītāja jautājumu, tad izvērs. Beidz ar dabisku aicinājumu izmēģināt T-Bode personalizācijas konstruktoru (bez cenām).`;
-  // Kur tēma saistīta ar apdruku, uzsver DTF kā T-Bode galveno metodi.
-
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (res.status === 429) throw new Error("AI rate limit (429)");
-  if (res.status === 402) throw new Error("AI credits exhausted (402)");
-  if (!res.ok) throw new Error(`AI error ${res.status}: ${(await res.text()).slice(0, 200)}`);
-
-  const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content ?? "{}";
-  let parsed: any = raw;
-  if (typeof raw === "string") {
-    const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/\s*```$/, "");
-    try {
-      parsed = JSON.parse(cleaned);
-    } catch {
-      parsed = JSON.parse(jsonrepair(cleaned));
-    }
-  }
-  if (!parsed?.title || !parsed?.content) throw new Error("AI returned incomplete article");
-  return parsed;
 }
 
 Deno.serve(async (req) => {
@@ -143,7 +83,7 @@ Deno.serve(async (req) => {
         .eq("planned_month", monthStart)
         .order("priority")
         .limit(count);
-      topics = planned ?? [];
+      topics = (planned ?? []).filter((t: any) => isTopicInSeason(t.season_months, month));
       if (topics.length < count) {
         const { data: backlog } = await admin
           .from("content_topics")
@@ -151,14 +91,16 @@ Deno.serve(async (req) => {
           .eq("status", "idea")
           .is("planned_month", null)
           .order("priority")
-          .limit(count - topics.length);
-        topics = [...topics, ...(backlog ?? [])];
+          .limit((count - topics.length) * 6 + 20);
+        // Seasonal topics (e.g. Christmas) may only be used in their own months.
+        const inSeason = (backlog ?? []).filter((t: any) => isTopicInSeason(t.season_months, month));
+        topics = [...topics, ...inSeason.slice(0, count - topics.length)];
       }
     }
 
     if (topics.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Tēmu bankā nav brīvu tēmu. Pievieno jaunas tēmas." }),
+        JSON.stringify({ error: "Tēmu bankā nav brīvu tēmu šim mēnesim (sezonālās tēmas ir rezervētas saviem mēnešiem). Pievieno jaunas tēmas." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }

@@ -18,7 +18,10 @@ type Topic = {
   angle_hint: string | null;
   priority: number;
   status: string;
+  season_months: number[] | null;
 };
+
+const MONTHS_SHORT = ["jan", "feb", "mar", "apr", "mai", "jūn", "jūl", "aug", "sep", "okt", "nov", "dec"];
 
 const STATUS_LABEL: Record<string, string> = {
   idea: "Brīva tēma",
@@ -43,7 +46,7 @@ export const TopicBank = () => {
     queryFn: async (): Promise<Topic[]> => {
       let q = supabase
         .from("content_topics")
-        .select("id,title_lv,category_id,primary_keyword,angle_hint,priority,status")
+        .select("id,title_lv,category_id,primary_keyword,angle_hint,priority,status,season_months")
         .order("priority")
         .order("created_at", { ascending: false });
       if (filter === "idea") q = q.eq("status", "idea").is("used_post_id", null);
@@ -166,6 +169,11 @@ export const TopicBank = () => {
                     <Badge variant={t.status === "idea" ? "secondary" : "outline"} className="text-[10px]">
                       {STATUS_LABEL[t.status] ?? t.status}
                     </Badge>
+                    {t.season_months && t.season_months.length > 0 && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {t.season_months.map((m) => MONTHS_SHORT[m - 1] ?? m).join(", ")}
+                      </Badge>
+                    )}
                   </div>
                   {t.primary_keyword && (
                     <p className="text-[11px] text-muted-foreground font-mono mt-0.5">{t.primary_keyword}</p>
