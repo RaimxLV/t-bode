@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, Loader2, Send, Sparkles, Undo2,
+  CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, ImagePlus, Loader2, Send, Sparkles, Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleEditorDialog, type EditablePost } from "./ArticleEditorDialog";
@@ -31,6 +31,9 @@ export const ContentCalendar = () => {
   const [generating, setGenerating] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EditablePost | null>(null);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const uploadTargetRef = useRef<string | null>(null);
 
   const { data: categories = [] } = useContentCategories();
   const catName = useMemo(
@@ -130,16 +133,61 @@ export const ContentCalendar = () => {
     else { toast.success(`Apstiprināti ${pending.length} raksti`); refetch(); }
   };
 
+  const pickImage = (postId: string) => {
+    uploadTargetRef.current = postId;
+    fileInputRef.current?.click();
+  };
+
+  const uploadCover = async (file: File) => {
+    const postId = uploadTargetRef.current;
+    if (!postId) return;
+    setUploadingId(postId);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `blog/${postId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+      const { error } = await supabase
+        .from("blog_posts")
+        .update({ cover_image_url: pub.publicUrl })
+        .eq("id", postId);
+      if (error) throw error;
+      toast.success("Bilde pievienota");
+      await refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Augšupielāde neizdevās");
+    } finally {
+      setUploadingId(null);
+      uploadTargetRef.current = null;
+    }
+  };
+
   const renderCard = (p: CalendarPost) => (
     <Card key={p.id} className="border border-border">
       <CardContent className="p-3 flex gap-3">
-        {p.cover_image_url ? (
-          <img src={p.cover_image_url} alt="" className="w-20 h-20 rounded-md object-cover border shrink-0" loading="lazy" />
-        ) : (
-          <div className="w-20 h-20 rounded-md border border-dashed flex items-center justify-center text-[10px] text-muted-foreground text-center shrink-0">
-            Nav bildes
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => pickImage(p.id)}
+          disabled={uploadingId === p.id}
+          aria-label={p.cover_image_url ? "Nomainīt bildi" : "Pievienot bildi"}
+          className="w-20 h-20 shrink-0 rounded-md overflow-hidden border relative"
+        >
+          {p.cover_image_url ? (
+            <img src={p.cover_image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <span className="w-full h-full flex flex-col items-center justify-center gap-1 border-dashed text-[10px] text-muted-foreground">
+              <ImagePlus className="w-4 h-4" /> Bilde
+            </span>
+          )}
+          {uploadingId === p.id && (
+            <span className="absolute inset-0 flex items-center justify-center bg-background/70">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+            </span>
+          )}
+        </button>
         <div className="flex-1 min-w-0 space-y-1">
           <div className="flex items-start gap-2 flex-wrap">
             <h4 className="font-display text-sm sm:text-base flex-1 min-w-0">{p.title}</h4>
@@ -162,6 +210,9 @@ export const ContentCalendar = () => {
             {!p.cover_image_url ? " · pievieno bildi" : ""}
           </p>
           <div className="flex flex-wrap gap-1.5 pt-1.5">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => pickImage(p.id)}>
+              <ImagePlus className="w-3.5 h-3.5" /> Bilde
+            </Button>
             <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setEditing(p)}>
               <FileText className="w-3.5 h-3.5" /> Rediģēt
             </Button>
@@ -196,6 +247,18 @@ export const ContentCalendar = () => {
 
   return (
     <div className="space-y-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void uploadCover(f);
+          e.target.value = "";
+        }}
+      />
+
       <Card className="border-dashed border-primary/40 bg-primary/5">
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
           Reizi mēnesī spied <strong>Sagatavot mēnesi</strong> — AI izveido melnrakstus no tēmu bankas un saliek tos
