@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "Tu esi Latvijas e-komercijas SEO redaktors. Radi konkrētas, profesionālas un patiesas rakstu tēmas par apģērbu personalizāciju, drukas tehnoloģijām un dāvanu idejām. Neizdomā cenas, statistiku, garantijas vai klientu atsauksmes. Atbildi tikai ar derīgu JSON objektu.",
+            content: "Tu esi Latvijas e-komercijas SEO redaktors T-Bode zīmolam. T-Bode galvenā apdrukas tehnoloģija ir DTF druka; vinilplēve, sublimācija un sietspiede ir tikai individuāliem pieprasījumiem, un DTG T-Bode nav (to var minēt vien salīdzinājumam). Radi konkrētas, profesionālas un patiesas rakstu tēmas ar uzsvaru uz DTF druku, apģērbu personalizāciju un dāvanu idejām. Neizdomā cenas, statistiku, garantijas vai klientu atsauksmes. Atbildi tikai ar derīgu JSON objektu.",
           },
           {
             role: "user",
