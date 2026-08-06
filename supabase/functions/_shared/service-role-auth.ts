@@ -12,6 +12,10 @@ export function requireServiceRole(
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const authHeader = req.headers.get("Authorization") ?? "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  // Internal pg_cron calls authenticate with the shared cron secret header.
+  const cronSecret = Deno.env.get("CRON_SECRET") ?? "";
+  const providedCron = req.headers.get("x-cron-secret") ?? "";
+  if (cronSecret && providedCron && providedCron === cronSecret) return { ok: true };
   if (!SERVICE_KEY || token !== SERVICE_KEY) {
     return {
       ok: false,

@@ -22,6 +22,13 @@ export async function requireAdmin(
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
+  // Internal pg_cron calls authenticate with the shared cron secret header.
+  const cronSecret = Deno.env.get("CRON_SECRET") ?? "";
+  const providedCron = req.headers.get("x-cron-secret") ?? "";
+  if (cronSecret && providedCron && providedCron === cronSecret) {
+    return { ok: true, userId: "cron" };
+  }
+
   if (!token) return { ok: false, response: deny() };
   if (token === SERVICE_KEY) return { ok: true, userId: "service" };
 
