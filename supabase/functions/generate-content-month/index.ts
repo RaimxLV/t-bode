@@ -191,6 +191,18 @@ Deno.serve(async (req) => {
     );
     const freeSlots = slots.filter((s) => !takenDays.has(s.slice(0, 10)));
 
+    if (freeSlots.length === 0) {
+      await admin.from("content_topics").update({ status: "idea" }).in("id", topics.map((topic) => topic.id));
+      return new Response(JSON.stringify({ error: "Šis mēnesis jau ir pilnībā sagatavots — visi publicēšanas datumi ir aizņemti." }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (topics.length > freeSlots.length) {
+      const unused = topics.slice(freeSlots.length);
+      await admin.from("content_topics").update({ status: "idea" }).in("id", unused.map((topic) => topic.id));
+      topics = topics.slice(0, freeSlots.length);
+    }
+
     const created: any[] = [];
     const failed: any[] = [];
 
