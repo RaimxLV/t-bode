@@ -206,7 +206,6 @@ export const ContentCalendar = () => {
             {p.scheduled_for
               ? new Date(p.scheduled_for).toLocaleDateString("lv-LV", { day: "numeric", month: "long" })
               : "Bez datuma"}
-            {p.reading_minutes ? ` · ${p.reading_minutes} min` : ""}
             {!p.cover_image_url ? " · pievieno bildi" : ""}
           </p>
           <div className="flex flex-wrap gap-1.5 pt-1.5">
