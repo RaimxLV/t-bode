@@ -97,8 +97,8 @@ export const ContentCalendar = () => {
     setReordering(true);
     try {
       const changed = order
-        .map((p, i) => ({ id: p.id, scheduled_for: dates[i] }))
-        .filter((row, i) => row.scheduled_for !== schedulable[i]?.scheduled_for || order[i].id !== schedulable[i]?.id);
+        .map((p, i) => ({ id: p.id, current: p.scheduled_for, scheduled_for: dates[i] }))
+        .filter((row) => row.current !== row.scheduled_for);
       for (const row of changed) {
         const { error } = await supabase
           .from("blog_posts")
@@ -388,7 +388,8 @@ export const ContentCalendar = () => {
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
           Reizi mēnesī spied <strong>Sagatavot mēnesi</strong> — AI izveido melnrakstus no tēmu bankas un saliek tos
           kalendārā (otrdienās un ceturtdienās). Tu pārskati, pievieno bildes un apstiprini. Publicējas tikai
-          apstiprinātie raksti savā datumā.
+          apstiprinātie raksti savā datumā. Rakstus vari sarindot pēc savas gaumes — velc kartīti citā vietā vai
+          spied bultiņas; datumi paliek tie paši, mainās tikai kārtība.
         </CardContent>
       </Card>
 
