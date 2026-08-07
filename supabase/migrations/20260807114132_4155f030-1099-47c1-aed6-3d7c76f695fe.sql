@@ -1,0 +1,4 @@
+delete from blog_post_products where blog_post_id in ('7b552e3a-deea-4e32-8340-84e3fde50bdb','7a4896ef-1773-4ed1-8d0a-3944f452c3a6','b003281d-633b-4910-bea2-8f26fe2b0d7b');
+update content_topics set status='idea', used_post_id=null where used_post_id in ('7b552e3a-deea-4e32-8340-84e3fde50bdb','7a4896ef-1773-4ed1-8d0a-3944f452c3a6','b003281d-633b-4910-bea2-8f26fe2b0d7b');
+delete from blog_posts where id in ('7b552e3a-deea-4e32-8340-84e3fde50bdb','7a4896ef-1773-4ed1-8d0a-3944f452c3a6','b003281d-633b-4910-bea2-8f26fe2b0d7b');
+delete from content_topics where id in ('eaca3fef-c05b-40ff-8ca0-e5a5ed61e559','a12d22ca-f4bb-4619-b2c3-5825dd39a695');
