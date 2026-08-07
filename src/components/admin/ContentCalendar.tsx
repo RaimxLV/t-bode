@@ -5,7 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, ImagePlus, Loader2, RefreshCw, Send, Sparkles, Undo2, Wand2,
+  ArrowDown, ArrowUp, CheckCircle2, ChevronLeft, ChevronRight, Eye, FileText, GripVertical, ImagePlus, Loader2,
+  RefreshCw, Send, Sparkles, Undo2, Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ArticleEditorDialog, type EditablePost } from "./ArticleEditorDialog";
@@ -33,6 +34,8 @@ export const ContentCalendar = () => {
   const [editing, setEditing] = useState<EditablePost | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const dragIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const uploadTargetRef = useRef<string | null>(null);
 
@@ -72,6 +75,45 @@ export const ContentCalendar = () => {
   const pending = posts.filter((p) => p.status !== "published" && !p.approved_at);
   const approved = posts.filter((p) => p.status !== "published" && p.approved_at);
   const published = posts.filter((p) => p.status === "published");
+
+  /** Unpublished posts with a date — these keep the month's dates but can swap places. */
+  const schedulable = useMemo(
+    () =>
+      posts
+        .filter((p) => p.status !== "published" && p.scheduled_for)
+        .sort((a, b) => (a.scheduled_for! < b.scheduled_for! ? -1 : 1)),
+    [posts],
+  );
+
+  /** Moves a post to another slot in the month; the dates stay, the articles shift. */
+  const moveToIndex = async (postId: string, targetIndex: number) => {
+    const fromIndex = schedulable.findIndex((p) => p.id === postId);
+    if (fromIndex < 0 || targetIndex < 0 || targetIndex >= schedulable.length || fromIndex === targetIndex) return;
+    const dates = schedulable.map((p) => p.scheduled_for!);
+    const order = [...schedulable];
+    const [moved] = order.splice(fromIndex, 1);
+    order.splice(targetIndex, 0, moved);
+
+    setReordering(true);
+    try {
+      const changed = order
+        .map((p, i) => ({ id: p.id, current: p.scheduled_for, scheduled_for: dates[i] }))
+        .filter((row) => row.current !== row.scheduled_for);
+      for (const row of changed) {
+        const { error } = await supabase
+          .from("blog_posts")
+          .update({ scheduled_for: row.scheduled_for })
+          .eq("id", row.id);
+        if (error) throw error;
+      }
+      await refetch();
+      toast.success("Datumi pārkārtoti");
+    } catch (e: any) {
+      toast.error(e?.message || "Pārkārtošana neizdevās");
+    } finally {
+      setReordering(false);
+    }
+  };
 
   const generateMonth = async () => {
     setGenerating(true);
@@ -204,8 +246,40 @@ export const ContentCalendar = () => {
   };
 
   const renderCard = (p: CalendarPost) => (
-    <Card key={p.id} className="border border-border">
+    <Card
+      key={p.id}
+      className="border border-border"
+      draggable={schedulable.some((s) => s.id === p.id)}
+      onDragStart={() => { dragIdRef.current = p.id; }}
+      onDragOver={(e) => { if (dragIdRef.current && dragIdRef.current !== p.id) e.preventDefault(); }}
+      onDrop={(e) => {
+        e.preventDefault();
+        const dragged = dragIdRef.current;
+        dragIdRef.current = null;
+        const targetIndex = schedulable.findIndex((s) => s.id === p.id);
+        if (dragged && targetIndex >= 0) void moveToIndex(dragged, targetIndex);
+      }}
+    >
       <CardContent className="p-3 flex gap-3">
+        {schedulable.some((s) => s.id === p.id) && (
+          <div className="flex flex-col items-center justify-center gap-1 -ml-1">
+            <Button
+              size="icon" variant="ghost" className="h-7 w-7" aria-label="Pārcelt uz agrāku datumu"
+              disabled={reordering || schedulable[0]?.id === p.id}
+              onClick={() => moveToIndex(p.id, schedulable.findIndex((s) => s.id === p.id) - 1)}
+            >
+              <ArrowUp className="w-3.5 h-3.5" />
+            </Button>
+            <GripVertical className="w-3.5 h-3.5 text-muted-foreground hidden sm:block" />
+            <Button
+              size="icon" variant="ghost" className="h-7 w-7" aria-label="Pārcelt uz vēlāku datumu"
+              disabled={reordering || schedulable[schedulable.length - 1]?.id === p.id}
+              onClick={() => moveToIndex(p.id, schedulable.findIndex((s) => s.id === p.id) + 1)}
+            >
+              <ArrowDown className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        )}
         <button
           type="button"
           onClick={() => pickImage(p.id)}
@@ -314,7 +388,8 @@ export const ContentCalendar = () => {
         <CardContent className="p-3 text-xs sm:text-sm text-muted-foreground font-body">
           Reizi mēnesī spied <strong>Sagatavot mēnesi</strong> — AI izveido melnrakstus no tēmu bankas un saliek tos
           kalendārā (otrdienās un ceturtdienās). Tu pārskati, pievieno bildes un apstiprini. Publicējas tikai
-          apstiprinātie raksti savā datumā.
+          apstiprinātie raksti savā datumā. Rakstus vari sarindot pēc savas gaumes — velc kartīti citā vietā vai
+          spied bultiņas; datumi paliek tie paši, mainās tikai kārtība.
         </CardContent>
       </Card>
 

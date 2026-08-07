@@ -5,9 +5,12 @@ type: feature
 ---
 ## Satura virziens (2026-08-06, apstiprināts)
 - Fokuss: **ceļveži un idejas** (kā saplānot merch komandai/klasei/pasākumam, dāvanu idejas, apdrukas kopšana). NAV raksti par tehnoloģiju.
-- AIZLIEGTS: drukas metožu salīdzinājumi, salīdzinājumu tabulas, "Kas ir DTF" tipa skaidrojumi, <table> rakstos.
-- AIZLIEGTS pieminēt sietspiedi, izšūšanu, sublimāciju, vinilu, DTG — pat kā piemēru vai salīdzinājumu. SIA Ervitex šos piedāvā, bet T-Bode (veikali + šī mājaslapa) = tikai mazumtirdzniecība ar DTF apdruku. Nedrīkst rasties iespaids, ka tos var pasūtīt šeit.
-- DTF ir vienīgā pieminamā metode, max 1-2x rakstā, dabiski, lasītāja labuma kontekstā. Bez tēmām par "kuru apdrukas veidu izvēlēties" vai tūkstošu gabalu ražošanu.
+- AIZLIEGTS: salīdzinājumu tabulas, <table> rakstos, "Kas ir DTF" tipa skaidrojumi kā raksta galvenā tēma.
+- Sietspiedi, sublimāciju, izšūšanu, vinilu, DTG drīkst pieminēt TIKAI kā salīdzinājumu/piemēru (max 1x rakstā, viens teikums), vienmēr blakus norādei, ka T-Bode drukā ar DTF. Nekad tā, ka rodas iespaids, ka tos var pasūtīt šeit (tos piedāvā SIA Ervitex B2B, ne T-Bode).
+- Bez tēmām, kuru galvenā tēma ir cita metode, apdrukas veida izvēle vai tūkstošu gabalu ražošana.
+- AIZLIEGTS rakstīt par to, kā mājaslapā nav: izmēru/apkārtmēru tabulas, izmēru mērīšanas ceļveži, ekspresdruka, paraugi, dizaina pakalpojumi.
+- Dāvanu tēmas = konkrētu ideju saraksti un situācijas, NEVIS pamācības "kā pareizi izvēlēties dāvanu" vai par gaumi.
+- Reāli pieejamais: online konstruktors (arī garumzīmes), T-krekli, hūdiji/džemperi, krūzes, auduma somas, bērnu apģērbs; no 1 gabala; Omniva pakomāts, kurjers vai Rīgas veikali.
 - Nesāk ar definīciju, "Vai zināji, ka...", "Mūsdienās...". Sāc ar konkrētu situāciju/lēmumu.
 - Bez pārdošanas CTA teksta vidū; bez izdomātām cenām, statistikas, atsauksmēm.
 - Rubrikas: Ceļveži · Idejas · Dāvanas · Kopšana (content_categories).
@@ -20,4 +23,5 @@ type: feature
 - Raksta CTA poga = HeroCtaButton (tāda pati kā hero sadaļā), "Sākt personalizēt" → /design.
 - Sezonalitāte: content_topics.season_months (1-12; tukšs = visu gadu). Svētku tēmas ģenerējas TIKAI savos mēnešos (Ziemassvētki 11-12, Valentīndiena 1-2, Lieldienas 3-4, Mātes diena 4-5, Jāņi 5-6, skolas sākums 7-8).
 - Katram rakstam kalendārā ir "Pārģenerēt" (teksts) un "AI bilde" (fotoreālistisks vāka attēls) pogas.
+- Kalendārā rakstus var pārkārtot (drag-and-drop vai bultiņas); mēneša datumi paliek fiksēti, mainās tikai rakstu kārtība tajos.
 - Automātiskā publicēšana APTURĒTA (cron `publish-approved-content` atslēgts). Neieslēgt bez lietotāja atļaujas.

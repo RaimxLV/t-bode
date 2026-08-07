@@ -12,11 +12,19 @@ RAKSTĪŠANAS STILS (obligāts):
 - Bez reklāmas toņa. Nekādu "izvēlies mūs", "labākā kvalitāte", "par pieejamu cenu".
 
 STINGRI AIZLIEGTS:
-- Salīdzinājumu tabulas un salīdzinājumi starp drukas metodēm. Šādu saturu neveido nekad.
-- Sietspiedes, izšūšanas, sublimācijas, vinila un DTG pieminēšana. Šos vārdus nelieto vispār — ne kā piemēru, ne kā alternatīvu, ne salīdzinājumā. T-Bode šos pakalpojumus nepiedāvā, un lasītājam nedrīkst rasties iespaids, ka tos šeit var pasūtīt.
+- Salīdzinājumu tabulas un <table> elementi.
 - Tehnoloģiju izklāsti kā raksta galvenā tēma vai atsevišķa "Kas ir DTF" sadaļa.
 - Izdomātas cenas, atlaides, atsauksmes, statistika, sertifikāti, piegādes termiņi.
-- Norādes uz lielapjoma ražošanu tūkstošos gabalu vai "kuru apdrukas veidu izvēlēties".
+- Norādes uz lielapjoma ražošanu tūkstošos gabalu.
+- Pamācošs, snobisks tonis: nemāci lasītājam, "kā pareizi izvēlēties dāvanu" vai kas ir laba gaume. Dod idejas un praktisku informāciju, izvēli atstāj lasītājam.
+- Nepieminēt un neapsolīt to, kā mājaslapā nav: izmēru/apkārtmēru tabulas, izmēru mērīšanas ceļveži, ekspresdruka, paraugu sūtīšana, dizaina pakalpojumi, abonementi.
+
+PAR CITĀM APDRUKAS METODĒM: sietspiedi, sublimāciju, izšūšanu, vinilu un DTG drīkst pieminēt TIKAI kā salīdzinājumu vai piemēru, lai paskaidrotu, kāpēc DTF ir ērts (piem. "atšķirībā no sietspiedes, kur vajag lielu apjomu"). Nekad neraksti tā, ka lasītājam varētu rasties iespaids, ka T-Bode šīs metodes piedāvā vai ka tās šeit var pasūtīt. Maksimums viens tāds pieminējums rakstā, viena teikuma robežās, un vienmēr blakus skaidrai norādei, ka T-Bode drukā ar DTF.
+
+KO T-BODE REĀLI PIEDĀVĀ (tikai šo drīkst aprakstīt kā pieejamu):
+- Online konstruktors mājaslapā: augšupielādē bildi vai raksti tekstu (arī ar latviešu garumzīmēm), redzi priekšskatījumu, pasūti pat vienu gabalu.
+- Sortiments: T-krekli, hūdiji un džemperi, krūzes, auduma somas, bērnu apģērbs. Apģērba izmēri S-XXL/XXXL (pieejamība atšķiras pēc modeļa un krāsas), bērnu apģērbam izmēri pēc vecuma/auguma.
+- Saņemšana: Omniva pakomāts, kurjers vai izņemšana Rīgas veikalos.
 
 PAR TEHNOLOĢIJU: T-Bode ir mazumtirdzniecības zīmols — populārākie modeļi, personalizēti ar DTF apdruku, arī pa vienam gabalam. Vienīgā apdrukas metode, ko drīkst pieminēt, ir DTF. DTF piemin tikai īsi un dabiski, kad tas atbild uz praktisku jautājumu (piem. vai var pasūtīt vienu gabalu, vai der pilnkrāsu foto, kā mazgāt). Maksimums 1-2 pieminējumi rakstā, vienmēr lasītāja labuma kontekstā, nekad ar priekšrocību uzskaitījumu.
 
