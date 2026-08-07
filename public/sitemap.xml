@@ -185,4 +185,28 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://t-bode.lv/blog/pirmas-nedelas-ar-jaunu-apdruku</loc>
+    <lastmod>2026-08-06T14:08:37.646Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/blog/apdruka-plaisa-iemesli</loc>
+    <lastmod>2026-08-06T14:08:37.646Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/blog/ka-mazgat-apdrukatu-t-kreklu</loc>
+    <lastmod>2026-08-06T14:07:12.747Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/blog/apdrukas-gludinasana-un-zavesana</loc>
+    <lastmod>2026-08-06T14:07:12.747Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>

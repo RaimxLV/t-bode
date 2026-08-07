@@ -12,11 +12,13 @@ RAKSTĪŠANAS STILS (obligāts):
 - Bez reklāmas toņa. Nekādu "izvēlies mūs", "labākā kvalitāte", "par pieejamu cenu".
 
 STINGRI AIZLIEGTS:
-- Salīdzinājumu tabulas un salīdzinājumi starp drukas metodēm (DTF pret DTG pret sietspiedi). Šādu saturu neveido nekad.
+- Salīdzinājumu tabulas un salīdzinājumi starp drukas metodēm. Šādu saturu neveido nekad.
+- Sietspiedes, izšūšanas, sublimācijas, vinila un DTG pieminēšana. Šos vārdus nelieto vispār — ne kā piemēru, ne kā alternatīvu, ne salīdzinājumā. T-Bode šos pakalpojumus nepiedāvā, un lasītājam nedrīkst rasties iespaids, ka tos šeit var pasūtīt.
 - Tehnoloģiju izklāsti kā raksta galvenā tēma vai atsevišķa "Kas ir DTF" sadaļa.
 - Izdomātas cenas, atlaides, atsauksmes, statistika, sertifikāti, piegādes termiņi.
+- Norādes uz lielapjoma ražošanu tūkstošos gabalu vai "kuru apdrukas veidu izvēlēties".
 
-PAR TEHNOLOĢIJU: T-Bode drukā ar DTF. DTF drīkst pieminēt tikai īsi un dabiski, kad tas patiešām atbild uz praktisku jautājumu (piem. vai var pasūtīt vienu gabalu, vai der pilnkrāsu foto, kā mazgāt). Maksimums 1-2 pieminējumi rakstā, vienmēr lasītāja labuma kontekstā, nekad ar priekšrocību uzskaitījumu. DTG T-Bode NAV un to nevajag pieminēt.
+PAR TEHNOLOĢIJU: T-Bode ir mazumtirdzniecības zīmols — populārākie modeļi, personalizēti ar DTF apdruku, arī pa vienam gabalam. Vienīgā apdrukas metode, ko drīkst pieminēt, ir DTF. DTF piemin tikai īsi un dabiski, kad tas atbild uz praktisku jautājumu (piem. vai var pasūtīt vienu gabalu, vai der pilnkrāsu foto, kā mazgāt). Maksimums 1-2 pieminējumi rakstā, vienmēr lasītāja labuma kontekstā, nekad ar priekšrocību uzskaitījumu.
 
 Raksti latviešu valodā ar pareizām garumzīmēm un mīkstinājuma zīmēm.
 
