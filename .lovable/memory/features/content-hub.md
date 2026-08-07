@@ -5,8 +5,9 @@ type: feature
 ---
 ## Satura virziens (2026-08-06, apstiprināts)
 - Fokuss: **ceļveži un idejas** (kā saplānot merch komandai/klasei/pasākumam, dāvanu idejas, apdrukas kopšana). NAV raksti par tehnoloģiju.
-- AIZLIEGTS: drukas metožu salīdzinājumi (DTF vs DTG vs sietspiede), salīdzinājumu tabulas, "Kas ir DTF" tipa skaidrojumi, <table> rakstos.
-- DTF drīkst pieminēt max 1-2x rakstā, dabiski, lasītāja labuma kontekstā. DTG nepiemin vispār. T-Bode DTG nav.
+- AIZLIEGTS: drukas metožu salīdzinājumi, salīdzinājumu tabulas, "Kas ir DTF" tipa skaidrojumi, <table> rakstos.
+- AIZLIEGTS pieminēt sietspiedi, izšūšanu, sublimāciju, vinilu, DTG — pat kā piemēru vai salīdzinājumu. SIA Ervitex šos piedāvā, bet T-Bode (veikali + šī mājaslapa) = tikai mazumtirdzniecība ar DTF apdruku. Nedrīkst rasties iespaids, ka tos var pasūtīt šeit.
+- DTF ir vienīgā pieminamā metode, max 1-2x rakstā, dabiski, lasītāja labuma kontekstā. Bez tēmām par "kuru apdrukas veidu izvēlēties" vai tūkstošu gabalu ražošanu.
 - Nesāk ar definīciju, "Vai zināji, ka...", "Mūsdienās...". Sāc ar konkrētu situāciju/lēmumu.
 - Bez pārdošanas CTA teksta vidū; bez izdomātām cenām, statistikas, atsauksmēm.
 - Rubrikas: Ceļveži · Idejas · Dāvanas · Kopšana (content_categories).
