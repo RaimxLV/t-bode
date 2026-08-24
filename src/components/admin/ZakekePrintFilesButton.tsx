@@ -820,19 +820,37 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
             </div>
           );
         })}
-        {fallbackPreviews.map((url, idx) => (
-          <button
-            key={`preview-${idx}-${url}`}
-            type="button"
-            onClick={() => setPreviewUrl(url)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-primary/30 bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1.5"
-            title="Apskatīt mockup"
-          >
-            <FileImage className="w-3.5 h-3.5" />
-            <span>{previewLabel(url, idx, fallbackPreviews.length)}</span>
-            <Eye className="w-3 h-3 opacity-80" />
-          </button>
-        ))}
+        {fallbackPreviews.map((url, idx) => {
+          const broken = !!brokenPreviews[url];
+          return (
+            <button
+              key={`preview-${idx}-${url}`}
+              type="button"
+              onClick={() => setPreviewUrl(url)}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold rounded px-2 py-1.5 border ${
+                broken
+                  ? "border-amber-500/50 bg-amber-50 text-amber-900 hover:bg-amber-100"
+                  : "border-primary/30 bg-primary/15 text-primary hover:bg-primary/25"
+              }`}
+              title={
+                broken
+                  ? "Zakeke priekšskatījums nav uzģenerēts (tukšs krāsas laukums) — izmanto drukas failu"
+                  : "Apskatīt mockup"
+              }
+            >
+              {broken ? (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              ) : (
+                <FileImage className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {previewLabel(url, idx, fallbackPreviews.length)}
+                {broken ? " (tukšs)" : ""}
+              </span>
+              <Eye className="w-3 h-3 opacity-80" />
+            </button>
+          );
+        })}
         {!hasRealPrint && (
           <button
             type="button"
