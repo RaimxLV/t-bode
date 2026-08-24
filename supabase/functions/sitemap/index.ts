@@ -33,11 +33,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    const nowIso = new Date().toISOString();
     const { data: products } = await supabase
       .from("products")
       .select("slug, updated_at")
       .eq("status", "published")
       .eq("is_draft", false)
+      .or(`available_from.is.null,available_from.lte.${nowIso}`)
+      .or(`expires_at.is.null,expires_at.gte.${nowIso}`)
       .order("updated_at", { ascending: false });
 
     const { data: categories } = await supabase
