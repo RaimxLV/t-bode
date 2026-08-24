@@ -11,6 +11,7 @@ import {
   Eye,
   X,
   Check,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Item {
@@ -641,6 +642,37 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   // from zakeke_print_files which holds only production assets.
   const fallbackPreviews = previewList;
 
+  // Zakeke reizēm atdod "tukšu" priekšskatījumu — 512x512 vienlaidus krāsas
+  // klucis (~8 KB) bez dizaina. Nosakām to pēc faila izmēra un brīdinām
+  // administratoru, lai viņš nedomā, ka pasūtījums ir bojāts.
+  const [brokenPreviews, setBrokenPreviews] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const urls = fallbackPreviews.slice(0, 4);
+    if (urls.length === 0) return;
+    (async () => {
+      const results: Record<string, boolean> = {};
+      await Promise.all(
+        urls.map(async (u) => {
+          try {
+            const res = await fetch(u, { method: "HEAD" });
+            const len = Number(res.headers.get("content-length") ?? 0);
+            if (len > 0 && len < 12_000) results[u] = true;
+          } catch {
+            // tīkla kļūda — neuzskatām par bojātu
+          }
+        }),
+      );
+      if (!cancelled && Object.keys(results).length > 0) setBrokenPreviews(results);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fallbackPreviews.join("|")]);
+
+
+
   const previewLabel = (url: string, idx: number, total: number) => {
     const u = url.toLowerCase();
     if (/front|priekš/.test(u)) return "Priekša";
@@ -788,19 +820,37 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
             </div>
           );
         })}
-        {fallbackPreviews.map((url, idx) => (
-          <button
-            key={`preview-${idx}-${url}`}
-            type="button"
-            onClick={() => setPreviewUrl(url)}
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold rounded border border-primary/30 bg-primary/15 text-primary hover:bg-primary/25 px-2 py-1.5"
-            title="Apskatīt mockup"
-          >
-            <FileImage className="w-3.5 h-3.5" />
-            <span>{previewLabel(url, idx, fallbackPreviews.length)}</span>
-            <Eye className="w-3 h-3 opacity-80" />
-          </button>
-        ))}
+        {fallbackPreviews.map((url, idx) => {
+          const broken = !!brokenPreviews[url];
+          return (
+            <button
+              key={`preview-${idx}-${url}`}
+              type="button"
+              onClick={() => setPreviewUrl(url)}
+              className={`inline-flex items-center gap-1.5 text-[11px] font-semibold rounded px-2 py-1.5 border ${
+                broken
+                  ? "border-amber-500/50 bg-amber-50 text-amber-900 hover:bg-amber-100"
+                  : "border-primary/30 bg-primary/15 text-primary hover:bg-primary/25"
+              }`}
+              title={
+                broken
+                  ? "Zakeke priekšskatījums nav uzģenerēts (tukšs krāsas laukums) — izmanto drukas failu"
+                  : "Apskatīt mockup"
+              }
+            >
+              {broken ? (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              ) : (
+                <FileImage className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {previewLabel(url, idx, fallbackPreviews.length)}
+                {broken ? " (tukšs)" : ""}
+              </span>
+              <Eye className="w-3 h-3 opacity-80" />
+            </button>
+          );
+        })}
         {!hasRealPrint && (
           <button
             type="button"
