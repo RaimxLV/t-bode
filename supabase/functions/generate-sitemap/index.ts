@@ -39,6 +39,8 @@ Deno.serve(async (req) => {
         .select("slug, updated_at")
         .eq("status", "published")
         .eq("is_draft", false)
+        .or(`available_from.is.null,available_from.lte.${new Date().toISOString()}`)
+        .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
         .order("updated_at", { ascending: false }),
       supabase
         .from("blog_posts")
