@@ -642,6 +642,37 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   // from zakeke_print_files which holds only production assets.
   const fallbackPreviews = previewList;
 
+  // Zakeke reizēm atdod "tukšu" priekšskatījumu — 512x512 vienlaidus krāsas
+  // klucis (~8 KB) bez dizaina. Nosakām to pēc faila izmēra un brīdinām
+  // administratoru, lai viņš nedomā, ka pasūtījums ir bojāts.
+  const [brokenPreviews, setBrokenPreviews] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    let cancelled = false;
+    const urls = fallbackPreviews.slice(0, 4);
+    if (urls.length === 0) return;
+    (async () => {
+      const results: Record<string, boolean> = {};
+      await Promise.all(
+        urls.map(async (u) => {
+          try {
+            const res = await fetch(u, { method: "HEAD" });
+            const len = Number(res.headers.get("content-length") ?? 0);
+            if (len > 0 && len < 12_000) results[u] = true;
+          } catch {
+            // tīkla kļūda — neuzskatām par bojātu
+          }
+        }),
+      );
+      if (!cancelled && Object.keys(results).length > 0) setBrokenPreviews(results);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fallbackPreviews.join("|")]);
+
+
+
   const previewLabel = (url: string, idx: number, total: number) => {
     const u = url.toLowerCase();
     if (/front|priekš/.test(u)) return "Priekša";
