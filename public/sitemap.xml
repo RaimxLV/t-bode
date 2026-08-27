@@ -37,7 +37,13 @@
   </url>
   <url>
     <loc>https://t-bode.lv/produkti/stanley-stella-organiskas-kokvilnas-t-krekls</loc>
-    <lastmod>2026-08-05T10:33:50.728Z</lastmod>
+    <lastmod>2026-08-27T07:08:20.039Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/dzemperis-bez-kapuces</loc>
+    <lastmod>2026-08-25T12:36:02.210Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -74,12 +80,6 @@
   <url>
     <loc>https://t-bode.lv/produkti/liela-kruze-450ml</loc>
     <lastmod>2026-06-11T14:15:13.939Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/dzemperis-bez-kapuces</loc>
-    <lastmod>2026-06-11T14:15:13.937Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
