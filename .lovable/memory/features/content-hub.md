@@ -25,3 +25,7 @@ type: feature
 - Katram rakstam kalendārā ir "Pārģenerēt" (teksts) un "AI bilde" (fotoreālistisks vāka attēls) pogas.
 - Kalendārā rakstus var pārkārtot (drag-and-drop vai bultiņas); mēneša datumi paliek fiksēti, mainās tikai rakstu kārtība tajos.
 - Automātiskā publicēšana APTURĒTA (cron `publish-approved-content` atslēgts). Neieslēgt bez lietotāja atļaujas.
+
+## Publiskums un bildes (2026-08-27)
+- /idejas ir publiski redzams: saite ir Navbar un Footer izvēlnē.
+- AI vāka bildes: nedrīkst visas būt darbnīcas/druknas iekārtu vidē. Prompts nejauši izvēlas dzīves situāciju (pāris ar dāvanu, kāzas, ballīte, klase/komanda, ģimene, iela, flat lay). Aizliegts: druku darbnīcas, termopreses, industriāli interjeri, studijas foni.
