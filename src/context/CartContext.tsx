@@ -102,12 +102,58 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (cartState.items.length === 0) {
-      localStorage.removeItem(CART_STORAGE_KEY);
+      try {
+        localStorage.removeItem(CART_STORAGE_KEY);
+      } catch {
+        /* storage unavailable — ignore */
+      }
       return;
     }
 
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartState));
+    // Zakeke can return preview images as huge inline `data:` URLs. Persisting
+    // those blows past the localStorage quota, which used to throw inside this
+    // effect and take the whole app (and the user's session) down. Strip them
+    // and progressively degrade instead of ever throwing.
+    const stripInline = (url?: string) =>
+      typeof url === "string" && url.startsWith("data:") ? undefined : url;
+
+    const slim: PersistedCart = {
+      ...cartState,
+      items: cartState.items.map((it) => ({
+        ...it,
+        image: stripInline(it.image) ?? "",
+        designThumbnail: stripInline(it.designThumbnail),
+        designPreviews: (it.designPreviews || []).filter(
+          (u) => typeof u === "string" && !u.startsWith("data:")
+        ),
+      })),
+    };
+
+    const attempts: PersistedCart[] = [
+      slim,
+      { ...slim, items: slim.items.map((it) => ({ ...it, designPreviews: [] })) },
+      {
+        ...slim,
+        items: slim.items.map((it) => ({
+          ...it,
+          designPreviews: [],
+          designThumbnail: undefined,
+          image: "",
+        })),
+      },
+    ];
+
+    for (const candidate of attempts) {
+      try {
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(candidate));
+        return;
+      } catch {
+        /* too large or storage blocked — try a smaller payload */
+      }
+    }
+    console.warn("[Cart] Neizdevās saglabāt grozu lokāli (vieta beigusies) — turpinām atmiņā.");
   }, [cartState]);
+
 
   const getKey = (id: string, size: string, color: string) => `${id}-${size}-${color}`;
 
