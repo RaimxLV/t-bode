@@ -224,8 +224,8 @@ Deno.serve(async (req) => {
             <measures weight="1.0" length="0.3" width="0.2" height="0.15"/>
             <receiverAddressee>
               <person_name>${escapeXml(recipientName)}</person_name>
-              <phone>${escapeXml(recipientPhone)}</phone>
-              ${recipientEmail ? `<mobile>${escapeXml(recipientPhone)}</mobile><email>${escapeXml(recipientEmail)}</email>` : ''}
+              ${recipientPhone ? `<phone>${escapeXml(recipientPhone)}</phone><mobile>${escapeXml(recipientPhone)}</mobile>` : ''}
+              <email>${escapeXml(recipientEmail)}</email>
               <address ${isPickup ? `offloadPostcode="${escapeXml(offloadPostcode)}"` : ''} postcode="${escapeXml(order.shipping_zip || '')}" deliverypoint="${escapeXml(order.shipping_city || '')}" country="LV" street="${escapeXml(order.shipping_address || '')}"/>
             </receiverAddressee>
             <returnAddressee>
