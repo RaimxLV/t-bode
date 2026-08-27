@@ -124,7 +124,17 @@ Deno.serve(async (req) => {
       || order.guest_email
       || "T-Bode klients";
     const recipientPhone = order.shipping_phone || "";
-    const recipientEmail = order.guest_email || "";
+    let recipientEmail = (order.guest_email && String(order.guest_email).trim()) || "";
+    if (!recipientEmail && order.user_id) {
+      const { data: userResp } = await supabase.auth.admin.getUserById(order.user_id);
+      recipientEmail = userResp?.user?.email || "";
+    }
+    // Omniva requires at least one valid contact detail (EMAIL) on the receiver.
+    if (!recipientEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(recipientEmail)) {
+      recipientEmail = OMNIVA_SENDER.email;
+      log("Recipient email fallback", "ok", `Order has no valid customer email → using ${OMNIVA_SENDER.email}`);
+    }
+    log("Recipient contact", "ok", `email=${recipientEmail}, phone=${recipientPhone || "—"}`);
     const isPickup = !!order.omniva_pickup_point;
     const serviceCode = isPickup ? OMNIVA_SERVICE_PA : OMNIVA_SERVICE_COURIER;
     log("Service resolved", "ok", `${isPickup ? "Parcel machine" : "Courier"} (${serviceCode})`);
