@@ -231,11 +231,28 @@ const Admin = () => {
       setOrders(data || []);
       const ids = (data || []).map((o: any) => o.id);
       if (ids.length > 0) {
-        const { data: items } = await supabase.from("order_items").select("*, products:product_id(image_url, color_variants)").in("order_id", ids);
+        // Fetch in chunks — a single `.in()` with hundreds of UUIDs makes the
+        // request URL too long (HTTP 414) and silently returns nothing.
         const grouped: Record<string, any[]> = {};
-        (items || []).forEach((item: any) => { if (!grouped[item.order_id]) grouped[item.order_id] = []; grouped[item.order_id].push(item); });
+        const CHUNK = 50;
+        for (let i = 0; i < ids.length; i += CHUNK) {
+          const chunk = ids.slice(i, i + CHUNK);
+          const { data: items, error: itemsError } = await supabase
+            .from("order_items")
+            .select("*, products:product_id(image_url, color_variants)")
+            .in("order_id", chunk);
+          if (itemsError) {
+            toast.error("Neizdevās ielādēt pasūtījumu preces");
+            break;
+          }
+          (items || []).forEach((item: any) => {
+            if (!grouped[item.order_id]) grouped[item.order_id] = [];
+            grouped[item.order_id].push(item);
+          });
+        }
         setOrderItems(grouped);
       }
+
     }
     setLoadingOrders(false);
   };
