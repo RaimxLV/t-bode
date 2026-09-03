@@ -49,7 +49,7 @@ export const BulkSizeMatrixDialog = ({
   // Next tier the customer hasn't reached yet (tiers are sorted high→low).
   const nextTier = [...VOLUME_DISCOUNT_TIERS]
     .sort((a, b) => a.min - b.min)
-    .find((tier) => total < tier.min && tier.percent > percent);
+    .find((tier) => tierQty < tier.min && tier.percent > percent);
 
 
   const update = (size: string, raw: string) => {
