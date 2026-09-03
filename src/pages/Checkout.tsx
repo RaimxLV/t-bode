@@ -361,7 +361,7 @@ const Checkout = () => {
       if (itemsError) throw itemsError;
 
       const stripeItems = items.map((item) => {
-        const ld = computeLineDiscount(item);
+        const ld = computeLineDiscount(item, eligibleQty);
         return {
           productId: item.productId,
           name: ld.percent > 0 ? `${item.name} (−${ld.percent}%)` : item.name,
