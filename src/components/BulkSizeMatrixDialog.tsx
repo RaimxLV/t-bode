@@ -35,7 +35,17 @@ export const BulkSizeMatrixDialog = ({
     () => Object.values(qtyMap).reduce((s, n) => s + (Number.isFinite(n) ? n : 0), 0),
     [qtyMap]
   );
-  const totalPrice = total * unitPrice;
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+  const percent = getDiscountPercent(total);
+  const discountedUnit = percent > 0 ? round2(unitPrice * (1 - percent / 100)) : unitPrice;
+  const fullPrice = round2(unitPrice * total);
+  const totalPrice = round2(discountedUnit * total);
+  const savings = round2(fullPrice - totalPrice);
+  // Next tier the customer hasn't reached yet (tiers are sorted high→low).
+  const nextTier = [...VOLUME_DISCOUNT_TIERS]
+    .sort((a, b) => a.min - b.min)
+    .find((tier) => total < tier.min && tier.percent > percent);
+
 
   const update = (size: string, raw: string) => {
     const n = Math.max(0, Math.min(9999, parseInt(raw || "0", 10) || 0));
