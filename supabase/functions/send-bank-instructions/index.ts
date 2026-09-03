@@ -36,7 +36,7 @@ const t = (lang: Lang) => ({
   team: lang === "lv" ? "T-Bode komanda" : "T-Bode team",
 });
 
-function renderHtml(order: any, settings: any, lang: Lang) {
+function renderHtml(order: any, settings: any, lang: Lang, note?: string) {
   const tr = t(lang);
   const ref = `#${String(order.order_number).padStart(5, "0")}`;
   return `<!doctype html>
@@ -48,6 +48,7 @@ function renderHtml(order: any, settings: any, lang: Lang) {
     <h2 style="font-size:18px;margin:0 0 8px;color:#DC2626;">${tr.subject}</h2>
     <p style="margin:0 0 16px;">${tr.hi}${order.shipping_name ? `, ${order.shipping_name}` : ""}!</p>
     <p style="margin:0 0 12px;line-height:1.5;">${tr.intro}</p>
+    ${note ? `<p style="margin:0 0 12px;line-height:1.5;background:#fff7ed;border-left:4px solid #DC2626;padding:12px 14px;"><strong>${note}</strong></p>` : ""}
     <p style="margin:0 0 4px;"><strong>${tr.orderNo}</strong> ${ref}</p>
     <p style="margin:0 0 16px;"><strong>${tr.total}:</strong> €${Number(order.total).toFixed(2)}</p>
 
@@ -100,7 +101,7 @@ Deno.serve(async (req) => {
     const auth = requireServiceRole(req, corsHeaders);
     if (!auth.ok) return auth.response;
 
-    const { order_id, lang } = await req.json();
+    const { order_id, lang, note } = await req.json();
     if (!order_id) throw new Error("order_id required");
     const language: Lang = lang === "en" ? "en" : "lv";
 
@@ -135,8 +136,9 @@ Deno.serve(async (req) => {
     }
     if (!recipientEmail) throw new Error("No recipient email");
 
-    const html = renderHtml(order, settings, language);
-    const text = renderText(order, settings, language);
+    const html = renderHtml(order, settings, language, note);
+    const text = renderText(order, settings, language)
+      + (note ? `\n\n${note}` : "");
     const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
 
     const result = await sendLovableTransactional(service, {
@@ -145,7 +147,7 @@ Deno.serve(async (req) => {
       subject,
       html,
       text,
-      idempotencyKey: `bank-instructions-${order_id}`,
+      idempotencyKey: `bank-instructions-${order_id}-${Number(order.total).toFixed(2)}`,
       metadata: { order_id, order_number: order.order_number, lang: language },
     });
 
