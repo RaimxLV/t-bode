@@ -103,20 +103,51 @@ export const BulkSizeMatrixDialog = ({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="text-xs text-muted-foreground font-body">
-            {t("bulk.totalQty", "Kopā gabali")}:{" "}
-            <span className="font-bold text-foreground">{total}</span>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
-              {t("bulk.totalPrice", "Kopējā summa")}
+        <div className="space-y-2 border-t border-border pt-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground font-body">
+              {t("bulk.totalQty", "Kopā gabali")}:{" "}
+              <span className="font-bold text-foreground">{total}</span>
+              {percent > 0 && (
+                <Badge className="ml-2 align-middle" variant="default">−{percent}%</Badge>
+              )}
             </div>
-            <div className="text-lg font-display font-bold text-primary">
-              €{totalPrice.toFixed(2)}
+            <div className="text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-body">
+                {t("bulk.totalPrice", "Kopējā summa")}
+              </div>
+              <div className="flex items-baseline justify-end gap-2">
+                {percent > 0 && (
+                  <span className="text-sm font-body text-muted-foreground line-through">
+                    €{fullPrice.toFixed(2)}
+                  </span>
+                )}
+                <span className="text-lg font-display font-bold text-primary">
+                  €{totalPrice.toFixed(2)}
+                </span>
+              </div>
             </div>
           </div>
+
+          {percent > 0 && (
+            <p className="text-xs font-body text-primary">
+              {t("bulk.discountApplied", "Apjoma atlaide {{percent}}% piemērota — ietaupījums €{{savings}} (€{{unit}}/gab.)", {
+                percent,
+                savings: savings.toFixed(2),
+                unit: discountedUnit.toFixed(2),
+              })}
+            </p>
+          )}
+          {nextTier && (
+            <p className="text-xs font-body text-muted-foreground">
+              {t("bulk.nextTierHint", "Pievieno vēl {{count}} gab., lai iegūtu {{percent}}% atlaidi.", {
+                count: nextTier.min - total,
+                percent: nextTier.percent,
+              })}
+            </p>
+          )}
         </div>
+
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="outline" onClick={onClose} className="font-body">
