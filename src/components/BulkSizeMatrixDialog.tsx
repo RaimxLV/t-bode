@@ -146,7 +146,7 @@ export const BulkSizeMatrixDialog = ({
           {nextTier && (
             <p className="text-xs font-body text-muted-foreground">
               {t("bulk.nextTierHint", "Pievieno vēl {{count}} gab., lai iegūtu {{percent}}% atlaidi.", {
-                count: nextTier.min - total,
+                count: nextTier.min - tierQty,
                 percent: nextTier.percent,
               })}
             </p>
