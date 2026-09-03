@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Layers } from "lucide-react";
-import { getDiscountPercent, VOLUME_DISCOUNT_TIERS } from "@/lib/volumeDiscount";
+import { getDiscountPercent, getEligibleQuantity, VOLUME_DISCOUNT_TIERS } from "@/lib/volumeDiscount";
+import { useCart } from "@/context/CartContext";
 
 
 interface BulkSizeMatrixDialogProps {
@@ -27,6 +28,8 @@ export const BulkSizeMatrixDialog = ({
   onConfirm,
 }: BulkSizeMatrixDialogProps) => {
   const { t } = useTranslation();
+  const { items: cartItems } = useCart();
+  const cartEligibleQty = getEligibleQuantity(cartItems);
   const [qtyMap, setQtyMap] = useState<Record<string, number>>(() =>
     Object.fromEntries(sizes.map((s) => [s, 0]))
   );
