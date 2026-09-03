@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Layers } from "lucide-react";
-import { getDiscountPercent, VOLUME_DISCOUNT_TIERS } from "@/lib/volumeDiscount";
+import { getDiscountPercent, getEligibleQuantity, VOLUME_DISCOUNT_TIERS } from "@/lib/volumeDiscount";
+import { useCart } from "@/context/CartContext";
 
 
 interface BulkSizeMatrixDialogProps {
@@ -27,6 +28,8 @@ export const BulkSizeMatrixDialog = ({
   onConfirm,
 }: BulkSizeMatrixDialogProps) => {
   const { t } = useTranslation();
+  const { items: cartItems } = useCart();
+  const cartEligibleQty = getEligibleQuantity(cartItems);
   const [qtyMap, setQtyMap] = useState<Record<string, number>>(() =>
     Object.fromEntries(sizes.map((s) => [s, 0]))
   );
@@ -36,7 +39,9 @@ export const BulkSizeMatrixDialog = ({
     [qtyMap]
   );
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const percent = getDiscountPercent(total);
+  // Tier counts this matrix PLUS personalized items already in the cart.
+  const tierQty = total + cartEligibleQty;
+  const percent = getDiscountPercent(tierQty);
   const discountedUnit = percent > 0 ? round2(unitPrice * (1 - percent / 100)) : unitPrice;
   const fullPrice = round2(unitPrice * total);
   const totalPrice = round2(discountedUnit * total);
@@ -44,7 +49,7 @@ export const BulkSizeMatrixDialog = ({
   // Next tier the customer hasn't reached yet (tiers are sorted high→low).
   const nextTier = [...VOLUME_DISCOUNT_TIERS]
     .sort((a, b) => a.min - b.min)
-    .find((tier) => total < tier.min && tier.percent > percent);
+    .find((tier) => tierQty < tier.min && tier.percent > percent);
 
 
   const update = (size: string, raw: string) => {
@@ -141,7 +146,7 @@ export const BulkSizeMatrixDialog = ({
           {nextTier && (
             <p className="text-xs font-body text-muted-foreground">
               {t("bulk.nextTierHint", "Pievieno vēl {{count}} gab., lai iegūtu {{percent}}% atlaidi.", {
-                count: nextTier.min - total,
+                count: nextTier.min - tierQty,
                 percent: nextTier.percent,
               })}
             </p>

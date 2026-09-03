@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { computeLineDiscount, type LineDiscount } from "@/lib/volumeDiscount";
+import { computeLineDiscount, getEligibleQuantity, type LineDiscount } from "@/lib/volumeDiscount";
 
 const CART_STORAGE_KEY = "t-bode-cart";
 const CART_TTL_MS = 1000 * 60 * 60 * 24;
@@ -213,11 +213,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const clearCart = useCallback(() => setCartState(EMPTY_CART), []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-  const lineDiscounts = items.map((i) => computeLineDiscount(i));
+  // Volume discount tier is based on the COMBINED quantity of all
+  // personalized/bulk items in the cart, not on a single line.
+  const eligibleQuantity = getEligibleQuantity(items);
+  const lineDiscounts = items.map((i) => computeLineDiscount(i, eligibleQuantity));
   const subtotalPrice = lineDiscounts.reduce((s, d) => s + d.originalLineTotal, 0);
   const totalPrice = lineDiscounts.reduce((s, d) => s + d.discountedLineTotal, 0);
   const totalSavings = Math.round((subtotalPrice - totalPrice) * 100) / 100;
-  const getLineDiscount = (item: CartItem) => computeLineDiscount(item);
+  const getLineDiscount = (item: CartItem) => computeLineDiscount(item, eligibleQuantity);
 
   return (
     <CartContext.Provider value={{ items, isOpen, setIsOpen, addItem, removeItem, updateQuantity, clearCart, totalItems, totalPrice, subtotalPrice, totalSavings, getLineDiscount }}>

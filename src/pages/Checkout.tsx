@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import { OFFICE_PICKUP_VALUE, OFFICE_PICKUP_ADDRESS } from "@/lib/officePickup";
 import { sanitizePhoneInput, phoneRegex } from "@/lib/phone";
 import { Seo } from "@/components/Seo";
-import { computeLineDiscount } from "@/lib/volumeDiscount";
+import { computeLineDiscount, getEligibleQuantity } from "@/lib/volumeDiscount";
 
 type ShippingMethod = "omniva" | "courier" | "pickup";
 type CheckoutMode = "choose" | "guest" | "loggedin";
@@ -324,8 +324,10 @@ const Checkout = () => {
         (priceRows ?? []).map((p: any) => [p.id, Number(p.price)])
       );
 
+      // Tier is picked from the combined quantity of all personalized items.
+      const eligibleQty = getEligibleQuantity(items);
       const orderItems = items.map((item) => {
-        const ld = computeLineDiscount(item);
+        const ld = computeLineDiscount(item, eligibleQty);
         const effectiveUnit = ld.discountedUnitPrice;
         const dbBase = basePriceMap.get(item.productId);
         // Prefer DB base price (authoritative). Fall back to cart hints.
@@ -359,7 +361,7 @@ const Checkout = () => {
       if (itemsError) throw itemsError;
 
       const stripeItems = items.map((item) => {
-        const ld = computeLineDiscount(item);
+        const ld = computeLineDiscount(item, eligibleQty);
         return {
           productId: item.productId,
           name: ld.percent > 0 ? `${item.name} (−${ld.percent}%)` : item.name,

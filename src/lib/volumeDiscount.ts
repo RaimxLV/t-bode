@@ -28,6 +28,16 @@ export const isVolumeDiscountEligible = (
   item: Pick<CartItem, "designId" | "isBulk">
 ): boolean => Boolean(item.designId || item.isBulk);
 
+/**
+ * Total quantity of ALL eligible (personalized / bulk) items in the cart.
+ * The discount tier is based on this combined quantity, not on a single line —
+ * a customer ordering 19 different designs × 2 pcs still gets the 37-pcs tier.
+ */
+export const getEligibleQuantity = (
+  items: Pick<CartItem, "designId" | "isBulk" | "quantity">[]
+): number =>
+  items.reduce((sum, i) => (isVolumeDiscountEligible(i) ? sum + i.quantity : sum), 0);
+
 export interface LineDiscount {
   eligible: boolean;
   percent: number;
@@ -40,9 +50,13 @@ export interface LineDiscount {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-export const computeLineDiscount = (item: CartItem): LineDiscount => {
+/**
+ * @param tierQuantity Combined eligible quantity used to pick the tier.
+ *   Defaults to the line's own quantity for standalone previews.
+ */
+export const computeLineDiscount = (item: CartItem, tierQuantity?: number): LineDiscount => {
   const eligible = isVolumeDiscountEligible(item);
-  const percent = eligible ? getDiscountPercent(item.quantity) : 0;
+  const percent = eligible ? getDiscountPercent(tierQuantity ?? item.quantity) : 0;
   const originalUnitPrice = item.price;
   const discountedUnitPrice = percent > 0
     ? round2(originalUnitPrice * (1 - percent / 100))
