@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
-import { computeLineDiscount, type LineDiscount } from "@/lib/volumeDiscount";
+import { computeLineDiscount, getEligibleQuantity, type LineDiscount } from "@/lib/volumeDiscount";
 
 const CART_STORAGE_KEY = "t-bode-cart";
 const CART_TTL_MS = 1000 * 60 * 60 * 24;
