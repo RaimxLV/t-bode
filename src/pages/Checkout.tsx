@@ -324,8 +324,10 @@ const Checkout = () => {
         (priceRows ?? []).map((p: any) => [p.id, Number(p.price)])
       );
 
+      // Tier is picked from the combined quantity of all personalized items.
+      const eligibleQty = getEligibleQuantity(items);
       const orderItems = items.map((item) => {
-        const ld = computeLineDiscount(item);
+        const ld = computeLineDiscount(item, eligibleQty);
         const effectiveUnit = ld.discountedUnitPrice;
         const dbBase = basePriceMap.get(item.productId);
         // Prefer DB base price (authoritative). Fall back to cart hints.
