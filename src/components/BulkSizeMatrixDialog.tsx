@@ -36,7 +36,9 @@ export const BulkSizeMatrixDialog = ({
     [qtyMap]
   );
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const percent = getDiscountPercent(total);
+  // Tier counts this matrix PLUS personalized items already in the cart.
+  const tierQty = total + cartEligibleQty;
+  const percent = getDiscountPercent(tierQty);
   const discountedUnit = percent > 0 ? round2(unitPrice * (1 - percent / 100)) : unitPrice;
   const fullPrice = round2(unitPrice * total);
   const totalPrice = round2(discountedUnit * total);
