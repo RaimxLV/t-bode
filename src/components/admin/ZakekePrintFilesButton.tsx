@@ -38,6 +38,13 @@ interface Props {
   orderNumber?: number | null;
   /** Client / company name used as filename prefix */
   clientName?: string | null;
+  /**
+   * Whether the parent order is paid. Zakeke only produces print files after
+   * payment, so for unpaid orders we show a calm "waiting for payment" note
+   * instead of an endless spinner + polling. Defaults to true so existing
+   * call sites keep their previous behaviour.
+   */
+  orderPaid?: boolean;
 }
 
 interface NormalizedFile {
