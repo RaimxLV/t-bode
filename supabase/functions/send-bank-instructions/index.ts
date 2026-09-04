@@ -15,8 +15,9 @@ const t = (lang: Lang) => ({
   hi: lang === "lv" ? "Sveiki" : "Hi",
   intro:
     lang === "lv"
-      ? "Paldies par pasūtījumu! Lūdzu, veic apmaksu ar bankas pārskaitījumu, izmantojot zemāk norādītos rekvizītus. Apmaksas termiņš — 3 darba dienas."
-      : "Thank you for your order! Please complete the payment via bank transfer using the details below. Payment is due within 3 business days.",
+      ? "Paldies par pasūtījumu! Lūdzu, veic apmaksu ar bankas pārskaitījumu, izmantojot zemāk norādītos rekvizītus. Apmaksas termiņš — 5 darba dienas."
+      : "Thank you for your order! Please complete the payment via bank transfer using the details below. Payment is due within 5 business days.",
+
   orderNo: lang === "lv" ? "Pasūtījuma Nr." : "Order No.",
   total: lang === "lv" ? "Summa" : "Amount",
   details: lang === "lv" ? "Bankas rekvizīti" : "Bank details",
