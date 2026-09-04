@@ -233,25 +233,38 @@ const Admin = () => {
       if (ids.length > 0) {
         // Fetch in chunks — a single `.in()` with hundreds of UUIDs makes the
         // request URL too long (HTTP 414) and silently returns nothing.
-        const grouped: Record<string, any[]> = {};
-        const CHUNK = 50;
-        for (let i = 0; i < ids.length; i += CHUNK) {
-          const chunk = ids.slice(i, i + CHUNK);
-          const { data: items, error: itemsError } = await supabase
-            .from("order_items")
-            .select("*, products:product_id(image_url, color_variants)")
-            .in("order_id", chunk);
-          if (itemsError) {
-            toast.error("Neizdevās ielādēt pasūtījumu preces");
-            break;
-          }
-          (items || []).forEach((item: any) => {
-            if (!grouped[item.order_id]) grouped[item.order_id] = [];
-            grouped[item.order_id].push(item);
-          });
-        }
-        setOrderItems(grouped);
+        // Chunks run in parallel and results are merged into state as they
+        // arrive, so the newest orders show their item counts immediately
+        // instead of waiting for a long sequential chain (which used to render
+        // "0 preces" for several seconds on mobile).
+        const CHUNK = 40;
+        const chunks: string[][] = [];
+        for (let i = 0; i < ids.length; i += CHUNK) chunks.push(ids.slice(i, i + CHUNK));
+
+        let failed = false;
+        await Promise.all(
+          chunks.map(async (chunk) => {
+            const { data: items, error: itemsError } = await supabase
+              .from("order_items")
+              .select("*, products:product_id(image_url, color_variants)")
+              .in("order_id", chunk);
+            if (itemsError) {
+              failed = true;
+              return;
+            }
+            const partial: Record<string, any[]> = {};
+            (items || []).forEach((item: any) => {
+              if (!partial[item.order_id]) partial[item.order_id] = [];
+              partial[item.order_id].push(item);
+            });
+            setOrderItems((prev) => ({ ...prev, ...partial }));
+          })
+        );
+        if (failed) toast.error("Daļu pasūtījumu preču neizdevās ielādēt — mēģiniet atsvaidzināt");
+      } else {
+        setOrderItems({});
       }
+
 
     }
     setLoadingOrders(false);
