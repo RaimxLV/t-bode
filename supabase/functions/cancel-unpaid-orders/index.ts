@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { requireServiceRole } from "../_shared/service-role-auth.ts";
+import { businessDaysSince, PAYMENT_TERM_BUSINESS_DAYS } from "../_shared/business-days.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +9,9 @@ const corsHeaders = {
 
 /**
  * Cancels online-payment orders (Montonio / Stripe card) that are still
- * `pending` 24h after creation — i.e. the customer never completed payment.
- * Bank-transfer orders are left alone: they follow the payment-reminder flow.
+ * `pending` after 5 business days — i.e. the customer never completed payment.
+ * Bank-transfer orders are left alone: they follow the payment-reminder flow
+ * (2 polite reminders, then cancellation on the same 5-business-day term).
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -23,7 +25,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    // Coarse pre-filter (5 business days are never fewer than 5 calendar days),
+    // then the exact business-day check happens in JS below.
+    const cutoff = new Date(Date.now() - PAYMENT_TERM_BUSINESS_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
     const { data: orders, error } = await service
       .from("orders")
@@ -42,7 +46,13 @@ Deno.serve(async (req) => {
     const isPaid = (o: any) =>
       String(o.montonio_payment_status ?? "").toUpperCase() === "PAID";
 
-    const targets = (orders ?? []).filter((o) => isOnline(o) && !isPaid(o));
+    const targets = (orders ?? []).filter(
+      (o) =>
+        isOnline(o) &&
+        !isPaid(o) &&
+        businessDaysSince(o.created_at) >= PAYMENT_TERM_BUSINESS_DAYS,
+    );
+
 
     let cancelled = 0;
     let emailed = 0;
