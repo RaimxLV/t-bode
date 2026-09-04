@@ -319,9 +319,19 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const monthsLv = ["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"];
   const monthsLvLoc = ["janvārī","februārī","martā","aprīlī","maijā","jūnijā","jūlijā","augustā","septembrī","oktobrī","novembrī","decembrī"];
   const issueDateLv = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLv[issue.getMonth()]}`;
-  const dueDate = data.due_date ? new Date(data.due_date) : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
+  const isBankTransfer = (() => {
+    const m = (data.payment_method ?? "").toLowerCase();
+    return m.includes("bank") || m.includes("transfer") || m.includes("parsk");
+  })();
+  // Bank-transfer invoices are due in 5 business days; others keep the 14-day default.
+  const dueDate = data.due_date
+    ? new Date(data.due_date)
+    : isBankTransfer
+      ? addBusinessDays(issue, PAYMENT_TERM_BUSINESS_DAYS)
+      : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
   const dueDateLv = `${String(dueDate.getDate()).padStart(2, "0")}.${String(dueDate.getMonth() + 1).padStart(2, "0")}.${dueDate.getFullYear()}.`;
   const payMethodLv = paymentMethodLv(data.payment_method);
+
 
   // ============================================================
   // 1. HEADER STRIP — logo (left) + "PAVADZĪME" + meta (right)
