@@ -1,21 +1,50 @@
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { sendLovableTransactional } from "../_shared/lovable-email.ts";
 import { requireAdmin } from "../_shared/admin-auth.ts";
+import {
+  addBusinessDays,
+  businessDaysSince,
+  formatDateLv,
+  PAYMENT_TERM_BUSINESS_DAYS,
+} from "../_shared/business-days.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 type Lang = "lv" | "en";
 
-const t = (lang: Lang) => ({
-  subject: lang === "lv" ? "Atgādinājums par apmaksu" : "Payment reminder",
+/**
+ * Reminder stages for bank-transfer orders, inside the 5-business-day term:
+ *   stage 1 → after 2 business days (friendly nudge)
+ *   stage 2 → after 4 business days (last, still warm, reminder)
+ *   then    → automatic cancellation after 5 business days
+ */
+const REMINDER_STAGES = [2, 4];
+
+const t = (lang: Lang, stage: 1 | 2, dueLabel: string) => ({
+  subject:
+    lang === "lv"
+      ? stage === 1
+        ? "Draudzīgs atgādinājums par rēķinu"
+        : "Pēdējais atgādinājums par rēķinu"
+      : stage === 1
+        ? "A friendly payment reminder"
+        : "A final payment reminder",
   hi: lang === "lv" ? "Sveiki" : "Hi",
   intro:
     lang === "lv"
-      ? "Atgādinām, ka Tavs pasūtījums vēl gaida apmaksu ar bankas pārskaitījumu."
-      : "This is a reminder that your order is still awaiting bank transfer payment.",
+      ? stage === 1
+        ? "Ceram, ka Tev viss labi! Gribējām draudzīgi atgādināt, ka Tavs pasūtījums vēl gaida apmaksu ar bankas pārskaitījumu. Ja tas vienkārši aizmirsies — nekas nav zudis, pasūtījums ir droši rezervēts."
+        : "Vēlamies pieklājīgi atgādināt, ka Tavam pasūtījumam vēl nav saņemta apmaksa. Šis ir pēdējais atgādinājums pirms pasūtījuma automātiskas atcelšanas — ļoti ceram, ka to nevajadzēs."
+      : stage === 1
+        ? "We hope you're doing well! Just a friendly reminder that your order is still awaiting your bank transfer. Your order is safely reserved for you."
+        : "A polite reminder that we haven't received your payment yet. This is the last reminder before the order is cancelled automatically — we hope it won't come to that.",
+  dueLine:
+    lang === "lv"
+      ? `Apmaksas termiņš: <strong>${dueLabel}</strong> (5 darba dienas no pasūtījuma).`
+      : `Payment due: <strong>${dueLabel}</strong> (5 business days from the order date).`,
   orderNo: lang === "lv" ? "Pasūtījuma Nr." : "Order No.",
   total: lang === "lv" ? "Summa" : "Amount",
   details: lang === "lv" ? "Bankas rekvizīti" : "Bank details",
@@ -23,19 +52,24 @@ const t = (lang: Lang) => ({
   iban: "IBAN",
   swift: "SWIFT",
   reference: lang === "lv" ? "Maksājuma mērķis" : "Payment reference",
-  expiresNote:
+  refHint:
     lang === "lv"
-      ? "Ja apmaksa netiks saņemta tuvākajā laikā, pasūtījums tiks automātiski atcelts."
-      : "If payment is not received soon, the order will be cancelled automatically.",
-  questions:
+      ? "Lūdzu, maksājuma mērķī norādi tieši šo pasūtījuma numuru — tad varam apmaksu atzīmēt uzreiz."
+      : "Please use exactly this order number as the payment reference so we can match it right away.",
+  help:
     lang === "lv"
-      ? "Ja apmaksa jau veikta, ignorē šo e-pastu."
-      : "If you have already paid, please ignore this email.",
+      ? "Ja radušies jautājumi, vēlies mainīt pasūtījumu vai nepieciešams ilgāks termiņš — vienkārši atbildi uz šo e-pastu, mēs labprāt palīdzēsim."
+      : "If you have any questions, want to change the order, or need a bit more time — just reply to this email and we'll gladly help.",
+  alreadyPaid:
+    lang === "lv"
+      ? "Ja apmaksa jau ir veikta, paldies — šo e-pastu vari droši ignorēt."
+      : "If you have already paid, thank you — please ignore this email.",
+  thanks: lang === "lv" ? "Paldies, ka izvēlējies T-Bode!" : "Thank you for choosing T-Bode!",
   team: lang === "lv" ? "T-Bode komanda" : "T-Bode team",
 });
 
-function renderHtml(order: any, settings: any, lang: Lang) {
-  const tr = t(lang);
+function renderHtml(order: any, settings: any, lang: Lang, stage: 1 | 2, dueLabel: string) {
+  const tr = t(lang, stage, dueLabel);
   const ref = `#${String(order.order_number).padStart(5, "0")}`;
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;color:#111;">
@@ -45,7 +79,8 @@ function renderHtml(order: any, settings: any, lang: Lang) {
     </div>
     <h2 style="font-size:18px;margin:0 0 8px;color:#DC2626;">${tr.subject}</h2>
     <p style="margin:0 0 16px;">${tr.hi}${order.shipping_name ? `, ${order.shipping_name}` : ""}!</p>
-    <p style="margin:0 0 12px;line-height:1.5;">${tr.intro}</p>
+    <p style="margin:0 0 12px;line-height:1.6;">${tr.intro}</p>
+    <p style="margin:0 0 16px;line-height:1.6;">${tr.dueLine}</p>
     <p style="margin:0 0 4px;"><strong>${tr.orderNo}</strong> ${ref}</p>
     <p style="margin:0 0 16px;"><strong>${tr.total}:</strong> €${Number(order.total).toFixed(2)}</p>
 
@@ -57,8 +92,10 @@ function renderHtml(order: any, settings: any, lang: Lang) {
       <p style="margin:0;"><strong>${tr.reference}:</strong> ${ref}</p>
     </div>
 
-    <p style="margin:16px 0 8px;color:#444;line-height:1.5;">${tr.expiresNote}</p>
-    <p style="margin:16px 0 8px;color:#555;">${tr.questions}</p>
+    <p style="margin:12px 0 8px;color:#444;line-height:1.6;">${tr.refHint}</p>
+    <p style="margin:12px 0 8px;color:#444;line-height:1.6;">${tr.help}</p>
+    <p style="margin:12px 0 8px;color:#666;line-height:1.6;">${tr.alreadyPaid}</p>
+    <p style="margin:20px 0 4px;color:#111;">${tr.thanks}</p>
     <p style="margin:0;color:#555;">— ${tr.team}</p>
   </div>
 </body></html>`;
@@ -90,7 +127,7 @@ Deno.serve(async (req) => {
     const sendOne = async (orderId: string, language: Lang) => {
       const { data: order } = await service
         .from("orders")
-        .select("id, order_number, total, guest_email, user_id, shipping_name, status, payment_method, payment_reminder_count")
+        .select("id, order_number, total, guest_email, user_id, shipping_name, status, payment_method, payment_reminder_count, created_at")
         .eq("id", orderId)
         .maybeSingle();
       if (!order) return { skipped: true, reason: "not found" };
@@ -106,31 +143,33 @@ Deno.serve(async (req) => {
 
       const toEmail = recipientEmail;
 
-      const html = renderHtml(order, settings, language);
-      const subject = `${t(language).subject} #${String(order.order_number).padStart(5, "0")}`;
-
       const reminderCount = (order as any).payment_reminder_count != null
         ? Number((order as any).payment_reminder_count)
         : 0;
+      const stage: 1 | 2 = reminderCount >= 1 ? 2 : 1;
+      const dueLabel = formatDateLv(
+        addBusinessDays(order.created_at, PAYMENT_TERM_BUSINESS_DAYS),
+      );
+
+      const html = renderHtml(order, settings, language, stage, dueLabel);
+      const subject = `${t(language, stage, dueLabel).subject} #${String(order.order_number).padStart(5, "0")}`;
+
       const result = await sendLovableTransactional(service, {
         template: "payment-reminder",
         to: toEmail,
         subject,
         html,
         idempotencyKey: `payment-reminder-${orderId}-${reminderCount}`,
-        metadata: { order_id: orderId, order_number: order.order_number, lang: language },
+        metadata: { order_id: orderId, order_number: order.order_number, lang: language, stage },
       });
       if (!result.ok) {
         return { sent: false, error: result.error };
       }
-      const newCount = (order as any).payment_reminder_count != null
-        ? Number((order as any).payment_reminder_count) + 1
-        : 1;
       await service
         .from("orders")
         .update({
           last_payment_reminder_at: new Date().toISOString(),
-          payment_reminder_count: newCount,
+          payment_reminder_count: reminderCount + 1,
         } as any)
         .eq("id", orderId);
       return { sent: true, to: toEmail };
@@ -143,8 +182,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Escalation cron: 24h → 3d → 7d (then auto-cancel)
-    const now = Date.now();
+    // Escalation cron: 2 business days → 4 business days → cancel after 5
     const { data: pendingOrders } = await service
       .from("orders")
       .select("id, created_at, payment_reminder_count, last_payment_reminder_at")
@@ -154,31 +192,35 @@ Deno.serve(async (req) => {
     let sent = 0;
     let cancelled = 0;
     let skipped = 0;
+    const now = Date.now();
 
     for (const o of pendingOrders ?? []) {
       const count = Number((o as any).payment_reminder_count ?? 0);
-      const ageMs = now - new Date(o.created_at).getTime();
+      const bizDays = businessDaysSince(o.created_at);
       const lastSentMs = o.last_payment_reminder_at
         ? now - new Date(o.last_payment_reminder_at).getTime()
         : Infinity;
-      if (lastSentMs < 12 * 60 * 60 * 1000) { skipped++; continue; }
 
-      if (count === 0 && ageMs >= 24 * 60 * 60 * 1000) {
-        const r = await sendOne(o.id, "lv");
-        if ((r as any).sent) sent++; else skipped++;
-      } else if (count === 1 && ageMs >= 3 * 24 * 60 * 60 * 1000) {
-        const r = await sendOne(o.id, "lv");
-        if ((r as any).sent) sent++; else skipped++;
-      } else if (count >= 2 && ageMs >= 7 * 24 * 60 * 60 * 1000) {
-        if (count === 2) {
+      // Term is over → cancel (send the 2nd reminder first if it never went out)
+      if (bizDays >= PAYMENT_TERM_BUSINESS_DAYS) {
+        if (count < REMINDER_STAGES.length && lastSentMs >= 12 * 60 * 60 * 1000) {
           const r = await sendOne(o.id, "lv");
           if ((r as any).sent) sent++;
         }
         await service.from("orders").update({
           status: "cancelled" as any,
-          notes: `[AUTO-CANCEL] Bank transfer not received within 7 days (${new Date().toISOString().slice(0, 10)})`,
+          notes: `[AUTO-CANCEL] Bankas pārskaitījums nav saņemts 5 darba dienās (${new Date().toISOString().slice(0, 10)})`,
         }).eq("id", o.id);
         cancelled++;
+        continue;
+      }
+
+      if (lastSentMs < 12 * 60 * 60 * 1000) { skipped++; continue; }
+
+      const nextStageDay = REMINDER_STAGES[count];
+      if (nextStageDay !== undefined && bizDays >= nextStageDay) {
+        const r = await sendOne(o.id, "lv");
+        if ((r as any).sent) sent++; else skipped++;
       } else {
         skipped++;
       }
