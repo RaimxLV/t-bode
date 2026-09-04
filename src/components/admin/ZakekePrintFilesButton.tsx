@@ -584,12 +584,29 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
       window.clearInterval(pollId);
       window.clearInterval(tickId);
     };
-  }, [hasZakeke, ready, item.id]);
+  }, [hasZakeke, ready, item.id, orderPaid]);
 
   if (!hasZakeke) return null;
 
   const baseClasses =
     variant === "block" ? "w-full" : "w-full sm:w-auto";
+
+  if (!ready && !orderPaid) {
+    return (
+      <div
+        className={`inline-flex items-center gap-2 text-[11px] font-body font-medium text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded ${baseClasses}`}
+        title="Drukas faili tiek pasūtīti no Zakeke tikai pēc apmaksas."
+      >
+        <Clock className="w-3.5 h-3.5 shrink-0" />
+        <span className="flex-1 text-left leading-tight">
+          Gaida apmaksu
+          <span className="block text-[10px] text-slate-500 font-normal">
+            Drukas faili tiks sagatavoti pēc maksājuma
+          </span>
+        </span>
+      </div>
+    );
+  }
 
   if (!ready) {
     const mins = Math.floor(elapsed / 60);
