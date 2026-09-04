@@ -561,7 +561,9 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   };
 
   useEffect(() => {
-    if (!hasZakeke || ready) return;
+    // Unpaid orders: Zakeke has not been asked to produce anything yet, so
+    // there is nothing to sync or poll for. Stay idle until payment lands.
+    if (!hasZakeke || ready || !orderPaid) return;
     let cancelled = false;
     if (!syncTriggered.current) {
       syncTriggered.current = true;
