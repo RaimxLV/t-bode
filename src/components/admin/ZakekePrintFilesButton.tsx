@@ -38,6 +38,13 @@ interface Props {
   orderNumber?: number | null;
   /** Client / company name used as filename prefix */
   clientName?: string | null;
+  /**
+   * Whether the parent order is paid. Zakeke only produces print files after
+   * payment, so for unpaid orders we show a calm "waiting for payment" note
+   * instead of an endless spinner + polling. Defaults to true so existing
+   * call sites keep their previous behaviour.
+   */
+  orderPaid?: boolean;
 }
 
 interface NormalizedFile {
@@ -510,7 +517,7 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
   }
 };
 
-export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, clientName }: Props) => {
+export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, clientName, orderPaid = true }: Props) => {
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
@@ -554,7 +561,9 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
   };
 
   useEffect(() => {
-    if (!hasZakeke || ready) return;
+    // Unpaid orders: Zakeke has not been asked to produce anything yet, so
+    // there is nothing to sync or poll for. Stay idle until payment lands.
+    if (!hasZakeke || ready || !orderPaid) return;
     let cancelled = false;
     if (!syncTriggered.current) {
       syncTriggered.current = true;
@@ -575,12 +584,29 @@ export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, 
       window.clearInterval(pollId);
       window.clearInterval(tickId);
     };
-  }, [hasZakeke, ready, item.id]);
+  }, [hasZakeke, ready, item.id, orderPaid]);
 
   if (!hasZakeke) return null;
 
   const baseClasses =
     variant === "block" ? "w-full" : "w-full sm:w-auto";
+
+  if (!ready && !orderPaid) {
+    return (
+      <div
+        className={`inline-flex items-center gap-2 text-[11px] font-body font-medium text-slate-700 bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded ${baseClasses}`}
+        title="Drukas faili tiek pasūtīti no Zakeke tikai pēc apmaksas."
+      >
+        <Clock className="w-3.5 h-3.5 shrink-0" />
+        <span className="flex-1 text-left leading-tight">
+          Gaida apmaksu
+          <span className="block text-[10px] text-slate-500 font-normal">
+            Drukas faili tiks sagatavoti pēc maksājuma
+          </span>
+        </span>
+      </div>
+    );
+  }
 
   if (!ready) {
     const mins = Math.floor(elapsed / 60);
