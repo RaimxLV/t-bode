@@ -1356,6 +1356,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                     variant="block"
                                     orderNumber={order.order_number}
                                     clientName={order.is_business ? (order.company_name ?? order.shipping_name) : (order.shipping_name ?? order.guest_email)}
+                                    orderPaid={isOrderPaid(order)}
                                   />
                                 </div>
                               );
@@ -1426,6 +1427,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                                             variant="inline"
                                             orderNumber={order.order_number}
                                             clientName={order.is_business ? (order.company_name ?? order.shipping_name) : (order.shipping_name ?? order.guest_email)}
+                                            orderPaid={isOrderPaid(order)}
                                           />
                                         </div>
                                       </div>
