@@ -517,7 +517,7 @@ const triggerDownload = async (f: NormalizedFile, friendlyName: string, orderIte
   }
 };
 
-export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, clientName }: Props) => {
+export const ZakekePrintFilesButton = ({ item, variant = "inline", orderNumber, clientName, orderPaid = true }: Props) => {
   const [files, setFiles] = useState<any>(item.zakeke_print_files);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
