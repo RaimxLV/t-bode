@@ -3,6 +3,8 @@
 // Prices are VAT-inclusive (B2C standard). Net = gross / 1.21, VAT = gross - net.
 import { PDFDocument, PDFFont, PDFPage, rgb } from "npm:pdf-lib@1.17.1";
 import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
+import { addBusinessDays, PAYMENT_TERM_BUSINESS_DAYS } from "./business-days.ts";
+
 
 export interface InvoiceBuyer {
   is_business: boolean;
@@ -319,9 +321,19 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
   const monthsLv = ["janvāris","februāris","marts","aprīlis","maijs","jūnijs","jūlijs","augusts","septembris","oktobris","novembris","decembris"];
   const monthsLvLoc = ["janvārī","februārī","martā","aprīlī","maijā","jūnijā","jūlijā","augustā","septembrī","oktobrī","novembrī","decembrī"];
   const issueDateLv = `${issue.getFullYear()}. gada ${issue.getDate()}. ${monthsLv[issue.getMonth()]}`;
-  const dueDate = data.due_date ? new Date(data.due_date) : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
+  const isBankTransfer = (() => {
+    const m = (data.payment_method ?? "").toLowerCase();
+    return m.includes("bank") || m.includes("transfer") || m.includes("parsk");
+  })();
+  // Bank-transfer invoices are due in 5 business days; others keep the 14-day default.
+  const dueDate = data.due_date
+    ? new Date(data.due_date)
+    : isBankTransfer
+      ? addBusinessDays(issue, PAYMENT_TERM_BUSINESS_DAYS)
+      : new Date(issue.getTime() + 14 * 24 * 3600 * 1000);
   const dueDateLv = `${String(dueDate.getDate()).padStart(2, "0")}.${String(dueDate.getMonth() + 1).padStart(2, "0")}.${dueDate.getFullYear()}.`;
   const payMethodLv = paymentMethodLv(data.payment_method);
+
 
   // ============================================================
   // 1. HEADER STRIP — logo (left) + "PAVADZĪME" + meta (right)
@@ -661,7 +673,45 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<{ bytes: Ui
     for (const line of noteLines.slice(0, 3)) {
       drawText(currentPage, line, marginX, y, font, 9, colorText);
       y -= 11;
+  }
+
+  // ============================================================
+  // 8b. BANK TRANSFER PAYMENT BLOCK
+  // Shown only for bank-transfer invoices: how, where and by when to pay.
+  // ============================================================
+  if (isBankTransfer) {
+    y -= 12;
+    const refText = data.order_number ? `#${String(data.order_number).padStart(5, "0")}` : (data.invoice_number ?? "—");
+    const lines: Array<[string, string]> = [
+      ["Apmaksas veids", "Bankas pārskaitījums"],
+      ["Saņēmējs", seller.bank_beneficiary ?? seller.company_name],
+      ["Banka / SWIFT", `${bankName}  ·  ${bankSwift}`],
+      ["IBAN", bankIban],
+      ["Maksājuma mērķis", refText],
+      ["Samaksāt līdz", `${dueDateLv}  (5 darba dienas)`],
+    ];
+    const boxH = 22 + lines.length * 13 + 20;
+    currentPage.drawRectangle({
+      x: marginX, y: y - boxH + 10, width: contentW, height: boxH,
+      color: rgb(0.97, 0.97, 0.98), borderColor: colorAccent, borderWidth: 0.8,
+    });
+    let by = y - 6;
+    drawText(currentPage, "APMAKSAS INFORMĀCIJA", marginX + 10, by, bold, 9, colorAccent);
+    by -= 15;
+    for (const [label, value] of lines) {
+      drawText(currentPage, `${label}:`, marginX + 10, by, font, 8.5, colorMuted);
+      drawText(currentPage, value, marginX + 140, by, bold, 8.5, colorText);
+      by -= 13;
     }
+    drawText(
+      currentPage,
+      "Lūdzam maksājuma mērķī norādīt pasūtījuma numuru — tad apmaksu atzīmējam uzreiz.",
+      marginX + 10, by - 2, font, 8, colorMuted,
+    );
+    y -= boxH + 6;
+  }
+
+
   }
 
   // ============================================================
