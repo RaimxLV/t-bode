@@ -36,6 +36,18 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://t-bode.lv/produkti/stanley-stella-organiskas-kokvilnas-t-krekls</loc>
+    <lastmod>2026-09-07T14:03:03.121Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/bernu-t-krekls</loc>
+    <lastmod>2026-09-07T10:57:27.970Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://t-bode.lv/produkti/stanley-stella-bieza-auduma-t-krekls</loc>
     <lastmod>2026-09-02T07:49:19.717Z</lastmod>
     <changefreq>weekly</changefreq>
@@ -44,18 +56,6 @@
   <url>
     <loc>https://t-bode.lv/produkti/dzemperis-bez-kapuces</loc>
     <lastmod>2026-09-01T08:41:50.798Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/bernu-t-krekls</loc>
-    <lastmod>2026-08-31T09:24:54.720Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/stanley-stella-organiskas-kokvilnas-t-krekls</loc>
-    <lastmod>2026-08-27T07:08:20.039Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -120,13 +120,31 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/zekes-latvija</loc>
+    <loc>https://t-bode.lv/produkti/cepure-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/dzemperis-ar-uzsuvi-latvija</loc>
+    <loc>https://t-bode.lv/produkti/dzemperis-tris-zvaigznes</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/dzemperis-ar-izsuvumu-latvija</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/bernu-t-krekls-fanu</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/bernu-dzemperis-ar-uzsuvi-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -138,7 +156,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/bernu-dzemperis-ar-uzsuvi-latvija</loc>
+    <loc>https://t-bode.lv/produkti/dzemperis-ar-uzsuvi-latvija</loc>
+    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://t-bode.lv/produkti/zekes-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -156,31 +180,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://t-bode.lv/produkti/bernu-t-krekls-fanu</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/dzemperis-ar-izsuvumu-latvija</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://t-bode.lv/produkti/t-krekls-tris-zvaigznes</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/dzemperis-tris-zvaigznes</loc>
-    <lastmod>2026-06-11T14:12:49.667Z</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://t-bode.lv/produkti/cepure-latvija</loc>
     <lastmod>2026-06-11T14:12:49.667Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
