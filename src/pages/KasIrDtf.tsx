@@ -1,32 +1,47 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { ArrowRight, Image as ImageIcon, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
+import dtfStep1 from "@/assets/dtf-step-1.jpg";
+import dtfStep2 from "@/assets/dtf-step-2.jpg";
+import dtfStep3 from "@/assets/dtf-step-3.jpg";
+import dtfStep4 from "@/assets/dtf-step-4.jpg";
+import dtfStep5 from "@/assets/dtf-step-5.jpg";
 
 const steps = [
   {
+    image: dtfStep1,
+    alt: "DTF printeris drukā dizainu uz caurspīdīgas PET plēves",
     title: "Dizaina sagatavošana un druka uz plēves",
     body:
       "Tavs dizains ar speciālu printeri spoguļattēlā tiek uzdrukāts uz caurspīdīgas PET plēves. Vispirms printeris uzklāj krāsaino slāni (CMYK krāsas), bet uzreiz pēc tam – blīvu, baltu krāsas pamatni. Baltā krāsa ir kritiski svarīga, lai dizains izskatītos spilgts un nepārspējami košs arī uz tumšiem vai melniem audumiem.",
   },
   {
+    image: dtfStep2,
+    alt: "Termo-līmes pulvera uzklāšana uz apdrukātās DTF plēves",
     title: "Līmes pulvera uzklāšana",
     body:
       "Kamēr tinte uz plēves vēl ir mitra, tai pāri tiek uzbērts īpašs termo-līmes pulveris. Šis pulveris pielīp tikai pie apdrukātajām vietām (tintes), bet neapskartās plēves vietas paliek pilnīgi tīras.",
   },
   {
+    image: dtfStep3,
+    alt: "DTF plēve iziet no žāvēšanas krāsns, kur līmes pulveris izkūst",
     title: "Līmes fiksācija (kausēšana)",
     body:
       "Plēve nonāk specializētā žāvēšanas krāsnī. Karstumā termo-pulveris izkūst, pārvēršoties par plānu, viendabīgu un elastīgu līmes slāni, kas cieši sasaistās ar uzdrukāto krāsu.",
   },
   {
+    image: dtfStep4,
+    alt: "DTF plēve novietota uz melna T-krekla termopresē",
     title: "Termodruka (Karstā pārnese uz auduma)",
     body:
       "Sagatavotā plēve tiek precīzi novietota uz apģērba (piemēram, T-krekla vai džempera) un ievietota profesionālā termopresē. Augstā temperatūrā (parasti ap 150°C–160°C) un zem spēcīga spiediena izkususī līme burtiski „ieaug\" auduma šķiedrās.",
   },
   {
+    image: dtfStep5,
+    alt: "PET plēves noņemšana no apdrukāta melna T-krekla",
     title: "Plēves noņemšana un gala fiksācija",
     body:
       "Karstumā piespiestais materiāls tiek atdzesēts, un PET plēve tiek uzmanīgi noņemta. Uz apģērba paliek tikai un vienīgi pats dizains – bez jebkādām fona plēves malām. Pašā noslēgumā mēs veicam īsu „gala presēšanu\" (fiksāciju), kas nodrošina, ka dizains ir patīkami mīksts un maksimāli noturīgs pret mazgāšanu.",
@@ -177,12 +192,15 @@ const KasIrDtf = () => {
                 className="group grid md:grid-cols-[220px_1fr] gap-5 md:gap-8 items-stretch rounded-2xl border border-border bg-card p-4 md:p-6 hover:border-primary/40 transition-colors"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
-                {/* Image placeholder */}
-                <div className="relative aspect-video md:aspect-auto md:h-full rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-2 text-xs uppercase tracking-wider">
-                    <ImageIcon className="w-6 h-6 opacity-50" />
-                    <span>Foto {i + 1}</span>
-                  </div>
+                {/* Step photo */}
+                <div className="relative aspect-video md:aspect-auto md:h-full min-h-[160px] rounded-xl overflow-hidden border border-border bg-muted/40">
+                  <img
+                    src={s.image}
+                    alt={s.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="flex flex-col">
