@@ -19,21 +19,29 @@ const steps = [
       "Tavs dizains ar speciālu printeri spoguļattēlā tiek uzdrukāts uz caurspīdīgas PET plēves. Vispirms printeris uzklāj krāsaino slāni (CMYK krāsas), bet uzreiz pēc tam – blīvu, baltu krāsas pamatni. Baltā krāsa ir kritiski svarīga, lai dizains izskatītos spilgts un nepārspējami košs arī uz tumšiem vai melniem audumiem.",
   },
   {
+    image: dtfStep2,
+    alt: "Termo-līmes pulvera uzklāšana uz apdrukātās DTF plēves",
     title: "Līmes pulvera uzklāšana",
     body:
       "Kamēr tinte uz plēves vēl ir mitra, tai pāri tiek uzbērts īpašs termo-līmes pulveris. Šis pulveris pielīp tikai pie apdrukātajām vietām (tintes), bet neapskartās plēves vietas paliek pilnīgi tīras.",
   },
   {
+    image: dtfStep3,
+    alt: "DTF plēve iziet no žāvēšanas krāsns, kur līmes pulveris izkūst",
     title: "Līmes fiksācija (kausēšana)",
     body:
       "Plēve nonāk specializētā žāvēšanas krāsnī. Karstumā termo-pulveris izkūst, pārvēršoties par plānu, viendabīgu un elastīgu līmes slāni, kas cieši sasaistās ar uzdrukāto krāsu.",
   },
   {
+    image: dtfStep4,
+    alt: "DTF plēve novietota uz melna T-krekla termopresē",
     title: "Termodruka (Karstā pārnese uz auduma)",
     body:
       "Sagatavotā plēve tiek precīzi novietota uz apģērba (piemēram, T-krekla vai džempera) un ievietota profesionālā termopresē. Augstā temperatūrā (parasti ap 150°C–160°C) un zem spēcīga spiediena izkususī līme burtiski „ieaug\" auduma šķiedrās.",
   },
   {
+    image: dtfStep5,
+    alt: "PET plēves noņemšana no apdrukāta melna T-krekla",
     title: "Plēves noņemšana un gala fiksācija",
     body:
       "Karstumā piespiestais materiāls tiek atdzesēts, un PET plēve tiek uzmanīgi noņemta. Uz apģērba paliek tikai un vienīgi pats dizains – bez jebkādām fona plēves malām. Pašā noslēgumā mēs veicam īsu „gala presēšanu\" (fiksāciju), kas nodrošina, ka dizains ir patīkami mīksts un maksimāli noturīgs pret mazgāšanu.",
