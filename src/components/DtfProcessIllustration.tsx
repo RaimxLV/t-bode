@@ -173,7 +173,7 @@ export const DtfProcessIllustration = ({ step, label }: DtfProcessIllustrationPr
     <div className="relative h-full min-h-[180px] overflow-hidden bg-process-surface" role="img" aria-label={label}>
       <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-sm border border-process-grid bg-background/90 px-2 py-1 font-body text-[10px] font-semibold uppercase text-foreground">
         <span className="h-1.5 w-1.5 rounded-full bg-cta-red" />
-        Process {String(step).padStart(2, "0")}
+        Solis {String(step).padStart(2, "0")}
       </div>
       <svg viewBox="0 0 320 170" className="absolute inset-0 h-full w-full" aria-hidden="true">
         <defs>
