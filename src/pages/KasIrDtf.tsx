@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
+import { HeroCtaButton } from "@/components/HeroCtaButton";
 import dtfStep1 from "@/assets/dtf-step-1.jpg";
 import dtfStep2 from "@/assets/dtf-step-2.jpg";
 import dtfStep3 from "@/assets/dtf-step-3.jpg";
@@ -20,28 +20,28 @@ const steps = [
   },
   {
     image: dtfStep2,
-    alt: "Termo-līmes pulvera uzklāšana uz apdrukātās DTF plēves",
+    alt: "Termolīmes pulvera uzklāšana uz apdrukātās DTF plēves",
     title: "Līmes pulvera uzklāšana",
     body:
-      "Kamēr tinte uz plēves vēl ir mitra, tai pāri tiek uzbērts īpašs termo-līmes pulveris. Šis pulveris pielīp tikai pie apdrukātajām vietām (tintes), bet neapskartās plēves vietas paliek pilnīgi tīras.",
+      "Kamēr tinte uz plēves vēl ir mitra, tai pāri tiek uzbērts īpašs termolīmes pulveris. Šis pulveris pielīp tikai pie apdrukātajām vietām (tintes), bet neapskartās plēves vietas paliek pilnīgi tīras.",
   },
   {
     image: dtfStep3,
     alt: "DTF plēve iziet no žāvēšanas krāsns, kur līmes pulveris izkūst",
     title: "Līmes fiksācija (kausēšana)",
     body:
-      "Plēve nonāk specializētā žāvēšanas krāsnī. Karstumā termo-pulveris izkūst, pārvēršoties par plānu, viendabīgu un elastīgu līmes slāni, kas cieši sasaistās ar uzdrukāto krāsu.",
+      "Plēve nonāk specializētā žāvēšanas krāsnī. Karstumā termopulveris izkūst, pārvēršoties par plānu, viendabīgu un elastīgu līmes slāni, kas cieši sasaistās ar uzdrukāto krāsu.",
   },
   {
     image: dtfStep4,
-    alt: "DTF plēve novietota uz melna T-krekla termopresē",
+    alt: "DTF plēve novietota uz melna T‑krekla termopresē",
     title: "Termodruka (Karstā pārnese uz auduma)",
     body:
-      "Sagatavotā plēve tiek precīzi novietota uz apģērba (piemēram, T-krekla vai džempera) un ievietota profesionālā termopresē. Augstā temperatūrā (parasti ap 150°C–160°C) un zem spēcīga spiediena izkususī līme burtiski „ieaug\" auduma šķiedrās.",
+      "Sagatavotā plēve tiek precīzi novietota uz apģērba (piemēram, T‑krekla vai džempera) un ievietota profesionālā termopresē. Augstā temperatūrā (parasti ap 150–160 °C) un zem spēcīga spiediena izkususī līme burtiski „ieaug\" auduma šķiedrās.",
   },
   {
     image: dtfStep5,
-    alt: "PET plēves noņemšana no apdrukāta melna T-krekla",
+    alt: "PET plēves noņemšana no apdrukāta melna T‑krekla",
     title: "Plēves noņemšana un gala fiksācija",
     body:
       "Karstumā piespiestais materiāls tiek atdzesēts, un PET plēve tiek uzmanīgi noņemta. Uz apģērba paliek tikai un vienīgi pats dizains – bez jebkādām fona plēves malām. Pašā noslēgumā mēs veicam īsu „gala presēšanu\" (fiksāciju), kas nodrošina, ka dizains ir patīkami mīksts un maksimāli noturīgs pret mazgāšanu.",
@@ -71,7 +71,7 @@ const comparisonRows: { feature: string; dtf: string; dtg: string; screen: strin
     feature: "Minimālais pasūtījums",
     dtf: "Sākot no 1 gabala",
     dtg: "Sākot no 1 gabala",
-    screen: "Tikai lielas tirāžas (no 20-50+ gab.)",
+    screen: "Tikai lielas tirāžas (no 20–50+ gab.)",
   },
   {
     feature: "Izturība (mazgāšanā)",
@@ -85,7 +85,7 @@ const benefits = [
   {
     title: "Universālums",
     body:
-      "Nav svarīgi, vai tas ir plāns vasaras T-krekls, biezs kokvilnas džemperis, sporta jaka no poliestera vai darba apģērbs – DTF perfekti turas uz jebkura auduma.",
+      "Nav svarīgi, vai tas ir plāns vasaras T‑krekls, biezs kokvilnas džemperis, sporta jaka no poliestera vai darba apģērbs – DTF perfekti turas uz jebkura auduma.",
   },
   {
     title: "Neticams elastīgums",
@@ -104,8 +104,8 @@ const KasIrDtf = () => {
   return (
     <div className="min-h-screen bg-background">
       <Seo
-        title="Kas ir DTF druka? | T-Bode apdruka Rīgā"
-        description="Uzzini, kas ir DTF (Direct-to-Film) druka un kā tā top solis pa solim. DTF, DTG un sietspiedes salīdzinājums un galvenās priekšrocības no T-Bode."
+        title="Kas ir DTF druka? | T‑Bode apdruka Rīgā"
+        description="Uzzini, kas ir DTF (Direct‑to‑Film) druka un kā tā top solis pa solim. DTF, DTG un sietspiedes salīdzinājums un galvenās priekšrocības no T‑Bode."
         canonical={canonical}
         type="article"
         breadcrumbs={[
@@ -153,7 +153,7 @@ const KasIrDtf = () => {
               className="mt-8 space-y-4 text-base md:text-lg text-white/85 leading-relaxed max-w-2xl"
             >
               <p>
-                Mūsdienu apģērbu apdrukā DTF (Direct-to-Film) ir tehnoloģija, kas
+                Mūsdienu apģērbu apdrukā DTF (Direct‑to‑Film) ir tehnoloģija, kas
                 pilnībā mainījusi kvalitātes standartus. Tā ir digitālā druka uz
                 speciālas plēves, kas pēc tam ar karstuma un spiediena palīdzību
                 tiek pārnesta tieši uz auduma šķiedrām.
@@ -244,7 +244,7 @@ const KasIrDtf = () => {
                       Funkcija / Īpašība
                     </th>
                     <th className="text-left font-display uppercase text-xs tracking-wider px-5 py-4">
-                      DTF <span className="text-white/70">(T-Bode izvēle)</span>
+                       DTF <span className="text-white/70">(T‑Bode izvēle)</span>
                     </th>
                     <th className="text-left font-display uppercase text-xs tracking-wider px-5 py-4">
                       DTG (Direct-to-Garment)
@@ -285,7 +285,7 @@ const KasIrDtf = () => {
                   <dl className="space-y-2 text-sm">
                     <div className="rounded-md bg-primary/5 border border-primary/30 p-3">
                       <dt className="text-xs uppercase tracking-wider font-semibold text-primary mb-1">
-                        DTF (T-Bode)
+                         DTF (T‑Bode)
                       </dt>
                       <dd className="text-foreground/90">{row.dtf}</dd>
                     </div>
@@ -344,14 +344,21 @@ const KasIrDtf = () => {
         </section>
 
         {/* CTA */}
-        <section className="relative overflow-hidden">
-          <div aria-hidden className="absolute inset-0" style={{ background: "var(--gradient-brand)" }} />
+        <section className="relative overflow-hidden border-t border-border">
           <div
             aria-hidden
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(800px 400px at 20% 110%, hsl(0 0% 0% / 0.5), transparent 60%), linear-gradient(180deg, transparent, hsl(0 0% 0% / 0.4))",
+                "linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(220 25% 8%) 60%, hsl(0 0% 4%) 100%)",
+            }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(900px 500px at 85% 10%, hsl(0 72% 45% / 0.35), transparent 60%), radial-gradient(700px 400px at 10% 90%, hsl(20 90% 50% / 0.18), transparent 65%)",
             }}
           />
           <div className="relative container mx-auto px-4 py-20 md:py-24 max-w-3xl text-center text-white">
@@ -359,16 +366,10 @@ const KasIrDtf = () => {
               Gatavs izmēģināt DTF apdruku?
             </h2>
             <p className="text-white/85 mb-8 text-base md:text-lg max-w-xl mx-auto">
-              Augšupielādē savu dizainu, izvēlies apģērbu un saņem gatavu apdruku
-              2–5 darba dienās.
+              Personalizētu produktu izgatavošana un piegāde ar Omniva pakomātu
+              parasti aizņem 1–2 darba dienas.
             </p>
-            <Link
-              to="/design"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-white text-foreground px-8 py-4 font-body font-bold uppercase tracking-wide hover:bg-white/90 transition-colors"
-            >
-              Sāc dizainēt
-              <ArrowRight className="w-5 h-5" />
-            </Link>
+            <HeroCtaButton to="/design" label="Sākt personalizēt" />
           </div>
         </section>
       </main>
