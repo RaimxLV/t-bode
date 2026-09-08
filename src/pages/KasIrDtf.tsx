@@ -192,12 +192,15 @@ const KasIrDtf = () => {
                 className="group grid md:grid-cols-[220px_1fr] gap-5 md:gap-8 items-stretch rounded-2xl border border-border bg-card p-4 md:p-6 hover:border-primary/40 transition-colors"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
-                {/* Image placeholder */}
-                <div className="relative aspect-video md:aspect-auto md:h-full rounded-xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
-                  <div className="flex flex-col items-center gap-2 text-xs uppercase tracking-wider">
-                    <ImageIcon className="w-6 h-6 opacity-50" />
-                    <span>Foto {i + 1}</span>
-                  </div>
+                {/* Step photo */}
+                <div className="relative aspect-video md:aspect-auto md:h-full min-h-[160px] rounded-xl overflow-hidden border border-border bg-muted/40">
+                  <img
+                    src={s.image}
+                    alt={s.alt}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                 </div>
 
                 <div className="flex flex-col">
