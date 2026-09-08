@@ -4,11 +4,11 @@ import { ArrowRight, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
-import dtfStep1 from "@/assets/dtf-step-1.jpg";
-import dtfStep2 from "@/assets/dtf-step-2.jpg";
-import dtfStep3 from "@/assets/dtf-step-3.jpg";
-import dtfStep4 from "@/assets/dtf-step-4.jpg";
-import dtfStep5 from "@/assets/dtf-step-5.jpg";
+import dtfStep1 from "@/assets/dtf-step-1.svg";
+import dtfStep2 from "@/assets/dtf-step-2.svg";
+import dtfStep3 from "@/assets/dtf-step-3.svg";
+import dtfStep4 from "@/assets/dtf-step-4.svg";
+import dtfStep5 from "@/assets/dtf-step-5.svg";
 
 const steps = [
   {
