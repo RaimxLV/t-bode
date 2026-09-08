@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     const { data: orders, error } = await service
       .from("orders")
       .select(
-        "id, order_number, payment_method, provider, created_at, montonio_order_uuid, stripe_session_id, montonio_payment_status, manually_paid_at, guest_email, user_id",
+        "id, order_number, payment_method, provider, created_at, montonio_order_uuid, stripe_session_id, montonio_payment_status, manually_paid_at, guest_email, user_id, notes",
       )
       .eq("status", "pending")
       .lt("created_at", cutoff)
@@ -46,10 +46,14 @@ Deno.serve(async (req) => {
     const isPaid = (o: any) =>
       String(o.montonio_payment_status ?? "").toUpperCase() === "PAID";
 
+    // Manually flagged orders (e.g. customer promised payment) are never auto-cancelled.
+    const isExempt = (o: any) => String(o.notes ?? "").includes("[NO-AUTO-CANCEL]");
+
     const targets = (orders ?? []).filter(
       (o) =>
         isOnline(o) &&
         !isPaid(o) &&
+        !isExempt(o) &&
         businessDaysSince(o.created_at) >= PAYMENT_TERM_BUSINESS_DAYS,
     );
 
