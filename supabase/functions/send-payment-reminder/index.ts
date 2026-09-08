@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
     // Escalation cron: 2 business days → 4 business days → cancel after 5
     const { data: pendingOrders } = await service
       .from("orders")
-      .select("id, created_at, payment_reminder_count, last_payment_reminder_at")
+      .select("id, created_at, payment_reminder_count, last_payment_reminder_at, notes")
       .eq("payment_method", "bank_transfer")
       .eq("status", "pending");
 
@@ -195,6 +195,8 @@ Deno.serve(async (req) => {
     const now = Date.now();
 
     for (const o of pendingOrders ?? []) {
+      // Manually flagged orders: no reminders, no automatic cancellation.
+      if (String((o as any).notes ?? "").includes("[NO-AUTO-CANCEL]")) { skipped++; continue; }
       const count = Number((o as any).payment_reminder_count ?? 0);
       const bizDays = businessDaysSince(o.created_at);
       const lastSentMs = o.last_payment_reminder_at
