@@ -4,11 +4,11 @@ import { ArrowRight, Check } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
-import dtfStep1 from "@/assets/dtf-step-1.jpg";
-import dtfStep2 from "@/assets/dtf-step-2.jpg";
-import dtfStep3 from "@/assets/dtf-step-3.jpg";
-import dtfStep4 from "@/assets/dtf-step-4.jpg";
-import dtfStep5 from "@/assets/dtf-step-5.jpg";
+import dtfStep1 from "@/assets/dtf-step-1.svg";
+import dtfStep2 from "@/assets/dtf-step-2.svg";
+import dtfStep3 from "@/assets/dtf-step-3.svg";
+import dtfStep4 from "@/assets/dtf-step-4.svg";
+import dtfStep5 from "@/assets/dtf-step-5.svg";
 
 const steps = [
   {
@@ -189,17 +189,17 @@ const KasIrDtf = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.4, delay: i * 0.05 }}
-                className="group grid md:grid-cols-[220px_1fr] gap-5 md:gap-8 items-stretch rounded-2xl border border-border bg-card p-4 md:p-6 hover:border-primary/40 transition-colors"
+                className="group grid md:grid-cols-[320px_1fr] gap-5 md:gap-8 items-stretch rounded-2xl border border-border bg-card p-4 md:p-6 hover:border-primary/40 transition-colors"
                 style={{ boxShadow: "var(--shadow-card)" }}
               >
                 {/* Step photo */}
-                <div className="relative aspect-video md:aspect-auto md:h-full min-h-[160px] rounded-xl overflow-hidden border border-border bg-muted/40">
+                <div className="relative aspect-video md:h-[180px] rounded-xl overflow-hidden border border-border bg-muted/40">
                   <img
                     src={s.image}
                     alt={s.alt}
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-contain"
                   />
                 </div>
 
