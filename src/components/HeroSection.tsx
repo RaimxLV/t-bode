@@ -95,6 +95,20 @@ export const HeroSection = () => {
             </motion.span>
           </motion.h1>
           {imageLoaded && <HeroAnimatedText />}
+          <motion.a
+            href="/kas-ir-dtf"
+            onClick={(e) => { e.preventDefault(); navigate("/kas-ir-dtf"); }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="group mt-5 inline-flex items-center gap-2 text-sm sm:text-base font-body font-semibold text-white/80 hover:text-white transition-colors"
+            aria-label={t("hero.dtfLinkAria", "Uzzini, kā darbojas DTF apdruka")}
+          >
+            <span className="underline decoration-white/40 decoration-2 underline-offset-4 group-hover:decoration-white/80 transition-colors">
+              {t("hero.dtfLink")}
+            </span>
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+          </motion.a>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
