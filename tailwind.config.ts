@@ -19,6 +19,19 @@ export default {
       },
       colors: {
         "cta-red": "hsl(var(--cta-red))",
+        process: {
+          surface: "hsl(var(--process-surface))",
+          machine: "hsl(var(--process-machine))",
+          window: "hsl(var(--process-window))",
+          ink: "hsl(var(--process-ink))",
+          grid: "hsl(var(--process-grid))",
+          film: "hsl(var(--process-film))",
+          shirt: "hsl(var(--process-shirt))",
+          powder: "hsl(var(--process-powder))",
+          cyan: "hsl(var(--process-cyan))",
+          pink: "hsl(var(--process-pink))",
+          yellow: "hsl(var(--process-yellow))",
+        },
         paper: {
           DEFAULT: "hsl(var(--paper))",
           foreground: "hsl(var(--paper-foreground))",
