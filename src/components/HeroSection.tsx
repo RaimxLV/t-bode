@@ -60,7 +60,7 @@ export const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[1080px] sm:min-h-[1120px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
+      className="relative min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
@@ -95,15 +95,16 @@ export const HeroSection = () => {
         </div>
       )}
       <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <div className="absolute inset-0 translate-y-[13%] lg:translate-y-[1%]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square translate-y-[6%] lg:inset-0 lg:aspect-auto lg:translate-y-[1%]">
           <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
         </div>
       </motion.div>
       <div aria-hidden className="absolute inset-0 z-[4]">
-        <div className="absolute inset-0 origin-bottom translate-y-[36%] scale-[1.08] lg:translate-y-[46%] lg:scale-[1.12]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[20%] scale-[1.12] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.12]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
         </div>
       </div>
+
       <div
         aria-hidden
         className="absolute inset-0 z-[5] bg-hero-parallax-overlay"
@@ -125,7 +126,7 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative z-10 flex min-h-[1080px] sm:min-h-[1120px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
+      <div className="relative z-10 flex min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-24 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
         <div className="max-w-3xl text-center lg:text-left lg:max-w-[620px] pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
