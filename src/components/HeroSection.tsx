@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
-import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-plus20.webp";
+import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-wide.png";
 import heroMidgroundDesktop from "@/assets/hero-parallax-midground-jumper-desktop-right-plus20.png";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -104,7 +104,7 @@ export const HeroSection = () => {
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 lg:translate-y-0 scale-100 xl:scale-[0.41] 2xl:scale-[0.37] 3xl:scale-[0.33]">
-          <motion.img src={heroMidgroundMobile} alt="" width={5376} height={1600} className="absolute bottom-0 left-[-118%] h-auto w-[336%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+          <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-0 left-[-52%] h-auto w-[204%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           <motion.img src={heroMidgroundDesktop} alt="" width={5591} height={1600} className="hidden lg:block lg:absolute lg:inset-y-0 lg:left-[-30%] lg:h-full lg:w-[269%] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
         </div>
       </motion.div>
