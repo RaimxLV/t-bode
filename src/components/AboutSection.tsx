@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Palette, Zap, Package, Truck } from "lucide-react";
+import { Palette, Zap, Package, Truck, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
@@ -25,19 +25,27 @@ export const AboutSection = () => {
         >
           <h2 className="text-4xl md:text-5xl mb-6">{t("about.title")}</h2>
           <p
-            className="text-muted-foreground leading-relaxed font-body text-left sm:text-center max-w-[34rem] mx-auto"
+            className="text-muted-foreground leading-relaxed font-body text-center max-w-[34rem] mx-auto"
             dangerouslySetInnerHTML={{ __html: t("about.description") }}
           />
-          {/* DTF sadaļa pagaidām paslēpta — atjaunot, kad /kas-ir-dtf lapa gatava
-          <div className="mt-8 flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="mt-8 flex justify-center"
+          >
             <Link
               to="/kas-ir-dtf"
-              className="inline-flex items-center justify-center rounded-md border border-foreground/30 bg-transparent px-6 py-3 font-body text-sm font-semibold uppercase tracking-wider text-foreground hover:border-primary hover:text-primary transition-colors"
+              aria-label={t("hero.dtfLinkAria", "Uzzini, kā darbojas DTF apdruka")}
+              className="group inline-flex items-center gap-2 text-sm sm:text-base font-body font-semibold text-primary hover:text-primary/80 transition-colors"
             >
-              Kas ir DTF?
+              <span className="underline decoration-primary/40 decoration-2 underline-offset-4 group-hover:decoration-primary transition-colors">
+                {t("hero.dtfLink")}
+              </span>
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
-          </div>
-          */}
+          </motion.div>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
