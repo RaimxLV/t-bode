@@ -143,8 +143,8 @@
     position: absolute;
     top: -8%;
     display: block;
-    width: 18px;
-    height: 11px;
+    width: 20px;
+    height: 12px;
     border-radius: 90% 12% 90% 12%;
     background: hsl(var(--leaf-gold));
     box-shadow: inset -2px -1px 0 hsl(var(--leaf-wine) / 0.35);
@@ -158,7 +158,7 @@
     position: absolute;
     left: 48%;
     top: 45%;
-    width: 8px;
+    width: 9px;
     height: 1px;
     background: hsl(var(--leaf-wine) / 0.7);
     transform: rotate(28deg);
@@ -166,8 +166,8 @@
   }
 
   .hero-leaves--distant .hero-leaf {
-    width: 10px;
-    height: 7px;
+    width: 11px;
+    height: 8px;
     opacity: 0;
     filter: blur(0.35px);
   }

@@ -95,7 +95,7 @@ export const HeroSection = () => {
         </div>
       )}
       <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <div className="absolute inset-0 translate-y-[23%] lg:translate-y-[11%]">
+        <div className="absolute inset-0 translate-y-[13%] lg:translate-y-[1%]">
           <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
         </div>
       </motion.div>
