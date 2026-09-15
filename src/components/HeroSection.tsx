@@ -9,7 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-wide.png";
@@ -22,6 +22,7 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
+  const lastPointerMoveRef = useRef(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
@@ -36,6 +37,25 @@ export const HeroSection = () => {
     enabled: !reduceMotion,
   });
 
+  // Keep a subtle sense of depth on desktop while the pointer is idle.
+  useEffect(() => {
+    if (reduceMotion || typeof window === "undefined" || window.innerWidth < 1024) return;
+
+    let frame = 0;
+    const startedAt = performance.now();
+    const drift = (now: number) => {
+      if (now - lastPointerMoveRef.current > 1200) {
+        const elapsed = (now - startedAt) / 1000;
+        pointerX.set(Math.sin(elapsed * 0.24) * 8);
+        pointerY.set(Math.sin(elapsed * 0.17 + 0.8) * 5);
+      }
+      frame = requestAnimationFrame(drift);
+    };
+
+    frame = requestAnimationFrame(drift);
+    return () => cancelAnimationFrame(frame);
+  }, [pointerX, pointerY, reduceMotion]);
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
@@ -48,9 +68,11 @@ export const HeroSection = () => {
   const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
   const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.15);
   const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.5);
+  const foregroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.8);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
+    lastPointerMoveRef.current = performance.now();
     const bounds = event.currentTarget.getBoundingClientRect();
     pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 24);
     pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 18);
@@ -123,7 +145,7 @@ export const HeroSection = () => {
       )}
       <div aria-hidden className="absolute inset-0 z-[4]">
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
-          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
+          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" />
         </div>
       </div>
 
