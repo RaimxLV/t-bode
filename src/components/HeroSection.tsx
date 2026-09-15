@@ -100,7 +100,7 @@ export const HeroSection = () => {
         <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_60%]" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0 z-[4]" style={{ y: foregroundY }}>
-        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_42%]" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.02 }} decoding="async" />
+        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1 }} decoding="async" />
       </motion.div>
       <div
         aria-hidden
