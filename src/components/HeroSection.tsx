@@ -102,6 +102,7 @@ export const HeroSection = () => {
         <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
           <span className="hero-ambient__glow hero-ambient__glow--warm" />
           <span className="hero-ambient__glow hero-ambient__glow--cool" />
+          <span className="hero-ambient__sun-rays" />
           <span className="hero-ambient__shimmer" />
         </div>
       )}
