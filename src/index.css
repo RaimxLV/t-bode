@@ -39,6 +39,9 @@
     --hero-overlay: linear-gradient(135deg, hsla(0, 0%, 0%, 0.55) 0%, hsla(0, 0%, 0%, 0.2) 100%);
     --hero-sky: 201 38% 56%;
     --hero-parallax-overlay: linear-gradient(90deg, hsl(0 0% 0% / 0.72) 0%, hsl(0 0% 0% / 0.48) 40%, hsl(0 0% 0% / 0.08) 72%, transparent 100%);
+    --leaf-gold: 38 74% 48%;
+    --leaf-rust: 15 67% 42%;
+    --leaf-wine: 2 60% 34%;
     --gradient-brand: linear-gradient(135deg, hsl(0, 72%, 51%), hsl(20, 90%, 55%));
     --shadow-card: 0 2px 12px hsla(0, 0%, 0%, 0.06);
     --shadow-glow: 0 0 20px hsla(0, 72%, 51%, 0.1);
@@ -134,6 +137,65 @@
     .bg-hero-parallax-overlay {
       background: var(--hero-parallax-overlay);
     }
+  }
+
+  .hero-leaf {
+    position: absolute;
+    top: -8%;
+    display: block;
+    width: 18px;
+    height: 11px;
+    border-radius: 90% 12% 90% 12%;
+    background: hsl(var(--leaf-gold));
+    box-shadow: inset -2px -1px 0 hsl(var(--leaf-wine) / 0.35);
+    opacity: 0;
+    animation: hero-leaf-fall 13s linear infinite;
+    transform-origin: 45% 55%;
+  }
+
+  .hero-leaf::after {
+    content: "";
+    position: absolute;
+    left: 48%;
+    top: 45%;
+    width: 8px;
+    height: 1px;
+    background: hsl(var(--leaf-wine) / 0.7);
+    transform: rotate(28deg);
+    transform-origin: left center;
+  }
+
+  .hero-leaves--distant .hero-leaf {
+    width: 10px;
+    height: 7px;
+    opacity: 0;
+    filter: blur(0.35px);
+  }
+
+  .hero-leaf--1 { left: 12%; animation-duration: 16s; animation-delay: -5s; }
+  .hero-leaf--2 { left: 47%; animation-duration: 19s; animation-delay: -13s; background: hsl(var(--leaf-rust)); }
+  .hero-leaf--3 { left: 81%; animation-duration: 17s; animation-delay: -2s; }
+  .hero-leaf--4 { left: 7%; animation-duration: 12s; animation-delay: -8s; background: hsl(var(--leaf-wine)); }
+  .hero-leaf--5 { left: 29%; animation-duration: 15s; animation-delay: -3s; }
+  .hero-leaf--6 { left: 58%; animation-duration: 11s; animation-delay: -9s; background: hsl(var(--leaf-rust)); }
+  .hero-leaf--7 { left: 76%; animation-duration: 14s; animation-delay: -6s; }
+  .hero-leaf--8 { left: 94%; animation-duration: 18s; animation-delay: -12s; background: hsl(var(--leaf-wine)); }
+
+  @keyframes hero-leaf-fall {
+    0% { translate: -20px -10vh; rotate: 0deg; opacity: 0; }
+    8% { opacity: 0.78; }
+    28% { translate: 38px 25vh; rotate: 115deg; }
+    52% { translate: -22px 52vh; rotate: 225deg; }
+    76% { translate: 65px 82vh; rotate: 330deg; opacity: 0.72; }
+    100% { translate: 22px 112vh; rotate: 470deg; opacity: 0; }
+  }
+
+  @media (max-width: 640px) {
+    .hero-leaf--1, .hero-leaf--3, .hero-leaf--5, .hero-leaf--7 { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-leaves { display: none; }
   }
 
   /* Skip to content link */

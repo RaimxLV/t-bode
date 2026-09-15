@@ -35,9 +35,9 @@ export const HeroSection = () => {
   });
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
-  const midgroundY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "3%" : "3%", reduceMotion ? "3%" : "21%"]);
-  const jumperY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "5%" : "5%", reduceMotion ? "5%" : "35%"]);
-  const foregroundY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "-5%" : "-5%", reduceMotion ? "-5%" : "37%"]);
+  const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
+  const jumperY = useTransform(scrollYProgress, [0, 1], ["11%", reduceMotion ? "11%" : "32%"]);
+  const foregroundY = useTransform(scrollYProgress, [0, 1], ["-16%", reduceMotion ? "-16%" : "25%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
   const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.55);
   const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.95);
@@ -68,7 +68,7 @@ export const HeroSection = () => {
     >
       <motion.div
         aria-hidden
-        className="absolute inset-0"
+        className="absolute inset-0 z-0"
         style={{ y: backgroundY }}
         initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
@@ -88,23 +88,34 @@ export const HeroSection = () => {
         />
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0" style={{ y: midgroundY }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
         <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
-      <motion.div aria-hidden className="absolute inset-0" style={{ y: jumperY }}>
+      {!reduceMotion && (
+        <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
+          <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
+        </div>
+      )}
+      <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
         <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_60%]" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
-      <motion.div aria-hidden className="absolute inset-0" style={{ y: foregroundY }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[4]" style={{ y: foregroundY }}>
         <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_42%]" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
       <div
         aria-hidden
-        className="absolute inset-0 bg-hero-parallax-overlay"
+        className="absolute inset-0 z-[5] bg-hero-parallax-overlay"
       />
+      {!reduceMotion && (
+        <div aria-hidden className="hero-leaves absolute inset-0 z-[8] pointer-events-none">
+          <i className="hero-leaf hero-leaf--4" /><i className="hero-leaf hero-leaf--5" /><i className="hero-leaf hero-leaf--6" />
+          <i className="hero-leaf hero-leaf--7" /><i className="hero-leaf hero-leaf--8" />
+        </div>
+      )}
       {/* Tileable film-grain overlay (WebP with JPG fallback via image-set) */}
       <div
         aria-hidden
-        className="absolute inset-0 pointer-events-none opacity-[0.18] mix-blend-overlay"
+        className="absolute inset-0 z-[9] pointer-events-none opacity-[0.18] mix-blend-overlay"
         style={{
           backgroundImage: `image-set(url(${grainWebp}) type("image/webp"), url(${grainJpg}) type("image/jpeg"))`,
           backgroundRepeat: "repeat",
