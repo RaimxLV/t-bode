@@ -13,8 +13,6 @@ import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroMidground from "@/assets/hero-parallax-midground-jumper.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
-import grainWebp from "@/assets/hero-grain-tile.webp";
-import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 
@@ -122,16 +120,6 @@ export const HeroSection = () => {
           <i className="hero-leaf hero-leaf--7" /><i className="hero-leaf hero-leaf--8" />
         </div>
       )}
-      {/* Tileable film-grain overlay (WebP with JPG fallback via image-set) */}
-      <div
-        aria-hidden
-        className="absolute inset-0 z-[9] pointer-events-none opacity-[0.18] mix-blend-overlay"
-        style={{
-          backgroundImage: `image-set(url(${grainWebp}) type("image/webp"), url(${grainJpg}) type("image/jpeg"))`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "256px 256px",
-        }}
-      />
 
       <div className="relative z-10 flex min-h-[760px] w-full items-start justify-center px-4 pb-10 pt-28 pointer-events-none sm:min-h-[900px] sm:pt-32 lg:container lg:mx-auto lg:min-h-[min(980px,100svh)] lg:items-center lg:justify-start lg:pb-16 lg:pt-28">
         <div className="w-full max-w-3xl mx-auto text-center pointer-events-auto lg:mx-0 lg:w-auto lg:max-w-[620px] lg:text-left">
