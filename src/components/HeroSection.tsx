@@ -134,8 +134,8 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative z-10 flex min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-10 lg:pb-16 pointer-events-none">
-        <div className="w-full max-w-3xl text-center lg:text-left lg:w-auto lg:max-w-[620px] pointer-events-auto">
+      <div className="relative z-10 flex min-h-[760px] w-full items-start justify-center px-4 pb-10 pt-28 pointer-events-none sm:min-h-[900px] sm:pt-32 lg:container lg:mx-auto lg:min-h-[min(980px,100svh)] lg:items-center lg:justify-start lg:pb-16 lg:pt-28">
+        <div className="w-full max-w-3xl mx-auto text-center pointer-events-auto lg:mx-0 lg:w-auto lg:max-w-[620px] lg:text-left">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
@@ -160,7 +160,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-5 sm:mt-8 flex flex-col gap-3 sm:gap-4 items-center lg:items-start max-w-xl mx-auto lg:mx-0"
+            className="mx-auto mt-5 flex w-full max-w-xl flex-col items-stretch gap-3 sm:mt-8 sm:gap-4 lg:mx-0 lg:items-start"
           >
             <button
               type="button"

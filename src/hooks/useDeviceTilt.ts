@@ -12,7 +12,7 @@ type Options = {
 };
 
 /**
- * Drives two motion values from device tilt (gyroscope / accelerometer)
+ * Drives two motion values from device orientation
  * so the parallax hero feels three-dimensional on phones and tablets.
  *
  * Sensors can be unavailable for several reasons (iOS permission not granted,
@@ -31,8 +31,8 @@ export const useDeviceTilt = (
 ) => {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
-    // Only touch devices: skip anything with a precise pointer (mouse)
-    if (window.matchMedia("(pointer: fine)").matches) return;
+    // Keep desktop pointer handling separate, but do not reject hybrid phones.
+    if (navigator.maxTouchPoints === 0 && window.innerWidth >= 1024) return;
 
     let disposed = false;
     let sensorActive = false;
@@ -62,26 +62,22 @@ export const useDeviceTilt = (
         baseBeta = beta;
         return;
       }
-      // ~18 degrees of tilt reaches full amplitude
-      x.set(clamp(((gamma - baseGamma) / 18) * amplitudeX, amplitudeX));
-      y.set(clamp(((beta - baseBeta) / 18) * amplitudeY, amplitudeY));
-    };
+      // Compensate for portrait/landscape so layers follow the physical tilt.
+      const angle = window.screen.orientation?.angle ?? 0;
+      const deltaGamma = gamma - baseGamma;
+      const deltaBeta = beta - baseBeta;
+      const landscape = Math.abs(angle) === 90;
+      const horizontal = landscape ? deltaBeta * Math.sign(angle || 1) : deltaGamma;
+      const vertical = landscape ? -deltaGamma * Math.sign(angle || 1) : deltaBeta;
 
-    const handleMotion = (event: DeviceMotionEvent) => {
-      const g = event.accelerationIncludingGravity;
-      if (!g || g.x === null || g.y === null) return;
-      if (!sensorActive) {
-        sensorActive = true;
-        stopDrift();
-      }
-      x.set(clamp((-(g.x ?? 0) / 4) * amplitudeX, amplitudeX));
-      y.set(clamp((((g.y ?? 0) - 9.8) / 4) * amplitudeY, amplitudeY));
+      // About 14 degrees reaches full travel: visible without becoming jumpy.
+      x.set(clamp((horizontal / 14) * amplitudeX, amplitudeX));
+      y.set(clamp((vertical / 14) * amplitudeY, amplitudeY));
     };
 
     const attach = () => {
       if (disposed) return;
       window.addEventListener("deviceorientation", handleOrientation, true);
-      window.addEventListener("devicemotion", handleMotion, true);
     };
 
     const startDrift = () => {
@@ -97,25 +93,32 @@ export const useDeviceTilt = (
       driftFrame = requestAnimationFrame(loop);
     };
 
-    const requestPermission = (
+    const orientationPermission = (
       DeviceOrientationEvent as unknown as {
+        requestPermission?: () => Promise<string>;
+      }
+    )?.requestPermission;
+    const motionPermission = (
+      DeviceMotionEvent as unknown as {
         requestPermission?: () => Promise<string>;
       }
     )?.requestPermission;
 
     let gestureHandler: (() => void) | undefined;
 
-    if (typeof requestPermission === "function") {
+    if (typeof orientationPermission === "function" || typeof motionPermission === "function") {
       // iOS 13+: permission must be requested from a user gesture
       gestureHandler = () => {
-        requestPermission()
-          .then((state) => {
-            if (state === "granted") attach();
+        Promise.all([
+          typeof orientationPermission === "function" ? orientationPermission() : Promise.resolve("granted"),
+          typeof motionPermission === "function" ? motionPermission() : Promise.resolve("granted"),
+        ])
+          .then((states) => {
+            if (states.every((state) => state === "granted")) attach();
           })
           .catch(() => undefined);
       };
-      window.addEventListener("touchend", gestureHandler, { once: true });
-      window.addEventListener("click", gestureHandler, { once: true });
+      window.addEventListener("pointerup", gestureHandler, { once: true });
     } else if ("DeviceOrientationEvent" in window || "DeviceMotionEvent" in window) {
       attach();
     }
@@ -128,10 +131,8 @@ export const useDeviceTilt = (
       stopDrift();
       window.clearTimeout(driftTimer);
       window.removeEventListener("deviceorientation", handleOrientation, true);
-      window.removeEventListener("devicemotion", handleMotion, true);
       if (gestureHandler) {
-        window.removeEventListener("touchend", gestureHandler);
-        window.removeEventListener("click", gestureHandler);
+        window.removeEventListener("pointerup", gestureHandler);
       }
       x.set(0);
       y.set(0);
