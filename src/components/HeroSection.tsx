@@ -89,7 +89,7 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
-        <div className="absolute bottom-0 left-0 h-full w-full origin-center scale-100 xl:scale-90 2xl:scale-[0.82] 3xl:scale-[0.74]">
+        <div className="absolute bottom-0 left-0 h-full w-full origin-center scale-100 xl:scale-[0.66] 2xl:scale-[0.60] 3xl:scale-[0.54]">
           <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full origin-bottom object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.08 }} decoding="async" />
         </div>
       </motion.div>
