@@ -34,24 +34,24 @@ export const HeroSection = () => {
     offset: ["start start", "end start"],
   });
 
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "5%"]);
-  const midgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "11%"]);
-  const jumperY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "18%"]);
-  const foregroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "25%"]);
-  const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.15);
-  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.35);
-  const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.65);
-  const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value);
-  const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.1);
-  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.25);
-  const jumperPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.45);
-  const foregroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.7);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
+  const midgroundY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "3%" : "3%", reduceMotion ? "3%" : "21%"]);
+  const jumperY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "5%" : "5%", reduceMotion ? "5%" : "35%"]);
+  const foregroundY = useTransform(scrollYProgress, [0, 1], [reduceMotion ? "-5%" : "-5%", reduceMotion ? "-5%" : "37%"]);
+  const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
+  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.55);
+  const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.95);
+  const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
+  const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.15);
+  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.45);
+  const jumperPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.8);
+  const foregroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 1.2);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
     const bounds = event.currentTarget.getBoundingClientRect();
-    pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 18);
-    pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 14);
+    pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 24);
+    pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 18);
   };
 
   const resetPointer = () => {
@@ -89,13 +89,13 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0" style={{ y: midgroundY }}>
-        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0" style={{ y: jumperY }}>
-        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_60%]" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0" style={{ y: foregroundY }}>
-        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_42%]" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.02 }} decoding="async" />
       </motion.div>
       <div
         aria-hidden
