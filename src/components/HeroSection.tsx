@@ -11,8 +11,7 @@ import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
-import heroMidground from "@/assets/hero-parallax-midground.webp";
-import heroJumper from "@/assets/hero-parallax-jumper.webp";
+import heroMidground from "@/assets/hero-parallax-midground-jumper.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
@@ -44,14 +43,11 @@ export const HeroSection = () => {
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
   const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
-  const jumperY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "21%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
-  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.55);
-  const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.95);
+  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.6);
   const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
   const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.15);
-  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.45);
-  const jumperPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.8);
+  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.5);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
@@ -86,7 +82,7 @@ export const HeroSection = () => {
           width={1600}
           height={1600}
           className="absolute inset-0 size-full object-cover object-center"
-          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.035 }}
+          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
           onLoad={() => setImageLoaded(true)}
           {...({ fetchpriority: "high" } as any)}
           decoding="async"
@@ -95,20 +91,22 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
-        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.02 }} decoding="async" />
+        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full origin-bottom object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.08 }} decoding="async" />
       </motion.div>
       {!reduceMotion && (
         <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
           <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
         </div>
       )}
-      <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <div className="absolute bottom-0 left-0 w-full aspect-square translate-y-[6%] lg:inset-0 lg:aspect-auto lg:translate-y-[1%]">
-          <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
+      {!reduceMotion && (
+        <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
+          <span className="hero-ambient__glow hero-ambient__glow--warm" />
+          <span className="hero-ambient__glow hero-ambient__glow--cool" />
+          <span className="hero-ambient__shimmer" />
         </div>
-      </motion.div>
+      )}
       <div aria-hidden className="absolute inset-0 z-[4]">
-        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.12] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.12]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
         </div>
       </div>

@@ -194,8 +194,63 @@
     .hero-leaf--1, .hero-leaf--3, .hero-leaf--5, .hero-leaf--7 { display: none; }
   }
 
+  /* Ambient light between parallax layers */
+  .hero-ambient__glow {
+    position: absolute;
+    display: block;
+    border-radius: 9999px;
+    filter: blur(48px);
+    mix-blend-mode: screen;
+    will-change: opacity, transform;
+  }
+
+  .hero-ambient__glow--warm {
+    left: 8%;
+    top: 6%;
+    width: 55%;
+    height: 45%;
+    background: radial-gradient(circle, hsl(38 92% 66% / 0.5) 0%, hsl(38 92% 66% / 0) 70%);
+    animation: hero-ambient-breathe 11s ease-in-out infinite;
+  }
+
+  .hero-ambient__glow--cool {
+    right: 4%;
+    top: 28%;
+    width: 48%;
+    height: 42%;
+    background: radial-gradient(circle, hsl(196 84% 70% / 0.36) 0%, hsl(196 84% 70% / 0) 70%);
+    animation: hero-ambient-breathe 15s ease-in-out infinite;
+    animation-delay: -5s;
+  }
+
+  .hero-ambient__shimmer {
+    position: absolute;
+    inset: -20% -35%;
+    display: block;
+    background: linear-gradient(
+      104deg,
+      transparent 38%,
+      hsl(0 0% 100% / 0.13) 48%,
+      hsl(38 92% 80% / 0.16) 52%,
+      transparent 62%
+    );
+    mix-blend-mode: soft-light;
+    animation: hero-ambient-drift 14s ease-in-out infinite;
+  }
+
+  @keyframes hero-ambient-breathe {
+    0%, 100% { opacity: 0.35; transform: scale(1) translate3d(0, 0, 0); }
+    50% { opacity: 0.85; transform: scale(1.12) translate3d(2%, -2%, 0); }
+  }
+
+  @keyframes hero-ambient-drift {
+    0% { transform: translate3d(-14%, 0, 0); opacity: 0.35; }
+    50% { transform: translate3d(14%, 2%, 0); opacity: 0.9; }
+    100% { transform: translate3d(-14%, 0, 0); opacity: 0.35; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    .hero-leaves { display: none; }
+    .hero-leaves, .hero-ambient { display: none; }
   }
 
   /* Skip to content link */
