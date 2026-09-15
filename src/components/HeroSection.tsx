@@ -89,7 +89,15 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
-        <div className="absolute bottom-0 left-0 h-full w-full origin-bottom scale-100 xl:scale-90 2xl:scale-[0.8] 3xl:scale-[0.72]">
+        <div
+          className="absolute bottom-0 left-0 h-full w-full origin-center scale-100 xl:scale-90 2xl:scale-[0.82] 3xl:scale-[0.74]"
+          style={{
+            WebkitMaskImage:
+              "radial-gradient(125% 120% at 50% 52%, #000 60%, transparent 100%)",
+            maskImage:
+              "radial-gradient(125% 120% at 50% 52%, #000 60%, transparent 100%)",
+          }}
+        >
           <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full origin-bottom object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.08 }} decoding="async" />
         </div>
       </motion.div>
