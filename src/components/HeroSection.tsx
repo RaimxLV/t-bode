@@ -178,7 +178,7 @@ export const HeroSection = () => {
               />
               <Sparkles aria-hidden className="absolute left-3 top-2 z-10 w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
               <Sparkles aria-hidden className="absolute right-4 bottom-2 z-10 w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
-              <span className="relative z-20 flex translate-z-0 items-center justify-center gap-3 whitespace-nowrap" style={{ transform: "translateZ(0)" }}>
+              <span className="relative z-20 flex items-center justify-center gap-3 whitespace-nowrap" style={{ transform: "translateZ(0)" }}>
                 <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
                 <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
                 <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
