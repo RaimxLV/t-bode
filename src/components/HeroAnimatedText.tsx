@@ -27,7 +27,7 @@ export const HeroAnimatedText = () => {
   const line2Delay = words.length * 0.12 + 0.5;
 
   if (!isInView) {
-    return <div ref={ref} className="min-h-[180px] md:min-h-[220px]" />;
+    return <div ref={ref} className="min-h-[120px] md:min-h-[220px]" />;
   }
 
   return (

@@ -100,7 +100,7 @@ export const HeroSection = () => {
         </div>
       </motion.div>
       <div aria-hidden className="absolute inset-0 z-[4]">
-        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[20%] scale-[1.12] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.12]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.12] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.12]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
         </div>
       </div>
@@ -126,7 +126,7 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative z-10 flex min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-24 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
+      <div className="relative z-10 flex min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-10 lg:pb-16 pointer-events-none">
         <div className="max-w-3xl text-center lg:text-left lg:max-w-[620px] pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
@@ -166,12 +166,12 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-8 flex flex-col gap-4 items-center lg:items-start max-w-xl mx-auto lg:mx-0"
+            className="mt-5 sm:mt-8 flex flex-col gap-3 sm:gap-4 items-center lg:items-start max-w-xl mx-auto lg:mx-0"
           >
             <button
               type="button"
               onClick={() => navigate("/design")}
-              className="group relative w-full overflow-hidden rounded-lg px-4 sm:px-10 py-6 text-lg sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+              className="group relative w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
               style={{ background: "var(--gradient-brand)" }}
               aria-label={t("hero.ctaDesign")}
             >
@@ -183,20 +183,20 @@ export const HeroSection = () => {
                     "linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.45) 50%, transparent 70%)",
                 }}
               />
-              <Sparkles aria-hidden className="absolute left-4 top-3 w-4 h-4 text-white/80 animate-sparkle-spin" />
-              <Sparkles aria-hidden className="absolute right-5 bottom-3 w-4 h-4 text-white/70 animate-sparkle-spin" style={{ animationDelay: "0.6s" }} />
+              <Sparkles aria-hidden className="absolute left-3 top-2 w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
+              <Sparkles aria-hidden className="absolute right-4 bottom-2 w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
               <span className="relative flex items-center justify-center gap-3 whitespace-nowrap">
-                <Wand2 className="w-6 h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
+                <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
                 <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
                 <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
               </span>
             </button>
             <button
               onClick={() => navigate("/collection")}
-              className="group w-full inline-flex items-center justify-center gap-3 px-4 sm:px-10 py-6 rounded-lg font-body font-bold text-lg sm:text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98] whitespace-nowrap"
+              className="group w-full inline-flex items-center justify-center gap-3 px-4 sm:px-10 py-3 sm:py-6 rounded-lg font-body font-bold text-base sm:text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98] whitespace-nowrap"
             >
               {t("hero.ctaCollection")}
-              <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-1" />
             </button>
           </motion.div>
         </div>
