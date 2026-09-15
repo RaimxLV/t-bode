@@ -164,21 +164,21 @@ export const HeroSection = () => {
             <button
               type="button"
               onClick={() => navigate("/design")}
-              className="group relative w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+              className="group relative isolate w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
               style={{ background: "var(--gradient-brand)" }}
               aria-label={t("hero.ctaDesign")}
             >
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-y-0 -inset-x-1 block animate-shimmer-slide"
+                className="pointer-events-none absolute inset-y-0 -inset-x-1 z-0 block animate-shimmer-slide"
                 style={{
                   background:
                     "linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.45) 50%, transparent 70%)",
                 }}
               />
-              <Sparkles aria-hidden className="absolute left-3 top-2 w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
-              <Sparkles aria-hidden className="absolute right-4 bottom-2 w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
-              <span className="relative flex items-center justify-center gap-3 whitespace-nowrap">
+              <Sparkles aria-hidden className="absolute left-3 top-2 z-10 w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
+              <Sparkles aria-hidden className="absolute right-4 bottom-2 z-10 w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
+              <span className="relative z-20 flex translate-z-0 items-center justify-center gap-3 whitespace-nowrap" style={{ transform: "translateZ(0)" }}>
                 <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
                 <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
                 <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
