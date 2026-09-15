@@ -31,9 +31,9 @@ export const HeroAnimatedText = () => {
   }
 
   return (
-    <div ref={ref} className="mt-4 flex flex-col items-center gap-3 md:gap-5 px-4 pointer-events-none">
+    <div ref={ref} className="mt-4 flex flex-col items-center lg:items-start gap-3 md:gap-5 px-4 lg:px-0 pointer-events-none">
       {/* key={i18n.language} resets animations when user switches language */}
-      <p key={`l1-${i18n.language}`} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+      <p key={`l1-${i18n.language}`} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-extrabold tracking-tight text-white text-center lg:text-left leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
         {words.map((w, i) => (
           <WordPow key={`${i18n.language}-${i}`} word={w} delay={i * 0.12} />
         ))}
@@ -41,7 +41,7 @@ export const HeroAnimatedText = () => {
 
       <motion.p
         key={`l2-${i18n.language}`}
-        className="text-sm sm:text-base md:text-lg lg:text-xl font-body text-white/85 max-w-xl text-center leading-relaxed whitespace-pre-line drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
+        className="text-sm sm:text-base md:text-lg lg:text-xl font-body text-white/85 max-w-xl text-center lg:text-left leading-relaxed whitespace-pre-line drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: line2Delay, duration: 0.7, ease: "easeOut" }}
