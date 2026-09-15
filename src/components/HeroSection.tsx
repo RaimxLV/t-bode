@@ -13,7 +13,7 @@ import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroMidground from "@/assets/hero-parallax-midground.webp";
 import heroJumper from "@/assets/hero-parallax-jumper.webp";
-import heroForeground from "@/assets/hero-parallax-foreground.webp";
+import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -102,7 +102,7 @@ export const HeroSection = () => {
         </div>
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0 z-[4]" style={{ y: foregroundY }}>
-        <div className="absolute inset-0 origin-bottom scale-[1.04] lg:scale-[1.07]">
+        <div className="absolute inset-0 origin-bottom translate-y-[6%] scale-[1.08] lg:translate-y-[15%] lg:scale-[1.12]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" />
         </div>
       </motion.div>
