@@ -255,8 +255,8 @@
     mask-image: linear-gradient(to bottom, black 0%, black 54%, hsl(0 0% 0% / 0.72) 72%, transparent 100%);
     filter: blur(9px);
     mix-blend-mode: screen;
-    opacity: 0.45;
-    animation: hero-sun-rays 8s ease-in-out infinite;
+    opacity: 0.62;
+    animation: hero-sun-rays 7s ease-in-out infinite;
     will-change: opacity, transform;
   }
 
