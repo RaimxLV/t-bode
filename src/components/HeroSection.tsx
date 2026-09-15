@@ -43,7 +43,7 @@ export const HeroSection = () => {
   const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
   const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.6);
-  const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
+  const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.3);
   const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.15);
   const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.5);
 
@@ -90,7 +90,7 @@ export const HeroSection = () => {
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 lg:-translate-y-[10%] scale-100 xl:scale-[0.33] 2xl:scale-[0.30] 3xl:scale-[0.27]">
-          <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full origin-bottom object-contain lg:inset-0 lg:h-full lg:w-full lg:object-contain lg:object-bottom lg:scale-100" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+          <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 -left-[4%] h-auto w-[108%] max-w-none origin-bottom object-contain lg:inset-0 lg:h-full lg:w-full lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
         </div>
       </motion.div>
       {!reduceMotion && (
@@ -107,7 +107,7 @@ export const HeroSection = () => {
         </div>
       )}
       <div aria-hidden className="absolute inset-0 z-[4]">
-        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.04] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.06]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
         </div>
       </div>
