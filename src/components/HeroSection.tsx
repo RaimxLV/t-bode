@@ -95,20 +95,22 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
-        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.02 }} decoding="async" />
+        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full origin-bottom object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_58%]" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.08 }} decoding="async" />
       </motion.div>
       {!reduceMotion && (
         <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
           <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
         </div>
       )}
-      <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <div className="absolute bottom-0 left-0 w-full aspect-square translate-y-[6%] lg:inset-0 lg:aspect-auto lg:translate-y-[1%]">
-          <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
+      {!reduceMotion && (
+        <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
+          <span className="hero-ambient__glow hero-ambient__glow--warm" />
+          <span className="hero-ambient__glow hero-ambient__glow--cool" />
+          <span className="hero-ambient__shimmer" />
         </div>
-      </motion.div>
+      )}
       <div aria-hidden className="absolute inset-0 z-[4]">
-        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.12] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.12]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX }} decoding="async" />
         </div>
       </div>
