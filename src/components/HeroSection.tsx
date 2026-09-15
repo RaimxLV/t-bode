@@ -62,7 +62,7 @@ export const HeroSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[1120px] sm:min-h-[1180px] lg:min-h-[112vh] overflow-hidden bg-hero-sky"
+      className="relative min-h-[1080px] sm:min-h-[1120px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
@@ -89,13 +89,13 @@ export const HeroSection = () => {
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0" style={{ y: midgroundY }}>
-        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.035 }} decoding="async" />
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0" style={{ y: jumperY }}>
-        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.035 }} decoding="async" />
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0" style={{ y: foregroundY }}>
-        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.035 }} decoding="async" />
+        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-center" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.035 }} decoding="async" />
       </motion.div>
       <div
         aria-hidden
@@ -112,7 +112,7 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative z-10 flex min-h-[1120px] sm:min-h-[1180px] lg:min-h-[112vh] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
+      <div className="relative z-10 flex min-h-[1080px] sm:min-h-[1120px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
         <div className="max-w-3xl text-center lg:text-left lg:max-w-[620px] pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
