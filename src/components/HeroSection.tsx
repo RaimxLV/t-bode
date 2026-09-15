@@ -30,6 +30,13 @@ export const HeroSection = () => {
   const smoothX = useSpring(pointerX, { stiffness: 55, damping: 22 });
   const smoothY = useSpring(pointerY, { stiffness: 55, damping: 22 });
 
+  // Gyroscope-driven parallax on phones/tablets
+  useDeviceTilt(pointerX, pointerY, {
+    amplitudeX: 26,
+    amplitudeY: 16,
+    enabled: !reduceMotion,
+  });
+
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
