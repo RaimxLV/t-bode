@@ -43,14 +43,11 @@ export const HeroSection = () => {
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
   const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
-  const jumperY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "21%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
-  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.55);
-  const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.95);
+  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.6);
   const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
   const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.15);
-  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.45);
-  const jumperPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.8);
+  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.5);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
