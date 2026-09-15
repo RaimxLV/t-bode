@@ -127,7 +127,7 @@ export const HeroSection = () => {
       />
 
       <div className="relative z-10 flex min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-10 lg:pb-16 pointer-events-none">
-        <div className="max-w-3xl text-center lg:text-left lg:max-w-[620px] pointer-events-auto">
+        <div className="w-full max-w-3xl text-center lg:text-left lg:w-auto lg:max-w-[620px] pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
