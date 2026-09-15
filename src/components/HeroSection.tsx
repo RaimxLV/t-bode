@@ -17,6 +17,7 @@ import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
+import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
