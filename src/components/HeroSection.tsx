@@ -1,15 +1,19 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import {
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useScroll,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
-import heroJpg from "@/assets/hero-1280.jpg";
-import heroJpgLarge from "@/assets/hero-1920.jpg";
-import heroJpgSmall from "@/assets/hero-480.jpg";
-import heroWebp1920 from "@/assets/hero-1920.webp";
-import heroWebp1280 from "@/assets/hero-1280.webp";
-import heroWebp768 from "@/assets/hero-768.webp";
-import heroWebp480 from "@/assets/hero-480.webp";
+import heroBackground from "@/assets/hero-parallax-background.webp";
+import heroMidground from "@/assets/hero-parallax-midground.webp";
+import heroJumper from "@/assets/hero-parallax-jumper.webp";
+import heroForeground from "@/assets/hero-parallax-foreground.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -19,48 +23,83 @@ export const HeroSection = () => {
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+  const smoothX = useSpring(pointerX, { stiffness: 55, damping: 22 });
+  const smoothY = useSpring(pointerY, { stiffness: 55, damping: 22 });
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ["start start", "end start"],
   });
 
-  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "5%"]);
+  const midgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "11%"]);
+  const jumperY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "18%"]);
+  const foregroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "25%"]);
+  const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.15);
+  const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.35);
+  const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.65);
+  const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value);
+  const backgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.1);
+  const midgroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.25);
+  const jumperPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.45);
+  const foregroundPointerY = useTransform(smoothY, (value) => reduceMotion ? 0 : value * 0.7);
 
-  const webpSrcSet = `${heroWebp480} 480w, ${heroWebp768} 768w, ${heroWebp1280} 1280w, ${heroWebp1920} 1920w`;
-  const jpgSrcSet = `${heroJpgSmall} 480w, ${heroJpg} 1280w, ${heroJpgLarge} 1920w`;
-  const sizesAttr = "(max-width: 480px) 480px, (max-width: 768px) 768px, (max-width: 1280px) 1280px, 1920px";
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (reduceMotion || event.pointerType === "touch") return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 18);
+    pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 14);
+  };
+
+  const resetPointer = () => {
+    pointerX.set(0);
+    pointerY.set(0);
+  };
 
   return (
-    <section ref={sectionRef} className="relative min-h-[120vh] overflow-hidden" style={{ position: 'relative' }}>
-      {/* Preloaded hero image with fade-in (WebP with JPG fallback) */}
+    <section
+      ref={sectionRef}
+      className="relative min-h-[1120px] sm:min-h-[1180px] lg:min-h-[112vh] overflow-hidden bg-hero-sky"
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointer}
+    >
       <motion.div
-        className="absolute inset-0 w-full h-full"
-        style={{ y: imgY }}
+        aria-hidden
+        className="absolute inset-0"
+        style={{ y: backgroundY }}
         initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <picture>
-          <source type="image/webp" srcSet={webpSrcSet} sizes={sizesAttr} />
-          <img
-            src={heroJpg}
-            srcSet={jpgSrcSet}
-            sizes={sizesAttr}
-            alt="Apdrukāts T-krekls ar savu dizainu — T-Bode DTF kreklu apdruka Rīgā"
-            width={1920}
-            height={1080}
-            className="absolute inset-0 w-full h-full object-cover object-[center_70%] md:object-[center_60%]"
-            onLoad={() => setImageLoaded(true)}
-            {...({ fetchpriority: "high" } as any)}
-            decoding="async"
-            loading="eager"
-          />
-        </picture>
+        <motion.img
+          src={heroBackground}
+          alt="Latvijas piekraste ar klintīm"
+          width={1600}
+          height={1600}
+          className="absolute inset-0 size-full object-cover object-center"
+          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.035 }}
+          onLoad={() => setImageLoaded(true)}
+          {...({ fetchpriority: "high" } as any)}
+          decoding="async"
+          loading="eager"
+        />
+      </motion.div>
+
+      <motion.div aria-hidden className="absolute inset-0" style={{ y: midgroundY }}>
+        <motion.img src={heroMidground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: midgroundX, translateY: midgroundPointerY, scale: 1.035 }} decoding="async" />
+      </motion.div>
+      <motion.div aria-hidden className="absolute inset-0" style={{ y: jumperY }}>
+        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.035 }} decoding="async" />
+      </motion.div>
+      <motion.div aria-hidden className="absolute inset-0" style={{ y: foregroundY }}>
+        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-cover object-center" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1.035 }} decoding="async" />
       </motion.div>
       <div
-        className="absolute inset-0"
-        style={{ background: "var(--hero-overlay)" }}
+        aria-hidden
+        className="absolute inset-0 bg-hero-parallax-overlay"
       />
       {/* Tileable film-grain overlay (WebP with JPG fallback via image-set) */}
       <div
@@ -73,13 +112,13 @@ export const HeroSection = () => {
         }}
       />
 
-      <div className="relative z-10 flex items-center justify-center h-full container mx-auto px-4 pt-32 md:pt-40">
-        <div className="max-w-3xl text-center">
+      <div className="relative z-10 flex min-h-[1120px] sm:min-h-[1180px] lg:min-h-[112vh] items-start lg:items-center container mx-auto px-4 pt-28 sm:pt-32 lg:pt-28 pb-16 pointer-events-none">
+        <div className="max-w-3xl text-center lg:text-left lg:max-w-[620px] pointer-events-auto">
           <motion.h1
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
+            className="text-6xl sm:text-7xl md:text-8xl lg:text-8xl xl:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
           >
             <span className="sr-only">T-kreklu un hūdiju apdruka Rīgā — personalizē online. </span>
             <span className="block text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
@@ -101,7 +140,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
             transition={{ duration: 0.6, delay: 0.7 }}
-            className="group mt-5 inline-flex items-center gap-2 text-sm sm:text-base font-body font-semibold text-white/80 hover:text-white transition-colors"
+            className="group mt-5 inline-flex items-center gap-2 text-sm sm:text-base font-body font-semibold text-primary-foreground/80 hover:text-primary-foreground transition-colors"
             aria-label={t("hero.dtfLinkAria", "Uzzini, kā darbojas DTF apdruka")}
           >
             <span className="underline decoration-white/40 decoration-2 underline-offset-4 group-hover:decoration-white/80 transition-colors">
@@ -113,7 +152,7 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-8 flex flex-col gap-4 items-center max-w-xl mx-auto"
+            className="mt-8 flex flex-col gap-4 items-center lg:items-start max-w-xl mx-auto lg:mx-0"
           >
             <button
               type="button"
