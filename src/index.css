@@ -37,6 +37,8 @@
     --radius: 0.5rem;
 
     --hero-overlay: linear-gradient(135deg, hsla(0, 0%, 0%, 0.55) 0%, hsla(0, 0%, 0%, 0.2) 100%);
+    --hero-sky: 201 38% 56%;
+    --hero-parallax-overlay: linear-gradient(90deg, hsl(0 0% 0% / 0.72) 0%, hsl(0 0% 0% / 0.48) 40%, hsl(0 0% 0% / 0.08) 72%, transparent 100%);
     --gradient-brand: linear-gradient(135deg, hsl(0, 72%, 51%), hsl(20, 90%, 55%));
     --shadow-card: 0 2px 12px hsla(0, 0%, 0%, 0.06);
     --shadow-glow: 0 0 20px hsla(0, 72%, 51%, 0.1);
@@ -118,6 +120,20 @@
 
   .bg-cta-red {
     background-color: hsl(var(--cta-red));
+  }
+
+  .bg-hero-sky {
+    background-color: hsl(var(--hero-sky));
+  }
+
+  .bg-hero-parallax-overlay {
+    background: linear-gradient(180deg, hsl(0 0% 0% / 0.58) 0%, hsl(0 0% 0% / 0.32) 48%, hsl(0 0% 0% / 0.1) 72%, hsl(0 0% 0% / 0.28) 100%);
+  }
+
+  @media (min-width: 1024px) {
+    .bg-hero-parallax-overlay {
+      background: var(--hero-parallax-overlay);
+    }
   }
 
   /* Skip to content link */
