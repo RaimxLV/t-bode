@@ -11,6 +11,7 @@ import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
+import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidground from "@/assets/hero-parallax-midground-jumper.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
