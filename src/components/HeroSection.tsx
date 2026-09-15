@@ -11,6 +11,7 @@ import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
+import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidground from "@/assets/hero-parallax-midground-jumper.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -79,8 +80,20 @@ export const HeroSection = () => {
           alt="Latvijas piekraste ar klintīm"
           width={1600}
           height={1600}
-          className="absolute inset-0 size-full object-cover object-center"
+          className="absolute inset-0 size-full object-cover object-center lg:hidden"
           style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
+          onLoad={() => setImageLoaded(true)}
+          {...({ fetchpriority: "high" } as any)}
+          decoding="async"
+          loading="eager"
+        />
+        <motion.img
+          src={heroBackgroundWide}
+          alt=""
+          width={2304}
+          height={1856}
+          className="hidden lg:block lg:absolute lg:inset-0 lg:size-full lg:object-cover lg:object-center"
+          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24 }}
           onLoad={() => setImageLoaded(true)}
           {...({ fetchpriority: "high" } as any)}
           decoding="async"
