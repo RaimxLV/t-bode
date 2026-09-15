@@ -36,8 +36,8 @@ export const HeroSection = () => {
 
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
   const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
-  const jumperY = useTransform(scrollYProgress, [0, 1], ["11%", reduceMotion ? "11%" : "32%"]);
-  const foregroundY = useTransform(scrollYProgress, [0, 1], ["-16%", reduceMotion ? "-16%" : "25%"]);
+  const jumperY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "21%"]);
+  const foregroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "41%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
   const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.55);
   const jumperX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.95);
@@ -97,10 +97,14 @@ export const HeroSection = () => {
         </div>
       )}
       <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_60%]" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
+        <div className="absolute inset-0 translate-y-[3%] lg:translate-y-[11%]">
+          <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute bottom-0 left-0 h-auto w-full object-contain lg:inset-0 lg:size-full lg:object-cover lg:object-[center_60%]" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
+        </div>
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0 z-[4]" style={{ y: foregroundY }}>
-        <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1 }} decoding="async" />
+        <div className="absolute inset-0 -translate-y-[4%] lg:-translate-y-[16%]">
+          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: foregroundX, translateY: foregroundPointerY, scale: 1 }} decoding="async" />
+        </div>
       </motion.div>
       <div
         aria-hidden
