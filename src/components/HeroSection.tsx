@@ -13,7 +13,7 @@ import { useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroMidground from "@/assets/hero-parallax-midground.webp";
 import heroJumper from "@/assets/hero-parallax-jumper.webp";
-import heroForeground from "@/assets/hero-parallax-foreground.webp";
+import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import grainWebp from "@/assets/hero-grain-tile.webp";
 import grainJpg from "@/assets/hero-grain-tile.jpg";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -97,12 +97,12 @@ export const HeroSection = () => {
         </div>
       )}
       <motion.div aria-hidden className="absolute inset-0 z-[3]" style={{ y: jumperY }}>
-        <div className="absolute inset-0 origin-center scale-[0.78] translate-y-[12%] lg:scale-[0.72] lg:translate-y-[22%]">
-          <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY }} decoding="async" />
+        <div className="absolute inset-0 translate-y-[23%] lg:translate-y-[11%]">
+          <motion.img src={heroJumper} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain" style={{ x: jumperX, translateY: jumperPointerY, scale: 1.02 }} decoding="async" />
         </div>
       </motion.div>
       <motion.div aria-hidden className="absolute inset-0 z-[4]" style={{ y: foregroundY }}>
-        <div className="absolute inset-0 origin-bottom scale-[1.08] -translate-y-[3%] lg:scale-[1.2] lg:-translate-y-[7%]">
+        <div className="absolute inset-0 origin-bottom translate-y-[6%] scale-[1.08] lg:translate-y-[15%] lg:scale-[1.12]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" />
         </div>
       </motion.div>
