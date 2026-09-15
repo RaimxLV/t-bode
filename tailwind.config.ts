@@ -13,6 +13,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        "3xl": "1920px",
+      },
       fontFamily: {
         display: ["Bebas Neue", "sans-serif"],
         body: ["Inter", "sans-serif"],
