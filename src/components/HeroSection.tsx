@@ -82,7 +82,7 @@ export const HeroSection = () => {
           width={1600}
           height={1600}
           className="absolute inset-0 size-full object-cover object-center"
-          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.035 }}
+          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
           onLoad={() => setImageLoaded(true)}
           {...({ fetchpriority: "high" } as any)}
           decoding="async"
