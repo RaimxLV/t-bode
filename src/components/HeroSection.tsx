@@ -49,6 +49,25 @@ export const HeroSection = () => {
     enabled: !reduceMotion,
   });
 
+  // The blurred/blended ambient light is the most expensive thing to repaint
+  // while the parallax plates move, so it fades out during active scrolling
+  // and fades back in as soon as scrolling settles.
+  const [isScrolling, setIsScrolling] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let timer = 0;
+    const onScroll = () => {
+      setIsScrolling(true);
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => setIsScrolling(false), 180);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
+    };
+  }, []);
+
   // Keep a subtle sense of depth on desktop while the pointer is idle.
   useEffect(() => {
     if (reduceMotion || typeof window === "undefined" || window.innerWidth < 1024) return;
