@@ -105,7 +105,7 @@ export const HeroSection = () => {
       <motion.div
         aria-hidden
         className="absolute inset-0 z-0"
-        style={{ y: backgroundY }}
+        style={{ y: backgroundY, willChange: "transform" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
@@ -117,7 +117,7 @@ export const HeroSection = () => {
             width={1600}
             height={1600}
             className="absolute inset-0 size-full object-cover object-center lg:hidden"
-            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
+            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12, willChange: "transform", backfaceVisibility: "hidden" }}
             onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
@@ -131,7 +131,7 @@ export const HeroSection = () => {
             width={2304}
             height={1856}
             className="hidden lg:block lg:absolute lg:inset-0 lg:size-full lg:object-cover lg:object-center"
-            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24 }}
+            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24, willChange: "transform", backfaceVisibility: "hidden" }}
             onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
@@ -140,13 +140,13 @@ export const HeroSection = () => {
         )}
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
-            <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
+            <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
           )}
           {isDesktop && (
-            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
+            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
           )}
         </div>
       </motion.div>
@@ -165,7 +165,7 @@ export const HeroSection = () => {
       )}
       <div aria-hidden className="absolute inset-0 z-[4]">
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
-          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
+          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
       </div>
 
