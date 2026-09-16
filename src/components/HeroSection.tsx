@@ -146,7 +146,7 @@ export const HeroSection = () => {
             <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           )}
           {isDesktop && (
-            <motion.img src={heroMidgroundDesktop} alt="" width={3494} height={770} className="hidden lg:block lg:absolute lg:inset-y-0 lg:left-[-30%] lg:h-full lg:w-[269%] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+            <motion.img src={heroMidgroundDesktop} alt="" width={3494} height={770} className="hidden lg:block lg:absolute lg:bottom-0 lg:left-[-1356px] lg:h-auto lg:w-[max(4448px,156vw)] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           )}
         </div>
       </motion.div>
