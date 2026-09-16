@@ -102,8 +102,9 @@ export const HeroSection = () => {
     offset: ["start start", "end start"],
   });
 
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "8%"]);
-  const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "21%"]);
+  // Scroll depth: people (foreground) 0%, jumper+tree 10%, sky/background 20%.
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "20%"]);
+  const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "13%"]);
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
   const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.6);
   const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
