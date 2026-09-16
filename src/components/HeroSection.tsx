@@ -36,6 +36,35 @@ export const HeroSection = () => {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
+  // Preload + decode every layer of the active breakpoint, then reveal the
+  // whole hero at once instead of layer-by-layer pop-in.
+  useEffect(() => {
+    let cancelled = false;
+    const sources = isDesktop
+      ? [heroBackgroundWide, heroMidgroundDesktop, heroForeground]
+      : [heroBackground, heroMidgroundMobile, heroForeground];
+    const load = (src: string) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        (img as any).fetchPriority = "high";
+        img.decoding = "async";
+        img.src = src;
+        const done = () => resolve();
+        if (img.decode) img.decode().then(done).catch(done);
+        else {
+          img.onload = done;
+          img.onerror = done;
+        }
+      });
+    setImageLoaded(false);
+    Promise.all(sources.map(load)).then(() => {
+      if (!cancelled) setImageLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [isDesktop]);
+
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
