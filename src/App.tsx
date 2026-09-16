@@ -15,6 +15,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import { CookieConsent } from "@/components/CookieConsent";
 import { GaPageviews } from "@/components/GaPageviews";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
@@ -221,6 +222,7 @@ const App = () => {
                   <BrowserRouter basename={import.meta.env.BASE_URL}>
                     <DynamicLang />
                     <ViewportRecovery />
+                    <SmoothScroll />
                     <ScrollToTop />
                     <CartSidebar />
                     <CookieConsent />
