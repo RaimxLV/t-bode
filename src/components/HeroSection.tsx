@@ -24,6 +24,18 @@ export const HeroSection = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const lastPointerMoveRef = useRef(0);
   const [imageLoaded, setImageLoaded] = useState(false);
+  // Only fetch the layer set that the current breakpoint actually shows, so
+  // phones never download the (much larger) desktop plates and vice versa.
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = () => setIsDesktop(mq.matches);
+    onChange();
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
   const pointerY = useMotionValue(0);
