@@ -170,12 +170,12 @@ export const HeroSection = () => {
         </div>
       </motion.div>
       {!reduceMotion && (
-        <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
+        <div aria-hidden className={`hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none${isScrolling ? " hero-leaves--paused" : ""}`}>
           <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
         </div>
       )}
       {!reduceMotion && (
-        <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
+        <div aria-hidden className={`hero-ambient absolute inset-0 z-[3] pointer-events-none${isScrolling ? " hero-ambient--paused" : ""}`}>
           <span className="hero-ambient__glow hero-ambient__glow--warm" />
           <span className="hero-ambient__glow hero-ambient__glow--cool" />
           <span className="hero-ambient__sun-rays" />
@@ -193,7 +193,7 @@ export const HeroSection = () => {
         className="absolute inset-0 z-[5] bg-hero-parallax-overlay"
       />
       {!reduceMotion && (
-        <div aria-hidden className="hero-leaves absolute inset-0 z-[8] pointer-events-none">
+        <div aria-hidden className={`hero-leaves absolute inset-0 z-[8] pointer-events-none${isScrolling ? " hero-leaves--paused" : ""}`}>
           <i className="hero-leaf hero-leaf--4" /><i className="hero-leaf hero-leaf--5" /><i className="hero-leaf hero-leaf--6" />
           <i className="hero-leaf hero-leaf--7" /><i className="hero-leaf hero-leaf--8" />
         </div>
