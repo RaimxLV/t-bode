@@ -165,7 +165,7 @@ export const HeroSection = () => {
       )}
       <div aria-hidden className="absolute inset-0 z-[4]">
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
-          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" />
+          <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
       </div>
 
