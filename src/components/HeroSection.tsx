@@ -146,7 +146,7 @@ export const HeroSection = () => {
             <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           )}
           {isDesktop && (
-            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
           )}
         </div>
       </motion.div>
