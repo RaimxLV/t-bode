@@ -128,6 +128,7 @@ export const HeroSection = () => {
     <section
       ref={sectionRef}
       className="relative min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
+      style={{ touchAction: "pan-y" }}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
