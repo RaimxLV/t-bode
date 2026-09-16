@@ -201,7 +201,7 @@ export const HeroSection = () => {
         aria-hidden
         className="absolute inset-0 z-[5] bg-hero-parallax-overlay"
       />
-      {!reduceMotion && (
+      {!reduceMotion && imageLoaded && (
         <div aria-hidden className="hero-leaves absolute inset-0 z-[8] pointer-events-none">
           <i className="hero-leaf hero-leaf--4" /><i className="hero-leaf hero-leaf--5" /><i className="hero-leaf hero-leaf--6" />
           <i className="hero-leaf hero-leaf--7" /><i className="hero-leaf hero-leaf--8" />
