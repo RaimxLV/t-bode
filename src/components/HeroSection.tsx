@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
-import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-wide-opt.webp";
 import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
@@ -42,7 +41,7 @@ export const HeroSection = () => {
     let cancelled = false;
     const sources = isDesktop
       ? [heroBackgroundWide, heroMidgroundDesktop, heroForeground]
-      : [heroBackground, heroMidgroundMobile, heroForeground];
+      : [heroBackground, heroMidgroundDesktop, heroForeground];
     const load = (src: string) =>
       new Promise<void>((resolve) => {
         const img = new Image();
@@ -172,7 +171,7 @@ export const HeroSection = () => {
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
-            <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
+            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-15%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
           )}
           {isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
