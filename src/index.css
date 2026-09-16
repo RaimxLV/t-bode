@@ -196,6 +196,16 @@
   }
 
   /* Ambient light between parallax layers */
+  .hero-ambient,
+  .hero-leaves {
+    contain: layout paint size style;
+    transform: translateZ(0);
+  }
+
+  .hero-leaf {
+    will-change: translate, rotate, opacity;
+  }
+
   .hero-ambient__glow {
     position: absolute;
     display: block;
