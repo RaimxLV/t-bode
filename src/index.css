@@ -200,6 +200,16 @@
   .hero-leaves {
     contain: layout paint size style;
     transform: translateZ(0);
+    transition: opacity 260ms ease-out;
+  }
+
+  /* While the page is actively scrolling, the heavy blurred light layers step
+     aside so the parallax plates can move at full frame rate. */
+  .hero-ambient--paused,
+  .hero-leaves--paused {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 90ms ease-out, visibility 0s linear 90ms;
   }
 
   .hero-leaf {
