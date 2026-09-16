@@ -147,7 +147,7 @@ export const HeroSection = () => {
             height={1600}
             className="absolute inset-0 size-full object-cover object-center lg:hidden"
             style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12, willChange: "transform", backfaceVisibility: "hidden" }}
-            onLoad={() => setImageLoaded(true)}
+            
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
             loading="eager"
