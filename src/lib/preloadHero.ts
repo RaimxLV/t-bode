@@ -1,6 +1,5 @@
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
-import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-wide-opt.webp";
 import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 
@@ -15,7 +14,7 @@ export const preloadHeroLayers = () => {
     typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
   const sources = isDesktop
     ? [heroBackgroundWide, heroMidgroundDesktop, heroForeground]
-    : [heroBackground, heroMidgroundMobile, heroForeground];
+    : [heroBackground, heroMidgroundDesktop, heroForeground];
 
   for (const href of sources) {
     const link = document.createElement("link");
