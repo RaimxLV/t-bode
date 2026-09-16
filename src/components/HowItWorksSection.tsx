@@ -4,10 +4,10 @@ import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import stepChoose from "@/assets/step-choose.png";
-import stepDesign from "@/assets/step-design.png";
-import stepPayment from "@/assets/step-payment.png";
-import stepDelivery from "@/assets/step-delivery.png";
+import stepChoose from "@/assets/step-choose.webp";
+import stepDesign from "@/assets/step-design.webp";
+import stepPayment from "@/assets/step-payment.webp";
+import stepDelivery from "@/assets/step-delivery.webp";
 
 const images = [stepChoose, stepDesign, stepPayment, stepDelivery];
 
