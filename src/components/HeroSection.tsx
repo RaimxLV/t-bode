@@ -161,7 +161,6 @@ export const HeroSection = () => {
             height={1856}
             className="hidden lg:block lg:absolute lg:inset-0 lg:size-full lg:object-cover lg:object-center"
             style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24, willChange: "transform", backfaceVisibility: "hidden" }}
-            onLoad={() => setImageLoaded(true)}
             {...({ fetchpriority: "high" } as any)}
             decoding="async"
             loading="eager"
@@ -169,7 +168,7 @@ export const HeroSection = () => {
         )}
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform" }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
             <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
