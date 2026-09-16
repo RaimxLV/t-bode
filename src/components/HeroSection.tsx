@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidgroundMobile from "@/assets/hero-parallax-midground-jumper-mobile-wide-opt.webp";
-import heroMidgroundDesktop from "@/assets/hero-parallax-midground-jumper-desktop-opt.webp";
+import heroMidgroundDesktop from "@/assets/hero-parallax-midground-jumper-desktop-repaired.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
@@ -146,7 +146,7 @@ export const HeroSection = () => {
             <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           )}
           {isDesktop && (
-            <motion.img src={heroMidgroundDesktop} alt="" width={5591} height={1600} className="hidden lg:block lg:absolute lg:inset-y-0 lg:left-[-30%] lg:h-full lg:w-[269%] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+            <motion.img src={heroMidgroundDesktop} alt="" width={5591} height={1600} className="hidden lg:block lg:absolute lg:bottom-0 lg:left-[-330px] lg:h-auto lg:w-[max(3422px,120vw)] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
           )}
         </div>
       </motion.div>
