@@ -329,6 +329,24 @@
   }
 
   @media (max-width: 640px) {
+    .hero-ambient__glow--warm {
+      left: -8%;
+      top: 2%;
+      width: 78%;
+      height: 52%;
+    }
+
+    .hero-ambient__glow--cool {
+      right: -14%;
+      top: 24%;
+      width: 72%;
+      height: 48%;
+    }
+
+    .hero-ambient__shimmer {
+      inset: -18% -58%;
+    }
+
     .hero-ambient__sun-rays {
       left: -42%;
       top: -8%;

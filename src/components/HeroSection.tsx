@@ -193,7 +193,7 @@ export const HeroSection = () => {
         </div>
       )}
       <div aria-hidden className="absolute inset-0 z-[4]" style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
-        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
+        <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[46%] scale-[1.26] sm:translate-y-[47%] sm:scale-[1.22] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
       </div>
