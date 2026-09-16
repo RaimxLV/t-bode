@@ -32,8 +32,8 @@ export const HeroSection = () => {
 
   // Gyroscope-driven parallax on phones/tablets
   useDeviceTilt(pointerX, pointerY, {
-    amplitudeX: 26,
-    amplitudeY: 16,
+    amplitudeX: 15.6,
+    amplitudeY: 9.6,
     enabled: !reduceMotion,
   });
 
