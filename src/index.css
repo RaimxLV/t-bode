@@ -195,21 +195,14 @@
     .hero-leaf--1, .hero-leaf--3, .hero-leaf--5, .hero-leaf--7 { display: none; }
   }
 
-  /* Ambient light between parallax layers */
+  /* Ambient light between parallax layers.
+     Every layer here is kept blur-free and blend-free so the compositor can
+     animate it on the GPU without re-reading the moving parallax plates —
+     the softness comes from wide gradient stops instead of filter: blur(). */
   .hero-ambient,
   .hero-leaves {
     contain: layout paint size style;
     transform: translateZ(0);
-    transition: opacity 260ms ease-out;
-  }
-
-  /* While the page is actively scrolling, the heavy blurred light layers step
-     aside so the parallax plates can move at full frame rate. */
-  .hero-ambient--paused,
-  .hero-leaves--paused {
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 90ms ease-out, visibility 0s linear 90ms;
   }
 
   .hero-leaf {
@@ -220,8 +213,6 @@
     position: absolute;
     display: block;
     border-radius: 9999px;
-    filter: blur(26px);
-    mix-blend-mode: screen;
     will-change: opacity, transform;
   }
 
@@ -230,7 +221,14 @@
     top: 6%;
     width: 55%;
     height: 45%;
-    background: radial-gradient(circle, hsl(38 92% 66% / 0.72) 0%, hsl(38 92% 66% / 0) 70%);
+    background: radial-gradient(
+      circle,
+      hsl(38 92% 70% / 0.5) 0%,
+      hsl(38 92% 70% / 0.34) 26%,
+      hsl(38 92% 70% / 0.16) 48%,
+      hsl(38 92% 70% / 0.05) 68%,
+      hsl(38 92% 70% / 0) 82%
+    );
     animation: hero-ambient-breathe 9s ease-in-out infinite;
   }
 
@@ -239,7 +237,14 @@
     top: 28%;
     width: 48%;
     height: 42%;
-    background: radial-gradient(circle, hsl(196 84% 70% / 0.5) 0%, hsl(196 84% 70% / 0) 70%);
+    background: radial-gradient(
+      circle,
+      hsl(196 84% 76% / 0.34) 0%,
+      hsl(196 84% 76% / 0.22) 28%,
+      hsl(196 84% 76% / 0.1) 50%,
+      hsl(196 84% 76% / 0.03) 70%,
+      hsl(196 84% 76% / 0) 84%
+    );
     animation: hero-ambient-breathe 12s ease-in-out infinite;
     animation-delay: -5s;
   }
@@ -250,12 +255,14 @@
     display: block;
     background: linear-gradient(
       104deg,
-      transparent 38%,
-      hsl(0 0% 100% / 0.09) 48%,
-      hsl(38 92% 80% / 0.11) 52%,
-      transparent 62%
+      transparent 34%,
+      hsl(0 0% 100% / 0.06) 45%,
+      hsl(38 92% 82% / 0.1) 51%,
+      hsl(0 0% 100% / 0.05) 57%,
+      transparent 66%
     );
     animation: hero-ambient-drift 14s ease-in-out infinite;
+    will-change: opacity, transform;
   }
 
   .hero-ambient__sun-rays {
@@ -267,14 +274,12 @@
     display: block;
     transform-origin: 50% 0;
     background:
-      linear-gradient(102deg, transparent 0 20%, hsl(var(--sun-ray) / 0.22) 31%, transparent 44%),
-      linear-gradient(112deg, transparent 0 34%, hsl(var(--sun-ray) / 0.18) 47%, transparent 60%),
-      linear-gradient(122deg, transparent 0 49%, hsl(var(--sun-ray) / 0.14) 60%, transparent 73%);
+      linear-gradient(102deg, transparent 0 18%, hsl(var(--sun-ray) / 0.06) 24%, hsl(var(--sun-ray) / 0.18) 31%, hsl(var(--sun-ray) / 0.06) 38%, transparent 46%),
+      linear-gradient(112deg, transparent 0 32%, hsl(var(--sun-ray) / 0.05) 39%, hsl(var(--sun-ray) / 0.15) 47%, hsl(var(--sun-ray) / 0.05) 54%, transparent 62%),
+      linear-gradient(122deg, transparent 0 47%, hsl(var(--sun-ray) / 0.04) 53%, hsl(var(--sun-ray) / 0.12) 60%, hsl(var(--sun-ray) / 0.04) 67%, transparent 75%);
     -webkit-mask-image: linear-gradient(to bottom, black 0%, black 54%, hsl(0 0% 0% / 0.72) 72%, transparent 100%);
     mask-image: linear-gradient(to bottom, black 0%, black 54%, hsl(0 0% 0% / 0.72) 72%, transparent 100%);
-    filter: blur(5px);
-    mix-blend-mode: screen;
-    opacity: 0.62;
+    opacity: 0.78;
     animation: hero-sun-rays 7s ease-in-out infinite;
     will-change: opacity, transform;
   }
@@ -285,12 +290,12 @@
     position: absolute;
     inset: -8% -10% 0;
     background:
-      radial-gradient(ellipse at 18% 25%, hsl(var(--sun-ray) / 0.3), transparent 38%),
-      radial-gradient(ellipse at 78% 34%, hsl(var(--hero-sky) / 0.42), transparent 44%),
-      linear-gradient(116deg, transparent 18%, hsl(var(--sun-ray) / 0.22) 42%, transparent 67%);
-    filter: blur(10px);
+      radial-gradient(ellipse at 18% 25%, hsl(var(--sun-ray) / 0.22) 0%, hsl(var(--sun-ray) / 0.1) 24%, transparent 46%),
+      radial-gradient(ellipse at 78% 34%, hsl(var(--hero-sky) / 0.28) 0%, hsl(var(--hero-sky) / 0.12) 26%, transparent 50%),
+      linear-gradient(116deg, transparent 16%, hsl(var(--sun-ray) / 0.1) 32%, hsl(var(--sun-ray) / 0.16) 44%, hsl(var(--sun-ray) / 0.08) 56%, transparent 70%);
     transform-origin: top center;
     animation: hero-aurora-shimmer 7s ease-in-out infinite alternate;
+    will-change: opacity, transform;
   }
 
   .hero-ambient__sun-rays::after {
@@ -336,14 +341,12 @@
         linear-gradient(132deg, transparent 0 62%, hsl(var(--sun-ray) / 0.34) 71%, transparent 82%);
       -webkit-mask-image: linear-gradient(to bottom, black 0%, black 48%, hsl(0 0% 0% / 0.78) 66%, hsl(0 0% 0% / 0.3) 84%, transparent 100%);
       mask-image: linear-gradient(to bottom, black 0%, black 48%, hsl(0 0% 0% / 0.78) 66%, hsl(0 0% 0% / 0.3) 84%, transparent 100%);
-      filter: blur(5px);
-      opacity: 0.88;
+      opacity: 0.9;
       animation-duration: 6s;
     }
 
     .hero-ambient__glow--warm {
-      opacity: 0.8;
-      filter: blur(22px);
+      opacity: 0.85;
     }
   }
 

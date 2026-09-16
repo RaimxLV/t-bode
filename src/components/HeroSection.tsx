@@ -49,25 +49,6 @@ export const HeroSection = () => {
     enabled: !reduceMotion,
   });
 
-  // The blurred/blended ambient light is the most expensive thing to repaint
-  // while the parallax plates move, so it fades out during active scrolling
-  // and fades back in as soon as scrolling settles.
-  const [isScrolling, setIsScrolling] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let timer = 0;
-    const onScroll = () => {
-      setIsScrolling(true);
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => setIsScrolling(false), 180);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.clearTimeout(timer);
-    };
-  }, []);
-
   // Keep a subtle sense of depth on desktop while the pointer is idle.
   useEffect(() => {
     if (reduceMotion || typeof window === "undefined" || window.innerWidth < 1024) return;
@@ -170,12 +151,12 @@ export const HeroSection = () => {
         </div>
       </motion.div>
       {!reduceMotion && (
-        <div aria-hidden className={`hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none${isScrolling ? " hero-leaves--paused" : ""}`}>
+        <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
           <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
         </div>
       )}
       {!reduceMotion && (
-        <div aria-hidden className={`hero-ambient absolute inset-0 z-[3] pointer-events-none${isScrolling ? " hero-ambient--paused" : ""}`}>
+        <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
           <span className="hero-ambient__glow hero-ambient__glow--warm" />
           <span className="hero-ambient__glow hero-ambient__glow--cool" />
           <span className="hero-ambient__sun-rays" />
@@ -193,7 +174,7 @@ export const HeroSection = () => {
         className="absolute inset-0 z-[5] bg-hero-parallax-overlay"
       />
       {!reduceMotion && (
-        <div aria-hidden className={`hero-leaves absolute inset-0 z-[8] pointer-events-none${isScrolling ? " hero-leaves--paused" : ""}`}>
+        <div aria-hidden className="hero-leaves absolute inset-0 z-[8] pointer-events-none">
           <i className="hero-leaf hero-leaf--4" /><i className="hero-leaf hero-leaf--5" /><i className="hero-leaf hero-leaf--6" />
           <i className="hero-leaf hero-leaf--7" /><i className="hero-leaf hero-leaf--8" />
         </div>
