@@ -178,12 +178,12 @@ export const HeroSection = () => {
           )}
         </div>
       </motion.div>
-      {!reduceMotion && (
+      {!reduceMotion && imageLoaded && (
         <div aria-hidden className="hero-leaves hero-leaves--distant absolute inset-0 z-[2] pointer-events-none">
           <i className="hero-leaf hero-leaf--1" /><i className="hero-leaf hero-leaf--2" /><i className="hero-leaf hero-leaf--3" />
         </div>
       )}
-      {!reduceMotion && (
+      {!reduceMotion && imageLoaded && (
         <div aria-hidden className="hero-ambient absolute inset-0 z-[3] pointer-events-none">
           <span className="hero-ambient__glow hero-ambient__glow--warm" />
           <span className="hero-ambient__glow hero-ambient__glow--cool" />
@@ -191,7 +191,7 @@ export const HeroSection = () => {
           <span className="hero-ambient__shimmer" />
         </div>
       )}
-      <div aria-hidden className="absolute inset-0 z-[4]">
+      <div aria-hidden className="absolute inset-0 z-[4]" style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[50%] scale-[1.18] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
