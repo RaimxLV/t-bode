@@ -171,7 +171,7 @@ export const HeroSection = () => {
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
-            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-15%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
+            <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-9%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
           )}
           {isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="hidden lg:block lg:absolute lg:bottom-[-2%] lg:right-[-3%] lg:h-[92%] lg:w-auto lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
