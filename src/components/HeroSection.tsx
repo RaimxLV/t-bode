@@ -110,36 +110,44 @@ export const HeroSection = () => {
         animate={{ opacity: imageLoaded ? 1 : 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
       >
-        <motion.img
-          src={heroBackground}
-          alt="Latvijas piekraste ar klintīm"
-          width={1600}
-          height={1600}
-          className="absolute inset-0 size-full object-cover object-center lg:hidden"
-          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
-          onLoad={() => setImageLoaded(true)}
-          {...({ fetchpriority: "high" } as any)}
-          decoding="async"
-          loading="eager"
-        />
-        <motion.img
-          src={heroBackgroundWide}
-          alt=""
-          width={2304}
-          height={1856}
-          className="hidden lg:block lg:absolute lg:inset-0 lg:size-full lg:object-cover lg:object-center"
-          style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24 }}
-          onLoad={() => setImageLoaded(true)}
-          {...({ fetchpriority: "high" } as any)}
-          decoding="async"
-          loading="eager"
-        />
+        {!isDesktop && (
+          <motion.img
+            src={heroBackground}
+            alt="Latvijas piekraste ar klintīm"
+            width={1600}
+            height={1600}
+            className="absolute inset-0 size-full object-cover object-center lg:hidden"
+            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.12 }}
+            onLoad={() => setImageLoaded(true)}
+            {...({ fetchpriority: "high" } as any)}
+            decoding="async"
+            loading="eager"
+          />
+        )}
+        {isDesktop && (
+          <motion.img
+            src={heroBackgroundWide}
+            alt=""
+            width={2304}
+            height={1856}
+            className="hidden lg:block lg:absolute lg:inset-0 lg:size-full lg:object-cover lg:object-center"
+            style={{ x: backgroundX, translateY: backgroundPointerY, scale: 1.24 }}
+            onLoad={() => setImageLoaded(true)}
+            {...({ fetchpriority: "high" } as any)}
+            decoding="async"
+            loading="eager"
+          />
+        )}
       </motion.div>
 
       <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
-          <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
-          <motion.img src={heroMidgroundDesktop} alt="" width={5591} height={1600} className="hidden lg:block lg:absolute lg:inset-y-0 lg:left-[-30%] lg:h-full lg:w-[269%] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+          {!isDesktop && (
+            <motion.img src={heroMidgroundMobile} alt="" width={2560} height={1600} className="absolute bottom-[-10%] left-[-36.7%] h-auto w-[173.4%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+          )}
+          {isDesktop && (
+            <motion.img src={heroMidgroundDesktop} alt="" width={5591} height={1600} className="hidden lg:block lg:absolute lg:inset-y-0 lg:left-[-30%] lg:h-full lg:w-[269%] lg:max-w-none lg:object-contain lg:object-bottom" style={{ x: midgroundX, translateY: midgroundPointerY }} decoding="async" />
+          )}
         </div>
       </motion.div>
       {!reduceMotion && (
