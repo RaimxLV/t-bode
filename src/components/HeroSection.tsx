@@ -184,7 +184,7 @@ export const HeroSection = () => {
         style={{ y: backgroundY, willChange: "transform" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
       >
         {!isDesktop && (
           <motion.img
@@ -215,7 +215,7 @@ export const HeroSection = () => {
         )}
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.2s ease-out" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-9%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
@@ -238,7 +238,7 @@ export const HeroSection = () => {
           <span className="hero-ambient__shimmer" />
         </div>
       )}
-      <div aria-hidden className="absolute inset-0 z-[4]" style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.6s ease-out" }}>
+      <div aria-hidden className="absolute inset-0 z-[4]" style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.2s ease-out" }}>
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[46%] scale-[1.26] sm:translate-y-[47%] sm:scale-[1.22] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
