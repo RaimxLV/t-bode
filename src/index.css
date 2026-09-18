@@ -209,6 +209,18 @@
     will-change: translate, rotate, opacity;
   }
 
+  /* Keep effects visible but freeze their animation while the browser is
+     handling a scroll gesture. This preserves the composition and removes
+     competing animation work from the critical scroll frames. */
+  section[data-motion-paused="true"] .hero-leaf,
+  section[data-motion-paused="true"] .hero-ambient__glow,
+  section[data-motion-paused="true"] .hero-ambient__shimmer,
+  section[data-motion-paused="true"] .hero-ambient__sun-rays,
+  section[data-motion-paused="true"] .hero-ambient__sun-rays::before,
+  section[data-motion-paused="true"] .hero-ambient__sun-rays::after {
+    animation-play-state: paused;
+  }
+
   .hero-ambient__glow {
     position: absolute;
     display: block;
