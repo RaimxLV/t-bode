@@ -14,15 +14,22 @@ import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
+import heroPlaceholderMobile from "@/assets/hero-placeholder-mobile.webp";
+import heroPlaceholderDesktop from "@/assets/hero-placeholder-desktop.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
+import { preloadHeroLayers } from "@/lib/preloadHero";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const lastPointerMoveRef = useRef(0);
+  const sectionBoundsRef = useRef<DOMRect | null>(null);
+  const scrollTimerRef = useRef<number>();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [heroVisible, setHeroVisible] = useState(true);
+  const [isScrolling, setIsScrolling] = useState(false);
   // Only fetch the layer set that the current breakpoint actually shows, so
   // phones never download the (much larger) desktop plates and vice versa.
   const [isDesktop, setIsDesktop] = useState(
@@ -35,34 +42,53 @@ export const HeroSection = () => {
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, []);
-  // Preload + decode every layer of the active breakpoint, then reveal the
-  // whole hero at once instead of layer-by-layer pop-in.
+  // Reuse the preload started before React mounts. This avoids a second decode
+  // pass and reveals the full-resolution layers together.
   useEffect(() => {
     let cancelled = false;
-    const sources = isDesktop
-      ? [heroBackgroundWide, heroMidgroundDesktop, heroForeground]
-      : [heroBackground, heroMidgroundDesktop, heroForeground];
-    const load = (src: string) =>
-      new Promise<void>((resolve) => {
-        const img = new Image();
-        (img as any).fetchPriority = "high";
-        img.decoding = "async";
-        img.src = src;
-        const done = () => resolve();
-        if (img.decode) img.decode().then(done).catch(done);
-        else {
-          img.onload = done;
-          img.onerror = done;
-        }
-      });
     setImageLoaded(false);
-    Promise.all(sources.map(load)).then(() => {
+    preloadHeroLayers(isDesktop).then(() => {
       if (!cancelled) setImageLoaded(true);
     });
     return () => {
       cancelled = true;
     };
   }, [isDesktop]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const updateBounds = () => {
+      sectionBoundsRef.current = section.getBoundingClientRect();
+    };
+    updateBounds();
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry?.isIntersecting ?? false),
+      { rootMargin: "120px 0px" }
+    );
+    observer.observe(section);
+    window.addEventListener("resize", updateBounds, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateBounds);
+    };
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setIsScrolling(true);
+      if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
+    };
+  }, []);
 
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
@@ -74,12 +100,12 @@ export const HeroSection = () => {
   useDeviceTilt(pointerX, pointerY, {
     amplitudeX: 13.26,
     amplitudeY: 8.16,
-    enabled: !reduceMotion,
+    enabled: !reduceMotion && heroVisible && !isScrolling,
   });
 
   // Keep a subtle sense of depth on desktop while the pointer is idle.
   useEffect(() => {
-    if (reduceMotion || typeof window === "undefined" || window.innerWidth < 1024) return;
+    if (reduceMotion || !heroVisible || isScrolling || typeof window === "undefined" || window.innerWidth < 1024) return;
 
     let frame = 0;
     const startedAt = performance.now();
@@ -94,7 +120,7 @@ export const HeroSection = () => {
 
     frame = requestAnimationFrame(drift);
     return () => cancelAnimationFrame(frame);
-  }, [pointerX, pointerY, reduceMotion]);
+  }, [pointerX, pointerY, reduceMotion, heroVisible, isScrolling]);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -114,7 +140,7 @@ export const HeroSection = () => {
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
     lastPointerMoveRef.current = performance.now();
-    const bounds = event.currentTarget.getBoundingClientRect();
+    const bounds = sectionBoundsRef.current ?? event.currentTarget.getBoundingClientRect();
     pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 24);
     pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 18);
   };
@@ -129,9 +155,29 @@ export const HeroSection = () => {
       ref={sectionRef}
       className="relative min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
       style={{ touchAction: "pan-y" }}
+      data-motion-paused={isScrolling || !heroVisible ? "true" : "false"}
+      onPointerEnter={(event) => {
+        sectionBoundsRef.current = event.currentTarget.getBoundingClientRect();
+      }}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
+      <picture
+        aria-hidden
+        className={`absolute inset-0 z-0 transition-opacity duration-200 ${imageLoaded ? "opacity-0" : "opacity-100"}`}
+      >
+        <source media="(min-width: 1024px)" srcSet={heroPlaceholderDesktop} />
+        <img
+          src={heroPlaceholderMobile}
+          alt=""
+          className="size-full object-cover object-center"
+          width={390}
+          height={760}
+          decoding="sync"
+          loading="eager"
+          {...({ fetchpriority: "high" } as any)}
+        />
+      </picture>
       <motion.div
         aria-hidden
         className="absolute inset-0 z-0"
