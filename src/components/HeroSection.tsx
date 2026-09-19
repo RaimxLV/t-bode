@@ -182,9 +182,9 @@ export const HeroSection = () => {
         aria-hidden
         className="absolute inset-0 z-0"
         style={{ y: backgroundY, willChange: "transform" }}
-        initial={{ opacity: 0 }}
+        initial={false}
         animate={{ opacity: imageLoaded ? 1 : 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+        transition={{ duration: 0.12, ease: "linear" }}
       >
         {!isDesktop && (
           <motion.img
@@ -215,7 +215,7 @@ export const HeroSection = () => {
         )}
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform", opacity: imageLoaded ? 1 : 0, transition: "opacity 0.2s ease-out" }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" initial={false} animate={{ opacity: imageLoaded ? 1 : 0 }} transition={{ duration: 0.12, ease: "linear" }} style={{ y: midgroundY, willChange: "transform" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-9%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
@@ -238,7 +238,7 @@ export const HeroSection = () => {
           <span className="hero-ambient__shimmer" />
         </div>
       )}
-      <div aria-hidden className="absolute inset-0 z-[4]" style={{ opacity: imageLoaded ? 1 : 0, transition: "opacity 0.2s ease-out" }}>
+      <div aria-hidden className={`absolute inset-0 z-[4] transition-opacity duration-100 ${imageLoaded ? "opacity-100" : "opacity-0"}`}>
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[46%] scale-[1.26] sm:translate-y-[47%] sm:scale-[1.22] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
@@ -258,9 +258,9 @@ export const HeroSection = () => {
       <div className="relative z-10 flex min-h-[760px] w-full items-start justify-center px-4 pb-10 pt-28 pointer-events-none sm:min-h-[900px] sm:pt-32 lg:container lg:mx-auto lg:min-h-[min(980px,100svh)] lg:items-center lg:justify-start lg:pb-16 lg:pt-28">
         <div className="w-full max-w-3xl mx-auto text-center pointer-events-auto lg:mx-0 lg:w-auto lg:max-w-[620px] lg:text-left">
           <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            initial={false}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="text-6xl sm:text-7xl md:text-8xl lg:text-8xl xl:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
           >
             <span className="sr-only">T-kreklu un hūdiju apdruka Rīgā — personalizē online. </span>
@@ -268,9 +268,9 @@ export const HeroSection = () => {
               {t("hero.sloganLine1")}
             </span>
             <motion.span
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 40 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
+              initial={false}
+              animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
               className="block text-gradient-brand drop-shadow-[0_2px_14px_rgba(220,38,38,0.4)]"
             >
               {t("hero.sloganLine2")}
@@ -278,15 +278,15 @@ export const HeroSection = () => {
           </motion.h1>
           {imageLoaded && <HeroAnimatedText />}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 30 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
+            initial={false}
+            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 16 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="mx-auto mt-5 flex w-full max-w-xl flex-col items-stretch gap-3 sm:mt-8 sm:gap-4 lg:mx-0 lg:items-start"
           >
             <button
               type="button"
               onClick={() => navigate("/design")}
-              className="group relative isolate w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-all hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+              className="group relative isolate w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-transform hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
               style={{ background: "var(--gradient-brand)" }}
               aria-label={t("hero.ctaDesign")}
             >
@@ -298,9 +298,9 @@ export const HeroSection = () => {
                     "linear-gradient(110deg, transparent 30%, hsl(0 0% 100% / 0.45) 50%, transparent 70%)",
                 }}
               />
-              <Sparkles aria-hidden className="absolute left-3 top-2 z-10 w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
-              <Sparkles aria-hidden className="absolute right-4 bottom-2 z-10 w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
-              <span className="relative z-20 flex items-center justify-center gap-3 whitespace-nowrap" style={{ transform: "translateZ(0)" }}>
+              <Sparkles aria-hidden className="pointer-events-none absolute left-3 top-2 z-[1] w-4 h-4 text-white/80 animate-sparkle-spin sm:left-4 sm:top-3" />
+              <Sparkles aria-hidden className="pointer-events-none absolute right-4 bottom-2 z-[1] w-4 h-4 text-white/70 animate-sparkle-spin sm:right-5 sm:bottom-3" style={{ animationDelay: "0.6s" }} />
+              <span className="relative z-10 flex items-center justify-center gap-3 whitespace-nowrap opacity-100">
                 <Wand2 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 transition-transform group-hover:-rotate-12 group-hover:scale-110" />
                 <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
                 <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
