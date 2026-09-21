@@ -74,6 +74,12 @@
     @apply bg-background text-foreground font-body antialiased;
   }
 
+  /* Prevent the browser's white canvas from flashing before the home page mounts. */
+  #root:empty {
+    min-height: 100vh;
+    background: hsl(var(--hero-sky));
+  }
+
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
     text-wrap: balance;
