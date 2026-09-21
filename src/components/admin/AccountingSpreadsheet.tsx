@@ -98,20 +98,44 @@ export const AccountingSpreadsheet = () => {
   const clearDates = () => { setDateFrom(""); setDateTo(""); };
 
   useEffect(() => {
+    // The backend caps a single request at 1000 rows, so every table is read
+    // in pages — otherwise newer orders lose their items/invoices.
+    const fetchAll = async (table: string, columns: string) => {
+      const pageSize = 1000;
+      const all: any[] = [];
+      for (let from = 0; ; from += pageSize) {
+        const { data, error } = await supabase
+          .from(table as any)
+          .select(columns)
+          .range(from, from + pageSize - 1);
+        if (error) throw error;
+        const rows = (data as any[]) || [];
+        all.push(...rows);
+        if (rows.length < pageSize) break;
+      }
+      return all;
+    };
+
     (async () => {
       setLoading(true);
-      const [ordersRes, invoicesRes, itemsRes] = await Promise.all([
-        supabase.from("orders").select("*").order("created_at", { ascending: false }),
-        supabase.from("invoices").select("invoice_number, order_id, net_amount, vat_amount, gross_amount, vat_rate, is_current"),
-        supabase.from("order_items").select("order_id, product_name, quantity, size, color, unit_price, base_unit_price, print_unit_price"),
-      ]);
-      if (ordersRes.error) toast.error("Neizdevās ielādēt pasūtījumus");
-      else setOrders(ordersRes.data || []);
-      if (!invoicesRes.error) setInvoices(invoicesRes.data || []);
-      if (!itemsRes.error) setItems(itemsRes.data || []);
+      try {
+        const [ordersData, invoicesData, itemsData] = await Promise.all([
+          fetchAll("orders", "*"),
+          fetchAll("invoices", "invoice_number, order_id, net_amount, vat_amount, gross_amount, vat_rate, is_current"),
+          fetchAll("order_items", "order_id, product_name, quantity, size, color, unit_price, base_unit_price, print_unit_price"),
+        ]);
+        ordersData.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setOrders(ordersData);
+        setInvoices(invoicesData);
+        setItems(itemsData);
+      } catch (e) {
+        console.error("AccountingSpreadsheet load failed:", e);
+        toast.error("Neizdevās ielādēt pasūtījumus");
+      }
       setLoading(false);
     })();
   }, []);
+
 
   const months = useMemo(() => {
     const set = new Set<string>();
