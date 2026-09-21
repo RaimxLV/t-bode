@@ -4,6 +4,7 @@ import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
 
 const layerPromises = new Map<string, Promise<void>>();
+const readyBreakpoints = new Set<"mobile" | "desktop">();
 
 const preloadImage = (href: string) => {
   const cached = layerPromises.get(href);
@@ -55,5 +56,10 @@ export const preloadHeroLayers = (desktop?: boolean) => {
     }
   }
 
-  return Promise.all(sources.map(preloadImage)).then(() => undefined);
+  return Promise.all(sources.map(preloadImage)).then(() => {
+    readyBreakpoints.add(isDesktop ? "desktop" : "mobile");
+  });
 };
+
+export const areHeroLayersReady = (desktop: boolean) =>
+  readyBreakpoints.has(desktop ? "desktop" : "mobile");
