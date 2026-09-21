@@ -14,11 +14,9 @@ import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
-import heroPlaceholderMobile from "@/assets/hero-placeholder-mobile.webp";
-import heroPlaceholderDesktop from "@/assets/hero-placeholder-desktop.webp";
 import { HeroAnimatedText } from "./HeroAnimatedText";
 import { useDeviceTilt } from "@/hooks/useDeviceTilt";
-import { preloadHeroLayers } from "@/lib/preloadHero";
+import { areHeroLayersReady, preloadHeroLayers } from "@/lib/preloadHero";
 
 export const HeroSection = () => {
   const navigate = useNavigate();
@@ -27,7 +25,10 @@ export const HeroSection = () => {
   const lastPointerMoveRef = useRef(0);
   const sectionBoundsRef = useRef<DOMRect | null>(null);
   const scrollTimerRef = useRef<number>();
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(() => {
+    const desktop = typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+    return areHeroLayersReady(desktop);
+  });
   const [heroVisible, setHeroVisible] = useState(true);
   const [isScrolling, setIsScrolling] = useState(false);
   // Only fetch the layer set that the current breakpoint actually shows, so
@@ -46,6 +47,10 @@ export const HeroSection = () => {
   // pass and reveals the full-resolution layers together.
   useEffect(() => {
     let cancelled = false;
+    if (areHeroLayersReady(isDesktop)) {
+      setImageLoaded(true);
+      return;
+    }
     setImageLoaded(false);
     preloadHeroLayers(isDesktop).then(() => {
       if (!cancelled) setImageLoaded(true);
@@ -151,9 +156,12 @@ export const HeroSection = () => {
   };
 
   return (
-    <section
+    <motion.section
       ref={sectionRef}
       className="relative min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
+      initial={false}
+      animate={{ opacity: imageLoaded ? 1 : 0 }}
+      transition={{ duration: 0.12, ease: "linear" }}
       style={{ touchAction: "pan-y" }}
       data-motion-paused={isScrolling || !heroVisible ? "true" : "false"}
       onPointerEnter={(event) => {
@@ -162,32 +170,10 @@ export const HeroSection = () => {
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
-      <motion.picture
-        aria-hidden
-        className="absolute inset-0 z-0"
-        initial={false}
-        animate={{ opacity: imageLoaded ? 0 : 1 }}
-        transition={{ duration: 0.12, ease: "linear" }}
-      >
-        <source media="(min-width: 1024px)" srcSet={heroPlaceholderDesktop} />
-        <img
-          src={heroPlaceholderMobile}
-          alt=""
-          className="size-full object-cover object-center"
-          width={390}
-          height={760}
-          decoding="sync"
-          loading="eager"
-          {...({ fetchpriority: "high" } as any)}
-        />
-      </motion.picture>
       <motion.div
         aria-hidden
         className="absolute inset-0 z-0"
         style={{ y: backgroundY, willChange: "transform" }}
-        initial={false}
-        animate={{ opacity: imageLoaded ? 1 : 0 }}
-        transition={{ duration: 0.12, ease: "linear" }}
       >
         {!isDesktop && (
           <motion.img
@@ -218,7 +204,7 @@ export const HeroSection = () => {
         )}
       </motion.div>
 
-      <motion.div aria-hidden className="absolute inset-0 z-[1]" initial={false} animate={{ opacity: imageLoaded ? 1 : 0 }} transition={{ duration: 0.12, ease: "linear" }} style={{ y: midgroundY, willChange: "transform" }}>
+      <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-9%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
@@ -244,9 +230,6 @@ export const HeroSection = () => {
       <motion.div
         aria-hidden
         className="absolute inset-0 z-[4]"
-        initial={false}
-        animate={{ opacity: imageLoaded ? 1 : 0 }}
-        transition={{ duration: 0.12, ease: "linear" }}
       >
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[46%] scale-[1.26] sm:translate-y-[47%] sm:scale-[1.22] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
@@ -268,8 +251,6 @@ export const HeroSection = () => {
         <div className="w-full max-w-3xl mx-auto text-center pointer-events-auto lg:mx-0 lg:w-auto lg:max-w-[620px] lg:text-left">
           <motion.h1
             initial={false}
-            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
             className="text-6xl sm:text-7xl md:text-8xl lg:text-8xl xl:text-9xl leading-[0.95] tracking-tight font-display font-extrabold uppercase"
           >
             <span className="sr-only">T-kreklu un hūdiju apdruka Rīgā — personalizē online. </span>
@@ -278,18 +259,14 @@ export const HeroSection = () => {
             </span>
             <motion.span
               initial={false}
-              animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 20 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               className="block text-gradient-brand drop-shadow-[0_2px_14px_rgba(220,38,38,0.4)]"
             >
               {t("hero.sloganLine2")}
             </motion.span>
           </motion.h1>
-          {imageLoaded && <HeroAnimatedText />}
+          <HeroAnimatedText />
           <motion.div
             initial={false}
-            animate={{ opacity: imageLoaded ? 1 : 0, y: imageLoaded ? 0 : 16 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
             className="mx-auto mt-5 flex w-full max-w-xl flex-col items-stretch gap-3 sm:mt-8 sm:gap-4 lg:mx-0 lg:items-start"
           >
             <button
@@ -325,6 +302,6 @@ export const HeroSection = () => {
           </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };

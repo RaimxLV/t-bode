@@ -6,7 +6,15 @@ import "./index.css";
 import App from "./App.tsx";
 
 installAuthRefreshGuard();
-if (window.location.pathname === "/") preloadHeroLayers();
 
-const root = createRoot(document.getElementById("root")!);
-root.render(<App />);
+const renderApp = () => {
+  const rootElement = document.getElementById("root");
+  if (!rootElement) return;
+  createRoot(rootElement).render(<App />);
+};
+
+if (window.location.pathname === "/") {
+  preloadHeroLayers().then(renderApp);
+} else {
+  renderApp();
+}
