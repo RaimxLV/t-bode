@@ -2,6 +2,8 @@ import heroBackground from "@/assets/hero-parallax-background.webp";
 import heroBackgroundWide from "@/assets/hero-parallax-background-wide.webp";
 import heroMidgroundDesktop from "@/assets/hero-koks-lecejs-desktop.webp";
 import heroForeground from "@/assets/hero-parallax-foreground-complete.webp";
+import heroPlaceholderMobile from "@/assets/hero-placeholder-mobile.webp";
+import heroPlaceholderDesktop from "@/assets/hero-placeholder-desktop.webp";
 
 const layerPromises = new Map<string, Promise<void>>();
 const readyBreakpoints = new Set<"mobile" | "desktop">();
@@ -41,8 +43,8 @@ export const preloadHeroLayers = (desktop?: boolean) => {
   const isDesktop = desktop ??
     (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches);
   const sources = isDesktop
-    ? [heroBackgroundWide, heroMidgroundDesktop, heroForeground]
-    : [heroBackground, heroMidgroundDesktop, heroForeground];
+    ? [heroPlaceholderDesktop, heroBackgroundWide, heroMidgroundDesktop, heroForeground]
+    : [heroPlaceholderMobile, heroBackground, heroMidgroundDesktop, heroForeground];
 
   for (const href of sources) {
     if (!document.head.querySelector(`link[data-hero-preload="${href}"]`)) {
