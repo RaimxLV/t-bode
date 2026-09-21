@@ -46,16 +46,26 @@ export const EmailLog = () => {
 
   const load = async () => {
     setLoading(true);
-    let q = supabase
-      .from("email_send_log")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(2000);
+    // Backend caps one request at 1000 rows — page through until exhausted.
+    const pageSize = 1000;
+    const all: LogRow[] = [];
     const start = rangeStart(range);
-    if (start) q = q.gte("created_at", start);
-    const { data, error } = await q;
-    if (error) toast.error("Neizdevās ielādēt e-pastu žurnālu");
-    else setRows((data ?? []) as LogRow[]);
+    let failed = false;
+    for (let from = 0; ; from += pageSize) {
+      let q = supabase
+        .from("email_send_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (start) q = q.gte("created_at", start);
+      const { data, error } = await q;
+      if (error) { failed = true; break; }
+      const batch = (data ?? []) as LogRow[];
+      all.push(...batch);
+      if (batch.length < pageSize) break;
+    }
+    if (failed) toast.error("Neizdevās ielādēt e-pastu žurnālu");
+    else setRows(all);
     setLoading(false);
   };
 
