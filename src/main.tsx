@@ -13,8 +13,5 @@ const renderApp = () => {
   createRoot(rootElement).render(<App />);
 };
 
-if (window.location.pathname === "/") {
-  preloadHeroLayers().then(renderApp);
-} else {
-  renderApp();
-}
+if (window.location.pathname === "/") preloadHeroLayers();
+renderApp();
