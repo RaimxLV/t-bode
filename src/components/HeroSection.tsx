@@ -162,9 +162,12 @@ export const HeroSection = () => {
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
     >
-      <picture
+      <motion.picture
         aria-hidden
-        className={`absolute inset-0 z-0 transition-opacity duration-200 ${imageLoaded ? "opacity-0" : "opacity-100"}`}
+        className="absolute inset-0 z-0"
+        initial={false}
+        animate={{ opacity: imageLoaded ? 0 : 1 }}
+        transition={{ duration: 0.12, ease: "linear" }}
       >
         <source media="(min-width: 1024px)" srcSet={heroPlaceholderDesktop} />
         <img
@@ -177,7 +180,7 @@ export const HeroSection = () => {
           loading="eager"
           {...({ fetchpriority: "high" } as any)}
         />
-      </picture>
+      </motion.picture>
       <motion.div
         aria-hidden
         className="absolute inset-0 z-0"
@@ -238,11 +241,17 @@ export const HeroSection = () => {
           <span className="hero-ambient__shimmer" />
         </div>
       )}
-      <div aria-hidden className={`absolute inset-0 z-[4] transition-opacity duration-100 ${imageLoaded ? "opacity-100" : "opacity-0"}`}>
+      <motion.div
+        aria-hidden
+        className="absolute inset-0 z-[4]"
+        initial={false}
+        animate={{ opacity: imageLoaded ? 1 : 0 }}
+        transition={{ duration: 0.12, ease: "linear" }}
+      >
         <div className="absolute bottom-0 left-0 w-full aspect-square origin-bottom translate-y-[46%] scale-[1.26] sm:translate-y-[47%] sm:scale-[1.22] lg:inset-0 lg:aspect-auto lg:translate-y-[46%] lg:scale-[1.18]">
           <motion.img src={heroForeground} alt="" width={1600} height={1600} className="absolute inset-0 size-full object-contain object-bottom" style={{ x: foregroundX, translateY: foregroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" {...({ fetchpriority: "high" } as any)} />
         </div>
-      </div>
+      </motion.div>
 
       <div
         aria-hidden

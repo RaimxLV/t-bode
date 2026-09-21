@@ -27,8 +27,27 @@ export const CookieConsent = () => {
     }
     const consent = localStorage.getItem(COOKIE_KEY);
     if (!consent) {
-      const timer = setTimeout(() => setVisible(true), 1500);
-      return () => clearTimeout(timer);
+      let timer: number | undefined;
+      let idleCallback: number | undefined;
+      const reveal = () => {
+        const schedule = () => {
+          timer = window.setTimeout(() => setVisible(true), 500);
+        };
+        if ("requestIdleCallback" in window) {
+          idleCallback = window.requestIdleCallback(schedule, { timeout: 2000 });
+        } else {
+          schedule();
+        }
+      };
+
+      if (document.readyState === "complete") reveal();
+      else window.addEventListener("load", reveal, { once: true });
+
+      return () => {
+        window.removeEventListener("load", reveal);
+        if (timer) window.clearTimeout(timer);
+        if (idleCallback && "cancelIdleCallback" in window) window.cancelIdleCallback(idleCallback);
+      };
     }
   }, [isEmbeddedPreview, location.pathname]);
 
@@ -48,10 +67,10 @@ export const CookieConsent = () => {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ y: 100, opacity: 0 }}
+          initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          exit={{ y: 24, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
           className="fixed bottom-0 left-0 right-0 z-[60] p-2 sm:p-4 md:p-6 pointer-events-none"
         >
           <div className="max-w-4xl mx-auto bg-card border border-border rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-5 md:p-6 pointer-events-auto">
