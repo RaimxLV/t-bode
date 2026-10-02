@@ -35,12 +35,12 @@ const Veikali = () => {
   return (
     <>
       <Seo
-        title="T-Bode | Kreklu apdruka un dizains tiešsaistē (Alfa, Akropole, Origo)"
-        description="Meklē T-Bode veikalus? Gaidīsim ciemos! Vai izveido dizainu tiešsaistē no jebkuras ierīces un saņem ar piegādi."
+        title="Veikali un kontakti Rīgā — Akropole, Domina, Origo, Alfa | T-Bode"
+        description="T-Bode veikali Rīgā: Akropole, Domina, Origo un Alfa. Adreses, darba laiki un kontakti. Vai pasūti online un saņem pakomātā visā Latvijā."
         canonical="https://t-bode.lv/veikali"
         noTitleSuffix
       />
-      <Index />
+      <Index withSeo={false} />
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md border-cta-red/30 bg-background data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:duration-700 data-[state=open]:zoom-in-100 data-[state=open]:slide-in-from-top-0 data-[state=open]:slide-in-from-left-0">
           <DialogHeader>

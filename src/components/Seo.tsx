@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
@@ -98,12 +99,25 @@ export const Seo = ({
     });
   }
 
+  // Remove static fallback tags from index.html so each page has exactly one
+  // description / canonical / og / robots tag (Helmet does not dedupe them).
+  useEffect(() => {
+    document.head
+      .querySelectorAll(
+        'meta[name="description"]:not([data-rh]), meta[name="robots"]:not([data-rh]), meta[name="googlebot"]:not([data-rh]), meta[property^="og:"]:not([data-rh]), meta[name^="twitter:"]:not([data-rh]), link[rel="canonical"]:not([data-rh])',
+      )
+      .forEach((el) => el.remove());
+  }, []);
+
   return (
     <Helmet htmlAttributes={{ lang }}>
       <title>{fullTitle}</title>
       {description && <meta name="description" content={description} />}
       <link rel="canonical" href={url} />
-      {noindex && <meta name="robots" content="noindex, nofollow" />}
+      <meta
+        name="robots"
+        content={noindex ? "noindex, nofollow" : "index, follow, max-snippet:-1, max-image-preview:large"}
+      />
 
       {/* Open Graph */}
       <meta property="og:site_name" content={SITE_NAME} />
