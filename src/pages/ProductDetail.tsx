@@ -438,9 +438,9 @@ const ProductDetail = () => {
                 <div className="mb-6">
                   <span className="font-body font-semibold text-sm mb-2 block">{t("productDetail.quantity")}</span>
                   <div className="inline-flex items-center border border-border rounded-md">
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
+                    <button aria-label="Samazināt daudzumu" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
                     <span className="px-6 py-2 font-body font-semibold border-x border-border">{quantity}</span>
-                    <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
+                    <button aria-label="Palielināt daudzumu" onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
                   </div>
                 </div>
               </div>
@@ -502,9 +502,9 @@ const ProductDetail = () => {
                 <div className="mb-8">
                   <span className="font-body font-semibold text-sm mb-3 block">{t("productDetail.quantity")}</span>
                   <div className="inline-flex items-center border border-border rounded-md">
-                    <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
+                    <button aria-label="Samazināt daudzumu" onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">−</button>
                     <span className="px-6 py-2 font-body font-semibold border-x border-border">{quantity}</span>
-                    <button onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
+                    <button aria-label="Palielināt daudzumu" onClick={() => setQuantity(quantity + 1)} className="px-4 py-2 text-lg font-body hover:bg-secondary transition-colors">+</button>
                   </div>
                 </div>
               </div>
