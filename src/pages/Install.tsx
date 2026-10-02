@@ -20,7 +20,7 @@ const Install = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Seo title={t("install.title")} description={t("install.description")} />
+      <Seo title={t("install.title")} description={t("install.description")} noindex />
       <Navbar />
       <main className="flex-1 container max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">

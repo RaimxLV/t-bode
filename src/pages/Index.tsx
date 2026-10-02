@@ -12,15 +12,15 @@ import { FAQSection } from "@/components/FAQSection";
 import { useTranslation } from "react-i18next";
 import { Seo } from "@/components/Seo";
 
-const Index = () => {
+const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
     ? "T-Bode | Personalizē kreklu, hūdiju vai krūzi online — apdruka Rīgā"
     : "Personalize your t-shirt, hoodie or mug online | T-Bode Riga";
   const description = isLv
-    ? "Personalizē kreklu, hūdiju vai krūzi tiešsaistē — pats, dažās minūtēs. Saņem Omniva pakomātā visā Latvijā vai mūsu birojā Rīgā. Iepērcies T-Bode online veikalā."
-    : "Personalize your t-shirt, hoodie or mug online in minutes. Pickup at any Omniva parcel locker in Latvia or at our Riga office. Shop the T-Bode online store.";
+    ? "Personalizē kreklu, hūdiju vai krūzi online dažās minūtēs. Pasūti kreklu un saņem 1-2 dienās jebkur pakomātā. Apdruka Rīgā, bez minimālā pasūtījuma."
+    : "Personalize your t-shirt, hoodie or mug online in minutes. Order a shirt and get it in 1-2 days at any parcel locker in Latvia. Printed in Riga.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
     (async () => {
@@ -58,12 +58,39 @@ const Index = () => {
     })),
   } : null;
 
-  const jsonLdArray: Record<string, any>[] = [breadcrumbJsonLd];
+  const navItems = isLv
+    ? [
+        ["Kolekcija", "/collection"],
+        ["Izveido savu dizainu", "/design"],
+        ["Idejas un padomi", "/idejas"],
+        ["Kas ir DTF apdruka", "/kas-ir-dtf"],
+        ["Veikali un kontakti", "/veikali"],
+      ]
+    : [
+        ["Collection", "/collection"],
+        ["Design your own", "/design"],
+        ["Ideas & tips", "/idejas"],
+        ["What is DTF printing", "/kas-ir-dtf"],
+        ["Stores & contacts", "/veikali"],
+      ];
+  const siteNavJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: isLv ? "Galvenā izvēlne" : "Main menu",
+    itemListElement: navItems.map(([name, path], i) => ({
+      "@type": "SiteNavigationElement",
+      position: i + 1,
+      name,
+      url: `https://t-bode.lv${path}`,
+    })),
+  };
+
+  const jsonLdArray: Record<string, any>[] = [breadcrumbJsonLd, siteNavJsonLd];
   if (faqJsonLd) jsonLdArray.push(faqJsonLd);
 
   return (
     <div className="min-h-screen">
-      <Seo title={title} description={description} type="website" jsonLd={jsonLdArray} />
+      {withSeo && <Seo title={title} description={description} type="website" canonical="/" jsonLd={jsonLdArray} />}
       <a href="#main-content" className="skip-to-content">
         {t("nav.skipToContent", "Pāriet uz saturu")}
       </a>

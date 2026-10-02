@@ -457,6 +457,7 @@ const Checkout = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col">
+        <Seo title="Grozs | T-Bode" description="Tavs T-Bode iepirkumu grozs." noindex />
         <Navbar />
         <div className="flex-1 flex items-center justify-center pt-16">
           <div className="text-center">
@@ -475,6 +476,7 @@ const Checkout = () => {
   if (mode === "choose" && !user) {
     return (
       <div className="min-h-screen flex flex-col">
+        <Seo title="Grozs | T-Bode" description="Tavs T-Bode iepirkumu grozs." noindex />
         <Navbar />
         <main className="flex-1 pt-24 pb-16">
           <div className="container mx-auto px-4 max-w-2xl">

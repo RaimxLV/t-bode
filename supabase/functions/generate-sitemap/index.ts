@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
     for (const p of products ?? []) {
       const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/product/${escapeXml(p.slug)}</loc>${
+        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc>${
           lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
         }<changefreq>weekly</changefreq><priority>0.8</priority></url>`,
       );
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         ? new Date(b.updated_at || b.published_at).toISOString()
         : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/blog/${escapeXml(b.slug)}</loc>${
+        `<url><loc>${SITE_URL}/idejas/${escapeXml(b.slug)}</loc>${
           lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
         }<changefreq>weekly</changefreq><priority>0.7</priority></url>`,
       );
