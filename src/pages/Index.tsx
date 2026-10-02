@@ -16,8 +16,8 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "T-Bode | Personalizē kreklu, hūdiju vai krūzi online — apdruka Rīgā"
-    : "Personalize your t-shirt, hoodie or mug online | T-Bode Riga";
+    ? "Kreklu apdruka Rīgā ar savu dizainu online | T-Bode"
+    : "Custom t-shirt printing in Riga, design online | T-Bode";
   const description = isLv
     ? "Personalizē kreklu, hūdiju vai krūzi online dažās minūtēs. Pasūti kreklu un saņem 1-2 dienās jebkur pakomātā. Apdruka Rīgā, bez minimālā pasūtījuma."
     : "Personalize your t-shirt, hoodie or mug online in minutes. Order a shirt and get it in 1-2 days at any parcel locker in Latvia. Printed in Riga.";
