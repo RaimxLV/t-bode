@@ -18,9 +18,8 @@ const NotFound = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Seo title={t("notFound.title")} description={t("notFound.message")} />
+      <Seo title={t("notFound.title")} description={t("notFound.message")} noindex />
       <Helmet>
-        <meta name="robots" content="noindex,follow" />
       </Helmet>
       <Navbar />
       <main className="flex-1 flex items-center justify-center px-4 py-16">

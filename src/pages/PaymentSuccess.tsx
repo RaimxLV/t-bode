@@ -10,6 +10,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Seo } from "@/components/Seo";
 
 interface SiteSettings {
   company_name: string;
@@ -152,6 +153,7 @@ const PaymentSuccess = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Seo title="Paldies par pirkumu | T-Bode" description="Tavs T-Bode pasūtījums ir saņemts." noindex />
       <Navbar />
       <main className="flex-1 flex items-center justify-center pt-24 pb-16">
         <motion.div
