@@ -35,9 +35,11 @@ const staticEntries: SitemapEntry[] = [
   { path: "/collection", changefreq: "daily", priority: "0.9" },
   { path: "/design", changefreq: "weekly", priority: "0.9" },
   { path: "/veikali", changefreq: "monthly", priority: "0.8" },
-  { path: "/install", changefreq: "monthly", priority: "0.4" },
-  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms", changefreq: "yearly", priority: "0.3" },
+  { path: "/idejas", changefreq: "weekly", priority: "0.8" },
+  { path: "/kas-ir-dtf", changefreq: "monthly", priority: "0.8" },
+  { path: "/auduma-maisinu-apdruka", changefreq: "monthly", priority: "0.6" },
+  { path: "/privacy", changefreq: "yearly", priority: "0.2" },
+  { path: "/terms", changefreq: "yearly", priority: "0.2" },
 ];
 
 async function fetchProducts(env: { url: string; key: string }): Promise<SitemapEntry[]> {
@@ -66,7 +68,7 @@ async function fetchProducts(env: { url: string; key: string }): Promise<Sitemap
         path: `/produkti/${r.slug}`,
         lastmod: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
         changefreq: "weekly" as const,
-        priority: "0.8",
+        priority: "0.6",
       }));
   } catch (e: any) {
     console.warn(`[sitemap] Supabase fetch error: ${e?.message}`);
@@ -89,12 +91,12 @@ async function fetchBlogPosts(env: { url: string; key: string }): Promise<Sitema
     return rows
       .filter((r) => r.slug)
       .map((r) => ({
-        path: `/blog/${r.slug}`,
+        path: `/idejas/${r.slug}`,
         lastmod: (r.updated_at || r.published_at)
           ? new Date(r.updated_at || r.published_at).toISOString()
           : undefined,
         changefreq: "weekly" as const,
-        priority: "0.7",
+        priority: "0.5",
       }));
   } catch (e: any) {
     console.warn(`[sitemap] blog_posts fetch error: ${e?.message}`);
