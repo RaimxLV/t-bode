@@ -143,6 +143,14 @@ const ViewportRecovery = () => {
       }
     };
 
+    applyMobileViewportLock();
+
+    const hasOAuthReturnParams =
+      new URLSearchParams(window.location.search).has("code") ||
+      window.location.hash.includes("error");
+
+    const cameFromGoogle = /google\.|accounts\.google\.|oauth\.lovable\.app|lovable\.app|t-bode\.lv/i.test(document.referrer);
+    const hasOAuthViewportFlag = hasMobileOAuthViewportReturn();
     const isRealOAuthReturn = hasOAuthReturnParams || hasOAuthViewportFlag;
 
     const handlePageShow = () => {
