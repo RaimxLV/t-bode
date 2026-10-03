@@ -2,7 +2,6 @@ import {
   motion,
   useMotionValue,
   useReducedMotion,
-  useScroll,
   useSpring,
   useTransform,
 } from "framer-motion";
@@ -24,15 +23,14 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
-  const lastPointerMoveRef = useRef(0);
   const sectionBoundsRef = useRef<DOMRect | null>(null);
   const scrollTimerRef = useRef<number>();
+  const scrollingRef = useRef(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const revealFramesRef = useRef<number[]>([]);
   const revealTimerRef = useRef<number>();
   const [placeholderVisible, setPlaceholderVisible] = useState(true);
   const [heroVisible, setHeroVisible] = useState(true);
-  const [isScrolling, setIsScrolling] = useState(false);
   // Only fetch the layer set that the current breakpoint actually shows, so
   // phones never download the (much larger) desktop plates and vice versa.
   const [isDesktop, setIsDesktop] = useState(
@@ -113,16 +111,20 @@ export const HeroSection = () => {
 
   useEffect(() => {
     const onScroll = () => {
-      setIsScrolling(true);
+      scrollingRef.current = true;
+      sectionRef.current?.setAttribute("data-motion-paused", "true");
       if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
-      scrollTimerRef.current = window.setTimeout(() => setIsScrolling(false), 140);
+      scrollTimerRef.current = window.setTimeout(() => {
+        scrollingRef.current = false;
+        if (heroVisible) sectionRef.current?.setAttribute("data-motion-paused", "false");
+      }, 140);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
       if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
     };
-  }, []);
+  }, [heroVisible]);
 
   const reduceMotion = useReducedMotion();
   const pointerX = useMotionValue(0);
@@ -134,36 +136,14 @@ export const HeroSection = () => {
   useDeviceTilt(pointerX, pointerY, {
     amplitudeX: 13.26,
     amplitudeY: 8.16,
-    enabled: !reduceMotion && heroVisible && !isScrolling,
+    enabled: !reduceMotion && heroVisible,
+    autoDrift: false,
+    pausedRef: scrollingRef,
   });
 
-  // Keep a subtle sense of depth on desktop while the pointer is idle.
-  useEffect(() => {
-    if (reduceMotion || !heroVisible || isScrolling || typeof window === "undefined" || window.innerWidth < 1024) return;
-
-    let frame = 0;
-    const startedAt = performance.now();
-    const drift = (now: number) => {
-      if (now - lastPointerMoveRef.current > 1200) {
-        const elapsed = (now - startedAt) / 1000;
-        pointerX.set(Math.sin(elapsed * 0.24) * 8);
-        pointerY.set(Math.sin(elapsed * 0.17 + 0.8) * 5);
-      }
-      frame = requestAnimationFrame(drift);
-    };
-
-    frame = requestAnimationFrame(drift);
-    return () => cancelAnimationFrame(frame);
-  }, [pointerX, pointerY, reduceMotion, heroVisible, isScrolling]);
-
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  // Scroll depth: people (foreground) 0%, jumper+tree 10%, sky/background 20%.
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", reduceMotion ? "0%" : "20%"]);
-  const midgroundY = useTransform(scrollYProgress, [0, 1], ["3%", reduceMotion ? "3%" : "13%"]);
+  // Keep the large image plates fixed while the page scrolls. Their depth still
+  // responds to pointer/device movement, without repainting multi-megapixel
+  // layers on every wheel or touch-scroll frame.
   const backgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.2);
   const midgroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 0.6);
   const foregroundX = useTransform(smoothX, (value) => reduceMotion ? 0 : value * 1.45);
@@ -173,7 +153,6 @@ export const HeroSection = () => {
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
-    lastPointerMoveRef.current = performance.now();
     const bounds = sectionBoundsRef.current ?? event.currentTarget.getBoundingClientRect();
     pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 24);
     pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 18);
@@ -189,7 +168,7 @@ export const HeroSection = () => {
       ref={sectionRef}
       className="relative min-h-[760px] sm:min-h-[900px] lg:min-h-[min(980px,100svh)] overflow-hidden bg-hero-sky"
       style={{ touchAction: "pan-y" }}
-      data-motion-paused={isScrolling || !heroVisible ? "true" : "false"}
+      data-motion-paused={!heroVisible ? "true" : "false"}
       onPointerEnter={(event) => {
         sectionBoundsRef.current = event.currentTarget.getBoundingClientRect();
       }}
@@ -207,7 +186,7 @@ export const HeroSection = () => {
         <motion.div
           aria-hidden
           className="absolute inset-0 z-0"
-          style={{ y: backgroundY, willChange: "transform" }}
+          style={{ willChange: "transform" }}
         >
         {!isDesktop && (
           <motion.img
@@ -240,7 +219,7 @@ export const HeroSection = () => {
         )}
         </motion.div>
 
-        <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ y: midgroundY, willChange: "transform" }}>
+        <motion.div aria-hidden className="absolute inset-0 z-[1]" style={{ transform: "translateY(3%)", willChange: "transform" }}>
         <div className="absolute bottom-0 left-0 h-full w-full origin-bottom translate-y-0 scale-100">
           {!isDesktop && (
             <motion.img src={heroMidgroundDesktop} alt="" width={1920} height={1080} className="absolute bottom-[-9%] right-[-45%] h-auto w-[220%] max-w-none origin-bottom object-contain lg:hidden" style={{ x: midgroundX, translateY: midgroundPointerY, willChange: "transform", backfaceVisibility: "hidden" }} decoding="async" loading="eager" data-hero-layer {...({ fetchpriority: "high" } as any)} />

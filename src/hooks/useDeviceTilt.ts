@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { RefObject } from "react";
 import type { MotionValue } from "framer-motion";
 
 type Options = {
@@ -9,6 +10,8 @@ type Options = {
   enabled?: boolean;
   /** Gentle automatic drift when no motion sensor is available */
   autoDrift?: boolean;
+  /** Temporarily freezes sensor and drift updates without reattaching listeners. */
+  pausedRef?: RefObject<boolean>;
 };
 
 /**
@@ -27,6 +30,7 @@ export const useDeviceTilt = (
     amplitudeY = 16,
     enabled = true,
     autoDrift = true,
+    pausedRef,
   }: Options = {}
 ) => {
   useEffect(() => {
@@ -51,6 +55,7 @@ export const useDeviceTilt = (
     };
 
     const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (pausedRef?.current) return;
       const { gamma, beta } = event;
       if (gamma === null || beta === null) return;
       if (!sensorActive) {
@@ -85,6 +90,10 @@ export const useDeviceTilt = (
       const start = performance.now();
       const loop = (now: number) => {
         if (disposed || sensorActive) return;
+        if (pausedRef?.current) {
+          driftFrame = requestAnimationFrame(loop);
+          return;
+        }
         const t = (now - start) / 1000;
         x.set(Math.sin(t * 0.32) * amplitudeX * 0.55);
         y.set(Math.sin(t * 0.21 + 1.2) * amplitudeY * 0.5);
@@ -137,5 +146,5 @@ export const useDeviceTilt = (
       x.set(0);
       y.set(0);
     };
-  }, [x, y, amplitudeX, amplitudeY, enabled, autoDrift]);
+  }, [x, y, amplitudeX, amplitudeY, enabled, autoDrift, pausedRef]);
 };
