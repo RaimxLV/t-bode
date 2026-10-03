@@ -23,7 +23,6 @@ export const HeroSection = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
-  const lastPointerMoveRef = useRef(0);
   const sectionBoundsRef = useRef<DOMRect | null>(null);
   const scrollTimerRef = useRef<number>();
   const scrollingRef = useRef(false);
@@ -138,27 +137,9 @@ export const HeroSection = () => {
     amplitudeX: 13.26,
     amplitudeY: 8.16,
     enabled: !reduceMotion && heroVisible,
+    autoDrift: false,
     pausedRef: scrollingRef,
   });
-
-  // Keep a subtle sense of depth on desktop while the pointer is idle.
-  useEffect(() => {
-    if (reduceMotion || !heroVisible || typeof window === "undefined" || window.innerWidth < 1024) return;
-
-    let frame = 0;
-    const startedAt = performance.now();
-    const drift = (now: number) => {
-      if (!scrollingRef.current && now - lastPointerMoveRef.current > 1200) {
-        const elapsed = (now - startedAt) / 1000;
-        pointerX.set(Math.sin(elapsed * 0.24) * 8);
-        pointerY.set(Math.sin(elapsed * 0.17 + 0.8) * 5);
-      }
-      frame = requestAnimationFrame(drift);
-    };
-
-    frame = requestAnimationFrame(drift);
-    return () => cancelAnimationFrame(frame);
-  }, [pointerX, pointerY, reduceMotion, heroVisible]);
 
   // Keep the large image plates fixed while the page scrolls. Their depth still
   // responds to pointer/device movement, without repainting multi-megapixel
@@ -172,7 +153,6 @@ export const HeroSection = () => {
 
   const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
     if (reduceMotion || event.pointerType === "touch") return;
-    lastPointerMoveRef.current = performance.now();
     const bounds = sectionBoundsRef.current ?? event.currentTarget.getBoundingClientRect();
     pointerX.set(((event.clientX - bounds.left) / bounds.width - 0.5) * 24);
     pointerY.set(((event.clientY - bounds.top) / bounds.height - 0.5) * 18);
