@@ -163,6 +163,21 @@ export const HeroSection = () => {
     pointerY.set(0);
   };
 
+  const pauseTouchMotion = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch") return;
+    scrollingRef.current = true;
+    event.currentTarget.setAttribute("data-motion-paused", "true");
+  };
+
+  const resumeTouchMotion = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== "touch") return;
+    if (scrollTimerRef.current) window.clearTimeout(scrollTimerRef.current);
+    scrollTimerRef.current = window.setTimeout(() => {
+      scrollingRef.current = false;
+      if (heroVisible) sectionRef.current?.setAttribute("data-motion-paused", "false");
+    }, 180);
+  };
+
   return (
     <section
       ref={sectionRef}
@@ -173,6 +188,9 @@ export const HeroSection = () => {
         sectionBoundsRef.current = event.currentTarget.getBoundingClientRect();
       }}
       onPointerMove={handlePointerMove}
+      onPointerDown={pauseTouchMotion}
+      onPointerUp={resumeTouchMotion}
+      onPointerCancel={resumeTouchMotion}
       onPointerLeave={resetPointer}
     >
       {placeholderVisible && (
