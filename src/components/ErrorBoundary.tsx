@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Helmet } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
 interface Props {
   children: ReactNode;
@@ -28,7 +28,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      // The boundary sits above the app's HelmetProvider, so the fallback
+      // needs its own provider or <Helmet> itself crashes the error screen.
       return (
+        <HelmetProvider>
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
           <Helmet>
             <title>T-Bode</title>
@@ -57,6 +60,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
           </div>
         </div>
+        </HelmetProvider>
       );
     }
 
