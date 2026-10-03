@@ -132,47 +132,46 @@ const ViewportRecovery = () => {
       }
     };
 
+    // Only fixes zoom/width. Never scrolls: mobile browsers fire `resize`
+    // while the address bar hides/shows mid-scroll, and scrolling here
+    // used to throw visitors back to the top of the page.
     const resetViewport = () => {
       if (isMobileLikeViewport()) {
         applyMobileViewportLock();
       } else {
         setViewport(getDefaultViewport());
       }
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
 
-    applyMobileViewportLock();
-
-    const hasOAuthReturnParams =
-      new URLSearchParams(window.location.search).has("code") ||
-      window.location.hash.includes("error");
-
-    const cameFromGoogle = /google\.|accounts\.google\.|oauth\.lovable\.app|lovable\.app|t-bode\.lv/i.test(document.referrer);
-    const hasOAuthViewportFlag = hasMobileOAuthViewportReturn();
+    const isRealOAuthReturn = hasOAuthReturnParams || hasOAuthViewportFlag;
 
     const handlePageShow = () => {
-      if (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || isMobileLikeViewport()) {
+      if (cameFromGoogle || isRealOAuthReturn || isMobileLikeViewport()) {
         resetViewport();
       }
     };
 
     const handleFocus = () => {
-      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || isMobileLikeViewport())) {
+      if (document.visibilityState === "visible" && (cameFromGoogle || isRealOAuthReturn || isMobileLikeViewport())) {
         resetViewport();
       }
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible" && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || user || isMobileLikeViewport())) {
+      if (document.visibilityState === "visible" && (cameFromGoogle || isRealOAuthReturn || user || isMobileLikeViewport())) {
         resetViewport();
       }
     };
 
-    const handleOAuthReturn = () => resetViewport();
+    const handleOAuthReturn = () => {
+      resetViewport();
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
     const handleResize = () => resetViewport();
 
-    if (!loading && (cameFromGoogle || hasOAuthReturnParams || hasOAuthViewportFlag || user || isMobileLikeViewport())) {
+    if (!loading && (cameFromGoogle || isRealOAuthReturn || user || isMobileLikeViewport())) {
       resetViewport();
+      if (isRealOAuthReturn) window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     }
 
     if (!loading && user && shouldReloadAfterMobileOAuthReturn()) {
