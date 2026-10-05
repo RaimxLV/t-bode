@@ -13,7 +13,7 @@ const AudumaMaisinuApdruka = () => (
       "T-Bode (SIA Ervitex) izgatavo personalizētus auduma maisiņus Rīgā — ar tava paša logo, attēlu vai tekstu. Maisiņi ir ekoloģiska un ilgtspējīga alternatīva plastmasas maisiņiem, kas lieliski der ikdienas iepirkumiem, pasākumiem un kā korporatīva dāvana.",
       "Augšupielādē savu dizainu tiešsaistes konstruktorā vietnē www.t-bode.lv/design, izvēlies maisiņa modeli un krāsu un redzi reālistisku vizualizāciju jau pirms pasūtīšanas.",
       "Populārākie pielietojumi: korporatīvās dāvanas klientiem un darbiniekiem, konferenču un semināru maisiņi, sporta komandu apdruka, bērnudārza grupiņu identifikācija, kāzu dāvaniņas viesiem un, protams, ikdienas iepirkšanās maisiņš ar paša izvēlētu dizainu.",
-      "Apdrukājam Rīgā 2–5 darba dienās. Bez minimālā pasūtījuma — gan viens maisiņš, gan liels korporatīvs pasūtījums.",
+      "Apdrukājam Rīgā 1–2 darba dienās. Bez minimālā pasūtījuma — gan viens maisiņš, gan liels korporatīvs pasūtījums.",
     ]}
   />
 );
