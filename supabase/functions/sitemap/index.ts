@@ -5,13 +5,13 @@ const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://t-bode.lv").replace(/\/$/
 
 const STATIC_ROUTES = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/collection", changefreq: "daily", priority: "0.9" },
-  { path: "/design", changefreq: "weekly", priority: "0.9" },
-  { path: "/veikali", changefreq: "monthly", priority: "0.8" },
+  { path: "/collection", changefreq: "daily", priority: "0.5" },
+  { path: "/design", changefreq: "weekly", priority: "1.0" },
+  { path: "/veikali", changefreq: "monthly", priority: "0.3" },
   { path: "/idejas", changefreq: "weekly", priority: "0.8" },
-  { path: "/install", changefreq: "monthly", priority: "0.4" },
-  { path: "/privacy", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms", changefreq: "yearly", priority: "0.3" },
+  { path: "/kas-ir-dtf", changefreq: "monthly", priority: "0.8" },
+  { path: "/privacy", changefreq: "yearly", priority: "0.2" },
+  { path: "/terms", changefreq: "yearly", priority: "0.2" },
 ];
 
 const corsHeaders = {
@@ -22,16 +22,16 @@ const corsHeaders = {
 
 const escapeXml = (s: string) =>
   s.replace(/[<>&'"]/g, (c) =>
-    ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c]!));
+    ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[c] ?? c));
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!url || !key) throw new Error("Sitemap configuration unavailable");
+    const supabase = createClient(url, key);
 
     const nowIso = new Date().toISOString();
     const { data: products } = await supabase
@@ -65,12 +65,12 @@ Deno.serve(async (req) => {
       urls.push(
         `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc>${
           lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>weekly</changefreq><priority>0.8</priority></url>`,
+        }<changefreq>weekly</changefreq><priority>0.6</priority></url>`,
       );
     }
     for (const c of categories ?? []) {
       urls.push(
-        `<url><loc>${SITE_URL}/idejas/kategorija/${escapeXml(c.slug)}</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>`,
+        `<url><loc>${SITE_URL}/idejas/kategorija/${escapeXml(c.slug)}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
       );
     }
     for (const post of posts ?? []) {
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       urls.push(
         `<url><loc>${SITE_URL}/idejas/${escapeXml(post.slug)}</loc>${
           lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>monthly</changefreq><priority>0.7</priority></url>`,
+        }<changefreq>monthly</changefreq><priority>0.5</priority></url>`,
       );
     }
 

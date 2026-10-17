@@ -16,10 +16,10 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "T-Bode — Izveido savu kreklu online ar piegādi pakomātā"
+    ? "T-Bode — Izveido savu dizainu un pasūti online uz pakomātu"
     : "T-Bode — Design your own t-shirt online with parcel delivery";
   const description = isLv
-    ? "Izveido savu kreklu online: pievieno attēlu, logo vai tekstu un pasūti internetā. Piegāde pakomātā visā Latvijā. Apdruka 1–2 darba dienās, arī vienam kreklam."
+    ? "Izveido savu dizainu un pasūti online uz pakomātu. Personalizē kreklu ar attēlu, logo vai tekstu. Piegāde visā Latvijā; apdruka 1–2 darba dienās, arī vienam kreklam."
     : "Design your own t-shirt online: add an image, logo or text and order online. Parcel-locker delivery across Latvia. Printed in 1–2 business days, even for one shirt.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
@@ -58,7 +58,7 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
 
   const navItems = isLv
     ? [
-        ["Izveido savu dizainu", "/design"],
+        ["Sākt personalizēt", "/design"],
         ["Kolekcija", "/collection"],
         ["Idejas un padomi", "/idejas"],
         ["Kas ir DTF apdruka", "/kas-ir-dtf"],

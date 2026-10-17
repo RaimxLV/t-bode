@@ -8,7 +8,7 @@ const DesignYourOwn = () => {
   const { i18n } = useTranslation();
   const isLv = i18n.language === "lv";
   const title = isLv
-    ? "Izveido savu kreklu — personalizē online | T-Bode"
+    ? "Sākt personalizēt — izveido savu kreklu online | T-Bode"
     : "Personalize your t-shirt, hoodie or mug online | T-Bode";
   const description = isLv
     ? "Izvēlies kreklu, hūdiju vai krūzi, pievieno savu attēlu, logo vai tekstu un pasūti internetā. Piegāde Omniva pakomātā visā Latvijā. Vari pasūtīt arī vienu preci."

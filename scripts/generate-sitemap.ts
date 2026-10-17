@@ -32,9 +32,9 @@ interface SitemapEntry {
 
 const staticEntries: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/collection", changefreq: "daily", priority: "0.9" },
-  { path: "/design", changefreq: "weekly", priority: "0.9" },
-  { path: "/veikali", changefreq: "monthly", priority: "0.8" },
+  { path: "/collection", changefreq: "daily", priority: "0.5" },
+  { path: "/design", changefreq: "weekly", priority: "1.0" },
+  { path: "/veikali", changefreq: "monthly", priority: "0.3" },
   { path: "/idejas", changefreq: "weekly", priority: "0.8" },
   { path: "/kas-ir-dtf", changefreq: "monthly", priority: "0.8" },
   { path: "/privacy", changefreq: "yearly", priority: "0.2" },
