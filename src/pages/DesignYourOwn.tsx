@@ -8,11 +8,11 @@ const DesignYourOwn = () => {
   const { i18n } = useTranslation();
   const isLv = i18n.language === "lv";
   const title = isLv
-    ? "Personalizē kreklu, hūdiju vai krūzi online | T-Bode"
+    ? "Izveido savu kreklu — personalizē online | T-Bode"
     : "Personalize your t-shirt, hoodie or mug online | T-Bode";
   const description = isLv
-    ? "Personalizē savu kreklu, hūdiju vai krūzi pats tiešsaistē — augšupielādē attēlu vai tekstu. Apdrukājam Rīgā, piegāde Omniva pakomātā visā Latvijā vai izņemšana birojā."
-    : "Personalize your t-shirt, hoodie or mug online — upload your image or text. Printed in Riga, delivered to any Omniva parcel locker in Latvia or pick up at our office.";
+    ? "Izvēlies kreklu, hūdiju vai krūzi, pievieno savu attēlu, logo vai tekstu un pasūti internetā. Piegāde Omniva pakomātā visā Latvijā. Vari pasūtīt arī vienu preci."
+    : "Choose a t-shirt, hoodie or mug, add your image, logo or text and order online. Omniva parcel-locker delivery across Latvia. Order as little as one item.";
 
   const steps = isLv
     ? [

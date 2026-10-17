@@ -35,7 +35,7 @@ const Veikali = () => {
   return (
     <>
       <Seo
-        title="Veikali un kontakti Rīgā — Akropole, Domina, Origo, Alfa | T-Bode"
+        title="Veikali un kontakti | T-Bode"
         description="T-Bode veikali Rīgā: Akropole, Domina, Origo un Alfa. Adreses, darba laiki un kontakti. Vai pasūti online un saņem pakomātā visā Latvijā."
         canonical="https://t-bode.lv/veikali"
         noTitleSuffix
