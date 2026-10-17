@@ -16,11 +16,11 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
   const { t, i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const title = isLv
-    ? "Kreklu apdruka Rīgā ar savu dizainu online | T-Bode"
-    : "Custom t-shirt printing in Riga, design online | T-Bode";
+    ? "T-Bode — Izveido savu kreklu online ar piegādi pakomātā"
+    : "T-Bode — Design your own t-shirt online with parcel delivery";
   const description = isLv
-    ? "Personalizē kreklu, hūdiju vai krūzi online dažās minūtēs. Pasūti kreklu un saņem 1-2 dienās jebkur pakomātā. Apdruka Rīgā, bez minimālā pasūtījuma."
-    : "Personalize your t-shirt, hoodie or mug online in minutes. Order a shirt and get it in 1-2 days at any parcel locker in Latvia. Printed in Riga.";
+    ? "Izveido savu kreklu online: pievieno attēlu, logo vai tekstu un pasūti internetā. Piegāde pakomātā visā Latvijā. Apdruka 1–2 darba dienās, arī vienam kreklam."
+    : "Design your own t-shirt online: add an image, logo or text and order online. Parcel-locker delivery across Latvia. Printed in 1–2 business days, even for one shirt.";
   const [faqs, setFaqs] = useState<{ q: string; a: string }[]>([]);
   useEffect(() => {
     (async () => {
@@ -42,8 +42,6 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "T-Bode", item: "https://t-bode.lv/" },
-      { "@type": "ListItem", position: 2, name: isLv ? "Izveido savu dizainu" : "Design your own", item: "https://t-bode.lv/design" },
-      { "@type": "ListItem", position: 3, name: isLv ? "Kolekcija" : "Collection", item: "https://t-bode.lv/collection" },
     ],
   };
 
@@ -60,15 +58,15 @@ const Index = ({ withSeo = true }: { withSeo?: boolean }) => {
 
   const navItems = isLv
     ? [
-        ["Kolekcija", "/collection"],
         ["Izveido savu dizainu", "/design"],
+        ["Kolekcija", "/collection"],
         ["Idejas un padomi", "/idejas"],
         ["Kas ir DTF apdruka", "/kas-ir-dtf"],
         ["Veikali un kontakti", "/veikali"],
       ]
     : [
-        ["Collection", "/collection"],
         ["Design your own", "/design"],
+        ["Collection", "/collection"],
         ["Ideas & tips", "/idejas"],
         ["What is DTF printing", "/kas-ir-dtf"],
         ["Stores & contacts", "/veikali"],
