@@ -8,3 +8,11 @@
 - [x] Izņemt dublētās veikalu navigācijas norādes un vietējā veikala marķējumu no vietnes kopējās informācijas.
 - [x] Pārbaudīt metadatus un ceļu no sākumlapas uz personalizējamu preci (pārlūkā bez kļūdām).
 - [ ] Izmaiņas jāpublicē, lai tās nonāktu t-bode.lv (nepieciešams publicēšanas apstiprinājums).
+
+# Fokusēts tehniskais audits — 2026-10-20
+
+- [ ] Pārbaudīt kanoniskās adreses, strukturētos datus, indeksēšanu un esošās vietnes kartes.
+- [ ] Pārbaudīt GA identifikatorus, piekrišanu un iespējamu dubultu lapu skatījumu uzskaiti; kontu iestatījumus nemainīt.
+- [ ] Ieviest tikai skaidrus, zema riska tehniskus labojumus bez redzamo tekstu, izskata un pasūtīšanas izmaiņām.
+- [ ] Veikt dažas Chromium datora un telefona izmēra pārbaudes un sagatavot audita rezultātus ar atlikušajiem riskiem.
+- [ ] Publicēšanu pēc pārskatīšanas veiks Raimonds; šajā uzdevumā neko nepublicēt vai neizvietot.

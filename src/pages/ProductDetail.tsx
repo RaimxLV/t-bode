@@ -225,7 +225,6 @@ const ProductDetail = () => {
             crawlers / browsers seeing an empty <title> flash. */}
         <Seo
           title={i18n.language === "en" ? "Loading product…" : "Ielādē produktu…"}
-          noindex
         />
         <Navbar />
         <main className="flex-1 pt-24 pb-16">

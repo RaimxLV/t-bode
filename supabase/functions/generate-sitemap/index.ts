@@ -1,6 +1,6 @@
 // Dynamic sitemap.xml generator (named per SEO spec).
 // Returns published products + published blog posts + static routes as XML.
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { readPublicSitemapRows } from "../_shared/public-sitemap.ts";
 
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://t-bode.lv").replace(/\/$/, "");
 
@@ -29,26 +29,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const url = Deno.env.get("SUPABASE_URL");
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!url || !key) throw new Error("Sitemap configuration unavailable");
-    const supabase = createClient(url, key);
-
-    const [{ data: products }, { data: posts }] = await Promise.all([
-      supabase
-        .from("products")
-        .select("slug, updated_at")
-        .eq("status", "published")
-        .eq("is_draft", false)
-        .or(`available_from.is.null,available_from.lte.${new Date().toISOString()}`)
-        .or(`expires_at.is.null,expires_at.gte.${new Date().toISOString()}`)
-        .order("updated_at", { ascending: false }),
-      supabase
-        .from("blog_posts")
-        .select("slug, updated_at, published_at")
-        .eq("status", "published")
-        .order("published_at", { ascending: false }),
-    ]);
+    const { products, posts, categories } = await readPublicSitemapRows();
 
     const urls: string[] = [];
     for (const r of STATIC_ROUTES) {
@@ -57,21 +38,18 @@ Deno.serve(async (req) => {
       );
     }
     for (const p of products ?? []) {
-      const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc>${
-          lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>weekly</changefreq><priority>0.6</priority></url>`,
+        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`,
+      );
+    }
+    for (const category of categories) {
+      urls.push(
+        `<url><loc>${SITE_URL}/idejas/kategorija/${escapeXml(category.slug)}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
       );
     }
     for (const b of posts ?? []) {
-      const lastmod = (b.updated_at || b.published_at)
-        ? new Date(b.updated_at || b.published_at).toISOString()
-        : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/idejas/${escapeXml(b.slug)}</loc>${
-          lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>weekly</changefreq><priority>0.5</priority></url>`,
+        `<url><loc>${SITE_URL}/idejas/${escapeXml(b.slug)}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
       );
     }
 

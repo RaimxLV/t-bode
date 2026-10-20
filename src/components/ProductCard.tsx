@@ -12,6 +12,7 @@ const productHref = (p: DBProduct) =>
   `/produkti/${p.slug}${(p as any).is_draft ? "?preview=1" : ""}`;
 const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
+  const [failureStage, setFailureStage] = useState(0);
   const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
   const srcSet = buildSrcSet(src, [256, 384, 512, 640, 800], 75) || undefined;
   return (
@@ -20,14 +21,18 @@ const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
         <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
       )}
       <img
-        src={optimized}
-        srcSet={srcSet}
+        src={failureStage >= 2 ? "/image-unavailable.svg" : failureStage === 1 ? src : optimized}
+        srcSet={failureStage === 0 ? srcSet : undefined}
         sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px" : undefined}
         alt={alt}
         className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
         decoding="async"
         onLoad={() => setLoaded(true)}
+        onError={() => {
+          if (failureStage < 2) setFailureStage(failureStage + 1);
+          else setLoaded(true);
+        }}
       />
     </div>
   );
@@ -109,7 +114,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={productHref(product)}
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
-                <ProductImage src={img} alt={`${displayName} ${i + 1}`} />
+                <ProductImage key={img} src={img} alt={`${displayName} ${i + 1}`} />
               </Link>
             ))}
           </div>

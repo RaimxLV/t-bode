@@ -35,9 +35,14 @@ export const OptimizedImage = ({
   sizes = "100vw",
   widths = DEFAULT_WIDTHS,
   quality = 75,
+  onLoad,
+  onError,
   ...rest
 }: OptimizedImageProps) => {
-  const [loaded, setLoaded] = useState(false);
+  const [loadedSrc, setLoadedSrc] = useState<string>();
+  const [failure, setFailure] = useState<{ src: string; stage: number }>();
+  const stage = failure?.src === src ? failure.stage : 0;
+  const loaded = loadedSrc === src || stage >= 2;
   const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, width, quality) : src;
   const srcSet = buildSrcSet(src, widths, quality) || undefined;
   return (
@@ -46,14 +51,18 @@ export const OptimizedImage = ({
         <div className="absolute inset-0 bg-muted animate-pulse" aria-hidden />
       )}
       <img
-        src={optimized}
-        srcSet={srcSet}
+        src={stage >= 2 ? "/image-unavailable.svg" : stage === 1 ? src : optimized}
+        srcSet={stage === 0 ? srcSet : undefined}
         sizes={srcSet ? sizes : undefined}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
         decoding="async"
         fetchPriority={eager ? "high" : "auto"}
-        onLoad={() => setLoaded(true)}
+        onLoad={(event) => { setLoadedSrc(src); onLoad?.(event); }}
+        onError={(event) => {
+          if (stage < 2) setFailure({ src, stage: stage + 1 });
+          onError?.(event);
+        }}
         className={cn(
           "transition-opacity duration-300",
           loaded ? "opacity-100" : "opacity-0",
