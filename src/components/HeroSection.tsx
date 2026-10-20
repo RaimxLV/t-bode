@@ -5,7 +5,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
@@ -20,7 +20,6 @@ import { useDeviceTilt } from "@/hooks/useDeviceTilt";
 import { preloadHeroLayers } from "@/lib/preloadHero";
 
 export const HeroSection = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const sectionBoundsRef = useRef<DOMRect | null>(null);
