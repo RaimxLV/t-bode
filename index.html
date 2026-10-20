@@ -92,7 +92,13 @@
         // Scrub automatic event defaults as well as manual page views. OAuth,
         // design and payment query/hash state must never become analytics URLs.
         gtag('set', {
-          page_location: window.location.origin + window.location.pathname,
+          page_location: window.location.origin + (function () {
+            var path = window.location.pathname;
+            if (/^\/(cart|checkout|admin|auth|profile|payment-success|reset-password|install)(\/|$)/.test(path) || /[?&]preview=1(?:&|$)/.test(window.location.search)) return '/';
+            if (/^\/(?:produkti|idejas)\/[\p{L}\p{N}_-]+(?:\/[\p{L}\p{N}_-]+)?$/u.test(path)) return path;
+            return ['/', '/design', '/collection', '/idejas', '/veikali', '/kas-ir-dtf', '/auduma-maisinu-apdruka', '/privacy', '/terms', '/privacy-policy', '/privatuma-politika', '/terms-and-conditions', '/noteikumi'].indexOf(path) >= 0 ? path : '/';
+          })(),
+          page_title: 'T-Bode',
           page_referrer: (function () { try { return new URL(document.referrer).origin; } catch (e) { return ''; } })()
         });
         gtag('config', 'G-09YMNHC0BF', { send_page_view: false });
