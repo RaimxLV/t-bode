@@ -38,4 +38,5 @@
 
 - [x] Aizvietot statiskās ilustrācijas ar vienotu 22 sekunžu stāstu, saglabājot esošos tekstus.
 - [x] Pievienot soļu izvēli, pauzi, redzamības apturēšanu un samazinātas kustības režīmu.
-- [ ] Pārbaudīt četrus soļus datora un telefona izmēros; publicē Raimonds pēc pārskatīšanas.
+- [x] Pārbaudīt visus četrus soļus, pilnu ciklu, tastatūru, pauzi un samazinātas kustības režīmu 1280/390 px; bez pārplūdes un pārlūka kļūdām.
+- [ ] Animāciju publicē Raimonds pēc pārskatīšanas.

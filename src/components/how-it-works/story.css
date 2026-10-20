@@ -11,7 +11,7 @@
 .story-locker-number { fill: var(--story-locker-light); text-anchor: end; font-family: 'Inter', sans-serif; font-size: 10px; }
 .story-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
 .story-step { position: relative; display: flex; flex-direction: column; justify-content: flex-start; height: auto; min-height: 152px; width: 100%; padding: 22px 6px 10px; white-space: normal; text-align: center; color: var(--story-white); background: transparent; border-radius: 4px; gap: 5px; }
-.story-step:hover { background: var(--story-ground); }
+.story-step:hover { background: var(--story-ground); color: var(--story-white); }
 .story-step:focus-visible { outline: 2px solid var(--story-red); outline-offset: 4px; box-shadow: none; }
 .story-step-track { position: absolute; inset: 0 0 auto; height: 2px; background: var(--story-ground); overflow: hidden; }
 .story-step-progress { display: block; height: 100%; transform: scaleX(0); transform-origin: left; background: var(--story-red); }
