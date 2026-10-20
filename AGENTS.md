@@ -11,3 +11,4 @@
 - Initialize offscreen maps only near the viewport and pause invisible gallery animation; reserve the same dimensions so deferred work does not change layout.
 - Activate product-card carousels near the viewport and load only initial/neighboring slides; keep links and card frames unchanged to reduce synchronous catalogue initialization.
 - Do not enable static homepage prerender on hosting that hardcodes index.html SPA fallback without a verified separate private/unknown shell; otherwise private and unknown URLs receive indexable homepage HTML.
+- Key the product detail stateful view by product identity, not fetched object reference; new products reset selections/dialogs/quantity while same-product refetches retain customer choices.
