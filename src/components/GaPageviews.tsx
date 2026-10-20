@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { publicAnalyticsPath, safeAnalyticsReferrer } from "@/lib/analyticsPolicy";
 
@@ -18,6 +18,10 @@ const GA_ID = "G-09YMNHC0BF";
  */
 export const GaPageviews = () => {
   const location = useLocation();
+  const lastPageRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastPageRef.current !== location.pathname) lastPageRef.current = null;
+  }, [location.pathname]);
   useEffect(() => {
     window.gtag?.("set", {
       page_location: window.location.origin + (publicAnalyticsPath(location.pathname, location.search) || "/"),
@@ -36,9 +40,10 @@ export const GaPageviews = () => {
       // the resolved title only for its currently mounted pathname.
       const ready = document.documentElement.dataset.analyticsPath;
       const title = document.documentElement.dataset.analyticsTitle;
-      if (sent || ready !== location.pathname || !title) return;
+      if (sent || lastPageRef.current === path || ready !== location.pathname || !title) return;
       if (document.querySelector('meta[name="robots"]')?.getAttribute("content")?.includes("noindex")) return;
       sent = true;
+      lastPageRef.current = path;
       window.gtag?.("event", "page_view", {
         send_to: GA_ID,
         page_path: path,
