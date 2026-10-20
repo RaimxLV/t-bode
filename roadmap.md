@@ -17,3 +17,12 @@
 - [x] Ieviest tikai skaidrus, zema riska tehniskus labojumus bez redzamo tekstu, izskata un pasūtīšanas izmaiņām.
 - [x] Veikt dažas Chromium datora un telefona izmēra pārbaudes un sagatavot audita rezultātus ar atlikušajiem riskiem.
 - [ ] Publicēšanu pēc pārskatīšanas veiks Raimonds; šajā uzdevumā neko nepublicēt vai neizvietot.
+
+# Atlikušo darbu pabeigšana
+
+- [ ] Izmērīt un mazināt mobilās aiztures un galvenes nobīdi bez dizaina maiņas.
+- [ ] Atjaunot tikai precīzi apstiprinātas veco fotogrāfiju saites un dialoga attēlus.
+- [ ] Sagatavot publisko lapu HTML priekšrenderēšanu un pārbaudīt privāto/nezināmo ceļu drošību.
+- [ ] Novērst novecojušu GA virsrakstu un privāto adrešu nosūtīšanu.
+- [ ] Izvietot un pārbaudīt abas vietnes kartes funkcijas; noskaidrot www pāradresācijas piekļuvi.
+- [ ] Noslēgt ar testiem, rezultātiem un ārējiem šķēršļiem; Raimonds pārskata un publicē.
