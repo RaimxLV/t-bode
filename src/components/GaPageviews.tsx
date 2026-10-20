@@ -11,8 +11,9 @@ const GA_ID = "G-09YMNHC0BF";
 
 /**
  * Sends a GA4 page_view on every SPA route change.
- * Consent gating is handled by the gtag consent-mode defaults in index.html;
- * events are dropped by GA until analytics_storage is granted.
+ * Consent mode defaults are set in index.html. Denied analytics_storage
+ * prevents analytics cookies, but advanced consent mode can send cookieless
+ * pings; it does not mean every event is dropped.
  */
 export const GaPageviews = () => {
   const location = useLocation();

@@ -41,73 +41,63 @@ const staticEntries: SitemapEntry[] = [
   { path: "/terms", changefreq: "yearly", priority: "0.2" },
 ];
 
-async function fetchProducts(env: { url: string; key: string }): Promise<SitemapEntry[]> {
-  if (!env.url || !env.key) {
-    console.warn("[sitemap] Missing Supabase env — skipping product entries.");
-    return [];
+// Read public rows in pages: the REST API can cap a single response at 1000.
+async function fetchPublicRows<T>(env: { url: string; key: string }, query: string): Promise<T[]> {
+  if (!env.url || !env.key) throw new Error("Missing sitemap configuration; keeping existing sitemap.");
+  const rows: T[] = [];
+  for (let offset = 0; ; offset += 1000) {
+    const res = await fetch(`${env.url}/rest/v1/${query}&limit=1000&offset=${offset}`, {
+      headers: { apikey: env.key, Authorization: `Bearer ${env.key}` },
+    });
+    if (!res.ok) throw new Error(`Public sitemap data request failed (${res.status}); keeping existing sitemap.`);
+    const page = await res.json() as T[];
+    rows.push(...page);
+    if (page.length < 1000) return rows;
   }
-  try {
-    const res = await fetch(
-      `${env.url}/rest/v1/products?select=slug,updated_at&status=eq.published&is_draft=eq.false&order=updated_at.desc`,
-      {
-        headers: {
-          apikey: env.key,
-          Authorization: `Bearer ${env.key}`,
-        },
-      },
-    );
-    if (!res.ok) {
-      console.warn(`[sitemap] Supabase fetch failed: ${res.status}`);
-      return [];
-    }
-    const rows = (await res.json()) as Array<{ slug: string; updated_at: string }>;
+}
+
+async function fetchProducts(env: { url: string; key: string }): Promise<SitemapEntry[]> {
+    const rows = await fetchPublicRows<{ slug: string; updated_at: string }>(env,
+      "products?select=slug,updated_at&status=eq.published&is_draft=eq.false&order=slug.asc");
     return rows
       .filter((r) => r.slug)
       .map((r) => ({
         path: `/produkti/${r.slug}`,
-        lastmod: r.updated_at ? new Date(r.updated_at).toISOString() : undefined,
+        // updated_at changes on every row update, not just significant page edits.
         changefreq: "weekly" as const,
         priority: "0.6",
       }));
-  } catch (e: any) {
-    console.warn(`[sitemap] Supabase fetch error: ${e?.message}`);
-    return [];
-  }
 }
 
 async function fetchBlogPosts(env: { url: string; key: string }): Promise<SitemapEntry[]> {
-  if (!env.url || !env.key) return [];
-  try {
-    const res = await fetch(
-      `${env.url}/rest/v1/blog_posts?select=slug,updated_at,published_at&status=eq.published&order=published_at.desc`,
-      { headers: { apikey: env.key, Authorization: `Bearer ${env.key}` } },
-    );
-    if (!res.ok) {
-      console.warn(`[sitemap] blog_posts fetch failed: ${res.status}`);
-      return [];
-    }
-    const rows = (await res.json()) as Array<{ slug: string; updated_at: string; published_at: string }>;
+    const rows = await fetchPublicRows<{ slug: string; updated_at: string; published_at: string }>(env,
+      "blog_posts?select=slug,updated_at,published_at&status=eq.published&order=slug.asc");
     return rows
       .filter((r) => r.slug)
       .map((r) => ({
         path: `/idejas/${r.slug}`,
-        lastmod: (r.updated_at || r.published_at)
-          ? new Date(r.updated_at || r.published_at).toISOString()
-          : undefined,
+        // No verified significant-content timestamp: omit lastmod.
         changefreq: "weekly" as const,
         priority: "0.5",
       }));
-  } catch (e: any) {
-    console.warn(`[sitemap] blog_posts fetch error: ${e?.message}`);
-    return [];
-  }
 }
+
+async function fetchCategories(env: { url: string; key: string }): Promise<SitemapEntry[]> {
+  const rows = await fetchPublicRows<{ slug: string }>(env,
+    "content_categories?select=slug&is_active=eq.true&order=slug.asc");
+  return rows.filter((row) => row.slug).map((row) => ({
+    path: `/idejas/kategorija/${row.slug}`, changefreq: "weekly", priority: "0.5",
+  }));
+}
+
+const escapeXml = (value: string) => value.replace(/[<>&'\"]/g, (character) =>
+  ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[character] ?? character));
 
 function generateSitemap(entries: SitemapEntry[]) {
   const urls = entries.map((e) =>
     [
       `  <url>`,
-      `    <loc>${BASE_URL}${e.path}</loc>`,
+      `    <loc>${escapeXml(BASE_URL + e.path)}</loc>`,
       e.lastmod ? `    <lastmod>${e.lastmod}</lastmod>` : null,
       e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
       e.priority ? `    <priority>${e.priority}</priority>` : null,
@@ -126,13 +116,17 @@ function generateSitemap(entries: SitemapEntry[]) {
 
 (async () => {
   const env = loadEnv();
-  const [productEntries, blogEntries] = await Promise.all([
+  const [productEntries, blogEntries, categoryEntries] = await Promise.all([
     fetchProducts(env),
     fetchBlogPosts(env),
+    fetchCategories(env),
   ]);
-  const entries = [...staticEntries, ...productEntries, ...blogEntries];
+  const entries = [...staticEntries, ...productEntries, ...blogEntries, ...categoryEntries];
   writeFileSync(resolve("public/sitemap.xml"), generateSitemap(entries));
   console.log(
     `[sitemap] wrote public/sitemap.xml (${entries.length} URLs: ${staticEntries.length} static + ${productEntries.length} products + ${blogEntries.length} blog posts)`,
   );
-})();
+})().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : "Sitemap generation failed; keeping existing sitemap.");
+  process.exitCode = 1;
+});

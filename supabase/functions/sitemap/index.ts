@@ -1,5 +1,5 @@
 // Public sitemap.xml generator. Returns XML listing static routes + all products.
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { readPublicSitemapRows } from "../_shared/public-sitemap.ts";
 
 const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://t-bode.lv").replace(/\/$/, "");
 
@@ -28,31 +28,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const url = Deno.env.get("SUPABASE_URL");
-    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!url || !key) throw new Error("Sitemap configuration unavailable");
-    const supabase = createClient(url, key);
-
-    const nowIso = new Date().toISOString();
-    const { data: products } = await supabase
-      .from("products")
-      .select("slug, updated_at")
-      .eq("status", "published")
-      .eq("is_draft", false)
-      .or(`available_from.is.null,available_from.lte.${nowIso}`)
-      .or(`expires_at.is.null,expires_at.gte.${nowIso}`)
-      .order("updated_at", { ascending: false });
-
-    const { data: categories } = await supabase
-      .from("content_categories")
-      .select("slug")
-      .eq("is_active", true);
-
-    const { data: posts } = await supabase
-      .from("blog_posts")
-      .select("slug, updated_at, published_at")
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
+    const { products, posts, categories } = await readPublicSitemapRows();
 
     const urls: string[] = [];
     for (const r of STATIC_ROUTES) {
@@ -61,11 +37,8 @@ Deno.serve(async (req) => {
       );
     }
     for (const p of products ?? []) {
-      const lastmod = p.updated_at ? new Date(p.updated_at).toISOString() : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc>${
-          lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>weekly</changefreq><priority>0.6</priority></url>`,
+        `<url><loc>${SITE_URL}/produkti/${escapeXml(p.slug)}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>`,
       );
     }
     for (const c of categories ?? []) {
@@ -74,15 +47,8 @@ Deno.serve(async (req) => {
       );
     }
     for (const post of posts ?? []) {
-      const lastmod = post.updated_at
-        ? new Date(post.updated_at).toISOString()
-        : post.published_at
-          ? new Date(post.published_at).toISOString()
-          : undefined;
       urls.push(
-        `<url><loc>${SITE_URL}/idejas/${escapeXml(post.slug)}</loc>${
-          lastmod ? `<lastmod>${lastmod}</lastmod>` : ""
-        }<changefreq>monthly</changefreq><priority>0.5</priority></url>`,
+        `<url><loc>${SITE_URL}/idejas/${escapeXml(post.slug)}</loc><changefreq>weekly</changefreq><priority>0.5</priority></url>`,
       );
     }
 

@@ -21,11 +21,11 @@ import { GaPageviews } from "@/components/GaPageviews";
 import { redirectToCanonicalHost } from "@/lib/authDomain";
 import { applyMobileViewportLock, cleanOAuthReturnUrl, getDefaultViewport, hasMobileOAuthViewportReturn, isMobileLikeViewport, shouldReloadAfterMobileOAuthReturn } from "@/lib/mobileViewport";
 import Index from "./pages/Index.tsx";
+import { buildCanonical } from "@/lib/seoPolicy";
 
 // Legacy redirect: send old indexed URLs to their current equivalents.
 // Preserves SEO signal as Google reprocesses the redirected paths.
-// SPA hosting can't emit true HTTP 301s, so we do the strongest client-side
-// equivalent that Google treats as a permanent redirect:
+// These are client-side redirects, not HTTP 301s; consolidation is not guaranteed:
 //   - `history.replace` (removes old URL from history)
 //   - <link rel="canonical"> pointing at the new URL, injected before nav
 //   - noindex on the transient old URL so it drops out of the index while
@@ -33,8 +33,7 @@ import Index from "./pages/Index.tsx";
 const LegacyRedirect = ({ to }: { to: string }) => {
   const { search, pathname } = useLocation();
   useEffect(() => {
-    const origin = window.location.origin;
-    const canonicalHref = to.startsWith("/#") ? `${origin}/` : `${origin}${to}`;
+    const canonicalHref = buildCanonical(to);
     // Add canonical + noindex hints for crawlers that execute the redirect JS.
     const canonical = document.createElement("link");
     canonical.rel = "canonical";
