@@ -1,5 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { resolveLegacyProductImage } from "@/lib/legacyProductImages";
+
+export function resolveProductImages<T extends { image_url: string | null; color_variants?: unknown; gallery_images?: unknown; showcase_images?: unknown; mockup_image_url?: string | null }>(product: T): T {
+  const imageList = (value: unknown) => Array.isArray(value) ? value.map((src) => typeof src === "string" ? resolveLegacyProductImage(src) : src) : [];
+  return {
+    ...product,
+    image_url: product.image_url ? resolveLegacyProductImage(product.image_url) : product.image_url,
+    mockup_image_url: product.mockup_image_url ? resolveLegacyProductImage(product.mockup_image_url) : product.mockup_image_url,
+    gallery_images: imageList(product.gallery_images),
+    showcase_images: imageList(product.showcase_images),
+    color_variants: Array.isArray(product.color_variants) ? product.color_variants.map((variant) => ({ ...variant, images: imageList(variant.images) })) : [],
+  };
+}
 
 export interface ColorVariant {
   name: string;
@@ -63,11 +76,11 @@ async function fetchProducts(customizable?: boolean): Promise<DBProduct[]> {
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).map((p) => ({
-    ...p,
-    color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
+    ...resolveProductImages(p),
+    color_variants: (resolveProductImages(p).color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
-    gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
-    showcase_images: (Array.isArray((p as any).showcase_images) ? (p as any).showcase_images : []) as string[],
+    gallery_images: resolveProductImages(p).gallery_images as string[],
+    showcase_images: resolveProductImages(p).showcase_images as string[],
   }));
 }
 
@@ -82,11 +95,11 @@ async function fetchCollectionProducts(): Promise<DBProduct[]> {
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []).map((p) => ({
-    ...p,
-    color_variants: (p.color_variants as unknown as ColorVariant[]) ?? [],
+    ...resolveProductImages(p),
+    color_variants: (resolveProductImages(p).color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (p as any).zakeke_model_code ?? null,
-    gallery_images: (Array.isArray((p as any).gallery_images) ? (p as any).gallery_images : []) as string[],
-    showcase_images: (Array.isArray((p as any).showcase_images) ? (p as any).showcase_images : []) as string[],
+    gallery_images: resolveProductImages(p).gallery_images as string[],
+    showcase_images: resolveProductImages(p).showcase_images as string[],
   }));
 }
 
@@ -99,11 +112,11 @@ async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {
   if (error) throw error;
   if (!data) return null;
   return {
-    ...data,
-    color_variants: (data.color_variants as unknown as ColorVariant[]) ?? [],
+    ...resolveProductImages(data),
+    color_variants: (resolveProductImages(data).color_variants as unknown as ColorVariant[]) ?? [],
     zakeke_model_code: (data as any).zakeke_model_code ?? null,
-    gallery_images: (Array.isArray((data as any).gallery_images) ? (data as any).gallery_images : []) as string[],
-    showcase_images: (Array.isArray((data as any).showcase_images) ? (data as any).showcase_images : []) as string[],
+    gallery_images: resolveProductImages(data).gallery_images as string[],
+    showcase_images: resolveProductImages(data).showcase_images as string[],
   };
 }
 
@@ -131,7 +144,7 @@ export function useAllProducts() {
 export function useProductBySlug(slug: string | undefined) {
   return useQuery({
     queryKey: ["products", "slug", slug],
-    queryFn: () => fetchProductBySlug(slug!),
+    queryFn: () => slug ? fetchProductBySlug(slug) : Promise.resolve(null),
     enabled: !!slug,
   });
 }

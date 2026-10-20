@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { publicAnalyticsPath, safeAnalyticsReferrer } from "@/lib/analyticsPolicy";
 
 declare global {
   interface Window {
@@ -19,13 +20,36 @@ export const GaPageviews = () => {
   const location = useLocation();
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-    const path = location.pathname + location.search;
-    window.gtag("event", "page_view", {
-      send_to: GA_ID,
-      page_path: path,
-      page_location: window.location.origin + path,
-      page_title: document.title,
-    });
+    const path = publicAnalyticsPath(location.pathname, location.search);
+    if (!path) return;
+    let sent = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const sendWhenReady = () => {
+      // A lazy route may still show the previous document.title. Seo announces
+      // the resolved title only for its currently mounted pathname.
+      const ready = document.documentElement.dataset.analyticsPath;
+      const title = document.documentElement.dataset.analyticsTitle;
+      if (sent || ready !== location.pathname || !title) return;
+      if (document.querySelector('meta[name="robots"]')?.getAttribute("content")?.includes("noindex")) return;
+      sent = true;
+      window.gtag?.("event", "page_view", {
+        send_to: GA_ID,
+        page_path: path,
+        page_location: window.location.origin + path,
+        page_title: title,
+        page_referrer: safeAnalyticsReferrer(document.referrer),
+      });
+    };
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(sendWhenReady, 0);
+    };
+    window.addEventListener("tbode:seo-ready", schedule);
+    schedule();
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("tbode:seo-ready", schedule);
+    };
   }, [location.pathname, location.search]);
   return null;
 };

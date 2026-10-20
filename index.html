@@ -58,7 +58,8 @@
     <title>T-Bode — Izveido savu dizainu un pasūti online uz pakomātu</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="preload" href="/bebas-neue.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
     <meta name="description" content="Izveido savu dizainu un pasūti online uz pakomātu. Personalizē kreklu ar attēlu, logo vai tekstu. Piegāde visā Latvijā; apdruka 1–2 darba dienās, arī vienam kreklam." />
     <meta name="author" content="T-Bode / SIA Ervitex" />
     <meta name="google-site-verification" content="IKaF0Ue7_PCXb8M1D7aunUpeAHigLumz7H4-PHl2eMg" />
@@ -87,6 +88,12 @@
           ad_user_data: 'denied',
           ad_personalization: 'denied',
           analytics_storage: 'denied'
+        });
+        // Scrub automatic event defaults as well as manual page views. OAuth,
+        // design and payment query/hash state must never become analytics URLs.
+        gtag('set', {
+          page_location: window.location.origin + window.location.pathname,
+          page_referrer: (function () { try { return new URL(document.referrer).origin; } catch (e) { return ''; } })()
         });
         gtag('config', 'G-09YMNHC0BF', { send_page_view: false });
 

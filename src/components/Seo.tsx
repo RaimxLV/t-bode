@@ -59,6 +59,19 @@ export const Seo = ({
   const url = buildCanonical(canonical || location.pathname);
   const excludeFromIndex = noindex || shouldNoindex(location.pathname, location.search);
 
+  useEffect(() => {
+    if (excludeFromIndex) return;
+    document.documentElement.dataset.analyticsPath = location.pathname;
+    document.documentElement.dataset.analyticsTitle = fullTitle;
+    window.dispatchEvent(new Event("tbode:seo-ready"));
+    return () => {
+      if (document.documentElement.dataset.analyticsPath === location.pathname) {
+        delete document.documentElement.dataset.analyticsPath;
+        delete document.documentElement.dataset.analyticsTitle;
+      }
+    };
+  }, [location.pathname, fullTitle, excludeFromIndex]);
+
   const jsonLdArray: Record<string, any>[] = [];
   if (jsonLd) jsonLdArray.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));
   if (breadcrumbs && breadcrumbs.length > 0) {

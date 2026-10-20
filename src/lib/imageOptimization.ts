@@ -9,6 +9,8 @@
  * hosts) are returned unchanged — browsers still lazy-load them.
  */
 
+import { resolveLegacyProductImage } from "./legacyProductImages";
+
 const SUPABASE_PUBLIC_RE = /\/storage\/v1\/object\/public\//;
 const SUPABASE_RENDER_RE = /\/storage\/v1\/render\/image\/public\//;
 
@@ -31,6 +33,7 @@ export const isSupabaseImage = (url: string): boolean => {
  * Storage URL, returns it unchanged.
  */
 export const transformImage = (url: string, opts: TransformOpts = {}): string => {
+  url = resolveLegacyProductImage(url);
   if (!url || !isSupabaseImage(url)) return url;
 
   // Normalize to the render/image/public endpoint so params take effect.

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import type { ColorVariant, DBProduct } from "@/hooks/useProducts";
+import { resolveProductImages } from "@/hooks/useProducts";
 import { ProductCard } from "@/components/ProductCard";
 
 interface RelatedProductsProps {
@@ -24,8 +25,8 @@ export const RelatedProducts = ({ category, excludeId, limit = 4 }: RelatedProdu
         .eq("in_stock", true)
         .limit(limit);
       return (data ?? []).map((p: any) => ({
-        ...p,
-        color_variants: (p.color_variants ?? []) as ColorVariant[],
+        ...resolveProductImages(p),
+        color_variants: (resolveProductImages(p).color_variants ?? []) as ColorVariant[],
         zakeke_model_code: p.zakeke_model_code ?? null,
       })) as DBProduct[];
     },
