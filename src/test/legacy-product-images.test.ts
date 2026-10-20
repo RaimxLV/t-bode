@@ -8,6 +8,7 @@ it.each([
   "2026/02/Ozollapu-krekls-melns-_prieksa_-1890-eur.png",
 ])("maps only storage-confirmed exact variant %s", (path) => {
   expect(resolveLegacyProductImage(`https://mml.s-host.net/t-bode/wp-content/uploads/${path}`)).toBe(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/product-images/wp/${path}`);
+  expect(resolveLegacyProductImage(`https://www.mml.s-host.net/t-bode/wp-content/uploads/${path}`)).toBe(`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/product-images/wp/${path}`);
 });
 
 it("never guesses another photo or host", () => {

@@ -10,7 +10,7 @@ export function resolveLegacyProductImage(src: string): string {
   try {
     const url = new URL(src);
     const prefix = "/t-bode/wp-content/uploads/";
-    if (url.hostname !== "mml.s-host.net" || !url.pathname.startsWith(prefix)) return src;
+    if (!["mml.s-host.net", "www.mml.s-host.net"].includes(url.hostname) || !url.pathname.startsWith(prefix)) return src;
     const path = decodeURIComponent(url.pathname.slice(prefix.length));
     if (!confirmedPaths.has(path)) return src;
     return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/product-images/wp/${path}`;

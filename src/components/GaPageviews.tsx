@@ -20,11 +20,11 @@ export const GaPageviews = () => {
   const location = useLocation();
   useEffect(() => {
     window.gtag?.("set", {
-      page_location: window.location.origin + location.pathname,
+      page_location: window.location.origin + (publicAnalyticsPath(location.pathname, location.search) || "/"),
       page_referrer: safeAnalyticsReferrer(document.referrer),
       page_title: "T-Bode",
     });
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.gtag !== "function") return;
     const path = publicAnalyticsPath(location.pathname, location.search);
