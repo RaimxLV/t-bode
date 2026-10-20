@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -77,7 +77,20 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
     return allImages;
   }, [selectedColorIdx, product.color_variants, allImages]);
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false });
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [carouselActive, setCarouselActive] = useState(false);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      setCarouselActive(true);
+      observer.disconnect();
+    }, { rootMargin: "200px" });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false, active: carouselActive && displayImages.length > 1 });
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const onSelect = useCallback(() => {
@@ -99,6 +112,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -114,7 +128,9 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={productHref(product)}
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
-                <ProductImage key={img} src={img} alt={`${displayName} ${i + 1}`} />
+                {(i === 0 || (carouselActive && (Math.abs(i - currentSlide) <= 1 || i === displayImages.length - 1))) && (
+                  <ProductImage key={img} src={img} alt={`${displayName} ${i + 1}`} />
+                )}
               </Link>
             ))}
           </div>
