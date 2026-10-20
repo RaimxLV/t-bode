@@ -4,7 +4,7 @@ import { Smartphone, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { HowItWorksStory } from "./how-it-works/HowItWorksStory";
+import { HowItWorksFrame } from "./how-it-works/HowItWorksFrame";
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
@@ -62,7 +62,7 @@ export const HowItWorksSection = () => {
       </div>
 
       <div className="container mx-auto px-4">
-        <HowItWorksStory />
+        <HowItWorksFrame />
       </div>
 
       {/* Install app CTA — sits at the end of the steps */}
