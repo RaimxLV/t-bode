@@ -40,7 +40,7 @@ function Navigation() {
 function App() {
   return <MemoryRouter initialEntries={["/produkti/stanley"]}><Navigation /><Routes><Route path="/produkti/:slug" element={<ProductDetail />} /></Routes></MemoryRouter>;
 }
-const choose = (name: string) => fireEvent.click(screen.getAllByRole("button", { name, exact: true })[0]);
+const choose = (name: string) => fireEvent.click(screen.getAllByRole("button", { name })[0]);
 const color = () => screen.getAllByText(/^productDetail.color/)[0].textContent;
 const quantity = () => screen.getAllByRole("button", { name: "Palielināt daudzumu" })[0].previousElementSibling?.textContent;
 afterEach(cleanup);
@@ -54,12 +54,12 @@ it("resets color, restricted size, image and quantity on same-component product 
   choose("Go FANU");
   expect(color()).toBe("productDetail.color — Burgundy");
   expect(quantity()).toBe("1");
-  expect(screen.getAllByRole("button", { name: "S", exact: true })[0].className).toContain("bg-primary/10");
+  expect(screen.getAllByRole("button", { name: "S" })[0].className).toContain("bg-primary/10");
   choose("White");
   choose("L");
   choose("Go Stanley");
   expect(color()).toBe("productDetail.color — Aloe");
-  expect(screen.getAllByRole("button", { name: "M", exact: true })[0].className).toContain("bg-primary/10");
+  expect(screen.getAllByRole("button", { name: "M" })[0].className).toContain("bg-primary/10");
 });
 
 it("retains same-product customer color, size and quantity on a new fetched object", () => {
@@ -71,7 +71,7 @@ it("retains same-product customer color, size and quantity on a new fetched obje
   view.rerender(<App />);
   expect(color()).toBe("productDetail.color — Black");
   expect(quantity()).toBe("2");
-  expect(screen.getAllByRole("button", { name: "L", exact: true })[0].className).toContain("bg-primary/10");
+  expect(screen.getAllByRole("button", { name: "L" })[0].className).toContain("bg-primary/10");
 });
 
 it("closes the previous product's personalization chooser on product navigation", () => {

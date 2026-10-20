@@ -31,6 +31,6 @@
 
 # Preču izvēļu regresija
 
-- [ ] Izolēt krāsu, izmēru, attēlu, daudzumu un dizaina dialogus katras preces identitātei; tās pašas preces atsvaidzinājumā saglabāt izvēles.
-- [ ] Pārbaudīt Stanley Stella ↔ FANU saistīto preču pārejas un pievienot regresijas testus.
+- [x] Izolēt krāsu, izmēru, attēlu, daudzumu un dizaina dialogus katras preces identitātei; tās pašas preces atsvaidzinājumā saglabāt izvēles.
+- [x] Pārbaudīt Stanley Stella ↔ FANU saistīto preču pārejas pārlūkā bez kļūdām un pievienot 4 regresijas testus.
 - [ ] Jauno labojumu pēc pārskatīšanas publicē Raimonds.
