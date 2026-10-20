@@ -5,7 +5,7 @@ import {
   useSpring,
   useTransform,
 } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Sparkles, Wand2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef, useState } from "react";
@@ -300,10 +300,9 @@ export const HeroSection = () => {
             initial={false}
             className="mx-auto mt-5 flex w-full max-w-xl flex-col items-stretch gap-3 sm:mt-8 sm:gap-4 lg:mx-0 lg:items-start"
           >
-            <button
-              type="button"
-              onClick={() => navigate("/design")}
-              className="group relative isolate w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-transform hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
+            <Link
+              to="/design"
+              className="group relative isolate block w-full overflow-hidden rounded-lg px-4 sm:px-10 py-3 sm:py-6 text-base sm:text-xl md:text-2xl font-bold font-body text-primary-foreground shadow-2xl transition-transform hover:scale-[1.03] active:scale-[0.98] animate-personalize-pulse"
               style={{ background: "var(--gradient-brand)" }}
               aria-label={t("hero.ctaDesign")}
             >
@@ -322,14 +321,14 @@ export const HeroSection = () => {
                 <span className="tracking-wide uppercase whitespace-nowrap">{t("hero.ctaDesign")}</span>
                 <Sparkles className="w-5 h-5 shrink-0 transition-transform group-hover:rotate-12 group-hover:scale-110" />
               </span>
-            </button>
-            <button
-              onClick={() => navigate("/collection")}
+            </Link>
+            <Link
+              to="/collection"
               className="group w-full inline-flex items-center justify-center gap-3 px-4 sm:px-10 py-3 sm:py-6 rounded-lg font-body font-bold text-base sm:text-xl md:text-2xl uppercase tracking-wide text-white border-2 border-white/50 bg-black/30 backdrop-blur-sm transition-all hover:scale-[1.03] hover:bg-white/10 hover:border-white/80 active:scale-[0.98] whitespace-nowrap"
             >
               {t("hero.ctaCollection")}
               <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-1" />
-            </button>
+            </Link>
           </motion.div>
         </div>
       </div>

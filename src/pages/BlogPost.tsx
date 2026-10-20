@@ -133,6 +133,9 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen bg-paper text-paper-foreground flex flex-col">
       {!isEmbeddedPreview && <Navbar />}
+      {!loading && !post && !isEmbeddedPreview && (
+        <Seo title="Raksts nav atrasts | T-Bode" noindex />
+      )}
       {post && !isEmbeddedPreview && (
         <Seo
           title={post.seo_title || post.title}
