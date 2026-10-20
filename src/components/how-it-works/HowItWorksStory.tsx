@@ -46,7 +46,7 @@ export function HowItWorksStory() {
     return () => cancelAnimationFrame(frame);
   }, [playing]);
   const select = (index: number) => {
-    clock.current = index * PHASE_MS;
+    clock.current = index * PHASE_MS + (paused || reducedMotion ? PHASE_MS * 0.85 : 0);
     setTime(clock.current);
   };
   const keyboard = (event: KeyboardEvent, index: number) => {

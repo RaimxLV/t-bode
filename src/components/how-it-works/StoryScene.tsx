@@ -142,7 +142,7 @@ export function StoryScene({ phase, progress, staticScene, title }: { phase: num
       </g>
       <rect x="252" y="540" width="88" height="5" rx="3" fill="var(--story-white)" />
     </g>
-    <Character delivery={delivery} reach={open * (1 - collect)} parcel={collect} />
+    <Character delivery={delivery} reach={phase === 3 ? open * (1 - collect) : phase === 0 ? tap(0.78) * 0.1 : phase === 1 ? tap(0.23) * 0.1 : tap(0.46) * 0.1} parcel={collect} />
     {phase === 3 && <g opacity={ease((p - 0.49) / 0.06)}><Box x={470 + collect * 163} y={421 - collect * 115} scale={0.7 + collect * 0.3} /></g>}
     <g transform="translate(833 213)" opacity={phase === 2 ? order : phase === 3 ? collect : 0}>
       <circle r="27" fill="var(--story-mint)" /><path d="m-12 0 8 9 16-19" stroke="var(--story-success)" strokeWidth="4" fill="none" strokeLinecap="round" />
