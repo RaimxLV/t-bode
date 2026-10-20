@@ -1,22 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Smartphone, Check, Loader2 } from "lucide-react";
+import { Smartphone, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import stepChoose from "@/assets/step-choose.webp";
-import stepDesign from "@/assets/step-design.webp";
-import stepPayment from "@/assets/step-payment.webp";
-import stepDelivery from "@/assets/step-delivery.webp";
-
-const images = [stepChoose, stepDesign, stepPayment, stepDelivery];
-
-const steps = [
-  { num: "1", titleKey: "about.steps.s1.title", descKey: "about.steps.s1.desc" },
-  { num: "2", titleKey: "about.steps.s2.title", descKey: "about.steps.s2.desc" },
-  { num: "3", titleKey: "about.steps.s3.title", descKey: "about.steps.s3.desc" },
-  { num: "4", titleKey: "about.steps.s4.title", descKey: "about.steps.s4.desc" },
-];
+import { HowItWorksStory } from "./how-it-works/HowItWorksStory";
 
 export const HowItWorksSection = () => {
   const { t } = useTranslation();
@@ -56,7 +44,7 @@ export const HowItWorksSection = () => {
   return (
     <section className="relative py-24 md:py-32 overflow-hidden" style={{ background: "#000" }}>
       {/* Section heading */}
-      <div className="container mx-auto px-4 mb-16 md:mb-20">
+      <div className="container mx-auto px-4 mb-3 md:mb-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -73,52 +61,8 @@ export const HowItWorksSection = () => {
         </motion.div>
       </div>
 
-      {/* Steps grid */}
       <div className="container mx-auto px-4">
-        <div className="relative grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-6">
-          {steps.map((step, i) => (
-            <motion.div
-              key={step.num}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.2 }}
-              className="relative flex flex-col items-center text-center group"
-            >
-              {/* Illustration */}
-              <div className="relative z-10 w-64 h-64 sm:w-72 sm:h-72 md:w-48 md:h-48 mb-6 transition-transform duration-300 group-hover:scale-105">
-                <img
-                  src={images[i]}
-                  alt={t(step.titleKey)}
-                  loading="lazy"
-                  width={512}
-                  height={512}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              {/* Arrow connector (desktop, between items) */}
-              {i < 3 && (
-                <div className="hidden md:flex absolute top-24 -right-3 z-20 text-gray-600">
-                  <ChevronRight className="w-6 h-6" />
-                </div>
-              )}
-
-              {/* Mobile card wrapper */}
-              <div className="md:bg-transparent bg-white/[0.03] md:border-0 border border-white/[0.06] rounded-xl md:rounded-none p-4 md:p-0 w-full">
-                <span className="inline-block font-display text-sm text-red-500 mb-1 tracking-widest">
-                  {t("about.steps.step", "SOLIS")} {step.num}
-                </span>
-                <h3 className="font-display text-xl md:text-2xl text-white mb-2 tracking-wide">
-                  {t(step.titleKey)}
-                </h3>
-                <p className="text-gray-400 font-body text-sm leading-relaxed max-w-[220px] mx-auto">
-                  {t(step.descKey)}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        <HowItWorksStory />
       </div>
 
       {/* Install app CTA — sits at the end of the steps */}

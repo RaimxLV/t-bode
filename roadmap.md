@@ -34,3 +34,9 @@
 - [x] Izolēt krāsu, izmēru, attēlu, daudzumu un dizaina dialogus katras preces identitātei; tās pašas preces atsvaidzinājumā saglabāt izvēles.
 - [x] Pārbaudīt Stanley Stella ↔ FANU saistīto preču pārejas pārlūkā bez kļūdām un pievienot 4 regresijas testus.
 - [ ] Jauno labojumu pēc pārskatīšanas publicē Raimonds.
+# Sākumlapas četru soļu animācija
+
+- [x] Aizvietot statiskās ilustrācijas ar vienotu 22 sekunžu stāstu, saglabājot esošos tekstus.
+- [x] Pievienot soļu izvēli, pauzi, redzamības apturēšanu un samazinātas kustības režīmu.
+- [x] Pārbaudīt visus četrus soļus, pilnu ciklu, tastatūru, pauzi un samazinātas kustības režīmu 1280/390 px; bez pārplūdes un pārlūka kļūdām.
+- [ ] Animāciju publicē Raimonds pēc pārskatīšanas.
