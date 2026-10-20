@@ -30,6 +30,15 @@ import { prefetchZakeke } from "@/lib/zakeke-loader";
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading } = useProductBySlug(slug);
+  // A product owns its selections and in-progress dialogs. Refetches retain
+  // the same identity/key; related-product navigation gets fresh local state.
+  return <ProductDetailView key={product?.id ?? slug} product={product} isLoading={isLoading} />;
+};
+
+const ProductDetailView = ({ product, isLoading }: {
+  product: ReturnType<typeof useProductBySlug>["data"];
+  isLoading: boolean;
+}) => {
   const { t, i18n } = useTranslation();
   const displayName = product ? getProductName(product, i18n.language) : "";
   const displayDescription = product ? getProductDescription(product, i18n.language) : "";

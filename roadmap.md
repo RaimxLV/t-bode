@@ -27,4 +27,10 @@
 - [x] Izvietot un anonīmi pārbaudīt abas vietnes kartes funkcijas (46 vienādas publiskas adreses, 200).
 - [ ] www 301/308: bloķē piekļuves trūkums hostinga HTTP pāradresācijas statusa konfigurācijai; pašlaik 302, OAuth nav mainīts.
 - [x] Noslēgt ar 34 testiem, Chromium pārbaudēm un ārējiem šķēršļiem.
-- [ ] Jauno frontend izmaiņu pārskatīšanu un publicēšanu veic Raimonds, kā norādīts šajā uzdevumā.
+- [x] Iepriekšējie frontend labojumi publicēti un pārbaudīti pēc Raimonda apstiprinājuma.
+
+# Preču izvēļu regresija
+
+- [ ] Izolēt krāsu, izmēru, attēlu, daudzumu un dizaina dialogus katras preces identitātei; tās pašas preces atsvaidzinājumā saglabāt izvēles.
+- [ ] Pārbaudīt Stanley Stella ↔ FANU saistīto preču pārejas un pievienot regresijas testus.
+- [ ] Jauno labojumu pēc pārskatīšanas publicē Raimonds.
