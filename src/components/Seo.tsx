@@ -85,7 +85,7 @@ export const Seo = ({
         "@type": "ListItem",
         position: i + 1,
         name: b.name,
-        item: b.url,
+        item: buildCanonical(b.url),
       })),
     });
   }
