@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
+import { publicAnalyticsPath, safeAnalyticsReferrer } from "@/lib/analyticsPolicy";
 
 declare global {
   interface Window {
@@ -17,15 +18,50 @@ const GA_ID = "G-09YMNHC0BF";
  */
 export const GaPageviews = () => {
   const location = useLocation();
+  const lastPageRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (lastPageRef.current !== location.pathname) lastPageRef.current = null;
+  }, [location.pathname]);
+  useEffect(() => {
+    window.gtag?.("set", {
+      page_location: window.location.origin + (publicAnalyticsPath(location.pathname, location.search) || "/"),
+      page_referrer: safeAnalyticsReferrer(document.referrer),
+      page_title: "T-Bode",
+    });
+  }, [location.pathname, location.search]);
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-    const path = location.pathname + location.search;
-    window.gtag("event", "page_view", {
-      send_to: GA_ID,
-      page_path: path,
-      page_location: window.location.origin + path,
-      page_title: document.title,
-    });
+    const path = publicAnalyticsPath(location.pathname, location.search);
+    if (!path) return;
+    let sent = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const sendWhenReady = () => {
+      // A lazy route may still show the previous document.title. Seo announces
+      // the resolved title only for its currently mounted pathname.
+      const ready = document.documentElement.dataset.analyticsPath;
+      const title = document.documentElement.dataset.analyticsTitle;
+      if (sent || lastPageRef.current === path || ready !== location.pathname || !title) return;
+      if (document.querySelector('meta[name="robots"]')?.getAttribute("content")?.includes("noindex")) return;
+      sent = true;
+      lastPageRef.current = path;
+      window.gtag?.("event", "page_view", {
+        send_to: GA_ID,
+        page_path: path,
+        page_location: window.location.origin + path,
+        page_title: title,
+        page_referrer: safeAnalyticsReferrer(document.referrer),
+      });
+    };
+    const schedule = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(sendWhenReady, 0);
+    };
+    window.addEventListener("tbode:seo-ready", schedule);
+    schedule();
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("tbode:seo-ready", schedule);
+    };
   }, [location.pathname, location.search]);
   return null;
 };

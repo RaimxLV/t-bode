@@ -7,7 +7,7 @@
 - [x] Saskaņot sākumlapas un personalizēšanas lapas meklēšanas aprakstus.
 - [x] Izņemt dublētās veikalu navigācijas norādes un vietējā veikala marķējumu no vietnes kopējās informācijas.
 - [x] Pārbaudīt metadatus un ceļu no sākumlapas uz personalizējamu preci (pārlūkā bez kļūdām).
-- [ ] Izmaiņas jāpublicē, lai tās nonāktu t-bode.lv (nepieciešams publicēšanas apstiprinājums).
+- [x] Iepriekšējās drošās izmaiņas Raimonds publicējis un pārbaudījis t-bode.lv.
 
 # Fokusēts tehniskais audits — 2026-10-20
 
@@ -16,4 +16,15 @@
 - [x] Pārbaudīt GA identifikatorus, piekrišanu un iespējamu dubultu lapu skatījumu uzskaiti; kontu iestatījumus nemainīt.
 - [x] Ieviest tikai skaidrus, zema riska tehniskus labojumus bez redzamo tekstu, izskata un pasūtīšanas izmaiņām.
 - [x] Veikt dažas Chromium datora un telefona izmēra pārbaudes un sagatavot audita rezultātus ar atlikušajiem riskiem.
-- [ ] Publicēšanu pēc pārskatīšanas veiks Raimonds; šajā uzdevumā neko nepublicēt vai neizvietot.
+- [x] Iepriekšējā audita izmaiņas Raimonds publicējis; jaunajam uzdevumam atļauta abu vietnes kartes funkciju izvietošana.
+
+# Atlikušo darbu pabeigšana
+
+- [x] Izmērīt un mazināt mobilās aiztures un galvenes nobīdi bez dizaina maiņas.
+- [x] Atjaunot tikai precīzi apstiprinātas veco fotogrāfiju saites un dialoga attēlus.
+- [ ] Publisko lapu HTML priekšrenderēšana: bloķē pārbaudāmas hostinga konfigurācijas trūkums atsevišķam SPA fallback; index.html saturs citādi nonāktu arī privātajās/nezināmajās adresēs.
+- [x] Novērst novecojušu GA virsrakstu un privāto adrešu nosūtīšanu.
+- [x] Izvietot un anonīmi pārbaudīt abas vietnes kartes funkcijas (46 vienādas publiskas adreses, 200).
+- [ ] www 301/308: bloķē piekļuves trūkums hostinga HTTP pāradresācijas statusa konfigurācijai; pašlaik 302, OAuth nav mainīts.
+- [x] Noslēgt ar 34 testiem, Chromium pārbaudēm un ārējiem šķēršļiem.
+- [ ] Jauno frontend izmaiņu pārskatīšanu un publicēšanu veic Raimonds, kā norādīts šajā uzdevumā.

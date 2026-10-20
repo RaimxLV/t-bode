@@ -22,6 +22,8 @@ interface SeoProps {
   titleKeyword?: string;
   /** When true, instruct crawlers not to index this route. */
   noindex?: boolean;
+  /** Loading placeholders must not announce a final analytics page title. */
+  analyticsReady?: boolean;
 }
 
 const SITE_NAME = "T-Bode";
@@ -44,6 +46,7 @@ export const Seo = ({
   noTitleSuffix,
   titleKeyword,
   noindex,
+  analyticsReady = true,
 }: SeoProps) => {
   const { i18n } = useTranslation();
   const location = useLocation();
@@ -58,6 +61,19 @@ export const Seo = ({
         : `${title} | ${SITE_NAME}`;
   const url = buildCanonical(canonical || location.pathname);
   const excludeFromIndex = noindex || shouldNoindex(location.pathname, location.search);
+
+  useEffect(() => {
+    if (excludeFromIndex || !analyticsReady) return;
+    document.documentElement.dataset.analyticsPath = location.pathname;
+    document.documentElement.dataset.analyticsTitle = fullTitle;
+    window.dispatchEvent(new Event("tbode:seo-ready"));
+    return () => {
+      if (document.documentElement.dataset.analyticsPath === location.pathname) {
+        delete document.documentElement.dataset.analyticsPath;
+        delete document.documentElement.dataset.analyticsTitle;
+      }
+    };
+  }, [location.pathname, fullTitle, excludeFromIndex, analyticsReady]);
 
   const jsonLdArray: Record<string, any>[] = [];
   if (jsonLd) jsonLdArray.push(...(Array.isArray(jsonLd) ? jsonLd : [jsonLd]));

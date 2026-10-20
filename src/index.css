@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Identical existing display font, discovered locally before first paint. */
+@font-face {
+  font-family: 'Bebas Neue';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url('/bebas-neue.ttf') format('truetype');
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
