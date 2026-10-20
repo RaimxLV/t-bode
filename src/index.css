@@ -56,6 +56,40 @@
 
     --cta-red: 0 72% 51%;
 
+    /* How-it-works illustration palette, isolated from storefront UI. */
+    --story-black: hsl(0 0% 0%);
+    --story-white: hsl(40 20% 97%);
+    --story-muted: hsl(215 12% 65%);
+    --story-ground: hsl(215 15% 13%);
+    --story-red: hsl(var(--cta-red));
+    --story-red-deep: hsl(0 76% 38%);
+    --story-navy: hsl(213 42% 26%);
+    --story-navy-deep: hsl(216 37% 15%);
+    --story-navy-light: hsl(215 24% 33%);
+    --story-phone-body: hsl(215 32% 13%);
+    --story-phone-screen: hsl(218 23% 19%);
+    --story-editor: hsl(217 16% 26%);
+    --story-ink: hsl(220 25% 15%);
+    --story-line: hsl(210 15% 76%);
+    --story-skin: hsl(25 90% 78%);
+    --story-skin-shadow: hsl(21 56% 58%);
+    --story-blush: hsl(8 79% 70%);
+    --story-mouth: hsl(5 44% 30%);
+    --story-hair: hsl(225 13% 17%);
+    --story-hair-highlight: hsl(225 13% 25%);
+    --story-locker: hsl(29 94% 54%);
+    --story-locker-edge: hsl(26 78% 34%);
+    --story-locker-light: hsl(37 100% 79%);
+    --story-box: hsl(33 44% 60%);
+    --story-box-edge: hsl(30 36% 42%);
+    --story-box-tape: hsl(35 56% 75%);
+    --story-cat: hsl(39 96% 72%);
+    --story-cat-backdrop: hsl(173 52% 65%);
+    --story-mint: hsl(158 50% 83%);
+    --story-success: hsl(158 66% 30%);
+    --story-card-cool: hsl(190 48% 78%);
+    --story-card-warm: hsl(41 78% 77%);
+
     /* Editorial content hub (Idejas un Padomi) */
     --paper: 36 33% 98%;
     --paper-foreground: 0 0% 10%;
