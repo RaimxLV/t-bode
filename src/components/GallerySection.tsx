@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Helmet } from "react-helmet-async";
 import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
@@ -77,6 +77,15 @@ const GalleryImage = ({ src, alt }: { src: string; alt: string }) => {
 };
 
 export const GallerySection = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const element = sectionRef.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(([entry]) => setActive(entry?.isIntersecting ?? false), { rootMargin: "100px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   const { i18n } = useTranslation();
   const isLv = (i18n.language || "lv") === "lv";
   const heading = isLv
@@ -102,7 +111,7 @@ export const GallerySection = () => {
   };
 
   return (
-    <section className="py-16 overflow-hidden" aria-labelledby="gallery-heading">
+    <section ref={sectionRef} className="py-16 overflow-hidden" aria-labelledby="gallery-heading">
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(itemListJsonLd)}</script>
       </Helmet>
@@ -112,7 +121,7 @@ export const GallerySection = () => {
         </h2>
       </div>
       <div className="w-full overflow-hidden">
-        <div className="flex gap-4 animate-[scroll_30s_linear_infinite]" style={{ width: "max-content", willChange: "transform" }}>
+        <div className="flex gap-4 animate-[scroll_30s_linear_infinite]" style={{ width: "max-content", willChange: active ? "transform" : "auto", animationPlayState: active ? "running" : "paused" }}>
           {[...galleryImages, ...galleryImages].map((img, i) => (
             <GalleryImage key={i} src={img.src} alt={isLv ? img.altLv : img.altEn} />
           ))}

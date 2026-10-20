@@ -5,6 +5,7 @@ import { stores } from "@/data/products";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { DeferredWork } from "./DeferredWork";
 
 const OFFICE_LAT = 56.961710;
 const OFFICE_LNG = 24.166054;
@@ -139,7 +140,9 @@ export const StoresSection = () => {
 
           {/* Light Leaflet map */}
           <div className="w-full h-[300px] md:h-[400px] rounded-lg overflow-hidden border border-border relative" style={{ zIndex: 0 }}>
-            <LeafletMap infoText={t("stores.mapInfo", "Braslas Biznesa Centrs, Entrance D, 2nd floor")} />
+            <DeferredWork className="w-full h-full">
+              <LeafletMap infoText={t("stores.mapInfo", "Braslas Biznesa Centrs, Entrance D, 2nd floor")} />
+            </DeferredWork>
           </div>
 
           {/* Pickup info */}
