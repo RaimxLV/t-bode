@@ -59,11 +59,11 @@ function render(){
  const confirmed=step===2?ramp(p,3.1,3.7):0;opacity(confirm,confirmed);check.style.transform=`scale(${.65+.35*confirmed})`;
  opacity(locker,delivery?ramp(p,.15,.85)*(1-ending):0);locker.style.transform=`translateX(${delivery?45*(1-ramp(p,.15,.9))+60*ending:45}px)`;
  door.style.transform=`rotateY(${-108*opening}deg)`;opacity(box,1-ramp(p,3.6,4.4));box.style.transform=`translate(${-60*ramp(p,3.3,4.2)}px,${-10*ramp(p,3.3,4.2)}px)`;
- opacity(arrived,delivery?ramp(p,.8,1.3)*(1-ramp(p,4.4,5.1)):0);opacity(finish,delivery?ending:0);finish.style.transform=`translateY(${12*(1-ending)}px)`;
+ opacity(arrived,delivery?ramp(p,.8,1.3)*(1-ramp(p,4.4,5.1)):0);const finalCaption=ramp(p,6.0,6.5);opacity(finish,delivery?finalCaption:0);finish.style.transform=`translateY(${12*(1-finalCaption)}px)`;
 }
 function animate(now){if(!last)last=now;const dt=Math.min((now-last)/1000,.1);last=now;if(!paused&&visible&&!document.hidden){time=(time+dt)%32;render();}raf=requestAnimationFrame(animate);}
 function setPause(value){paused=value;play.textContent=paused?'Atskaņot':'Pauze';play.setAttribute('aria-label',paused?'Atskaņot animāciju':'Apturēt animāciju');last=0;}
-play.addEventListener('click',()=>setPause(!paused));steps.forEach((button,i)=>button.addEventListener('click',()=>{time=i*8+(paused?5.5:0);last=0;render();q('.tb-sr').textContent=descriptions[i];}));
+play.addEventListener('click',()=>setPause(!paused));steps.forEach((button,i)=>button.addEventListener('click',()=>{time=i*8+(paused?(i===3?6.7:5.5):0);last=0;render();q('.tb-sr').textContent=descriptions[i];}));
 const intersection=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;last=0;},{threshold:.08});intersection.observe(root);
 document.addEventListener('visibilitychange',()=>{last=0});window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',e=>{setPause(e.matches);render()});
 setPause(paused);render();raf=requestAnimationFrame(animate);
