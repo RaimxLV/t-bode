@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useNavigate } from "react-router-dom";
 import ProductDetail from "@/pages/ProductDetail";
 
@@ -43,7 +43,6 @@ function App() {
 const choose = (name: string) => fireEvent.click(screen.getAllByRole("button", { name, exact: true })[0]);
 const color = () => screen.getAllByText(/^productDetail.color/)[0].textContent;
 const quantity = () => screen.getAllByRole("button", { name: "Palielināt daudzumu" })[0].previousElementSibling?.textContent;
-const mainImage = () => screen.getAllByRole("img").find((img) => img.className.includes("max-h"))?.getAttribute("src");
 afterEach(cleanup);
 
 it("resets color, restricted size, image and quantity on same-component product navigation in both directions", () => {
@@ -79,6 +78,21 @@ it("closes the previous product's personalization chooser on product navigation"
   render(<App />);
   choose("productDetail.customizeDesign");
   expect(screen.getByRole("dialog")).toBeTruthy();
-  choose("Go FANU");
+  // Simulate a router transition (e.g. browser history) while the modal is open.
+  fireEvent.click(screen.getByText("Go FANU"));
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("retains the image selection on refetch but resets it for a new product", async () => {
+  const view = render(<App />);
+  fireEvent.click(screen.getAllByRole("button", { name: "productDetail.selectImage" })[1]);
+  const hasImage = (src: string) => screen.getByRole("button", { name: "productDetail.zoomImage" }).querySelector(`img[src="${src}"]`);
+  await waitFor(() => expect(hasImage("/aloe-2.png")).toBeTruthy());
+  fixtures.products.stanley = { ...fixtures.products.stanley };
+  view.rerender(<App />);
+  expect(hasImage("/aloe-2.png")).toBeTruthy();
+  choose("Go FANU");
+  await waitFor(() => expect(hasImage("/burgundy.png")).toBeTruthy());
+  choose("Go Stanley");
+  await waitFor(() => expect(hasImage("/aloe-1.png")).toBeTruthy());
 });
