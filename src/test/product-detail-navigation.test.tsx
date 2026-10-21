@@ -37,13 +37,31 @@ function Navigation() {
   const navigate = useNavigate();
   return <><button onClick={() => navigate("/produkti/stanley")}>Go Stanley</button><button onClick={() => navigate("/produkti/fanu")}>Go FANU</button></>;
 }
-function App() {
-  return <MemoryRouter initialEntries={["/produkti/stanley"]}><Navigation /><Routes><Route path="/produkti/:slug" element={<ProductDetail />} /></Routes></MemoryRouter>;
+function App({ entry = "/produkti/stanley" }: { entry?: string }) {
+  return <MemoryRouter initialEntries={[entry]}><Navigation /><Routes><Route path="/produkti/:slug" element={<ProductDetail />} /></Routes></MemoryRouter>;
 }
 const choose = (name: string) => fireEvent.click(screen.getAllByRole("button", { name })[0]);
 const color = () => screen.getAllByText(/^productDetail.color/)[0].textContent;
 const quantity = () => screen.getAllByRole("button", { name: "Palielināt daudzumu" })[0].previousElementSibling?.textContent;
 afterEach(cleanup);
+
+it("accepts only an existing initial URL color and retains a later customer choice on refetch", () => {
+  const view = render(<App entry="/produkti/stanley?color=Black" />);
+  expect(color()).toBe("productDetail.color — Black");
+  choose("Aloe");
+  fixtures.products.stanley = { ...fixtures.products.stanley };
+  view.rerender(<App entry="/produkti/stanley?color=Black" />);
+  expect(color()).toBe("productDetail.color — Aloe");
+  choose("Go FANU");
+  expect(color()).toBe("productDetail.color — Burgundy");
+  choose("Go Stanley");
+  expect(color()).toBe("productDetail.color — Aloe");
+});
+
+it("ignores a color absent from the actual product variants", () => {
+  render(<App entry="/produkti/fanu?color=Aloe" />);
+  expect(color()).toBe("productDetail.color — Burgundy");
+});
 
 it("resets color, restricted size, image and quantity on same-component product navigation in both directions", () => {
   render(<App />);
