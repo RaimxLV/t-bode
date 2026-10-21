@@ -14,5 +14,5 @@ export const bagFaqs = [
 export const bagSteps = [
   ["Izvēlies maisiņu", "Atrodi savu krāsu un atver personalizēšanas rīku."],
   ["Uzliec savu ideju", "Pievieno attēlu, logo vai tekstu. Pielāgo novietojumu un apskati rezultātu."],
-  ["Pasūti tiešsaistē", "Pārbaudi dizainu, pabeidz pasūtījumu un izvēlies piegādi."],
+  ["Saņem savu maisiņu", "Pārbaudi dizainu, pabeidz pasūtījumu un izvēlies piegādi vai saņemšanu T-Bode birojā."],
 ];
