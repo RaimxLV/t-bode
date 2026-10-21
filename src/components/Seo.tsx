@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { buildCanonical, shouldNoindex } from "@/lib/seoPolicy";
+import { buildCanonical, isIndexableHost, shouldNoindex } from "@/lib/seoPolicy";
 
 interface SeoProps {
   title?: string;
@@ -60,7 +60,8 @@ export const Seo = ({
         ? `${title} | ${titleKeyword} | ${SITE_NAME}`
         : `${title} | ${SITE_NAME}`;
   const url = buildCanonical(canonical || location.pathname);
-  const excludeFromIndex = noindex || shouldNoindex(location.pathname, location.search);
+  const excludeFromIndex = noindex || shouldNoindex(location.pathname, location.search)
+    || (typeof window !== "undefined" && !isIndexableHost(window.location.hostname));
 
   useEffect(() => {
     if (excludeFromIndex || !analyticsReady) return;

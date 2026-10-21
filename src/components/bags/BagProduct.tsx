@@ -23,9 +23,8 @@ export function BagProduct({ product, selectedName, onColorChange }: { product: 
       <figcaption>Maisiņš bez apdrukas · <span aria-live="polite">{label}</span></figcaption>
     </figure>
     <div className="bag-product-info">
-      <p className="bag-eyebrow">TAVAS IDEJAS PAMATS</p>
       <h3>{product.name_lv || product.name}</h3>
-      <p className="bag-lead">Vienkārša forma, vieta tavai idejai. Izvēlies krāsu ikdienai, personiskai dāvanai vai sava zīmola stāstam.</p>
+      <p className="bag-lead">Izvēlies maisiņa krāsu un pievieno savu attēlu vai tekstu.</p>
       <div className="bag-color-heading"><span>Krāsa — <strong aria-live="polite">{label}</strong></span><span>{variants.length} krāsas</span></div>
       <div className="bag-swatches" role="group" aria-label="Maisiņa krāsas">
         {variants.map((variant) => <Button key={variant.name} variant="ghost" size="icon" className="bag-swatch" aria-label={bagColorLabels[variant.name] ?? variant.name} aria-pressed={selected?.name === variant.name} title={bagColorLabels[variant.name] ?? variant.name} onClick={() => onColorChange(variant.name)}>
@@ -35,7 +34,6 @@ export function BagProduct({ product, selectedName, onColorChange }: { product: 
       <div className="bag-price"><span>{new Intl.NumberFormat("lv-LV", { style: "currency", currency: "EUR" }).format(product.price)}</span><span>Maisiņš bez apdrukas</span></div>
       <p className="bag-small">Apdrukas cena tiek aprēķināta konstruktorā. Piegādes izmaksas redzēsi pirms pasūtījuma apmaksas.</p>
       {product.in_stock ? <Button asChild className="bag-cta"><Link to={bagProductHref(product, selected?.name)}>Sākt personalizēt <ArrowRight aria-hidden="true" /></Link></Button> : <p className="bag-stock">Šis maisiņš pašlaik nav pieejams pasūtīšanai.</p>}
-      <p className="bag-small bag-next">Nākamajā solī atvērsies prece izvēlētajā krāsā. Tur varēsi atvērt personalizēšanas rīku.</p>
       <div className="bag-specs" dangerouslySetInnerHTML={{ __html: sanitizeHtml(getProductDescription(product, "lv")) }} />
     </div>
   </div>;

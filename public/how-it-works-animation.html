@@ -72,4 +72,7 @@ setPause(paused);render();raf=requestAnimationFrame(animate);
 </div>
 <script>
 (()=>{const root=document.getElementById('tbode-motion-v2');let h=0;const send=()=>{const n=Math.ceil(root.getBoundingClientRect().height);if(n!==h){h=n;parent.postMessage({type:'tbode-how-height',height:n},location.origin);}};new ResizeObserver(send).observe(root);send();})();
+</script>
+<script>
+(()=>{if(parent===window)return;const clamp=v=>Number.isFinite(v)?Math.max(-2000,Math.min(2000,v)):0;addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey)return;const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;const dy=clamp(e.deltaY*unit),dx=clamp(e.deltaX*unit);if(!dy&&!dx)return;e.preventDefault();parent.postMessage({type:'tbode-how-wheel',dx,dy},location.origin);},{passive:false});})();
 </script></body></html>

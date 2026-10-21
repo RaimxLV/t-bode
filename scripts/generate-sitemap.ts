@@ -37,6 +37,7 @@ const staticEntries: SitemapEntry[] = [
   { path: "/veikali", changefreq: "monthly", priority: "0.3" },
   { path: "/idejas", changefreq: "weekly", priority: "0.8" },
   { path: "/kas-ir-dtf", changefreq: "monthly", priority: "0.8" },
+  { path: "/auduma-maisinu-apdruka", changefreq: "monthly", priority: "0.8" },
   { path: "/privacy", changefreq: "yearly", priority: "0.2" },
   { path: "/terms", changefreq: "yearly", priority: "0.2" },
 ];
