@@ -76,6 +76,7 @@
 @keyframes bag-print-enter { from { opacity:.5; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 @keyframes bag-process-draw { to { transform:scaleY(1); } }
 @media (max-width:760px) {
+  .bag-v2 .bag-studio-bottom>span { display:inline-block; margin-bottom:8px; }
   .bag-print-gallery { padding-top:36px; }
   .bag-print-heading { display:block; }
   .bag-v2 .bag-print-heading h3 { font-size:42px; }
