@@ -23,6 +23,17 @@ const AudumaMaisinuApdruka = () => {
   const selectedName = product?.color_variants.find((variant) => colorChoice?.productId === product.id && variant.name === colorChoice.name)?.name
     ?? natural?.name ?? product?.color_variants[0]?.name ?? "";
   const href = product?.in_stock ? bagProductHref(product, selectedName) : "/design?category=bags";
+
+  // This route loads lazily, so the browser's initial hash scroll happens before
+  // the section exists. Scroll to the hash target once the page has mounted.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, []);
   const cta = <Button asChild className="bag-cta"><Link to={href}>Sākt personalizēt <ArrowRight aria-hidden="true" /></Link></Button>;
 
   return <>
