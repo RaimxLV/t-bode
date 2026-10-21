@@ -32,7 +32,7 @@ const AudumaMaisinuApdruka = () => {
   useEffect(() => {
     const hash = window.location.hash;
     const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (!hash || navigation?.type === "back_forward" || (navigationType === "POP" && locationKey !== "default")) return;
+    if (!hash || navigation?.type === "back_forward" || (navigationType === "POP" && locationKey !== "default" && navigation?.type !== "reload")) return;
     let id: string;
     try { id = decodeURIComponent(hash.slice(1)); } catch { return; }
     if (!document.getElementById(id)?.closest(".bag-page")) return;
@@ -57,12 +57,15 @@ const AudumaMaisinuApdruka = () => {
       const el = document.getElementById(id);
       if (!el) return;
       const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+      const top = window.scrollY + el.getBoundingClientRect().top - margin;
       const lenis = (window as Window & { __lenis?: Lenis }).__lenis;
       if (lenis) {
         lenis.resize();
-        lenis.scrollTo(el, { offset: -margin, immediate: true, force: true });
+        // This Lenis version already subtracts CSS scroll-margin for elements;
+        // use a numeric position so the header offset is applied exactly once.
+        lenis.scrollTo(top, { immediate: true, force: true });
       } else {
-        window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - margin, behavior: "instant" });
+        window.scrollTo({ top, behavior: "instant" });
       }
     };
     void document.fonts.ready.then(() => {
