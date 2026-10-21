@@ -1,7 +1,9 @@
-export const bagIdeaCategories = ["Visi", "Kaķi", "Kafija", "Ikdiena", "Pastaigas"] as const;
+import { bagAuthoredIdeas } from "./bagAuthoredIdeas";
+
+export const bagIdeaCategories = ["Visi", "Ziemassvētki", "Kaķi", "Kafija", "Ikdiena", "Pastaigas"] as const;
 export type BagIdeaCategory = typeof bagIdeaCategories[number];
 export type BagIdea = { id: number; category: Exclude<BagIdeaCategory, "Visi">; slogan: string; lines: string[]; palette: string; layout: string; motif: string };
-export const bagIdeas: BagIdea[] = [
+export const originalBagIdeas: BagIdea[] = [
   { id: 1, category: "Kaķi", slogan: "Šajā maisā kaķa nav. Pagaidām.", lines: ["ŠAJĀ MAISĀ", "KAĶA NAV.", "Pagaidām."], palette: "paper", layout: "peek", motif: "eyes" },
   { id: 2, category: "Kaķi", slogan: "Kaķis apstiprināja.", lines: ["KAĶIS", "APSTIPRINĀJA."], palette: "paper-blue", layout: "stamp", motif: "paw" },
   { id: 3, category: "Kaķi", slogan: "Mans priekšnieks saka: ņau.", lines: ["MANS PRIEKŠNIEKS", "SAKA:", "ŅAU."], palette: "coral", layout: "giant", motif: "whiskers" },
@@ -23,9 +25,28 @@ export const bagIdeas: BagIdea[] = [
   { id: 19, category: "Pastaigas", slogan: "Soli pa solim. Ar uzkodām.", lines: ["SOLI PA", "SOLIM.", "Ar uzkodām."], palette: "lime", layout: "walk", motif: "footsteps" },
   { id: 20, category: "Pastaigas", slogan: "Šodienas plāns: mazliet nomaldīties.", lines: ["ŠODIENAS PLĀNS:", "MAZLIET", "NOMALDĪTIES."], palette: "blue", layout: "compass", motif: "compass" },
 ];
-export function visibleBagIdeas(category: BagIdeaCategory, expanded: boolean) {
+/** Wrap text only; paintings stay absent until the author's asset commit. */
+function sloganLines(slogan: string): string[] {
+  const lines: string[] = [];
+  for (const word of slogan.split(" ")) {
+    const last = lines.length - 1;
+    if (last >= 0 && `${lines[last]} ${word}`.length <= 19) lines[last] += ` ${word}`;
+    else lines.push(word);
+  }
+  return lines;
+}
+export const bagIdeas: BagIdea[] = [...originalBagIdeas, ...bagAuthoredIdeas.map((row) => ({
+  ...row, lines: sloganLines(row.slogan), palette: "paper-blue", layout: "authored-text", motif: "none",
+}))];
+export const curatedBagIdeaIds = [1, 21, 6, 31, 11, 41, 17, 51] as const;
+export function matchingBagIdeas(category: BagIdeaCategory) {
   const matching = bagIdeas.filter((idea) => category === "Visi" || idea.category === category);
-  return expanded ? matching : matching.slice(0, 8);
+  if (category !== "Visi") return matching;
+  return [...curatedBagIdeaIds.flatMap((id) => matching.filter((idea) => idea.id === id)),
+    ...matching.filter((idea) => !curatedBagIdeaIds.some((id) => id === idea.id))];
+}
+export function visibleBagIdeas(category: BagIdeaCategory, limit: number = 8) {
+  return matchingBagIdeas(category).slice(0, limit);
 }
 export async function copyBagIdea(slogan: string, clipboard: Pick<Clipboard, "writeText"> | undefined = navigator.clipboard): Promise<"success" | "error"> {
   if (!clipboard) return "error";
