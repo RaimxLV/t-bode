@@ -30,6 +30,7 @@ export function BagIdeaPoster({ idea }: { idea: BagIdea }) {
   if (layout === "peek") { sizes = [33, 49, 29]; positions = [87, 141, 197]; }
   if (layout === "stamp") { sizes = [48, 23]; positions = [137, 175]; }
   if (layout === "giant") { sizes = idea.id === 3 ? [23, 31, 100] : [37, 89, 29]; positions = [83, 128, 218]; }
+  if (idea.id === 11) positions = [65, 159, 218];
   if (layout === "receipt") { sizes = [42, 42, 29, 29]; positions = [108, 154, 193, 222]; }
   if (layout === "scatter") { sizes = [52, 50, 27]; positions = [112, 168, 208]; }
   if (layout === "blocks") { sizes = [33, 59, 33, 45]; positions = [75, 136, 218, 268]; }
