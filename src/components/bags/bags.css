@@ -6,9 +6,9 @@
 .bag-breadcrumb { display:flex; justify-content:space-between; align-items:center; gap:16px; padding-top:90px; padding-bottom:24px; font-size:12px; color:hsl(var(--bag-muted)); }
 .bag-breadcrumb ol { display:flex; list-style:none; flex-wrap:wrap; gap:10px; padding:0; margin:0; }
 .bag-breadcrumb a { text-decoration:none; }
-.bag-draft { text-transform:uppercase; font-size:10px; letter-spacing:1.5px !important; }
+.bag-draft { text-transform:uppercase; font-size:10px; }
 .bag-hero { display:grid; grid-template-columns:48fr 52fr; gap:52px; align-items:center; padding-bottom:72px; }
-.bag-eyebrow { font-size:12px; font-weight:600; letter-spacing:2px !important; line-height:1.5; }
+.bag-eyebrow { font-size:12px; font-weight:600; line-height:1.5; }
 .bag-hero h1 { font-size:104px; line-height:.96; margin:24px 0; }
 .bag-hero h1 span { display:block; }
 .bag-red { color:hsl(var(--bag-red)); }
@@ -63,7 +63,7 @@
 .bag-idea { flex:1; padding:24px 32px; display:flex; gap:20px; align-items:center; justify-content:space-between; border-radius:4px; background:hsl(var(--bag-photo)); }
 .bag-idea:nth-child(2) { background:hsl(var(--bag-blush)); }
 .bag-idea:nth-child(3) { background:hsl(var(--bag-ink)); color:hsl(var(--bag-paper)); }
-.bag-idea p { font-size:10px; letter-spacing:1.7px !important; }
+.bag-idea p { font-size:10px; }
 .bag-idea h3 { font-size:40px; margin-top:8px; }
 .bag-idea a { padding:12px; flex-shrink:0; }
 .bag-ideas-note { margin-top:18px !important; max-width:710px; }
@@ -84,10 +84,12 @@
 .bag-finale .bag-cta:hover { background:hsl(var(--bag-paper)); color:hsl(var(--bag-ink)); }
 .bag-page a:focus-visible,.bag-page summary:focus-visible { outline:2px solid hsl(var(--bag-red)); outline-offset:5px; }
 @media (min-width:1024px) and (prefers-reduced-motion:no-preference) { .bag-hero-image img { transition:transform .5s ease; } .bag-hero-image:hover img { transform:scale(1.015); } }
+@media (prefers-reduced-motion:no-preference) { .bag-hero-copy { animation:bag-enter .6s ease-out both; } }
+@keyframes bag-enter { from { transform:translateY(16px); opacity:.5; } to { transform:translateY(0); opacity:1; } }
 @media (max-width:1100px) { .bag-container { padding:0 32px; } .bag-hero { gap:32px; } .bag-hero h1 { font-size:88px; } .bag-product-grid,.bag-faq-layout { gap:40px; } .bag-finale h2 { font-size:60px; } }
 @media (max-width:760px) {
   .bag-container { padding:0 20px; } .bag-breadcrumb { padding-top:84px; padding-bottom:28px; }
-  .bag-hero { grid-template-columns:1fr; gap:32px; padding-bottom:48px; } .bag-hero h1 { font-size:64px; margin:20px 0; } .bag-hero-copy > p:not(.bag-eyebrow) { font-size:16px; line-height:1.75; }
+  .bag-hero { grid-template-columns:1fr; gap:28px; padding-bottom:48px; } .bag-hero h1 { font-size:58px; margin:20px 0; } .bag-hero-copy > p:not(.bag-eyebrow) { font-size:16px; line-height:1.75; }
   .bag-hero-actions { gap:14px 24px; margin-top:24px; } .bag-support { margin-top:22px; font-size:11px; } .bag-support span + span::before { margin:0 8px; }
   .bag-hero-image { max-width:none; } .bag-hero-image figcaption { font-size:11px; } .bag-section { padding-top:52px; padding-bottom:52px; }
   .bag-section h2 { font-size:44px; } .bag-product-grid { grid-template-columns:1fr; gap:32px; margin-top:28px; } .bag-product-photo { padding:20px; }
