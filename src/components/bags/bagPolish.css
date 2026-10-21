@@ -26,6 +26,19 @@
 .bag-poster.palette-ink-lime { --poster-paper:hsl(var(--bag-print-ink)); --poster-ink:hsl(var(--bag-print-lime)); }
 .bag-poster.palette-ink { --poster-paper:hsl(var(--bag-print-ink)); --poster-ink:hsl(var(--bag-print-cream)); }
 .bag-poster.palette-sage { --poster-paper:hsl(var(--bag-print-sage)); }
+.bag-artwork-poster { display:grid; padding:7% 9%; gap:5%; overflow:hidden; color:var(--poster-ink); background:var(--poster-paper); }
+.bag-artwork-painting { min-width:0; min-height:0; }
+.bag-artwork-painting img { display:block; width:100%; height:100%; object-fit:contain; }
+.bag-artwork-caption { min-width:0; min-height:0; display:flex; align-items:center; justify-content:center; text-align:center; font:600 20px/1.25 Georgia,serif; letter-spacing:0; overflow-wrap:anywhere; }
+.art-text-above { grid-template-rows:28% 1fr; }
+.art-text-above .bag-artwork-caption { grid-row:1; }
+.art-text-above .bag-artwork-painting { grid-row:2; }
+.art-text-below { grid-template-rows:1fr 28%; }
+.art-split-caption { grid-template-columns:57% 1fr; padding:12% 7%; gap:6%; }
+.art-split-caption .bag-artwork-caption { font-size:16px; }
+.art-palette-ink { --poster-ink:hsl(var(--bag-print-ink)); }
+.art-palette-cobalt { --poster-ink:hsl(var(--bag-print-cobalt)); }
+.art-palette-evergreen { --poster-ink:hsl(var(--bag-print-evergreen)); }
 .bag-poster-paper { fill:var(--poster-paper); }
 .bag-poster-type { fill:var(--poster-ink); font-family:'Bebas Neue',sans-serif; letter-spacing:0; }
 .bag-poster-serif { font-family:Georgia,serif; font-style:italic; }
@@ -89,4 +102,5 @@
   .bag-step-symbol { width:56px; height:56px; }
   .bag-process-track { left:27px; }
 }
-@media (prefers-reduced-motion:reduce) { .bag-idea-dialog,.bag-idea-dialog * { animation:none !important; transition:none !important; } .bag-process-track:after { transform:scaleY(1); } }.bag-print-gallery .bag-print-tile,.bag-print-gallery .bag-poster,.bag-print-gallery .bag-poster *,.bag-idea-preview .bag-poster,.bag-idea-preview .bag-poster * { animation:none !important; transition:none !important; }
+@media (prefers-reduced-motion:reduce) { .bag-idea-dialog,.bag-idea-dialog * { animation:none !important; transition:none !important; } .bag-process-track:after { transform:scaleY(1); } }
+.bag-print-gallery .bag-print-tile,.bag-print-gallery .bag-poster,.bag-print-gallery .bag-poster *,.bag-idea-preview .bag-poster,.bag-idea-preview .bag-poster * { animation:none !important; transition:none !important; }
