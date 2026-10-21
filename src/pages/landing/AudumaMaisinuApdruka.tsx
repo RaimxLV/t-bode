@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type Lenis from "lenis";
 import { Link, useLocation, useNavigationType } from "react-router-dom";
-import { ArrowDownRight, ArrowRight } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ImagePlus, Package, ShoppingBag } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Seo } from "@/components/Seo";
@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { useDesignProducts } from "@/hooks/useProducts";
 import { BagProduct, bagProductHref } from "@/components/bags/BagProduct";
 import { BagHeroArt, BagStudio } from "@/components/bags/BagStudio";
-import { bagFaqs, bagSteps } from "@/components/bags/bagContent";
+import { bagFaqs } from "@/components/bags/bagContent";
+import { BagProcess } from "@/components/bags/BagProcess";
 import "@/components/bags/bags.css";
 import "@/components/bags/bagStudio.css";
+import "@/components/bags/bagPolish.css";
 
 const TITLE = "Auduma maisiņu apdruka ar savu dizainu | T-Bode";
 const DESCRIPTION = "Apdrukāts auduma maisiņš ar tavu attēlu, logo vai tekstu. Izvēlies krāsu, izveido dizainu tiešsaistē un saņem piegādi Omniva pakomātā Latvijā. Arī 1 gabals.";
@@ -101,7 +103,7 @@ const AudumaMaisinuApdruka = () => {
             <h1 id="bag-title"><span className="bag-eyebrow">AUDUMA MAISIŅU APDRUKA</span><span>Tavs stāsts.</span><span>Uz tava</span><span className="bag-red">maisiņa.</span></h1>
             <p>Skice no piezīmju klades. Foto no pēdējā ceļojuma. Ideja, kas neliek mieru. Uzliec to uz auduma maisiņa — un paņem līdzi.</p>
             <div className="bag-hero-actions">{cta}<a className="bag-text-link" href="#ideju-studija">Smelties idejas <ArrowDownRight size={17} aria-hidden="true" /></a></div>
-            <div className="bag-support"><span>Arī 1 gabals</span><span>Tavs attēls vai teksts</span><span>Piegāde Latvijā</span></div>
+            <ul className="bag-benefits"><li><ShoppingBag aria-hidden="true" /><span>No 1 gab.</span></li><li><ImagePlus aria-hidden="true" /><span>Tavs attēls vai teksts</span></li><li><Package aria-hidden="true" /><span>Piegāde Omniva pakomātā Latvijā</span></li></ul>
           </div>
           <BagHeroArt />
         </section>
@@ -118,10 +120,7 @@ const AudumaMaisinuApdruka = () => {
           {isLoading ? <div className="bag-load" role="status">Ielādējam maisiņa krāsas…</div> : product ? <BagProduct key={product.id} product={product} selectedName={selectedName} onColorChange={(name) => setColorChoice({ productId: product.id, name })} /> : <div className="bag-load"><p>{isError ? "Maisiņa informāciju šobrīd neizdevās ielādēt." : "Maisiņš šobrīd nav pieejams."}</p><Button variant="outline" onClick={() => void refetch()}>Mēģināt vēlreiz</Button><Link className="bag-text-link" to="/design?category=bags">Apskatīt pieejamos maisiņus</Link></div>}
         </section>
 
-        <section className="bag-section bag-process-editorial" aria-labelledby="bag-process-title">
-          <div><p className="bag-eyebrow">NO EKRĀNA IKDIENĀ</p><h2 id="bag-process-title">Trīs soļi līdz<br /><em>tavam maisiņam.</em></h2></div>
-          <div className="bag-steps">{bagSteps.map(([title, text], index) => <div className="bag-step" key={title}><span className="bag-number">0{index + 1}</span><h3>{title}</h3><p>{text}</p></div>)}</div>
-        </section>
+        <BagProcess />
 
         <section className="bag-section bag-faq-layout" aria-labelledby="bag-faq-title">
           <div><p className="bag-eyebrow">NODERĪGI ZINĀT</p><h2 id="bag-faq-title">Jautājumi par maisiņu apdruku</h2></div>

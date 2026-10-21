@@ -5,6 +5,7 @@ import illustrationAsset from "@/assets/bag-art-illustration.webp.asset.json";
 import photoAsset from "@/assets/bag-art-photo.webp.asset.json";
 import graphicAsset from "@/assets/bag-art-graphic.webp.asset.json";
 import { Button } from "@/components/ui/button";
+import { BagIdeasGallery } from "./BagIdeasGallery";
 
 const concepts = [
   {
@@ -99,6 +100,7 @@ export function BagStudio({ href }: { href: string }) {
         </div>
       </div>
 
+      <BagIdeasGallery href={href} />
       <div className="bag-studio-bottom"><span>Apdrukas piemēri iedvesmai</span><a href="#izvelies-maisinu">Izvēlēties maisiņa krāsu <ArrowDownRight aria-hidden="true" /></a></div>
     </div>
   </section>;
