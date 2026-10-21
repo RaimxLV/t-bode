@@ -1,5 +1,10 @@
 # Interneta veikala prioritāte meklēšanā
 
+# Maisiņu melnraksta pārveide — 2026-10-21
+- [ ] Izveidot izolētu redakcionālu maisiņu lapu ar apstiprināto attēlu un īstās preces krāsām.
+- [ ] Pievienot validētu sākotnējās krāsas saiti, saglabājot preču izvēļu izolāciju un atsvaidzināšanu.
+- [ ] Pārbaudīt melnraksta metadatus, krāsas, pārejas un datora/telefona izkārtojumu; nepublicēt.
+
 - [x] Izvērtēt augšupielādētos ieteikumus un saskaņot visu esošo vietnes karšu prioritātes (abas publiskās funkcijas izvietotas un pārbaudītas).
 - [x] Saskaņot sākumlapas meklēšanas tekstu un primāro navigācijas norādi ar “Sākt personalizēt”.
 - [x] Pārbaudīt meklēšanas datus un personalizēšanas sākšanu, nemainot pasūtīšanu (4 testi; sākumlapa → /design → krekla lapa, bez pārlūka kļūdām).
