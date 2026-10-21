@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type Lenis from "lenis";
 import { Link } from "react-router-dom";
 import { ArrowDownRight, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -24,15 +25,58 @@ const AudumaMaisinuApdruka = () => {
     ?? natural?.name ?? product?.color_variants[0]?.name ?? "";
   const href = product?.in_stock ? bagProductHref(product, selectedName) : "/design?category=bags";
 
-  // This route loads lazily, so the browser's initial hash scroll happens before
-  // the section exists. Scroll to the hash target once the page has mounted.
+  // Position lazy-route deep links after layout settles, using the active scroll
+  // controller. Never compete with user input or restored history positions.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    const hash = window.location.hash;
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (!hash || navigation?.type === "back_forward") return;
+    let id: string;
+    try { id = decodeURIComponent(hash.slice(1)); } catch { return; }
+    if (!document.getElementById(id)?.closest(".bag-page")) return;
+
+    let cancelled = false;
+    let frame = 0;
+    const cancel = () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " ", "Tab"].includes(event.key)) cancel();
+    };
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("hashchange", cancel);
+    window.addEventListener("popstate", cancel);
+
+    const position = () => {
+      if (cancelled || window.location.hash !== hash) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+      const lenis = (window as Window & { __lenis?: Lenis }).__lenis;
+      if (lenis) {
+        lenis.resize();
+        lenis.scrollTo(el, { offset: -margin, immediate: true, force: true });
+      } else {
+        window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - margin, behavior: "instant" });
+      }
+    };
+    void document.fonts.ready.then(() => {
+      if (cancelled) return;
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(position);
+      });
+    });
+    return () => {
+      cancel();
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("hashchange", cancel);
+      window.removeEventListener("popstate", cancel);
+    };
   }, []);
   const cta = <Button asChild className="bag-cta"><Link to={href}>Sākt personalizēt <ArrowRight aria-hidden="true" /></Link></Button>;
 
