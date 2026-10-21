@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCanonical, shouldNoindex } from "../lib/seoPolicy";
+import { buildCanonical, isIndexableHost, shouldNoindex } from "../lib/seoPolicy";
 
 describe("Public SEO policy", () => {
   it("normalizes www and preview origins to the public apex", () => {
@@ -21,5 +21,14 @@ describe("Public SEO policy", () => {
     expect(shouldNoindex("/produkti/bernu-t-krekls", "")).toBe(false);
     expect(shouldNoindex("/design", "?category=bags")).toBe(false);
     expect(shouldNoindex("/", "")).toBe(false);
+  });
+  it("indexes only t-bode.lv and www.t-bode.lv hosts", () => {
+    expect(isIndexableHost("t-bode.lv")).toBe(true);
+    expect(isIndexableHost("www.t-bode.lv")).toBe(true);
+    expect(isIndexableHost("t-bode.lovable.app")).toBe(false);
+    expect(isIndexableHost("id-preview--x.lovable.app")).toBe(false);
+  });
+  it("keeps the bag landing indexable by path", () => {
+    expect(shouldNoindex("/auduma-maisinu-apdruka", "")).toBe(false);
   });
 });

@@ -9,7 +9,7 @@ const sources = [
 ].map((path) => ({ path, source: readFileSync(path, "utf8") }));
 
 describe("Online personalization sitemap priorities", () => {
-  for (const [path, priority] of [["/", "1.0"], ["/design", "1.0"], ["/collection", "0.5"], ["/veikali", "0.3"]]) {
+  for (const [path, priority] of [["/", "1.0"], ["/design", "1.0"], ["/collection", "0.5"], ["/veikali", "0.3"], ["/auduma-maisinu-apdruka", "0.8"]]) {
     it(`${path} has priority ${priority} in the served sitemap and every existing generator`, () => {
       const entries = sitemap.match(/<url>[\s\S]*?<\/url>/g) ?? [];
       const entry = entries.find((value) => value.includes(`<loc>https://t-bode.lv${path}</loc>`));
