@@ -66,21 +66,6 @@ Deno.serve(async (req) => {
     headers.set("Authorization", `Basic ${basicAuth}`);
     headers.set("Accept-Language", "en-US,en;q=0.9");
 
-    console.log("=== ZAKEKE TOKEN REQUEST ===");
-    console.log("URL: https://api.zakeke.com/token");
-    console.log("Method: POST");
-    console.log("Body:", rawBody);
-    console.log("Client ID length:", clientId.length);
-    console.log("Client Secret length:", clientSecret.length);
-    console.log("Request Headers:");
-    headers.forEach((value, key) => {
-      if (key === "authorization") {
-        console.log(`  ${key}: Basic <redacted>`);
-      } else {
-        console.log(`  ${key}: ${value}`);
-      }
-    });
-
     // Force HTTP/1.1 to avoid potential HTTP/2 issues with Kestrel
     const httpClient = Deno.createHttpClient({ http1: true, http2: false });
 
@@ -95,16 +80,8 @@ Deno.serve(async (req) => {
     const resText = await tokenRes.text();
     httpClient.close();
 
-    console.log("=== ZAKEKE TOKEN RESPONSE ===");
-    console.log("Status:", tokenRes.status);
-    console.log("Status Text:", tokenRes.statusText);
-    console.log("Response Headers:");
-    tokenRes.headers.forEach((value, key) => {
-      console.log(`  ${key}: ${value}`);
-    });
-    console.log("Response Body:", resText || "(empty)");
-    console.log("Response Body Length:", resText.length);
-    console.log("=== END ===");
+    // Never log credentials, request/response payloads, headers or customer codes.
+    console.log("Zakeke token response status:", tokenRes.status);
 
     if (!tokenRes.ok) {
       return new Response(
@@ -131,7 +108,7 @@ Deno.serve(async (req) => {
       status: 200,
     });
   } catch (err) {
-    console.error("Zakeke token error:", err);
+    console.error("Zakeke token request failed");
     return new Response(
       JSON.stringify({ error: "Internal error", detail: String(err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -1,5 +1,12 @@
 # Interneta veikala prioritāte meklēšanā
 
+# 100 statisku maisiņu kompozīciju pamats
+- [x] Saglabāt sākotnējos 20 saukļus, pievienot 80 autora rindas un pakāpenisku visu kategoriju ielādi; 8 jauktas idejas, tālāk pa 16.
+- [x] Sagatavot ilustrāciju reģistru, slāņu manifestu un tikai pārbaudītām sagatavēm paredzētu sākotnējās izvēles savienojumu.
+- [x] Izņemt sensitīvos tokena žurnālus tikai avotā; 31 tests un kompilācija veiksmīgi; 375/1440 px visas 100 idejas un kategorijas sasniedzamas, Lenis ~64 px, bez izvietošanas vai datu rakstīšanas.
+- [ ] Ilustrāciju aktivizēšana gaida autora oriģinālos failus un pārbaudāmus dabiskos izmērus.
+- [ ] Reālu sagatavju ielāde gaida Zakeke kontā apstiprinātu neaktīvu/pārskatīšanai drošu sagatavju iespēju, īstos kodus, fontu/eksporta pārbaudi un atļauju reģistrēt; pašlaik visas 100 ir unregistered.
+
 # Maisiņu lapas gala vizuālā apdare
 - [x] Pievienot precīzas piegādes ikonas, 20 tipogrāfiskas idejas ar filtriem/priekšskatījumu/kopēšanu un savienotu procesa ilustrāciju.
 - [x] Pārbaudīt 375/1440 px bez pārplūdes, 20 idejas, filtrus, Escape/aizvēršanu/fokusu, kopēšanas panākumus/kļūdu, Dark%20blue saiti, samazinātas kustības un apturēšanu ārpus ekrāna; Lenis pārlāde ~64 px, 16 testi un build OK; nepublicēts.

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2, Percent } from "lucide-react";
@@ -27,6 +27,7 @@ import { Seo } from "@/components/Seo";
 import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
 import { prefetchZakeke } from "@/lib/zakeke-loader";
 import { productInitialColor } from "@/lib/productInitialColor";
+import { initialBagTemplateChoice } from "@/lib/bagTemplateBridge";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -41,7 +42,11 @@ const ProductDetailView = ({ product, isLoading }: {
   isLoading: boolean;
 }) => {
   const { t, i18n } = useTranslation();
-  const { search } = useLocation();
+  const { search, state: navigationState } = useLocation();
+  const galleryChoice = useRef<unknown>(navigationState?.bagTemplateIdeaId);
+  const designerEverOpened = useRef(false);
+  const [templateConfirmationOpen, setTemplateConfirmationOpen] = useState(false);
+  const [confirmedTemplateIdeaId, setConfirmedTemplateIdeaId] = useState<number>();
   const displayName = product ? getProductName(product, i18n.language) : "";
   const displayDescription = product ? getProductDescription(product, i18n.language) : "";
 
@@ -181,6 +186,14 @@ const ProductDetailView = ({ product, isLoading }: {
   };
 
   const openDesigner = (mode: "individual" | "bulk") => {
+    if (mode === "individual" && product && initialBagTemplateChoice(
+      galleryChoice.current, product.slug, zakekeProductCode, true, designerEverOpened.current,
+    )) {
+      setWorkflowChoiceOpen(false);
+      setTemplateConfirmationOpen(true);
+      return;
+    }
+    designerEverOpened.current = true;
     setDesignMode(mode);
     setWorkflowChoiceOpen(false);
     if (mode === "bulk" && masterSize) {
@@ -616,12 +629,35 @@ const ProductDetailView = ({ product, isLoading }: {
           availableSizes={sizes}
           variantCodes={zakekeVariantCodes}
           quantity={designMode === "bulk" ? 1 : quantity}
-          onClose={() => setDesignerOpen(false)}
+          initialBagTemplateIdeaId={confirmedTemplateIdeaId}
+          onClose={() => { setDesignerOpen(false); setConfirmedTemplateIdeaId(undefined); }}
           bulkMode={designMode === "bulk"}
           onBulkAddRequest={handleBulkDesignReady}
         />
       )}
 
+      <Dialog open={templateConfirmationOpen} onOpenChange={setTemplateConfirmationOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sākt ar izvēlēto sagatavi?</DialogTitle>
+            <DialogDescription>Sagatave paredzēta jaunam dizainam. Ja personalizēšanas rīkā jau ir iesākts darbs, turpini bez sagataves, lai to neaizstātu.</DialogDescription>
+          </DialogHeader>
+          <Button onClick={() => {
+            if (typeof galleryChoice.current !== "number") return;
+            setConfirmedTemplateIdeaId(galleryChoice.current);
+            designerEverOpened.current = true;
+            setTemplateConfirmationOpen(false);
+            setDesignMode("individual");
+            setDesignerOpen(true);
+          }}>Sākt jaunu ar sagatavi</Button>
+          <Button variant="outline" onClick={() => {
+            designerEverOpened.current = true;
+            setTemplateConfirmationOpen(false);
+            setDesignMode("individual");
+            setDesignerOpen(true);
+          }}>Turpināt bez sagataves</Button>
+        </DialogContent>
+      </Dialog>
       {/* Workflow choice — Bulk vs Individual */}
       <Dialog open={workflowChoiceOpen} onOpenChange={setWorkflowChoiceOpen}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-background via-background to-cta-red/5">

@@ -1,5 +1,8 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import type { BagIdea } from "./bagIdeas";
+import { bagTemplateManifest } from "./bagTemplateManifest";
+import { bagArtworkRegistry } from "./bagArtworkRegistry";
+import { BagArtworkPoster } from "./BagArtworkPoster";
 
 function Motif({ name }: { name: string }) {
   switch (name) {
@@ -24,9 +27,17 @@ function Motif({ name }: { name: string }) {
 /** Twenty native print compositions; readable slogan is also the control's accessible name. */
 export function BagIdeaPoster({ idea }: { idea: BagIdea }) {
   const id = `poster-${useId().replace(/:/g, "")}`;
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const composition = bagTemplateManifest.templates.find((entry) => entry.ideaId === idea.id);
+  const artwork = composition ? bagArtworkRegistry[composition.layers[0].artworkId] : undefined;
+  if (composition && artwork && failedSrc !== artwork.src) return <BagArtworkPoster composition={composition} artwork={artwork} onError={() => setFailedSrc(artwork.src)} />;
   const { layout, lines } = idea;
   let sizes = lines.map(() => 32);
   let positions = lines.map((_, index) => 94 + index * 44);
+  if (layout === "authored-text") {
+    sizes = lines.map((line) => Math.min(28, 330 / line.length));
+    positions = lines.map((_, index) => 160 + (index - (lines.length - 1) / 2) * 36);
+  }
   if (layout === "peek") { sizes = [33, 49, 29]; positions = [87, 141, 197]; }
   if (layout === "stamp") { sizes = [48, 23]; positions = [137, 175]; }
   if (layout === "giant") { sizes = idea.id === 3 ? [23, 31, 100] : [37, 89, 29]; positions = [83, 128, 218]; }
