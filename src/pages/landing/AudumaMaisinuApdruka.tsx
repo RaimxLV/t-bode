@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
@@ -18,7 +19,10 @@ const AudumaMaisinuApdruka = () => {
   const { data, isLoading, isError, refetch } = useDesignProducts();
   const product = !isError ? data?.find((p) => p.slug === "kokvilnas-soma" && p.category === "bags" && p.customizable) : undefined;
   const natural = product?.color_variants.find((v) => v.name === "Natural");
-  const href = product?.in_stock ? bagProductHref(product, natural?.name ?? product.color_variants[0]?.name) : "/design?category=bags";
+  const [colorChoice, setColorChoice] = useState<{ productId: string; name: string }>();
+  const selectedName = product?.color_variants.find((variant) => colorChoice?.productId === product.id && variant.name === colorChoice.name)?.name
+    ?? natural?.name ?? product?.color_variants[0]?.name ?? "";
+  const href = product?.in_stock ? bagProductHref(product, selectedName) : "/design?category=bags";
   const cta = <Button asChild className="bag-cta"><Link to={href}>Sākt personalizēt <ArrowRight aria-hidden="true" /></Link></Button>;
   return <>
     <Seo title={TITLE} noTitleSuffix description={DESCRIPTION} locale="lv" noindex canonical="/auduma-maisinu-apdruka" breadcrumbs={[{ name: "Sākums", url: "/" }, { name: "Auduma maisiņu apdruka", url: "/auduma-maisinu-apdruka" }]} jsonLd={[
@@ -31,8 +35,7 @@ const AudumaMaisinuApdruka = () => {
         <div className="bag-breadcrumb"><nav aria-label="Lapas ceļš"><ol><li><Link to="/">Sākums</Link></li><li aria-hidden="true">/</li><li>Auduma maisiņu apdruka</li></ol></nav><span className="bag-draft">Melnraksts</span></div>
         <section className="bag-hero" aria-labelledby="bag-title">
           <div className="bag-hero-copy">
-            <p className="bag-eyebrow">AUDUMA MAISIŅU APDRUKA</p>
-            <h1 id="bag-title"><span>Tavs stāsts.</span><span>Uz tava</span><span className="bag-red">maisiņa.</span></h1>
+            <h1 id="bag-title"><span className="bag-eyebrow">AUDUMA MAISIŅU APDRUKA</span><span>Tavs stāsts.</span><span>Uz tava</span><span className="bag-red">maisiņa.</span></h1>
             <p>Ikdienai, dāvanai vai tava zīmola idejai. Pievieno auduma maisiņam savu attēlu, logo vai tekstu un pasūti to tiešsaistē.</p>
             <div className="bag-hero-actions">{cta}<a className="bag-text-link" href="#izvelies-maisinu">Apskatīt krāsas</a></div>
             <div className="bag-support"><span>Arī 1 gabals</span><span>Tavs attēls vai teksts</span><span>Piegāde Latvijā</span></div>
@@ -41,10 +44,10 @@ const AudumaMaisinuApdruka = () => {
         </section>
         <section id="izvelies-maisinu" className="bag-section" aria-labelledby="bag-selection-title">
           <p className="bag-eyebrow">SĀC AR KRĀSU</p><h2 id="bag-selection-title">Viena soma. Daudz iespēju.</h2>
-          {isLoading ? <div className="bag-load" role="status">Ielādējam maisiņa krāsas…</div> : product ? <BagProduct key={product.id} product={product} /> : <div className="bag-load"><p>{isError ? "Maisiņa informāciju šobrīd neizdevās ielādēt." : "Maisiņš šobrīd nav pieejams."}</p><Button variant="outline" onClick={() => void refetch()}>Mēģināt vēlreiz</Button><Link className="bag-text-link" to="/design?category=bags">Apskatīt pieejamos maisiņus</Link></div>}
+          {isLoading ? <div className="bag-load" role="status">Ielādējam maisiņa krāsas…</div> : product ? <BagProduct key={product.id} product={product} selectedName={selectedName} onColorChange={(name) => setColorChoice({ productId: product.id, name })} /> : <div className="bag-load"><p>{isError ? "Maisiņa informāciju šobrīd neizdevās ielādēt." : "Maisiņš šobrīd nav pieejams."}</p><Button variant="outline" onClick={() => void refetch()}>Mēģināt vēlreiz</Button><Link className="bag-text-link" to="/design?category=bags">Apskatīt pieejamos maisiņus</Link></div>}
         </section>
         <section className="bag-section" aria-labelledby="bag-process-title"><p className="bag-eyebrow">TRĪS SOĻI. TAVA IDEJA.</p><h2 id="bag-process-title">No idejas līdz plecam.</h2><div className="bag-steps">{bagSteps.map(([title, text], index) => <div className="bag-step" key={title}><span className="bag-number">0{index + 1}</span><h3>{title}</h3><p>{text}</p></div>)}</div></section>
-        <section className="bag-section" aria-labelledby="bag-ideas-title"><p className="bag-eyebrow">DIZAINA IDEJAS</p><h2 id="bag-ideas-title">Kam tu nesīsi savu stāstu?</h2>
+        <section className="bag-section" aria-labelledby="bag-ideas-title"><p className="bag-eyebrow">DIZAINA IDEJAS</p><h2 id="bag-ideas-title">Ikdienai. Dāvanai. Tavam zīmolam.</h2>
           <div className="bag-ideas">
             {natural?.images[0] && <figure className="bag-ideas-photo"><OptimizedImage src={natural.images[0]} alt="Dabīgas krāsas kokvilnas soma bez apdrukas — pamats tavai dizaina idejai" width={600} wrapperClassName="bag-product-image" className="bag-photo-img" /><figcaption>Viena soma. Tavs personiskais vēstījums.</figcaption></figure>}
             <div className="bag-idea-list">{[["IKDIENAI", "LABA DIENA."], ["DĀVANAI", "TIEŠI TEV."], ["ZĪMOLAM", "TAVS LOGO"]].map(([label, text]) => <div className="bag-idea" key={label}><div><p>{label}</p><h3>{text}</h3></div><Button asChild variant="ghost" size="icon"><Link to={href} aria-label={`Sākt savu dizainu — ${label.toLocaleLowerCase("lv")}`}><ArrowRight aria-hidden="true" /></Link></Button></div>)}</div>
