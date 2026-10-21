@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2, Percent } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
@@ -26,6 +26,7 @@ import { WishlistButton } from "@/components/WishlistButton";
 import { Seo } from "@/components/Seo";
 import { buildZakekeVariantCodes, getZakekeProductCode } from "@/lib/zakeke";
 import { prefetchZakeke } from "@/lib/zakeke-loader";
+import { productInitialColor } from "@/lib/productInitialColor";
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -40,6 +41,7 @@ const ProductDetailView = ({ product, isLoading }: {
   isLoading: boolean;
 }) => {
   const { t, i18n } = useTranslation();
+  const { search } = useLocation();
   const displayName = product ? getProductName(product, i18n.language) : "";
   const displayDescription = product ? getProductDescription(product, i18n.language) : "";
 
@@ -103,7 +105,7 @@ const ProductDetailView = ({ product, isLoading }: {
     if (!product) return;
     const productColors = product.color_variants ?? [];
     if (!selectedColor && productColors.length > 0) {
-      setSelectedColor(productColors[0].name);
+      setSelectedColor(productInitialColor(search, productColors));
     }
   }, [product]); // eslint-disable-line react-hooks/exhaustive-deps
 
