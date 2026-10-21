@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import type Lenis from "lenis";
+import { Link, useLocation, useNavigationType } from "react-router-dom";
 import { ArrowDownRight, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -16,6 +17,8 @@ const TITLE = "Auduma maisiņu apdruka — izveido savu dizainu | T-Bode";
 const DESCRIPTION = "Izveido savu auduma maisiņu ar attēlu, logo vai tekstu un pasūti tiešsaistē. Izvēlies īsto krāsu un piegādi Latvijā. Arī viens maisiņš.";
 
 const AudumaMaisinuApdruka = () => {
+  const { key: locationKey } = useLocation();
+  const navigationType = useNavigationType();
   const { data, isLoading, isError, refetch } = useDesignProducts();
   const product = !isError ? data?.find((p) => p.slug === "kokvilnas-soma" && p.category === "bags" && p.customizable) : undefined;
   const natural = product?.color_variants.find((variant) => variant.name === "Natural");
@@ -24,15 +27,61 @@ const AudumaMaisinuApdruka = () => {
     ?? natural?.name ?? product?.color_variants[0]?.name ?? "";
   const href = product?.in_stock ? bagProductHref(product, selectedName) : "/design?category=bags";
 
-  // This route loads lazily, so the browser's initial hash scroll happens before
-  // the section exists. Scroll to the hash target once the page has mounted.
+  // Position lazy-route deep links after layout settles, using the active scroll
+  // controller. Never compete with user input or restored history positions.
   useEffect(() => {
-    const id = window.location.hash.slice(1);
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    const hash = window.location.hash;
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (!hash || navigation?.type === "back_forward" || (navigationType === "POP" && locationKey !== "default" && navigation?.type !== "reload")) return;
+    let id: string;
+    try { id = decodeURIComponent(hash.slice(1)); } catch { return; }
+    if (!document.getElementById(id)?.closest(".bag-page")) return;
+
+    let cancelled = false;
+    let frame = 0;
+    const cancel = () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " ", "Tab"].includes(event.key)) cancel();
+    };
+    window.addEventListener("wheel", cancel, { passive: true });
+    window.addEventListener("touchstart", cancel, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("hashchange", cancel);
+    window.addEventListener("popstate", cancel);
+
+    const position = () => {
+      if (cancelled || window.location.hash !== hash) return;
+      const el = document.getElementById(id);
+      if (!el) return;
+      const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+      const top = window.scrollY + el.getBoundingClientRect().top - margin;
+      const lenis = (window as Window & { __lenis?: Lenis }).__lenis;
+      if (lenis) {
+        lenis.resize();
+        // This Lenis version already subtracts CSS scroll-margin for elements;
+        // use a numeric position so the header offset is applied exactly once.
+        lenis.scrollTo(top, { immediate: true, force: true });
+      } else {
+        window.scrollTo({ top, behavior: "instant" });
+      }
+    };
+    void document.fonts.ready.then(() => {
+      if (cancelled) return;
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(position);
+      });
+    });
+    return () => {
+      cancel();
+      window.removeEventListener("wheel", cancel);
+      window.removeEventListener("touchstart", cancel);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("hashchange", cancel);
+      window.removeEventListener("popstate", cancel);
+    };
   }, []);
   const cta = <Button asChild className="bag-cta"><Link to={href}>Sākt personalizēt <ArrowRight aria-hidden="true" /></Link></Button>;
 
