@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type Lenis from "lenis";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigationType } from "react-router-dom";
 import { ArrowDownRight, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -17,6 +17,8 @@ const TITLE = "Auduma maisiņu apdruka — izveido savu dizainu | T-Bode";
 const DESCRIPTION = "Izveido savu auduma maisiņu ar attēlu, logo vai tekstu un pasūti tiešsaistē. Izvēlies īsto krāsu un piegādi Latvijā. Arī viens maisiņš.";
 
 const AudumaMaisinuApdruka = () => {
+  const { key: locationKey } = useLocation();
+  const navigationType = useNavigationType();
   const { data, isLoading, isError, refetch } = useDesignProducts();
   const product = !isError ? data?.find((p) => p.slug === "kokvilnas-soma" && p.category === "bags" && p.customizable) : undefined;
   const natural = product?.color_variants.find((variant) => variant.name === "Natural");
@@ -30,7 +32,7 @@ const AudumaMaisinuApdruka = () => {
   useEffect(() => {
     const hash = window.location.hash;
     const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (!hash || navigation?.type === "back_forward") return;
+    if (!hash || navigation?.type === "back_forward" || (navigationType === "POP" && locationKey !== "default")) return;
     let id: string;
     try { id = decodeURIComponent(hash.slice(1)); } catch { return; }
     if (!document.getElementById(id)?.closest(".bag-page")) return;
