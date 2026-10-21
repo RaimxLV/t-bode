@@ -1,6 +1,7 @@
 # Interneta veikala prioritāte meklēšanā
 
 # Maisiņu melnraksta pārveide — 2026-10-21
+- [x] Integrēt piegādāto v2 dizainu; pārbaudīti 360/390/768/1440 px, trīs koncepcijas, tuvināšana/atiestate, tastatūra, samazinātas kustības, 4 sākšanas saites ar Dark%20blue un 9 esošie testi; saglabāti pieci faktiskie base64 ekrānattēli, nepublicēts.
 - [x] Saskaņot visu sākšanas pogu izvēlēto krāsu, trīs precizējumus un saglabāt faktiskos base64 ekrānattēlus pārskatīšanai (6 pogas ar Dark%20blue; 1440×1000, 390×1000, 1440×4741).
 - [x] Izveidot izolētu redakcionālu maisiņu lapu ar apstiprināto attēlu un īstās preces krāsām.
 - [x] Pievienot validētu sākotnējās krāsas saiti, saglabājot preču izvēļu izolāciju un atsvaidzināšanu (9 testi).

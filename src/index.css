@@ -22,6 +22,40 @@
     --bag-photo: 40 33% 97%;
     --bag-blush: 7 52% 93%;
     --bag-white: 0 0% 100%;
+    /* Authored bag studio palette; consumed only by the hidden draft. */
+    --bag-studio-red: 4 76% 47%;
+    --bag-studio-coordinates: #66665f;
+    --bag-studio-photo-paper: #fff;
+    --bag-studio-shadow-main: #29251c1c;
+    --bag-studio-shadow-edge: #29251c18;
+    --bag-studio-photo-caption: #302e28;
+    --bag-studio-shadow-secondary: #29251c26;
+    --bag-studio-stamp: #dc3329;
+    --bag-studio-shadow-stamp: #29251c16;
+    --bag-studio-footnote: #67645b;
+    --bag-studio-editorial-muted: #69665c;
+    --bag-studio-photo-border: #dedbd1;
+    --bag-studio-photo-label: #656258;
+    --bag-studio-finale-accent: #e2eb79;
+    --bag-studio-watermark: #ffffff05;
+    --bag-studio-background: #1c1d21;
+    --bag-studio-foreground: #f8f5ec;
+    --bag-studio-illustration-accent: #afbdff;
+    --bag-studio-photo-accent: #b5d4b3;
+    --bag-studio-graphic-accent: #e4ed79;
+    --bag-studio-kicker: #c6c6cd;
+    --bag-studio-muted: #bfc0c7;
+    --bag-studio-line: #ffffff24;
+    --bag-studio-subtle: #a8a9b0;
+    --bag-studio-selected: #ffffff04;
+    --bag-studio-edition: #85868d;
+    --bag-studio-image-background: #2a2b30;
+    --bag-studio-loading: #c2c2c8;
+    --bag-studio-zoom-background: #fbf8efed;
+    --bag-studio-zoom-foreground: #202125;
+    --bag-studio-cta: #f6f3e9;
+    --bag-studio-disclaimer: #999ba5;
+
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
