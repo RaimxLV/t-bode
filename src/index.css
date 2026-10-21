@@ -56,6 +56,16 @@
     --bag-studio-cta: #f6f3e9;
     --bag-studio-disclaimer: #999ba5;
 
+    /* Native print ideas; consumed exclusively on the bag landing. */
+    --bag-print-cream: 44 35% 94%;
+    --bag-print-ink: 230 8% 12%;
+    --bag-print-cobalt: 230 74% 43%;
+    --bag-print-lime: 68 76% 70%;
+    --bag-print-coral: 9 89% 70%;
+    --bag-print-coral-ink: 4 72% 43%;
+    --bag-print-lilac: 265 40% 85%;
+    --bag-print-sage: 135 18% 76%;
+
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
