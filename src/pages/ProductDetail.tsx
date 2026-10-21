@@ -630,7 +630,7 @@ const ProductDetailView = ({ product, isLoading }: {
           variantCodes={zakekeVariantCodes}
           quantity={designMode === "bulk" ? 1 : quantity}
           initialBagTemplateIdeaId={confirmedTemplateIdeaId}
-          onClose={() => setDesignerOpen(false)}
+          onClose={() => { setDesignerOpen(false); setConfirmedTemplateIdeaId(undefined); }}
           bulkMode={designMode === "bulk"}
           onBulkAddRequest={handleBulkDesignReady}
         />
