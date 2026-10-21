@@ -16,5 +16,6 @@
 - Keep the bag editorial draft in its own page/components with globally declared, locally consumed palette tokens; shared landing pages and production data must remain unaffected.
 - Keep the authored bag studio isolated with page-ordered styles, shared controls, and CDN image pointers; this preserves the supplied composition without changing storefront behavior.
 - Own the bag color selection at page level, validated against current product identity and variants, so all start links agree and refetches retain valid customer choices.
-- Keep native bag print compositions and filtering in local modules with shared accessible dialogs and one-shot visibility-controlled CSS motion; inspiration must never import a design or trigger ordering.
+- Keep bag ideas and authored artwork in typed local registries with incremental category pagination and static accessible previews; preview backgrounds are never print layers, and native dimensions remain unknown until assets are inspected.
+- Keep the versioned bag layer manifest separate from the empty account-verified Zakeke allowlist; only explicit gallery selection plus initial-open confirmation may supply official template fields, never URL codes, retries, ordinary routes or automatic replacement of existing work.
 - Keep the homepage process animation as the approved same-origin static document in public/how-it-works-animation.html behind an iframe wrapper that validates height messages by origin and contentWindow; edit it only mechanically, never redesign, and it must never invoke real storefront transactions.

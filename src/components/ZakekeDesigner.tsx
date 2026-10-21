@@ -5,6 +5,7 @@ import { useCart } from "@/context/CartContext";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { sanitizeZakekeCodePart } from "@/lib/zakeke";
+import { initialBagTemplateChoice } from "@/lib/bagTemplateBridge";
 import {
   getZakekeToken,
   getVisitorCode,
@@ -27,6 +28,8 @@ interface ZakekeDesignerProps {
   /** Pre-built variant codes that match what the `zakeke-products` edge function exposes. */
   variantCodes?: { color?: string; size?: string };
   quantity: number;
+  /** Explicitly confirmed gallery choice; no raw template code accepted from URLs. */
+  initialBagTemplateIdeaId?: number;
   onClose: () => void;
   /**
    * When `bulkMode` is true, the designer does NOT add to cart on its own.
@@ -67,6 +70,7 @@ export const ZakekeDesigner = ({
   availableSizes = [],
   variantCodes,
   quantity,
+  initialBagTemplateIdeaId,
   onClose,
   bulkMode = false,
   onBulkAddRequest,
@@ -80,6 +84,8 @@ export const ZakekeDesigner = ({
   const customizationPriceRef = useRef(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const customizerRef = useRef<any>(null);
+  const initialTemplateChoice = useRef(initialBagTemplateIdeaId);
+  const templateChoiceConsumed = useRef(false);
   const { addItem, setIsOpen } = useCart();
   const { t, i18n } = useTranslation();
 
@@ -351,7 +357,13 @@ export const ZakekeDesigner = ({
           },
         };
 
-        customizer.createIframe(config);
+        const templateConfig = initialBagTemplateChoice(
+          initialTemplateChoice.current, productSlug, zakekeModelCode,
+          initialTemplateChoice.current !== undefined, templateChoiceConsumed.current,
+        );
+        // First creation only. Retries/refetches never reapply a gallery template.
+        templateChoiceConsumed.current = true;
+        customizer.createIframe({ ...config, ...(templateConfig ?? {}) });
         setLoading(false);
       } catch (err) {
         if (!mounted) return;
