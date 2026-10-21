@@ -7,12 +7,12 @@ function Motif({ name }: { name: string }) {
     case "paw": return <g transform="translate(100 211)"><path d="M3 20c-9 17 0 22 17 16 17 6 26 1 17-16L20 9Z" /><ellipse cx="3" cy="2" rx="5" ry="7" /><ellipse cx="15" cy="-7" rx="5" ry="7" /><ellipse cx="28" cy="-7" rx="5" ry="7" /><ellipse cx="39" cy="2" rx="5" ry="7" /></g>;
     case "whiskers": return <g><path d="m18 48 30 12m-21 7 20 3m143 17 32-12m-34 28 28-5M18 250l32-9m-22 29 29-15m135 8 25 15m-35-2 25 21" /></g>;
     case "receipt": return <g><path d="M22 25h196v264l-14-7-14 7-14-7-14 7-14-7-14 7-14-7-14 7-14-7-14 7-14-7-14 7-14-7-14 7Z" /><path strokeDasharray="3 5" d="M40 62h160m-160 170h160" /><path d="M51 255v15m8-15v15m5-15v15m9-15v15m4-15v15m10-15v15m4-15v15m8-15v15m5-15v15m9-15v15m7-15v15m4-15v15m10-15v15m9-15v15m4-15v15m10-15v15m6-15v15" /></g>;
-    case "cup": return <g><path d="M83 228h67l-6 43H89ZM151 237h12c18 0 18 23-15 22m-67 20h77M98 211c-25-28 27-32 5-58m18 58c-17-17 20-30 4-45m20 45c-9-15 11-20 9-31" /></g>;
+    case "cup": return <g><path d="M83 228h67l-6 43H89ZM151 237h12c18 0 18 23-15 22m-67 20h77M98 211c-15-12 18-17 5-31m18 31c-12-12 14-18 4-31m20 31c-9-10 11-16 9-27" /></g>;
     case "battery": return <g><path d="M58 228h114v49H58Zm114 12h12v25h-12M83 214h60" /><path className="bag-poster-accent-fill" d="M67 237h22v31H67Zm30 0h22v31H97Zm30 0h22v31h-22Z" /></g>;
     case "checks": return <g><path d="m26 105 7 7 15-21m-22 97h19v19H26m5-14 9 9m0-9-9 9M22 241h196" /></g>;
     case "bread": return <g transform="translate(88 238)"><path d="M0 11c0-24 64-24 64 0v27H0Z" /><path d="m15 0 7 13m12-17 7 17m10-13 6 13" /></g>;
     case "rules": return <g><path d="M25 215h190M25 239h190M25 263h190M25 287h190m-175-5 155-60" /></g>;
-    case "star": return <g><path d="M24 104V25h128m64 182v88H24V192M177 38l7 21 23 6-23 7-7 21-7-21-22-7 22-6Z" /></g>;
+    case "star": return <g><path d="M24 104V25h128m64 182v88H24V192M185 24l4 13 15 4-15 5-4 13-4-13-15-5 15-4Z" /></g>;
     case "path": return <g><path d="M30 293c155-5 222-45 134-53s-159-15-72-45" /><circle cx="30" cy="293" r="5" /></g>;
     case "route": return <g><path strokeDasharray="5 6" d="M37 263c28-91 60 60 105-10s69 2 56 34" /><circle cx="37" cy="263" r="9" /><circle cx="141" cy="254" r="9" /><path d="m190 287 8-15 8 15Z" /></g>;
     case "footsteps": return <g><ellipse transform="rotate(25 83 245)" cx="83" cy="245" rx="9" ry="16" /><ellipse transform="rotate(25 112 227)" cx="112" cy="227" rx="9" ry="16" /><path className="bag-poster-accent-fill" d="m156 240 27-8 10 33-27 8Zm9 10 16-5m-14 14 16-5" /></g>;
