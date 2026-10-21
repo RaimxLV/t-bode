@@ -13,7 +13,7 @@
 
 @layer base {
   :root {
-    /* Approved bag editorial draft palette; scoped components consume these tokens. */
+    /* Bag editorial draft palette; scoped components consume these tokens. */
     --bag-paper: 44 35% 94%;
     --bag-ink: 60 4% 10%;
     --bag-red: 4 77% 54%;

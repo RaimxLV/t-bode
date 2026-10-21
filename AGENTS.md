@@ -14,4 +14,5 @@
 - Key the product detail stateful view by product identity, not fetched object reference; new products reset selections/dialogs/quantity while same-product refetches retain customer choices.
 - Treat a product URL color as a validated initial variant suggestion only, never as an ongoing override of customer selections; this preserves same-product refetch behavior.
 - Keep the bag editorial draft in its own page/components with globally declared, locally consumed palette tokens; shared landing pages and production data must remain unaffected.
+- Own the bag color selection at page level, validated against current product identity and variants, so all start links agree and refetches retain valid customer choices.
 - Keep the homepage process animation as the approved same-origin static document in public/how-it-works-animation.html behind an iframe wrapper that validates height messages by origin and contentWindow; edit it only mechanically, never redesign, and it must never invoke real storefront transactions.
