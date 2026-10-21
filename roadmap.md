@@ -1,5 +1,9 @@
 # Interneta veikala prioritāte meklēšanā
 
+# Maisiņu lapas gala vizuālā apdare
+- [ ] Pievienot precīzas piegādes ikonas, 20 tipogrāfiskas idejas ar filtriem/priekšskatījumu/kopēšanu un savienotu procesa ilustrāciju.
+- [ ] Pārbaudīt 375 px un datora izkārtojumu, ideju vadīklas, izvēlēto krāsu, kustību ierobežošanu un kompilācijas signālu; nepublicēt.
+
 # Maisiņu melnraksta pārveide — 2026-10-21
 - [x] Diagnosticēt hostētā priekšskatījuma veco izkārtojumu: avots pareizs, service worker nav; hostēto lapu nevar pārbaudīt aiz Lovable pieteikšanās robežas. Labota tiešā #ideju-studija ritināšana slinkajā maršrutā (scrollY 0→867, kompilācija OK).
 - [x] Integrēt piegādāto v2 dizainu; pārbaudīti 360/390/768/1440 px, trīs koncepcijas, tuvināšana/atiestate, tastatūra, samazinātas kustības, 4 sākšanas saites ar Dark%20blue un 9 esošie testi; saglabāti pieci faktiskie base64 ekrānattēli, nepublicēts.
