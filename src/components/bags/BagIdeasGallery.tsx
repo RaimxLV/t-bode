@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { bagIdeaCategories, bagIdeas, copyBagIdea, visibleBagIdeas, type BagIdea, type BagIdeaCategory } from "./bagIdeas";
 import { BagIdeaPoster } from "./BagIdeaPoster";
-import { useBagReveal } from "./useBagReveal";
 
 export function BagIdeasGallery({ href }: { href: string }) {
   const [category, setCategory] = useState<BagIdeaCategory>("Visi");
@@ -13,10 +12,9 @@ export function BagIdeasGallery({ href }: { href: string }) {
   const [selected, setSelected] = useState<BagIdea>();
   const [copyState, setCopyState] = useState<"idle" | "success" | "error">("idle");
   const trigger = useRef<HTMLButtonElement>();
-  const ref = useBagReveal();
   const shown = visibleBagIdeas(category, expanded);
 
-  return <div className="bag-print-gallery" ref={ref} data-paused="true">
+  return <div className="bag-print-gallery">
     <div className="bag-print-heading"><div><p className="bag-studio-kicker">20 IDEJAS · VIENS TAVS RAKSTURS</p><h3>Vārdi ar <em>raksturu.</em></h3></div><p>Kaķiem, kafijai un ikdienas mazajiem piedzīvojumiem.</p></div>
     <div className="bag-print-filters" role="group" aria-label="Ideju kategorijas">
       {bagIdeaCategories.map((item) => <Button key={item} variant="ghost" aria-pressed={category === item} onClick={() => setCategory(item)}>{item}<span>{item === "Visi" ? bagIdeas.length : bagIdeas.filter((idea) => idea.category === item).length}</span></Button>)}

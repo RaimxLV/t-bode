@@ -30,7 +30,7 @@
 .bag-poster-type { fill:var(--poster-ink); font-family:'Bebas Neue',sans-serif; letter-spacing:0; }
 .bag-poster-serif { font-family:Georgia,serif; font-style:italic; }
 .bag-poster-motif,.bag-poster-stamp { fill:none; stroke:var(--poster-ink); stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
-.bag-poster-stamp { transform-origin:120px 151px; transition:transform .4s; }
+.bag-poster-stamp { transform-origin:120px 151px; }
 .bag-poster-micro { font:9px Inter,sans-serif; fill:var(--poster-ink); stroke:none; }
 .bag-poster-accent-fill { fill:var(--poster-accent); }
 .bag-poster-outline { fill:none; stroke:var(--poster-ink); stroke-width:1; }
@@ -62,17 +62,12 @@
 .bag-process-track { position:absolute; left:31px; top:32px; bottom:32px; width:1px; background:hsl(var(--bag-line)); }
 .bag-process-track:after { content:''; position:absolute; inset:0; background:hsl(var(--bag-red)); transform:scaleY(0); transform-origin:top; }
 @media (prefers-reduced-motion:no-preference) {
-  .bag-print-gallery[data-seen=true] .bag-print-tile { animation:bag-print-enter .5s ease both; }
-  .bag-print-tile:nth-child(4n+2) { animation-delay:.06s !important; }
-  .bag-print-tile:nth-child(4n+3) { animation-delay:.12s !important; }
-  .bag-print-tile:nth-child(4n) { animation-delay:.18s !important; }
   .bag-connected-steps[data-seen=true] .bag-step { animation:bag-print-enter .5s ease both; }
   .bag-connected-steps .bag-step:nth-of-type(2) { animation-delay:.15s !important; }
   .bag-connected-steps .bag-step:nth-of-type(3) { animation-delay:.3s !important; }
   .bag-connected-steps[data-seen=true] .bag-process-track:after { animation:bag-process-draw 1s ease both; }
-  [data-paused=true] .bag-print-tile,[data-paused=true] .bag-step,[data-paused=true] .bag-process-track:after { animation-play-state:paused !important; }
+  [data-paused=true] .bag-step,[data-paused=true] .bag-process-track:after { animation-play-state:paused !important; }
 }
-@media (hover:hover) and (prefers-reduced-motion:no-preference) { .bag-print-tile:hover .bag-poster-stamp { transform:rotate(-7deg); } }
 @keyframes bag-print-enter { from { opacity:.5; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 @keyframes bag-process-draw { to { transform:scaleY(1); } }
 @media (max-width:760px) {
@@ -94,4 +89,4 @@
   .bag-step-symbol { width:56px; height:56px; }
   .bag-process-track { left:27px; }
 }
-@media (prefers-reduced-motion:reduce) { .bag-idea-dialog,.bag-idea-dialog * { animation:none !important; transition:none !important; } .bag-process-track:after { transform:scaleY(1); } }
+@media (prefers-reduced-motion:reduce) { .bag-idea-dialog,.bag-idea-dialog * { animation:none !important; transition:none !important; } .bag-process-track:after { transform:scaleY(1); } }.bag-print-gallery .bag-print-tile,.bag-print-gallery .bag-poster,.bag-print-gallery .bag-poster *,.bag-idea-preview .bag-poster,.bag-idea-preview .bag-poster * { animation:none !important; transition:none !important; }
