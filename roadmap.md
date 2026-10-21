@@ -1,5 +1,10 @@
 # Interneta veikala prioritāte meklēšanā
 
+# 100 statisku maisiņu kompozīciju pamats
+- [ ] Saglabāt sākotnējos 20 saukļus, pievienot 80 autora rindas un pakāpenisku visu kategoriju ielādi.
+- [ ] Sagatavot ilustrāciju reģistru, slāņu manifestu un tikai pārbaudītām sagatavēm paredzētu sākotnējās izvēles savienojumu.
+- [ ] Izņemt sensitīvos tokena žurnālus tikai avotā; pārbaudīt testus un priekšskatījumu bez izvietošanas vai datu rakstīšanas.
+
 # Maisiņu lapas gala vizuālā apdare
 - [x] Pievienot precīzas piegādes ikonas, 20 tipogrāfiskas idejas ar filtriem/priekšskatījumu/kopēšanu un savienotu procesa ilustrāciju.
 - [x] Pārbaudīt 375/1440 px bez pārplūdes, 20 idejas, filtrus, Escape/aizvēršanu/fokusu, kopēšanas panākumus/kļūdu, Dark%20blue saiti, samazinātas kustības un apturēšanu ārpus ekrāna; Lenis pārlāde ~64 px, 16 testi un build OK; nepublicēts.
