@@ -47,7 +47,6 @@ export function BagHeroArt() {
       <svg viewBox="0 0 100 100" aria-hidden="true"><defs><path id={circleId} d="M50 10a40 40 0 1 1-.1 0" /></defs><text><textPath href={`#${circleId}`} textLength="245" lengthAdjust="spacing">TAVA IDEJA · TAVS MAISIŅŠ · </textPath></text></svg>
       <ArrowDownRight aria-hidden="true" />
     </a>
-    <p className="bag-art-footnote">Apdrukas piemēri iedvesmai</p>
   </div>;
 }
 

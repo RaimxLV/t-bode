@@ -131,7 +131,7 @@ const AudumaMaisinuApdruka = () => {
 
       <section className="bag-finale" aria-labelledby="bag-finale-title">
         <span className="bag-finale-watermark" aria-hidden="true">RADI SAVU</span>
-        <div className="bag-container bag-finale-inner"><h2 id="bag-finale-title">Ideju pietiek.<br /><em>Tagad tavējā.</em></h2>{cta}</div>
+        <div className="bag-container bag-finale-inner"><h2 id="bag-finale-title">Tavs dizains.<br /><em>Tavs maisiņš.</em></h2>{cta}</div>
       </section>
     </main>
     <Footer />
