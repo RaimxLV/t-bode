@@ -15,6 +15,7 @@
 .bag-v2 .bag-print-tile { display:block; min-width:0; height:auto; padding:0; border-radius:2px; white-space:normal; text-align:left; color:var(--bag-studio-muted); background:transparent; overflow:hidden; }
 .bag-v2 .bag-print-tile:hover { color:var(--bag-studio-foreground); background:transparent; }
 .bag-poster { display:block; width:100%; height:auto; aspect-ratio:3/4; --poster-paper:hsl(var(--bag-print-cream)); --poster-ink:hsl(var(--bag-print-ink)); --poster-accent:hsl(var(--bag-print-coral-ink)); }
+.bag-v2 .bag-print-tile>.bag-poster { width:100%; height:auto; }
 .bag-poster.palette-paper-blue { --poster-ink:hsl(var(--bag-print-cobalt)); }
 .bag-poster.palette-coral { --poster-paper:hsl(var(--bag-print-coral)); }
 .bag-poster.palette-lilac { --poster-paper:hsl(var(--bag-print-lilac)); }

@@ -34,11 +34,13 @@ export function BagIdeaPoster({ idea }: { idea: BagIdea }) {
   if (layout === "scatter") { sizes = [52, 50, 27]; positions = [112, 168, 208]; }
   if (layout === "blocks") { sizes = [33, 59, 33, 45]; positions = [75, 136, 218, 268]; }
   if (layout === "cup" || layout === "battery") { sizes = [32, 33, 53]; positions = [66, 109, 165]; }
-  if (layout === "outline") { sizes = [28, 65, 34]; positions = [98, 168, 227]; }
+  if (layout === "outline") { sizes = [28, 65, 29]; positions = [98, 168, 227]; }
   if (layout === "checklist") { sizes = [41, 34, 31, 34]; positions = [89, 127, 180, 216]; }
   if (layout === "retro") { sizes = [29, 53, 36]; positions = [98, 168, 223]; }
   if (layout === "contrast" || layout === "manifesto") { sizes = [34, 64, 34, 51]; positions = [70, 139, 202, 266]; }
   if (["frame", "path", "route", "walk", "compass"].includes(layout)) { sizes = [32, 39, 29]; positions = [95, 141, 185]; }
+  if (layout === "route") sizes[2] = 25;
+  if (layout === "compass") sizes[0] = 24;
   return <svg className={`bag-poster palette-${idea.palette} layout-${layout}`} viewBox="0 0 240 320" aria-hidden="true" focusable="false">
     <rect className="bag-poster-paper" width="240" height="320" />
     {layout === "blocks" && <rect className="bag-poster-block" x="0" y="160" width="240" height="160" />}
