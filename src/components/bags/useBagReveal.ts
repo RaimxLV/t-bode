@@ -12,7 +12,7 @@ export function useBagReveal() {
       intersecting = entry.isIntersecting;
       if (intersecting) node.dataset.seen = "true";
       visibility();
-    }, { threshold: 0.12 });
+    }, { threshold: 0.01 });
     observer.observe(node);
     document.addEventListener("visibilitychange", visibility);
     return () => { observer.disconnect(); document.removeEventListener("visibilitychange", visibility); };
