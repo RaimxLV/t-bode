@@ -37,7 +37,7 @@ export function BagHeroArt() {
     <div className="bag-art-coordinates" aria-hidden="true"><span>T–B / PRINT STUDIO</span><span>01 — 03</span></div>
     <figure className="bag-art-main">
       <img src={illustrationAsset.url} width={1122} height={1402} alt={concepts[0].alt} fetchPriority="high" decoding="async" />
-      <figcaption>01 / ILUSTRĀCIJA</figcaption>
+      <figcaption>Kaķis maisā? Šoreiz — uz maisiņa.</figcaption>
     </figure>
     <figure className="bag-art-secondary" aria-hidden="true">
       <img src={graphicAsset.url} width={1122} height={1402} alt="" loading="lazy" decoding="async" />
@@ -47,7 +47,7 @@ export function BagHeroArt() {
       <svg viewBox="0 0 100 100" aria-hidden="true"><defs><path id={circleId} d="M50 10a40 40 0 1 1-.1 0" /></defs><text><textPath href={`#${circleId}`} textLength="245" lengthAdjust="spacing">TAVA IDEJA · TAVS MAISIŅŠ · </textPath></text></svg>
       <ArrowDownRight aria-hidden="true" />
     </a>
-    <p className="bag-art-footnote">Apdrukas ideju vizualizācijas</p>
+    <p className="bag-art-footnote">Apdrukas piemēri iedvesmai</p>
   </div>;
 }
 
@@ -69,7 +69,7 @@ export function BagStudio({ href }: { href: string }) {
     <div className="bag-container">
       <div className="bag-studio-heading">
         <div><p className="bag-studio-kicker"><span aria-hidden="true">✳</span> T–BODE IDEJU STUDIJA</p><h2 id="bag-studio-title">Viena forma.<br /><em>Bezgalīgi stāsti.</em></h2></div>
-        <p>Fotogrāfija, ilustrācija, kolāža vai paša zīmējums. Sāc ar to, kas kaut ko nozīmē tieši tev.</p>
+        <p>Fotogrāfija, ilustrācija vai paša zīmējums.</p>
       </div>
 
       <div className="bag-studio-choices" role="group" aria-label="Apdrukas ideju izvēle">
@@ -97,11 +97,10 @@ export function BagStudio({ href }: { href: string }) {
             <p className="bag-studio-materials">{active.note}</p>
           </div>
           <Button asChild variant="ghost" className="bag-studio-cta"><Link to={href}>Izveidot savu maisiņu <ArrowRight aria-hidden="true" /></Link></Button>
-          <p className="bag-studio-disclaimer">Piemēri iedvesmai. Savu attēlu un apdrukas novietojumu izvēlēsies konstruktorā.</p>
         </div>
       </div>
 
-      <div className="bag-studio-bottom"><span>Attēls. Krāsa. Tavs raksturs.</span><a href="#izvelies-maisinu">Izvēlēties maisiņa krāsu <ArrowDownRight aria-hidden="true" /></a></div>
+      <div className="bag-studio-bottom"><span>Apdrukas piemēri iedvesmai</span><a href="#izvelies-maisinu">Izvēlēties maisiņa krāsu <ArrowDownRight aria-hidden="true" /></a></div>
     </div>
   </section>;
 }

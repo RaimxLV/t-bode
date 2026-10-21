@@ -17,3 +17,6 @@ export const shouldNoindex = (pathname: string, search: string): boolean => {
   return privateRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))
     || new URLSearchParams(search).get("preview") === "1";
 };
+/** Only the production domains may be indexed; previews and staging hosts stay noindex. */
+export const isIndexableHost = (hostname: string): boolean =>
+  ["t-bode.lv", "www.t-bode.lv"].includes(hostname.toLowerCase());
