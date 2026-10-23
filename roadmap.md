@@ -1,8 +1,8 @@
 # Interneta veikala prioritāte meklēšanā
 
 # Sava attēla augšupielāde mockup veidošanai
-- [ ] Pievienot tiešu augšupielādi sadaļā Dizaini → Krekli, saglabājot oriģinālu bibliotēkā un automātiski izvēloties to esošajai kartīšu veidošanai.
-- [ ] Pārbaudīt veiksmīgu augšupielādi un kļūmju apstrādi bez reālu produktu/pasūtījumu izveides; nepublicēt.
+- [x] Pievienot tiešu augšupielādi sadaļā Dizaini → Krekli, saglabājot oriģinālu bibliotēkā un automātiski izvēloties to esošajai kartīšu veidošanai.
+- [x] Četri testi veiksmīgi, build OK; autentificētā administrācijā pārbaudīta augšupielādes plūsma ar pārtvertiem saglabāšanas pieprasījumiem, automātisku izvēli un saglabātu cenu. Reāla faila/ieraksta saglabāšana apzināti nav veikta; nav publicēts.
 
 # 1267. pasūtījums un manuāla apmaksa
 - [x] Atzīmēt Raimonda apstiprināto 1267. pasūtījuma apmaksu.
