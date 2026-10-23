@@ -2,7 +2,7 @@
 
 # 1267. pasūtījums un manuāla apmaksa
 - [x] Atzīmēt Raimonda apstiprināto 1267. pasūtījuma apmaksu.
-- [ ] Evitas konts ir info@t-bode.lv: saglabāt esošo pasūtījumu pārvaldīšanas piekļuvi, dot apmaksas pogu visiem maksājumu veidiem; pēc lietotāja norādes papildu pārbaudes neveikt.
+- [x] Evitas konts ir info@t-bode.lv: saglabāta esošā pasūtījumu pārvaldīšanas piekļuve, pievienota apmaksas poga visiem maksājumu veidiem avotā/priekšskatījumā; pēc lietotāja norādes papildu pārbaudes neveikt. Nav publicēts.
 
 # Fokusēta preču attēlu ielāde
 - [x] Adaptīvi galvenie attēli un sīktēli ar avota maiņas atiestati un oriģināla/placeholder rezervi; oriģināli palielinājumam un drukai saglabāti.
