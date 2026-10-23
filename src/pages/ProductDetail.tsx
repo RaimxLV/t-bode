@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { ArrowLeft, ShoppingCart, Ruler, Palette, Paintbrush, ZoomIn, Sparkles, Wand2, Percent } from "lucide-react";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Navbar } from "@/components/Navbar";
@@ -346,18 +347,19 @@ const ProductDetailView = ({ product, isLoading }: {
                 onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLightboxOpen(true); } }}
               >
                 <AnimatePresence mode="wait">
-                  <motion.img
+                  <motion.div
                     key={displayImage}
-                    src={displayImage}
-                    alt={displayName}
-                    className="w-full h-full object-contain bg-white"
-                    decoding="async"
-                    fetchPriority="high"
+                    className="w-full h-full"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                  />
+                  >
+                    <OptimizedImage src={displayImage} alt={displayName} eager width={800}
+                      widths={[320, 480, 640, 768, 1024, 1280, 1600, 1920]}
+                      sizes="(min-width: 1536px) 728px, (min-width: 1280px) 600px, (min-width: 1024px) 472px, (min-width: 768px) 736px, (min-width: 640px) 608px, calc(100vw - 32px)"
+                      wrapperClassName="w-full h-full" className="w-full h-full object-contain bg-white" />
+                  </motion.div>
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                   <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-80 transition-opacity drop-shadow-lg" />
@@ -389,11 +391,14 @@ const ProductDetailView = ({ product, isLoading }: {
                       aria-pressed={selectedImageIdx === idx}
                       className={`w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-all ${selectedImageIdx === idx ? "border-primary" : "border-border hover:border-foreground/50"}`}
                     >
-                      <img
+                      <OptimizedImage
+                        key={img}
                         src={img}
                         alt=""
-                        loading="lazy"
-                        decoding="async"
+                        width={128}
+                        widths={[64, 128, 192, 256]}
+                        sizes="64px"
+                        wrapperClassName="w-full h-full"
                         className="w-full h-full object-contain bg-white"
                       />
                     </button>
