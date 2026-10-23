@@ -1,5 +1,9 @@
 # Interneta veikala prioritāte meklēšanā
 
+# Sava attēla augšupielāde mockup veidošanai
+- [ ] Pievienot tiešu augšupielādi sadaļā Dizaini → Krekli, saglabājot oriģinālu bibliotēkā un automātiski izvēloties to esošajai kartīšu veidošanai.
+- [ ] Pārbaudīt veiksmīgu augšupielādi un kļūmju apstrādi bez reālu produktu/pasūtījumu izveides; nepublicēt.
+
 # 1267. pasūtījums un manuāla apmaksa
 - [x] Atzīmēt Raimonda apstiprināto 1267. pasūtījuma apmaksu.
 - [x] Evitas konts ir info@t-bode.lv: saglabāta esošā pasūtījumu pārvaldīšanas piekļuve, pievienota apmaksas poga visiem maksājumu veidiem avotā/priekšskatījumā; pēc lietotāja norādes papildu pārbaudes neveikt. Nav publicēts.

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move, Eraser } from "lucide-react";
 import { composeMockup } from "@/lib/imageCrop";
 import { removeDesignBackground } from "@/lib/removeDesignBackground";
+import { DesignImageUpload } from "./DesignImageUpload";
 
 type DesignItem = {
   id: string;
@@ -323,6 +324,13 @@ export function DesignsToProducts() {
               )}
             </div>
 
+            <DesignImageUpload disabled={busy || bgRemovingId !== null} onUploaded={(design) => {
+              const item: DesignItem = { ...design, id: `lib:${design.id}`, source: "library" };
+              setDesigns((previous) => [item, ...previous]);
+              setSelectedDesignId(item.id);
+              setSourceFilter("all");
+            }} />
+
             <div className="flex gap-1 text-xs">
               {(["all", "library", "campaign"] as const).map((s) => (
                 <button
@@ -339,7 +347,7 @@ export function DesignsToProducts() {
             {filteredDesigns.length === 0 ? (
               <div className="text-xs text-muted-foreground font-body p-4 text-center border border-dashed rounded">
                 <Upload className="w-4 h-4 mx-auto mb-2 opacity-60" />
-                Nav dizainu. Aug&scaron;upiel&#x0101;d&#x0113; Bulk Studio bibliot&#x0113;k&#x0101; vai &#x0123;ener&#x0113; Autopilot&#x0101;.
+                Nav dizainu. Augšupielādē savu attēlu vai izvēlies AI kampaņas dizainu.
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[460px] overflow-y-auto pr-1">
