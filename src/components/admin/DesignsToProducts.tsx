@@ -40,13 +40,16 @@ function adjustPrintArea(
   base: { x: number; y: number; w: number; h: number },
   offsetY: number,
   scale: number,
+  offsetX = 0,
 ) {
-  const w = Math.min(1, Math.max(0.05, base.w * scale));
-  const h = Math.min(1, Math.max(0.05, base.h * scale));
-  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2));
+  const w = Math.min(1, Math.max(0.03, base.w * scale));
+  const h = Math.min(1, Math.max(0.03, base.h * scale));
+  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2 + offsetX));
   const y = Math.min(1 - h, Math.max(0, base.y + (base.h - h) / 2 + offsetY));
   return { x, y, w, h };
 }
+
+const colorKey = (productId: string, colorName: string) => `${productId}::${colorName}`;
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -80,8 +83,18 @@ export function DesignsToProducts() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
   // Manual print placement adjustments (applied on top of each base's print_area)
-  const [offsetY, setOffsetY] = useState(0); // -0.15 .. +0.15 of mockup height
-  const [scale, setScale] = useState(1);     // 0.6 .. 1.4
+  const [offsetY, setOffsetY] = useState(0); // fraction of mockup height
+  const [offsetX, setOffsetX] = useState(0); // fraction of mockup width
+  const [scale, setScale] = useState(1);     // 0.2 .. 3
+  const [excludedColors, setExcludedColors] = useState<Set<string>>(new Set());
+  const dragRef = useRef<{ px: number; py: number; ox: number; oy: number; w: number; h: number } | null>(null);
+  const toggleColor = (pid: string, name: string) =>
+    setExcludedColors((prev) => {
+      const n = new Set(prev);
+      const k = colorKey(pid, name);
+      n.has(k) ? n.delete(k) : n.add(k);
+      return n;
+    });
 
   useEffect(() => { void load(); }, []);
 
