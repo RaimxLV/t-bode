@@ -285,6 +285,7 @@ export function DesignsToProducts() {
       }
       toast.success(`Izveidoti ${createdCount} melnraksta produkti. Pārbaudi sadaļā Melnraksti.`);
       await queryClient.invalidateQueries({ queryKey: ["products"] });
+      window.dispatchEvent(new Event("admin-products-changed"));
     } catch (e: any) {
       console.error(e);
       toast.error("Ģenerēšana neizdevās: " + (e?.message || ""));

@@ -137,6 +137,11 @@ const Admin = () => {
   }, [user, authLoading, adminLoading, hasAdminRole, isWhitelisted, isAdmin, authorizedUserId, navigate, t]);
 
   useEffect(() => { if (!isAdmin) return; loadProducts(); loadOrders(); loadFaqs(); loadWhitelist(); }, [isAdmin]);
+  useEffect(() => {
+    const onChanged = () => { void loadProducts(); };
+    window.addEventListener("admin-products-changed", onChanged);
+    return () => window.removeEventListener("admin-products-changed", onChanged);
+  }, []);
 
   // Real-time new-order notifications — persistent in-app popup
   const [pendingNewOrders, setPendingNewOrders] = useState<NewOrderInfo[]>([]);
