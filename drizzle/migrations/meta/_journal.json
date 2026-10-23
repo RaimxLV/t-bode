@@ -8,6 +8,13 @@
       "when": 1792743455522,
       "tag": "0000_worker_manual_order_payment",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792743656365,
+      "tag": "0001_manual_payment_admin_access_only",
+      "breakpoints": true
     }
   ]
 }

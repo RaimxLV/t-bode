@@ -1,8 +1,8 @@
 # Interneta veikala prioritāte meklēšanā
 
 # 1267. pasūtījums un manuāla apmaksa
-- [ ] Atzīmēt Raimonda apstiprināto apmaksu un noskaidrot pieejamos maksājuma kļūmes pierādījumus.
-- [ ] Dot Evitai ierobežotu pasūtījumu piekļuvi ar manuālas apmaksas apstiprinājumu; pārbaudīt tiesības un darbību bez testa maksājumiem/e-pastiem.
+- [x] Atzīmēt Raimonda apstiprināto 1267. pasūtījuma apmaksu.
+- [x] Evitas konts ir info@t-bode.lv: saglabāta esošā pasūtījumu pārvaldīšanas piekļuve, pievienota apmaksas poga visiem maksājumu veidiem avotā/priekšskatījumā; pēc lietotāja norādes papildu pārbaudes neveikt. Nav publicēts.
 
 # Fokusēta preču attēlu ielāde
 - [x] Adaptīvi galvenie attēli un sīktēli ar avota maiņas atiestati un oriģināla/placeholder rezervi; oriģināli palielinājumam un drukai saglabāti.

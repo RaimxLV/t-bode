@@ -127,13 +127,9 @@ const Admin = () => {
       return;
     }
     if (!hasAdminRole && !isWhitelisted) {
-      let cancelled = false;
-      void supabase.rpc("has_role", { _user_id: user.id, _role: "worker" }).then(({ data, error }) => {
-        if (cancelled) return;
-        if (!error && data) navigate("/admin/orders", { replace: true });
-        else { toast.error(t("admin.noAccess")); navigate("/"); }
-      });
-      return () => { cancelled = true; };
+      toast.error(t("admin.noAccess"));
+      navigate("/");
+      return;
     }
     setAuthorizedUserId(user.id);
     setIsAdmin(true);
