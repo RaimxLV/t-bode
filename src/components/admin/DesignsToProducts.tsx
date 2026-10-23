@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,13 +40,16 @@ function adjustPrintArea(
   base: { x: number; y: number; w: number; h: number },
   offsetY: number,
   scale: number,
+  offsetX = 0,
 ) {
-  const w = Math.min(1, Math.max(0.05, base.w * scale));
-  const h = Math.min(1, Math.max(0.05, base.h * scale));
-  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2));
+  const w = Math.min(1, Math.max(0.03, base.w * scale));
+  const h = Math.min(1, Math.max(0.03, base.h * scale));
+  const x = Math.min(1 - w, Math.max(0, base.x + (base.w - w) / 2 + offsetX));
   const y = Math.min(1 - h, Math.max(0, base.y + (base.h - h) / 2 + offsetY));
   return { x, y, w, h };
 }
+
+const colorKey = (productId: string, colorName: string) => `${productId}::${colorName}`;
 
 function slugify(s: string) {
   return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -80,8 +83,18 @@ export function DesignsToProducts() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
   // Manual print placement adjustments (applied on top of each base's print_area)
-  const [offsetY, setOffsetY] = useState(0); // -0.15 .. +0.15 of mockup height
-  const [scale, setScale] = useState(1);     // 0.6 .. 1.4
+  const [offsetY, setOffsetY] = useState(0); // fraction of mockup height
+  const [offsetX, setOffsetX] = useState(0); // fraction of mockup width
+  const [scale, setScale] = useState(1);     // 0.2 .. 3
+  const [excludedColors, setExcludedColors] = useState<Set<string>>(new Set());
+  const dragRef = useRef<{ px: number; py: number; ox: number; oy: number; w: number; h: number } | null>(null);
+  const toggleColor = (pid: string, name: string) =>
+    setExcludedColors((prev) => {
+      const n = new Set(prev);
+      const k = colorKey(pid, name);
+      n.has(k) ? n.delete(k) : n.add(k);
+      return n;
+    });
 
   useEffect(() => { void load(); }, []);
 
@@ -166,11 +179,11 @@ export function DesignsToProducts() {
     const sel = availableBases.filter((p) => selectedBases.has(p.id));
     return sel[0] ?? null;
   }, [availableBases, selectedBases]);
-  const previewColor = previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
+  const previewColor = previewBase?.color_variants.find((cv) => cv.images?.[0] && !excludedColors.has(colorKey(previewBase.id, cv.name))) ?? previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
   const previewArea = useMemo(() => {
     const base = previewBase?.print_area ?? DEFAULT_PRINT_AREA;
-    return adjustPrintArea(base, offsetY, scale);
-  }, [previewBase, offsetY, scale]);
+    return adjustPrintArea(base, offsetY, scale, offsetX);
+  }, [previewBase, offsetY, scale, offsetX]);
 
   function toggleBase(id: string) {
     setSelectedBases((prev) => {
@@ -184,10 +197,10 @@ export function DesignsToProducts() {
     let n = 0;
     for (const p of availableBases) {
       if (!selectedBases.has(p.id)) continue;
-      n += p.color_variants.filter((cv) => cv.images?.[0]).length;
+      n += p.color_variants.filter((cv) => cv.images?.[0] && !excludedColors.has(colorKey(p.id, cv.name))).length;
     }
     return n;
-  }, [availableBases, selectedBases]);
+  }, [availableBases, selectedBases, excludedColors]);
 
   async function generate() {
     if (!selectedDesign) { toast.error("Izvēlies dizainu"); return; }
@@ -203,9 +216,9 @@ export function DesignsToProducts() {
       const selectedProducts = availableBases.filter((p) => selectedBases.has(p.id));
       for (const baseProduct of selectedProducts) {
         const baseArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
-        const printArea = adjustPrintArea(baseArea, offsetY, scale);
+        const printArea = adjustPrintArea(baseArea, offsetY, scale, offsetX);
         const variants: ColorVariant[] = [];
-        const eligible = baseProduct.color_variants.filter((cv) => cv.images?.[0]);
+        const eligible = baseProduct.color_variants.filter((cv) => cv.images?.[0] && !excludedColors.has(colorKey(baseProduct.id, cv.name)));
         for (let vi = 0; vi < eligible.length; vi++) {
           const cv = eligible[vi];
           try {
@@ -450,6 +463,34 @@ export function DesignsToProducts() {
               </div>
             )}
 
+            {availableBases.some((p) => selectedBases.has(p.id)) && (
+              <div className="rounded border border-border p-2 space-y-2 bg-muted/30">
+                <div className="text-[11px] font-body text-muted-foreground">Krāsas kartītēm (klikšķini, lai izslēgtu/ieslēgtu)</div>
+                {availableBases.filter((p) => selectedBases.has(p.id)).map((p) => (
+                  <div key={p.id} className="space-y-1">
+                    <div className="text-[11px] font-body truncate">{p.name_lv || p.name}</div>
+                    <div className="flex flex-wrap gap-1">
+                      {p.color_variants.filter((cv) => cv.images?.[0]).map((cv) => {
+                        const off = excludedColors.has(colorKey(p.id, cv.name));
+                        return (
+                          <button
+                            key={cv.name}
+                            type="button"
+                            onClick={() => toggleColor(p.id, cv.name)}
+                            aria-pressed={!off}
+                            className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-body transition ${off ? "border-border opacity-40 line-through" : "border-primary bg-primary/10"}`}
+                          >
+                            <span className="w-3 h-3 rounded-full border border-border" style={{ background: cv.hex || "#888" }} />
+                            {cv.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="pt-2 border-t border-border space-y-2">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-body text-muted-foreground">Cena (€):</label>
@@ -467,15 +508,24 @@ export function DesignsToProducts() {
                   <Move className="w-3 h-3" /> Drukas novietojums
                   <button
                     type="button"
-                    onClick={() => { setOffsetY(0); setScale(1); }}
+                    onClick={() => { setOffsetY(0); setOffsetX(0); setScale(1); }}
                     className="ml-auto text-[10px] underline hover:text-foreground"
                   >atiestatīt</button>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="text-[10px] font-body space-y-1">
+                    <div className="flex justify-between"><span>Horizontāli</span><span className="text-muted-foreground">{(offsetX * 100).toFixed(0)}%</span></div>
+                    <input
+                      type="range" min={-0.5} max={0.5} step={0.005}
+                      value={offsetX}
+                      onChange={(e) => setOffsetX(parseFloat(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                  </label>
                   <label className="text-[10px] font-body space-y-1">
                     <div className="flex justify-between"><span>Vertikāli</span><span className="text-muted-foreground">{(offsetY * 100).toFixed(0)}%</span></div>
                     <input
-                      type="range" min={-0.15} max={0.25} step={0.01}
+                      type="range" min={-0.5} max={0.5} step={0.005}
                       value={offsetY}
                       onChange={(e) => setOffsetY(parseFloat(e.target.value))}
                       className="w-full accent-primary"
@@ -484,7 +534,7 @@ export function DesignsToProducts() {
                   <label className="text-[10px] font-body space-y-1">
                     <div className="flex justify-between"><span>Izmērs</span><span className="text-muted-foreground">{(scale * 100).toFixed(0)}%</span></div>
                     <input
-                      type="range" min={0.5} max={1.4} step={0.05}
+                      type="range" min={0.2} max={3} step={0.02}
                       value={scale}
                       onChange={(e) => setScale(parseFloat(e.target.value))}
                       className="w-full accent-primary"
@@ -492,13 +542,29 @@ export function DesignsToProducts() {
                   </label>
                 </div>
                 {previewBase && previewColor && selectedDesign && (
-                  <div className="relative w-full max-w-[180px] mx-auto bg-card rounded overflow-hidden border border-border">
+                  <div
+                    className="relative w-full max-w-[280px] mx-auto bg-card rounded overflow-hidden border border-border cursor-move touch-none select-none"
+                    title="Velc, lai pārvietotu; ritini, lai mainītu izmēru"
+                    onPointerDown={(e) => {
+                      const r = e.currentTarget.getBoundingClientRect();
+                      e.currentTarget.setPointerCapture(e.pointerId);
+                      dragRef.current = { px: e.clientX, py: e.clientY, ox: offsetX, oy: offsetY, w: r.width, h: r.height };
+                    }}
+                    onPointerMove={(e) => {
+                      const d = dragRef.current; if (!d) return;
+                      setOffsetX(Math.max(-0.5, Math.min(0.5, d.ox + (e.clientX - d.px) / d.w)));
+                      setOffsetY(Math.max(-0.5, Math.min(0.5, d.oy + (e.clientY - d.py) / d.h)));
+                    }}
+                    onPointerUp={() => { dragRef.current = null; }}
+                    onPointerCancel={() => { dragRef.current = null; }}
+                    onWheel={(e) => setScale((s) => Math.max(0.2, Math.min(3, +(s * (e.deltaY < 0 ? 1.05 : 0.95)).toFixed(3))))}
+                  >
                     {/* The shirt image controls layout so the print-area overlay
                         aligns exactly with the mockup's pixel space (matches
                         composeMockup output). Using object-contain inside a
                         fixed-aspect box would letterbox the shirt and shift
                         the design vs. the generated draft. */}
-                    <img src={previewColor.images[0]} alt="" className="block w-full h-auto" />
+                    <img src={previewColor.images[0]} alt="" draggable={false} className="block w-full h-auto pointer-events-none" />
                     <img
                       src={selectedDesign.url}
                       alt=""
