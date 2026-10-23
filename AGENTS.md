@@ -9,7 +9,8 @@
 - Resolve only explicitly storage-verified legacy product image paths through the shared image resolver; preserve all unverified URLs and product records to avoid wrong variant photos.
 - Emit manual analytics only after route SEO signals its resolved title; measure public pathname only and scrub referrer/query/hash defaults to avoid personal state leakage.
 - Initialize offscreen maps only near the viewport and pause invisible gallery animation; reserve the same dimensions so deferred work does not change layout.
-- Activate product-card carousels near the viewport and load only initial/neighboring slides; keep links and card frames unchanged to reduce synchronous catalogue initialization.
+- Activate product-card carousels near the viewport, fetching only the current slide until interaction prepares all slides for uninterrupted looping/swiping; only the first two catalogue primaries may gain visible eager priority.
+- Use source-keyed responsive OptimizedImage for product display and thumbnails; retain untouched originals for lightbox and constructor/print data so display optimizations cannot reduce print quality.
 - Do not enable static homepage prerender on hosting that hardcodes index.html SPA fallback without a verified separate private/unknown shell; otherwise private and unknown URLs receive indexable homepage HTML.
 - Key the product detail stateful view by product identity, not fetched object reference; new products reset selections/dialogs/quantity while same-product refetches retain customer choices.
 - Treat a product URL color as a validated initial variant suggestion only, never as an ongoing override of customer selections; this preserves same-product refetch behavior.

@@ -1,5 +1,11 @@
 # Interneta veikala prioritāte meklēšanā
 
+# Fokusēta preču attēlu ielāde
+- [x] Adaptīvi galvenie attēli un sīktēli ar avota maiņas atiestati un oriģināla/placeholder rezervi; oriģināli palielinājumam un drukai saglabāti.
+- [x] Katalogā tikai pašreizējais slaids līdz mijiedarbībai, pirmās divas redzamās kartītes ar prioritāti; 17 testi, 1280/390 px krāsu maiņa, cilpa un pieskāriena vilkšana pārbaudīti, kompilācija OK.
+- [x] Izmērīti baltās krūzes galvenie WebP: 5468 B datorā un 14836 B 3x telefonā pret 2831474 B oriģinālu; baltās krūzes sīktēlu izmēra pārbaude 564/1270 B (šai izvēlei sīktēlu UI nav).
+- [ ] Publicēšana tikai pēc Raimonda atļaujas; iepriekšējie maisiņu/sagatavju darbi jāpārskata kopā, jo izvietošana nav tikai šis labojums.
+
 # 100 statisku maisiņu kompozīciju pamats
 - [x] Saglabāt sākotnējos 20 saukļus, pievienot 80 autora rindas un pakāpenisku visu kategoriju ielādi; 8 jauktas idejas, tālāk pa 16.
 - [x] Sagatavot ilustrāciju reģistru, slāņu manifestu un tikai pārbaudītām sagatavēm paredzētu sākotnējās izvēles savienojumu.

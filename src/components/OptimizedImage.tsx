@@ -24,7 +24,11 @@ interface OptimizedImageProps extends ImgHTMLAttributes<HTMLImageElement> {
  * Lazy-loading image with async decoding, fade-in and automatic WebP +
  * `srcset` for Supabase Storage URLs. External URLs are used as-is.
  */
-export const OptimizedImage = ({
+export const OptimizedImage = (props: OptimizedImageProps) => (
+  <OptimizedImageContent key={props.src} {...props} />
+);
+
+const OptimizedImageContent = ({
   src,
   alt,
   eager = false,

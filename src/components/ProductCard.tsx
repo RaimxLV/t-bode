@@ -7,44 +7,18 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { DBProduct } from "@/hooks/useProducts";
 import { getProductName } from "@/hooks/useProducts";
 import { WishlistButton } from "@/components/WishlistButton";
-import { buildSrcSet, getOptimizedSrc, isSupabaseImage } from "@/lib/imageOptimization";
+import { OptimizedImage } from "@/components/OptimizedImage";
 const productHref = (p: DBProduct) =>
   `/produkti/${p.slug}${(p as any).is_draft ? "?preview=1" : ""}`;
-const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
-  const [loaded, setLoaded] = useState(false);
-  const [failureStage, setFailureStage] = useState(0);
-  const optimized = isSupabaseImage(src) ? getOptimizedSrc(src, 640, 75) : src;
-  const srcSet = buildSrcSet(src, [256, 384, 512, 640, 800], 75) || undefined;
-  return (
-    <div className="relative w-full h-full bg-muted">
-      {!loaded && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
-      )}
-      <img
-        src={failureStage >= 2 ? "/image-unavailable.svg" : failureStage === 1 ? src : optimized}
-        srcSet={failureStage === 0 ? srcSet : undefined}
-        sizes={srcSet ? "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px" : undefined}
-        alt={alt}
-        className={`w-full h-full object-contain bg-white transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-        loading="lazy"
-        decoding="async"
-        onLoad={() => setLoaded(true)}
-        onError={() => {
-          if (failureStage < 2) setFailureStage(failureStage + 1);
-          else setLoaded(true);
-        }}
-      />
-    </div>
-  );
-};
 
 interface ProductCardProps {
   product: DBProduct;
   onEdit?: (product: DBProduct) => void;
   onDelete?: (productId: string) => void;
+  priorityImage?: boolean;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+export const ProductCard = ({ product, onEdit, onDelete, priorityImage = false }: ProductCardProps) => {
   const { t, i18n } = useTranslation();
   const displayName = getProductName(product, i18n.language);
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
@@ -79,6 +53,11 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
 
   const cardRef = useRef<HTMLDivElement>(null);
   const [carouselActive, setCarouselActive] = useState(false);
+  const [inViewport, setInViewport] = useState(false);
+  const imageGroup = displayImages.join("\n");
+  const [interactedGroup, setInteractedGroup] = useState<string>();
+  const interacted = interactedGroup === imageGroup;
+  const prepareSlides = useCallback(() => setInteractedGroup(imageGroup), [imageGroup]);
   useEffect(() => {
     const card = cardRef.current;
     if (!card) return;
@@ -90,6 +69,17 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
     observer.observe(card);
     return () => observer.disconnect();
   }, []);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || !priorityImage) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry?.isIntersecting) return;
+      setInViewport(true);
+      observer.disconnect();
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [priorityImage]);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, dragFree: false, active: carouselActive && displayImages.length > 1 });
   const [currentSlide, setCurrentSlide] = useState(0);
 
@@ -101,11 +91,15 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
   useEffect(() => {
     if (!emblaApi) return;
     emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    emblaApi.on("pointerDown", prepareSlides);
     onSelect();
     return () => {
       emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+      emblaApi.off("pointerDown", prepareSlides);
     };
-  }, [emblaApi, onSelect]);
+  }, [emblaApi, onSelect, prepareSlides]);
 
   const hasMultipleImages = displayImages.length > 1;
   const hasColors = product.color_variants && product.color_variants.length > 0;
@@ -120,7 +114,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
     >
       {/* Image — aspect-square, overflow-hidden, rounded top */}
       <div className="relative aspect-square w-full overflow-hidden rounded-t-xl flex-shrink-0 bg-white">
-        <div ref={emblaRef} className="overflow-hidden w-full h-full">
+        <div ref={emblaRef} onPointerDownCapture={prepareSlides} className="overflow-hidden w-full h-full">
           <div className="flex h-full">
             {displayImages.map((img, i) => (
               <Link
@@ -128,8 +122,13 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                 to={productHref(product)}
                 className="relative flex-[0_0_100%] min-w-0 h-full"
               >
-                {(i === 0 || (carouselActive && (Math.abs(i - currentSlide) <= 1 || i === displayImages.length - 1))) && (
-                  <ProductImage key={img} src={img} alt={`${displayName} ${i + 1}`} />
+                {(i === currentSlide || interacted) && (
+                  <OptimizedImage key={img} src={img} alt={`${displayName} ${i + 1}`}
+                    width={640} widths={[256, 384, 512, 640, 800, 1024]}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                    wrapperClassName="w-full h-full bg-muted" className="w-full h-full object-contain bg-white"
+                    eager={interacted || (priorityImage && inViewport && i === currentSlide)}
+                    fetchPriority={priorityImage && inViewport && i === currentSlide ? "high" : "auto"} />
                 )}
               </Link>
             ))}
@@ -139,14 +138,14 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         {hasMultipleImages && (
           <>
             <button
-              onClick={(e) => { e.preventDefault(); emblaApi?.scrollPrev(); }}
+              onClick={(e) => { e.preventDefault(); prepareSlides(); emblaApi?.scrollPrev(); }}
               className="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
               aria-label="Previous"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={(e) => { e.preventDefault(); emblaApi?.scrollNext(); }}
+              onClick={(e) => { e.preventDefault(); prepareSlides(); emblaApi?.scrollNext(); }}
               className="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
               aria-label="Next"
             >
