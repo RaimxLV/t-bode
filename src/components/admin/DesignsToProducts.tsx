@@ -84,9 +84,11 @@ export function DesignsToProducts() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [bgRemovingId, setBgRemovingId] = useState<string | null>(null);
   // Manual print placement adjustments (applied on top of each base's print_area)
-  const [offsetY, setOffsetY] = useState(0); // fraction of mockup height
-  const [offsetX, setOffsetX] = useState(0); // fraction of mockup width
-  const [scale, setScale] = useState(1);     // 0.2 .. 3
+  // Placement: shared default + optional per-color overrides (key = productId::colorName)
+  type Placement = { x: number; y: number; s: number };
+  const [defaultPlacement, setDefaultPlacement] = useState<Placement>({ x: 0, y: 0, s: 1 });
+  const [placements, setPlacements] = useState<Record<string, Placement>>({});
+  const placementFor = (k: string) => placements[k] ?? defaultPlacement;
   const queryClient = useQueryClient();
   const [previewPick, setPreviewPick] = useState<{ pid: string; name: string } | null>(null);
   const [excludedColors, setExcludedColors] = useState<Set<string>>(new Set());
@@ -183,10 +185,21 @@ export function DesignsToProducts() {
     return sel.find((p) => p.id === previewPick?.pid) ?? sel[0] ?? null;
   }, [availableBases, selectedBases, previewPick]);
   const previewColor = (previewPick && previewBase?.id === previewPick.pid ? previewBase.color_variants.find((cv) => cv.name === previewPick.name && cv.images?.[0]) : undefined) ?? previewBase?.color_variants.find((cv) => cv.images?.[0] && !excludedColors.has(colorKey(previewBase.id, cv.name))) ?? previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
+  const activeKey = previewBase && previewColor ? colorKey(previewBase.id, previewColor.name) : null;
+  const current = activeKey ? placementFor(activeKey) : defaultPlacement;
+  const offsetX = current.x, offsetY = current.y, scale = current.s;
+  const updateCurrent = (patch: (p: Placement) => Placement) => {
+    if (activeKey && placements[activeKey]) setPlacements((m) => ({ ...m, [activeKey]: patch(m[activeKey]) }));
+    else setDefaultPlacement(patch);
+  };
+  const setOffsetX = (v: number) => updateCurrent((p) => ({ ...p, x: v }));
+  const setOffsetY = (v: number) => updateCurrent((p) => ({ ...p, y: v }));
+  const setScale = (v: number | ((s: number) => number)) => updateCurrent((p) => ({ ...p, s: typeof v === "function" ? v(p.s) : v }));
   const previewArea = useMemo(() => {
     const base = previewBase?.print_area ?? DEFAULT_PRINT_AREA;
     return adjustPrintArea(base, offsetY, scale, offsetX);
   }, [previewBase, offsetY, scale, offsetX]);
+  const activeHasOwn = !!activeKey && !!placements[activeKey];
 
   function toggleBase(id: string) {
     setSelectedBases((prev) => {
@@ -219,11 +232,12 @@ export function DesignsToProducts() {
       const selectedProducts = availableBases.filter((p) => selectedBases.has(p.id));
       for (const baseProduct of selectedProducts) {
         const baseArea = baseProduct.print_area ?? DEFAULT_PRINT_AREA;
-        const printArea = adjustPrintArea(baseArea, offsetY, scale, offsetX);
         const variants: ColorVariant[] = [];
         const eligible = baseProduct.color_variants.filter((cv) => cv.images?.[0] && !excludedColors.has(colorKey(baseProduct.id, cv.name)));
         for (let vi = 0; vi < eligible.length; vi++) {
           const cv = eligible[vi];
+          const pl = placementFor(colorKey(baseProduct.id, cv.name));
+          const printArea = adjustPrintArea(baseArea, pl.y, pl.s, pl.x);
           try {
             const blob = await composeMockup({
               mockupUrl: cv.images[0],
@@ -269,8 +283,8 @@ export function DesignsToProducts() {
           in_stock: true,
           is_draft: true,
           status: "draft",
-          print_offset_y: offsetY,
-          print_scale: scale,
+          print_offset_y: defaultPlacement.y,
+          print_scale: defaultPlacement.s,
           available_from: new Date().toISOString(),
           always_available: false,
           campaign_id: selectedDesign.campaignId ?? null,
@@ -486,7 +500,7 @@ export function DesignsToProducts() {
                               className={`flex items-center gap-1 pl-2 pr-1 py-0.5 ${off ? "line-through" : ""}`}
                             >
                               <span className="w-3 h-3 rounded-full border border-border" style={{ background: cv.hex || "#888" }} />
-                              {cv.name}
+                              {cv.name}{placements[colorKey(p.id, cv.name)] ? " •" : ""}
                             </button>
                             <button
                               type="button"
@@ -521,10 +535,25 @@ export function DesignsToProducts() {
                   <Move className="w-3 h-3" /> Drukas novietojums
                   <button
                     type="button"
-                    onClick={() => { setOffsetY(0); setOffsetX(0); setScale(1); }}
+                    onClick={() => { setDefaultPlacement({ x: 0, y: 0, s: 1 }); setPlacements({}); }}
                     className="ml-auto text-[10px] underline hover:text-foreground"
                   >atiestatīt</button>
                 </div>
+                {activeKey && previewColor && (
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] font-body">
+                    <span className="text-muted-foreground">
+                      {activeHasOwn ? <>Regulē tikai krāsu <strong className="text-foreground">{previewColor.name}</strong></> : <>Regulē <strong className="text-foreground">visas krāsas</strong> kopā</>}
+                    </span>
+                    {activeHasOwn ? (
+                      <>
+                        <button type="button" className="underline hover:text-foreground" onClick={() => { const own = placements[activeKey]; setDefaultPlacement(own); setPlacements({}); }}>Piemērot visām krāsām</button>
+                        <button type="button" className="underline hover:text-foreground" onClick={() => setPlacements((m) => { const n = { ...m }; delete n[activeKey]; return n; })}>Atgriezt kopējo</button>
+                      </>
+                    ) : (
+                      <button type="button" className="underline hover:text-foreground" onClick={() => setPlacements((m) => ({ ...m, [activeKey]: { ...defaultPlacement } }))}>Regulēt atsevišķi šai krāsai</button>
+                    )}
+                  </div>
+                )}
                 <div className="grid grid-cols-3 gap-2">
                   <label className="text-[10px] font-body space-y-1">
                     <div className="flex justify-between"><span>Horizontāli</span><span className="text-muted-foreground">{(offsetX * 100).toFixed(0)}%</span></div>
@@ -565,8 +594,7 @@ export function DesignsToProducts() {
                     }}
                     onPointerMove={(e) => {
                       const d = dragRef.current; if (!d) return;
-                      setOffsetX(Math.max(-0.5, Math.min(0.5, d.ox + (e.clientX - d.px) / d.w)));
-                      setOffsetY(Math.max(-0.5, Math.min(0.5, d.oy + (e.clientY - d.py) / d.h)));
+                      updateCurrent((p) => ({ ...p, x: Math.max(-0.5, Math.min(0.5, d.ox + (e.clientX - d.px) / d.w)), y: Math.max(-0.5, Math.min(0.5, d.oy + (e.clientY - d.py) / d.h)) }));
                     }}
                     onPointerUp={() => { dragRef.current = null; }}
                     onPointerCancel={() => { dragRef.current = null; }}
