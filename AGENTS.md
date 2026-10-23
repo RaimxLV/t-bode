@@ -1,5 +1,7 @@
 # SEO maintenance
 
+- Worker payment access lives at /admin/orders with read-only order RLS and the authenticated mark_order_manually_paid RPC; never grant workers general order updates or full admin access, and preserve fulfillment status when confirming payment.
+
 - Preserve the existing build-time sitemap generator and both public sitemap functions; synchronize their static routes and priorities when SEO rules change, so different entry points cannot restore obsolete settings.
 - Keep SEO-only changes isolated from checkout, cart, payment, authentication and hero rendering, so search improvements do not alter customer ordering behavior.
 - Centralize canonical normalization and technical-route/draft-preview indexing in `src/lib/seoPolicy.ts`; route SEO must react to location changes so private query state never becomes an indexed URL.

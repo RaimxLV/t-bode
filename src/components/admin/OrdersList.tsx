@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { X, Archive, Inbox, TrendingUp, Clock, CheckCircle, ShoppingCart, Euro, ChevronDown, ChevronUp, Search, Trash2, FileText, Building2, Truck, Download, Loader2, Landmark, BadgeCheck, Bell, BellRing, BellOff, FlaskConical, AlertCircle, Info, FileArchive, RefreshCw, Lock, Unlock, Phone, Mail, Undo2, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { isOfficePickup, stripOfficePrefix } from "@/lib/officePickup";
+import { canMarkOrderManuallyPaid } from "@/lib/manualOrderPayment";
 
 const InvoiceModal = lazy(() => import("./InvoiceModal").then(m => ({ default: m.InvoiceModal })));
 import { ZakekePrintFilesButton } from "./ZakekePrintFilesButton";
@@ -465,13 +466,7 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
 
   const markAsPaid = async (orderId: string) => {
     if (!confirm(t("admin.markPaidConfirm", "Apstiprināt, ka maksājums ir saņemts bankā?"))) return;
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        status: "processing" as any,
-        manually_paid_at: new Date().toISOString(),
-      })
-      .eq("id", orderId);
+    const { error } = await supabase.rpc("mark_order_manually_paid", { _order_id: orderId });
     if (error) toast.error(t("admin.statusError"));
     else { toast.success(t("admin.markedAsPaid", "Pasūtījums atzīmēts kā apmaksāts")); onRefresh(); }
   };
@@ -1144,6 +1139,11 @@ export const OrdersList = ({ orders, orderItems, loading, onRefresh }: OrdersLis
                         </div>
                       </div>
 
+                      {order.payment_method !== "bank_transfer" && canMarkOrderManuallyPaid(order) && (
+                        <Button variant="outline" size="sm" onClick={() => markAsPaid(order.id)} className="gap-1.5">
+                          <BadgeCheck className="w-3.5 h-3.5" />Atzīmēt kā apmaksātu
+                        </Button>
+                      )}
                       {/* Bank transfer block */}
                       {order.payment_method === "bank_transfer" && (
                         <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 space-y-2">
