@@ -1,5 +1,7 @@
 # SEO maintenance
 
+- Direct design uploads in Designs → Products use the existing design-library bucket and design_library records, auto-select the saved original, and clean up uploaded files if record creation fails; this keeps mockup generation and pricing unchanged.
+
 - Manual order payment confirmation uses the authenticated admin/whitelist-only mark_order_manually_paid RPC; record the acting user and preserve advanced fulfillment status.
 
 - Preserve the existing build-time sitemap generator and both public sitemap functions; synchronize their static routes and priorities when SEO rules change, so different entry points cannot restore obsolete settings.
