@@ -1769,6 +1769,10 @@ export type Database = {
       }
       is_admin_or_whitelisted: { Args: never; Returns: boolean }
       is_admin_whitelisted: { Args: { _email: string }; Returns: boolean }
+      mark_order_manually_paid: {
+        Args: { _order_id: string }
+        Returns: boolean
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

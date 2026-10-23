@@ -79,6 +79,7 @@ const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
+const OrderPayments = lazy(() => import("./pages/OrderPayments.tsx"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess.tsx"));
 const Profile = lazy(() => import("./pages/Profile.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
@@ -247,6 +248,7 @@ const App = () => {
                         <Route path="/install" element={<Install />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/admin" element={<Admin />} />
+                        <Route path="/admin/orders" element={<OrderPayments />} />
                         {/* Idejas un Padomi (content hub) */}
                         <Route path="/idejas" element={<IdejasIndex />} />
                         <Route path="/idejas/kategorija/:slug" element={<IdejasCategory />} />

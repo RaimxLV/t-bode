@@ -1,5 +1,9 @@
 # Interneta veikala prioritāte meklēšanā
 
+# 1267. pasūtījums un manuāla apmaksa
+- [ ] Atzīmēt Raimonda apstiprināto apmaksu un noskaidrot pieejamos maksājuma kļūmes pierādījumus.
+- [ ] Dot Evitai ierobežotu pasūtījumu piekļuvi ar manuālas apmaksas apstiprinājumu; pārbaudīt tiesības un darbību bez testa maksājumiem/e-pastiem.
+
 # Fokusēta preču attēlu ielāde
 - [x] Adaptīvi galvenie attēli un sīktēli ar avota maiņas atiestati un oriģināla/placeholder rezervi; oriģināli palielinājumam un drukai saglabāti.
 - [x] Katalogā tikai pašreizējais slaids līdz mijiedarbībai, pirmās divas redzamās kartītes ar prioritāti; 17 testi, 1280/390 px krāsu maiņa, cilpa un pieskāriena vilkšana pārbaudīti, kompilācija OK.
