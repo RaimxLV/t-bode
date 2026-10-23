@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Check, Image as ImageIcon, Shirt, Search, Wand2, Sparkles, Upload, Move, Eraser } from "lucide-react";
 import { composeMockup } from "@/lib/imageCrop";
 import { removeDesignBackground } from "@/lib/removeDesignBackground";
@@ -86,6 +87,8 @@ export function DesignsToProducts() {
   const [offsetY, setOffsetY] = useState(0); // fraction of mockup height
   const [offsetX, setOffsetX] = useState(0); // fraction of mockup width
   const [scale, setScale] = useState(1);     // 0.2 .. 3
+  const queryClient = useQueryClient();
+  const [previewPick, setPreviewPick] = useState<{ pid: string; name: string } | null>(null);
   const [excludedColors, setExcludedColors] = useState<Set<string>>(new Set());
   const dragRef = useRef<{ px: number; py: number; ox: number; oy: number; w: number; h: number } | null>(null);
   const toggleColor = (pid: string, name: string) =>
@@ -177,9 +180,9 @@ export function DesignsToProducts() {
   // Preview base = first selected base with at least one color image
   const previewBase = useMemo(() => {
     const sel = availableBases.filter((p) => selectedBases.has(p.id));
-    return sel[0] ?? null;
-  }, [availableBases, selectedBases]);
-  const previewColor = previewBase?.color_variants.find((cv) => cv.images?.[0] && !excludedColors.has(colorKey(previewBase.id, cv.name))) ?? previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
+    return sel.find((p) => p.id === previewPick?.pid) ?? sel[0] ?? null;
+  }, [availableBases, selectedBases, previewPick]);
+  const previewColor = (previewPick && previewBase?.id === previewPick.pid ? previewBase.color_variants.find((cv) => cv.name === previewPick.name && cv.images?.[0]) : undefined) ?? previewBase?.color_variants.find((cv) => cv.images?.[0] && !excludedColors.has(colorKey(previewBase.id, cv.name))) ?? previewBase?.color_variants.find((cv) => cv.images?.[0]) ?? null;
   const previewArea = useMemo(() => {
     const base = previewBase?.print_area ?? DEFAULT_PRINT_AREA;
     return adjustPrintArea(base, offsetY, scale, offsetX);
@@ -281,7 +284,7 @@ export function DesignsToProducts() {
         }
       }
       toast.success(`Izveidoti ${createdCount} melnraksta produkti. Pārbaudi sadaļā Melnraksti.`);
-      setSelectedBases(new Set());
+      await queryClient.invalidateQueries({ queryKey: ["products"] });
     } catch (e: any) {
       console.error(e);
       toast.error("Ģenerēšana neizdevās: " + (e?.message || ""));
@@ -465,24 +468,33 @@ export function DesignsToProducts() {
 
             {availableBases.some((p) => selectedBases.has(p.id)) && (
               <div className="rounded border border-border p-2 space-y-2 bg-muted/30">
-                <div className="text-[11px] font-body text-muted-foreground">Krāsas kartītēm (klikšķini, lai izslēgtu/ieslēgtu)</div>
+                <div className="text-[11px] font-body text-muted-foreground">Krāsas: klikšķini uz krāsas, lai apskatītu; × izslēdz, + ieslēdz</div>
                 {availableBases.filter((p) => selectedBases.has(p.id)).map((p) => (
                   <div key={p.id} className="space-y-1">
                     <div className="text-[11px] font-body truncate">{p.name_lv || p.name}</div>
                     <div className="flex flex-wrap gap-1">
                       {p.color_variants.filter((cv) => cv.images?.[0]).map((cv) => {
                         const off = excludedColors.has(colorKey(p.id, cv.name));
+                        const active = previewBase?.id === p.id && previewColor?.name === cv.name;
                         return (
-                          <button
-                            key={cv.name}
-                            type="button"
-                            onClick={() => toggleColor(p.id, cv.name)}
-                            aria-pressed={!off}
-                            className={`flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-body transition ${off ? "border-border opacity-40 line-through" : "border-primary bg-primary/10"}`}
-                          >
-                            <span className="w-3 h-3 rounded-full border border-border" style={{ background: cv.hex || "#888" }} />
-                            {cv.name}
-                          </button>
+                          <div key={cv.name} className={`flex items-center rounded-full border text-[10px] font-body ${active ? "ring-2 ring-primary" : ""} ${off ? "border-border opacity-50" : "border-primary bg-primary/10"}`}>
+                            <button
+                              type="button"
+                              onClick={() => setPreviewPick({ pid: p.id, name: cv.name })}
+                              title="Apskatīt priekšskatījumā"
+                              className={`flex items-center gap-1 pl-2 pr-1 py-0.5 ${off ? "line-through" : ""}`}
+                            >
+                              <span className="w-3 h-3 rounded-full border border-border" style={{ background: cv.hex || "#888" }} />
+                              {cv.name}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => toggleColor(p.id, cv.name)}
+                              aria-pressed={!off}
+                              title={off ? "Ieslēgt krāsu" : "Izslēgt krāsu"}
+                              className="px-1.5 py-0.5 border-l border-border hover:text-primary"
+                            >{off ? "+" : "×"}</button>
+                          </div>
                         );
                       })}
                     </div>
