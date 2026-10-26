@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveLegacyProductImage } from "@/lib/legacyProductImages";
+import { sortReadyMadeProducts } from "@/lib/readyMadeProducts";
 
 export function resolveProductImages<T extends { image_url: string | null; color_variants?: unknown; gallery_images?: unknown; showcase_images?: unknown; mockup_image_url?: string | null }>(product: T): T {
   const imageList = (value: unknown) => Array.isArray(value) ? value.map((src) => typeof src === "string" ? resolveLegacyProductImage(src) : src) : [];
@@ -44,6 +45,8 @@ export interface DBProduct {
   in_stock: boolean;
   zakeke_model_code: string | null;
   campaign_id: string | null;
+  published_at?: string | null;
+  product_theme_assignments?: { theme_id: string }[];
   created_at: string;
   updated_at: string;
 }
@@ -91,13 +94,14 @@ async function fetchCollectionProducts(): Promise<DBProduct[]> {
   // Non-customizable products PLUS any campaign/blog products explicitly flagged
   const { data, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*, product_theme_assignments(theme_id)")
     .eq("is_draft", false)
     .or("customizable.eq.false,show_in_collection.eq.true")
     .order("display_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []).map((p) => {
+  // Freshly published ready-made products go first, newest first publication on top.
+  return sortReadyMadeProducts((data ?? []).map((p) => {
     const images = resolveProductImages(p);
     return {
       ...images,
@@ -105,8 +109,8 @@ async function fetchCollectionProducts(): Promise<DBProduct[]> {
       zakeke_model_code: (p as any).zakeke_model_code ?? null,
       gallery_images: images.gallery_images as string[],
       showcase_images: images.showcase_images as string[],
-    };
-  });
+    } as DBProduct;
+  }));
 }
 
 async function fetchProductBySlug(slug: string): Promise<DBProduct | null> {

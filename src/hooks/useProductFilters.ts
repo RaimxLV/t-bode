@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react";
 export interface ProductFiltersState {
   category: string;
   campaign: string;
+  theme: string;
   colors: string[];
   sizes: string[];
   priceMin: number | null;
@@ -16,6 +17,7 @@ export function useProductFilters() {
   const filters: ProductFiltersState = useMemo(() => ({
     category: searchParams.get("category") || "all",
     campaign: searchParams.get("campaign") || "all",
+    theme: searchParams.get("theme") || "all",
     colors: searchParams.get("colors")?.split(",").filter(Boolean) || [],
     sizes: searchParams.get("sizes")?.split(",").filter(Boolean) || [],
     priceMin: searchParams.get("priceMin") ? Number(searchParams.get("priceMin")) : null,
@@ -40,7 +42,7 @@ export function useProductFilters() {
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  const hasActiveFilters = filters.category !== "all" || filters.campaign !== "all" || filters.colors.length > 0 || filters.sizes.length > 0 || filters.priceMin !== null || filters.priceMax !== null;
+  const hasActiveFilters = filters.category !== "all" || filters.campaign !== "all" || filters.theme !== "all" || filters.colors.length > 0 || filters.sizes.length > 0 || filters.priceMin !== null || filters.priceMax !== null;
 
   return { filters, setFilter, clearFilters, hasActiveFilters };
 }
