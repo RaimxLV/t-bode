@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Plus, Trash2, Save, Upload, X, ImagePlus, Palette, Languages, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, Upload, X, Palette, Languages, Loader2, Copy, Eye, EyeOff } from "lucide-react";
+import { ImageStrip } from "@/components/admin/ImageStrip";
+import { validateForPublish } from "@/lib/readyMadeProducts";
+import { useProductThemes } from "@/hooks/useProductThemes";
+import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
 import { useCategories, getTopLevel, getChildren } from "@/hooks/useCategories";
 import { useExistingColors } from "@/hooks/useExistingColors";
@@ -18,7 +22,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { slugify as slugifyShared } from "@/lib/slug";
 
 export interface ColorVariant { name: string; hex: string; images: string[]; sizes?: string[]; }
-export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; gallery_images?: string[]; showcase_images?: string[]; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; }
+export interface ProductForm { id?: string; name: string; name_lv?: string; name_en?: string; slug: string; description: string; description_lv?: string; description_en?: string; price: number; category: string; sizes: string[]; customizable: boolean; color_variants: ColorVariant[]; image_url: string; mockup_image_url?: string; gallery_images?: string[]; showcase_images?: string[]; in_stock: boolean; is_draft?: boolean; zakeke_model_code: string; theme_ids?: string[]; published_at?: string | null; }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"];
 
@@ -30,9 +34,11 @@ interface ProductDialogProps {
   product: ProductForm | null;
   onProductChange: (product: ProductForm) => void;
   onSaved: () => void;
+  /** Duplicates a saved product and opens the copy. */
+  onDuplicate?: (id: string) => void;
 }
 
-export const ProductDialog = ({ open, onOpenChange, product, onProductChange, onSaved }: ProductDialogProps) => {
+export const ProductDialog = ({ open, onOpenChange, product, onProductChange, onSaved, onDuplicate }: ProductDialogProps) => {
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState<"name" | "description" | null>(null);
@@ -41,6 +47,19 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const { data: allCategories = [] } = useCategories();
   const { data: existingColors = [] } = useExistingColors();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const { data: themes = [] } = useProductThemes();
+  const [initialDraft] = useState(() => !!product?.is_draft || !product?.id);
+
+  // Load theme assignments for an existing product once.
+  useEffect(() => {
+    if (!product?.id || product.theme_ids !== undefined) return;
+    let cancelled = false;
+    supabase.from("product_theme_assignments").select("theme_id").eq("product_id", product.id).then(({ data }) => {
+      if (!cancelled) onProductChange({ ...product, theme_ids: (data ?? []).map((r) => r.theme_id) });
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id, product?.theme_ids]);
 
   const handleAutoTranslate = async (field: "name" | "description", direction: "lv-en" | "en-lv") => {
     if (!product) return;
@@ -102,18 +121,50 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
+    const publishing = !product.is_draft;
+    if (publishing) {
+      const missing = validateForPublish(product);
+      if (missing.length) { toast.error("Lai publicētu, aizpildi: " + missing.join(", ")); return; }
+    }
     setSaving(true);
     const payload = { name: product.name, name_lv: product.name_lv || product.name, name_en: product.name_en || null, slug: product.slug, description: product.description || null, description_lv: product.description_lv || product.description || null, description_en: product.description_en || null, price: product.price, category: product.category, sizes: product.sizes, colors: product.color_variants.map((c) => c.name), customizable: product.customizable, color_variants: JSON.parse(JSON.stringify(product.color_variants)), image_url: product.image_url || null, mockup_image_url: product.mockup_image_url || null, gallery_images: product.gallery_images ?? [], showcase_images: product.showcase_images ?? [], in_stock: product.in_stock, is_draft: !!product.is_draft, zakeke_model_code: product.zakeke_model_code || null };
-    if (product.id) {
-      const { error } = await supabase.from("products").update(payload).eq("id", product.id);
-      if (error) toast.error(t("admin.saveError") + ": " + error.message);
-      else toast.success(t("admin.productSaved"));
+    let productId = product.id;
+    if (productId) {
+      const { error } = await supabase.from("products").update(payload).eq("id", productId);
+      if (error) { toast.error(t("admin.saveError") + ": " + error.message); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from("products").insert(payload);
-      if (error) toast.error(t("admin.createError") + ": " + error.message);
-      else toast.success(t("admin.productCreated"));
+      const { data, error } = await supabase.from("products").insert(payload).select("id").single();
+      if (error || !data) { toast.error(t("admin.createError") + ": " + (error?.message ?? "")); setSaving(false); return; }
+      productId = data.id;
     }
+    if (product.theme_ids !== undefined && productId) {
+      const { error: delErr } = await supabase.from("product_theme_assignments").delete().eq("product_id", productId);
+      const rows = product.theme_ids.map((theme_id) => ({ product_id: productId!, theme_id }));
+      const { error: insErr } = delErr || rows.length === 0 ? { error: delErr } : await supabase.from("product_theme_assignments").insert(rows);
+      if (delErr || insErr) toast.error("Tēmas neizdevās saglabāt: " + (delErr ?? insErr)!.message);
+    }
+    if (publishing && initialDraft) toast.success("Produkts publicēts veikalā");
+    else if (!publishing) toast.success("Melnraksts saglabāts — klientiem nav redzams");
+    else toast.success(t("admin.productSaved"));
     setSaving(false); onOpenChange(false); onSaved();
+  };
+
+  // Uploads new files to storage. Existing files are never deleted from here.
+  const uploadFiles = async (files: File[]): Promise<string[]> => {
+    const uploaded: string[] = [];
+    for (const file of files) {
+      const ext = file.name.split(".").pop();
+      const path = `${product.slug || "temp"}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file);
+      if (error) { toast.error(t("admin.uploadError") + ": " + (error.message || "unknown")); continue; }
+      uploaded.push(supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl);
+    }
+    return uploaded;
+  };
+
+  const toggleTheme = (id: string) => {
+    const current = product.theme_ids ?? [];
+    onProductChange({ ...product, theme_ids: current.includes(id) ? current.filter((x) => x !== id) : [...current, id] });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: "main" | "mockup" | "gallery" | "showcase" | { colorIndex: number }) => {
@@ -213,10 +264,26 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-screen h-screen max-w-none max-h-none left-0 top-0 translate-x-0 translate-y-0 p-0 sm:rounded-none flex flex-col overflow-hidden">
         <DialogHeader className="shrink-0 px-4 sm:px-6 py-4 border-b border-border">
-          <DialogTitle className="font-display text-xl">{product.id ? t("admin.editProduct") : t("admin.newProduct")}</DialogTitle>
+          <DialogTitle className="font-display text-xl flex items-center gap-2 flex-wrap">{product.id ? t("admin.editProduct") : t("admin.newProduct")}{product.is_draft && <Badge variant="secondary">Melnraksts</Badge>}</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+          <div className={`rounded-lg border p-3 sm:p-4 flex items-start gap-3 ${product.is_draft ? "border-border bg-muted/40" : "border-primary/40 bg-primary/5"}`}>
+            <Switch id="product-draft" checked={!!product.is_draft} onCheckedChange={(v) => onProductChange({ ...product, is_draft: v })} aria-describedby="product-draft-help" />
+            <div className="min-w-0">
+              <Label htmlFor="product-draft" className="font-body text-sm font-semibold flex items-center gap-2">
+                {product.is_draft ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} Melnraksts
+              </Label>
+              <p id="product-draft-help" className="text-xs text-muted-foreground font-body mt-0.5">
+                {product.is_draft
+                  ? "Ieslēgts: produkts klientiem nav redzams. Izslēdz un saglabā, lai publicētu."
+                  : product.published_at
+                    ? "Izslēgts: pēc saglabāšanas produkts redzams veikalā. Pirmās publicēšanas datums nemainās."
+                    : "Izslēgts: pēc saglabāšanas produkts tiks publicēts un parādīsies kā jaunākais ar zīmi \"Jaunums\"."}
+              </p>
+            </div>
+          </div>
+
           {/* Bilingual name fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
@@ -370,10 +437,6 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <Switch checked={product.in_stock} onCheckedChange={(v) => onProductChange({ ...product, in_stock: v })} />
               <Label className="font-body text-sm">{t("admin.inStock")}</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch checked={!!product.is_draft} onCheckedChange={(v) => onProductChange({ ...product, is_draft: v })} />
-              <Label className="font-body text-sm">Melnraksts (slēpt no veikala)</Label>
-            </div>
           </div>
 
           <div>
@@ -415,26 +478,8 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
           <div>
             <Label className="font-body text-sm">Lifestyle galerija — stock / katalogs</Label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {(product.gallery_images ?? []).map((img, idx) => (
-                <div key={idx} className="relative group">
-                  <img src={img} alt={`Galerija ${idx + 1}`} className="w-20 h-24 object-cover rounded border border-border" />
-                  <button
-                    type="button"
-                    onClick={() => onProductChange({ ...product, gallery_images: (product.gallery_images ?? []).filter((_, i) => i !== idx) })}
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Dzēst bildi"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              <label className="cursor-pointer">
-                <div className="w-20 h-24 border-2 border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 hover:bg-muted transition-colors">
-                  {uploadingImage === "gallery" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
-                </div>
-                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "gallery")} disabled={uploadingImage === "gallery"} />
-              </label>
+            <div className="mt-2 mb-2">
+              <ImageStrip label="Galerija" images={product.gallery_images ?? []} upload={uploadFiles} onChange={(gallery_images) => onProductChange({ ...product, gallery_images })} />
             </div>
           </div>
 
@@ -443,27 +488,29 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <span className="inline-block w-2 h-2 rounded-full bg-cta-red" />
               Mūsu darbi (klientu nodrukāti pasūtījumi)
             </Label>
-            <div className="flex flex-wrap gap-2 mb-1">
-              {(product.showcase_images ?? []).map((img, idx) => (
-                <div key={idx} className="relative group">
-                  <img src={img} alt={`Mūsu darbs ${idx + 1}`} className="w-20 h-24 object-cover rounded border border-cta-red/40" />
-                  <button
-                    type="button"
-                    onClick={() => onProductChange({ ...product, showcase_images: (product.showcase_images ?? []).filter((_, i) => i !== idx) })}
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    aria-label="Dzēst bildi"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-              <label className="cursor-pointer">
-                <div className="w-20 h-24 border-2 border-dashed border-cta-red/40 rounded flex items-center justify-center hover:border-cta-red hover:bg-cta-red/5 transition-colors">
-                  {uploadingImage === "showcase" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5 text-cta-red" />}
-                </div>
-                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleImageUpload(e, "showcase")} disabled={uploadingImage === "showcase"} />
-              </label>
+            <div className="mt-2 mb-1">
+              <ImageStrip label="Mūsu darbs" images={product.showcase_images ?? []} upload={uploadFiles} onChange={(showcase_images) => onProductChange({ ...product, showcase_images })} />
             </div>
+          </div>
+
+          <div>
+            <Label className="font-body text-sm">Tēmas</Label>
+            <p className="text-xs text-muted-foreground font-body mb-2">Var izvēlēties vairākas. Tēmas pārvaldi sadaļā "Kategorijas".</p>
+            {themes.length === 0 ? (
+              <p className="text-xs text-muted-foreground font-body">Vēl nav nevienas tēmas.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {themes.map((th) => {
+                  const active = (product.theme_ids ?? []).includes(th.id);
+                  return (
+                    <button key={th.id} type="button" aria-pressed={active} onClick={() => toggleTheme(th.id)}
+                      className={`px-3 py-1 text-xs font-body rounded-full border transition-colors ${active ? "bg-primary text-primary-foreground border-primary" : "border-border hover:border-primary/40"} ${th.is_active ? "" : "opacity-60"}`}>
+                      {th.name_lv}{!th.is_active && " (slēpta)"}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div>
@@ -538,17 +585,9 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
             <div className="space-y-4">
               {product.color_variants.map((variant, ci) => (
                 <Card key={ci} className="p-3 sm:p-4 border border-border">
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {variant.images.map((img, ii) => (
-                      <div key={ii} className="relative group">
-                        <img src={img} alt="" className="w-16 h-16 object-cover rounded border border-border" />
-                        <button onClick={() => removeColorImage(ci, ii)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3 h-3" /></button>
-                      </div>
-                    ))}
-                    <label className="cursor-pointer w-16 h-16 border border-dashed border-border rounded flex items-center justify-center hover:border-primary/40 transition-colors">
-                      {uploadingImage === `color-${ci}` ? <span className="text-xs text-muted-foreground">...</span> : <ImagePlus className="w-5 h-5 text-muted-foreground" />}
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, { colorIndex: ci })} disabled={uploadingImage === `color-${ci}`} />
-                    </label>
+                  <div className="mb-4">
+                    <ImageStrip label={`${variant.name || "Krāsa"} bilde`} thumbClass="w-16 h-16" images={variant.images} upload={uploadFiles}
+                      onChange={(images) => onProductChange({ ...product, color_variants: product.color_variants.map((v, idx) => (idx === ci ? { ...v, images } : v)) })} />
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <input type="color" value={variant.hex} onChange={(e) => updateColorVariant(ci, "hex", e.target.value)} className="w-8 h-8 rounded cursor-pointer border-0 p-0" />
@@ -604,10 +643,20 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
 
         </div>
         <DialogFooter className="shrink-0 px-4 sm:px-6 py-4 border-t border-border gap-2 sm:gap-3">
+          {product.id && (
+            <div className="flex gap-2 w-full sm:w-auto sm:mr-auto">
+              <Button variant="outline" asChild className="flex-1 sm:flex-none">
+                <a href={`/produkti/${product.slug}?preview=1`} target="_blank" rel="noopener noreferrer"><Eye className="w-4 h-4 mr-2" /> Priekšskatīt</a>
+              </Button>
+              {onDuplicate && (
+                <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => onDuplicate(product.id!)}><Copy className="w-4 h-4 mr-2" /> Dublēt</Button>
+              )}
+            </div>
+          )}
           <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">{t("admin.cancel")}</Button>
           <Button onClick={handleSave} disabled={saving} className="w-full sm:w-auto bg-primary text-primary-foreground">
             <Save className="w-4 h-4 mr-2" />
-            {saving ? t("admin.saving") : t("admin.save")}
+            {saving ? t("admin.saving") : product.is_draft ? "Saglabāt melnrakstu" : t("admin.save")}
           </Button>
         </DialogFooter>
       </DialogContent>
