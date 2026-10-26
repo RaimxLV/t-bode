@@ -27,6 +27,7 @@ import { Seo } from "@/components/Seo";
 const ProductDialog = lazy(() => import("@/components/admin/ProductDialog").then(m => ({ default: m.ProductDialog })));
 const OrdersList = lazy(() => import("@/components/admin/OrdersList").then(m => ({ default: m.OrdersList })));
 const FAQManager = lazy(() => import("@/components/admin/FAQManager").then(m => ({ default: m.FAQManager })));
+const ThemeManager = lazy(() => import("@/components/admin/ThemeManager").then(m => ({ default: m.ThemeManager })));
 const CategoryManager = lazy(() => import("@/components/admin/CategoryManager").then(m => ({ default: m.CategoryManager })));
 const ProductStats = lazy(() => import("@/components/admin/ProductStats").then(m => ({ default: m.ProductStats })));
 const CustomersList = lazy(() => import("@/components/admin/CustomersList").then(m => ({ default: m.CustomersList })));
@@ -103,6 +104,7 @@ const Admin = () => {
   const draftProducts = products.filter((p) => (p as any).is_draft);
   const designProducts = publishedProducts.filter((p) => p.customizable);
   const collectionProducts = publishedProducts.filter((p) => !p.customizable);
+  const collectionDrafts = draftProducts.filter((p) => !p.customizable);
 
   const stats = useMemo(() => ({
     total: products.length,
@@ -306,9 +308,26 @@ const Admin = () => {
   // Future: unpublish action (back to draft) — wire when needed.
 
   const openCreateDialog = (forDesign: boolean) => { setEditingProduct({ ...EMPTY_PRODUCT, customizable: forDesign }); setDialogOpen(true); };
+  const toForm = (product: DBProduct): ProductForm => ({ id: product.id, name: product.name, name_lv: (product as any).name_lv || product.name, name_en: (product as any).name_en || "", slug: product.slug, description: product.description || "", description_lv: (product as any).description_lv || product.description || "", description_en: (product as any).description_en || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", mockup_image_url: (product as any).mockup_image_url || "", gallery_images: Array.isArray((product as any).gallery_images) ? (product as any).gallery_images : [], showcase_images: Array.isArray((product as any).showcase_images) ? (product as any).showcase_images : [], in_stock: product.in_stock, is_draft: (product as any).is_draft ?? false, zakeke_model_code: product.zakeke_model_code || "", published_at: (product as any).published_at ?? null });
   const openEditDialog = (product: DBProduct) => {
-    setEditingProduct({ id: product.id, name: product.name, name_lv: (product as any).name_lv || product.name, name_en: (product as any).name_en || "", slug: product.slug, description: product.description || "", description_lv: (product as any).description_lv || product.description || "", description_en: (product as any).description_en || "", price: product.price, category: product.category, sizes: product.sizes || [], customizable: product.customizable, color_variants: (product.color_variants as ColorVariant[]) || [], image_url: product.image_url || "", mockup_image_url: (product as any).mockup_image_url || "", gallery_images: Array.isArray((product as any).gallery_images) ? (product as any).gallery_images : [], showcase_images: Array.isArray((product as any).showcase_images) ? (product as any).showcase_images : [], in_stock: product.in_stock, is_draft: (product as any).is_draft ?? false, zakeke_model_code: product.zakeke_model_code || "" });
+    setEditingProduct(toForm(product));
     setDialogOpen(true);
+  };
+
+  // Duplicates on the server (admin-only RPC), then opens the new draft copy.
+  const [duplicating, setDuplicating] = useState(false);
+  const handleDuplicate = async (productId: string) => {
+    if (duplicating) return;
+    setDuplicating(true);
+    const { data: newId, error } = await supabase.rpc("duplicate_product", { _product_id: productId });
+    if (error || !newId) { toast.error("Neizdevās dublēt: " + (error?.message ?? "")); setDuplicating(false); return; }
+    const { data: copy, error: readErr } = await supabase.from("products").select("*").eq("id", newId).single();
+    setDuplicating(false);
+    void loadProducts();
+    if (readErr || !copy) { toast.error("Kopija izveidota, bet neizdevās to atvērt"); return; }
+    toast.success("Kopija izveidota kā melnraksts");
+    setDialogOpen(false);
+    setTimeout(() => { setEditingProduct(toForm({ ...(copy as any), color_variants: (copy as any).color_variants || [] })); setDialogOpen(true); }, 0);
   };
 
   if (authLoading || checking) {
@@ -331,7 +350,7 @@ const Admin = () => {
     return result;
   };
 
-  const renderProductGrid = (items: DBProduct[], forDesign: boolean) => {
+  const renderProductGrid = (items: DBProduct[], forDesign: boolean, allowDuplicate = false) => {
     const filtered = filterProductsForTab(items);
     const relevantCategories = forDesign
       ? topCats.filter((c) => !["latvia", "accessories"].includes(c.slug))
@@ -382,6 +401,7 @@ const Admin = () => {
             products={filtered}
             onEdit={openEditDialog}
             onDelete={handleDelete}
+            onDuplicate={allowDuplicate ? (p) => handleDuplicate(p.id) : undefined}
             onReordered={loadProducts}
           />
         )}
@@ -440,7 +460,18 @@ const Admin = () => {
             <div className="flex justify-end mb-3 sm:mb-4">
               <Button onClick={() => openCreateDialog(false)} className="w-full sm:w-auto bg-primary text-primary-foreground"><Plus className="w-4 h-4 mr-2" /> Jauns kolekcijas produkts</Button>
             </div>
-            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false)}
+            {!loadingProducts && collectionDrafts.length > 0 && (
+              <section className="mb-6 rounded-lg border border-dashed border-border p-3 sm:p-4" aria-labelledby="collection-drafts-title">
+                <h2 id="collection-drafts-title" className="font-display text-lg mb-1">Melnraksti <Badge variant="secondary" className="ml-1">{collectionDrafts.length}</Badge></h2>
+                <p className="text-xs text-muted-foreground font-body mb-3">Klientiem nav redzami. Atver, izslēdz "Melnraksts" un saglabā, lai publicētu.</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
+                  {collectionDrafts.map((p) => (
+                    <ProductCard key={p.id} product={p} onEdit={openEditDialog} onDelete={handleDelete} onDuplicate={(x) => handleDuplicate(x.id)} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {loadingProducts ? <p className="text-muted-foreground text-center py-12 font-body">{t("admin.loadingProducts")}</p> : renderProductGrid(collectionProducts, false, true)}
           </TabsContent>
 
           <TabsContent value="orders">
@@ -472,6 +503,7 @@ const Admin = () => {
           <TabsContent value="categories">
             <Suspense fallback={<TabFallback />}>
               <CategoryManager />
+              <div className="mt-6"><ThemeManager /></div>
             </Suspense>
           </TabsContent>
 
@@ -661,6 +693,7 @@ const Admin = () => {
             product={editingProduct}
             onProductChange={setEditingProduct}
             onSaved={loadProducts}
+            onDuplicate={editingProduct && !editingProduct.customizable ? handleDuplicate : undefined}
           />
         </Suspense>
       )}
