@@ -1323,6 +1323,72 @@ export type Database = {
         }
         Relationships: []
       }
+      product_theme_assignments: {
+        Row: {
+          created_at: string
+          product_id: string
+          theme_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: string
+          theme_id: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: string
+          theme_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_theme_assignments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_theme_assignments_theme_id_fkey"
+            columns: ["theme_id"]
+            isOneToOne: false
+            referencedRelation: "product_themes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_themes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name_en: string | null
+          name_lv: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_en?: string | null
+          name_lv: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name_en?: string | null
+          name_lv?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           always_available: boolean
@@ -1353,6 +1419,7 @@ export type Database = {
           print_area: Json | null
           print_offset_y: number | null
           print_scale: number | null
+          published_at: string | null
           show_in_collection: boolean
           showcase_images: Json
           sizes: string[] | null
@@ -1390,6 +1457,7 @@ export type Database = {
           print_area?: Json | null
           print_offset_y?: number | null
           print_scale?: number | null
+          published_at?: string | null
           show_in_collection?: boolean
           showcase_images?: Json
           sizes?: string[] | null
@@ -1427,6 +1495,7 @@ export type Database = {
           print_area?: Json | null
           print_offset_y?: number | null
           print_scale?: number | null
+          published_at?: string | null
           show_in_collection?: boolean
           showcase_images?: Json
           sizes?: string[] | null
@@ -1718,6 +1787,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      duplicate_product: { Args: { _product_id: string }; Returns: string }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
