@@ -25,6 +25,7 @@ interface Props {
   products: DBProduct[];
   onEdit: (p: DBProduct) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (p: DBProduct) => void;
   onReordered?: () => void;
 }
 
@@ -32,10 +33,12 @@ function SortableCard({
   product,
   onEdit,
   onDelete,
+  onDuplicate,
 }: {
   product: DBProduct;
   onEdit: (p: DBProduct) => void;
   onDelete: (id: string) => void;
+  onDuplicate?: (p: DBProduct) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: product.id });
   const style: React.CSSProperties = {
@@ -55,12 +58,12 @@ function SortableCard({
       >
         <GripVertical size={16} />
       </button>
-      <ProductCard product={product} onEdit={onEdit} onDelete={onDelete} />
+      <ProductCard product={product} onEdit={onEdit} onDelete={onDelete} onDuplicate={onDuplicate} />
     </div>
   );
 }
 
-export function SortableProductGrid({ products, onEdit, onDelete, onReordered }: Props) {
+export function SortableProductGrid({ products, onEdit, onDelete, onDuplicate, onReordered }: Props) {
   const [items, setItems] = useState(products);
   useEffect(() => setItems(products), [products]);
 
@@ -97,7 +100,7 @@ export function SortableProductGrid({ products, onEdit, onDelete, onReordered }:
       <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
           {items.map((p) => (
-            <SortableCard key={p.id} product={p} onEdit={onEdit} onDelete={onDelete} />
+            <SortableCard key={p.id} product={p} onEdit={onEdit} onDelete={onDelete} onDuplicate={onDuplicate} />
           ))}
         </div>
       </SortableContext>

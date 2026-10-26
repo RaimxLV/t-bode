@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { ShoppingCart, ChevronLeft, ChevronRight, Pencil, Trash2, Copy } from "lucide-react";
+import { isFreshlyPublished } from "@/lib/readyMadeProducts";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useEmblaCarousel from "embla-carousel-react";
@@ -15,18 +16,22 @@ interface ProductCardProps {
   product: DBProduct;
   onEdit?: (product: DBProduct) => void;
   onDelete?: (productId: string) => void;
+  onDuplicate?: (product: DBProduct) => void;
   priorityImage?: boolean;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete, priorityImage = false }: ProductCardProps) => {
+export const ProductCard = ({ product, onEdit, onDelete, onDuplicate, priorityImage = false }: ProductCardProps) => {
   const { t, i18n } = useTranslation();
   const displayName = getProductName(product, i18n.language);
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(null);
   const isAdmin = !!(onEdit || onDelete);
 
   // "Jaunums" badge for campaign/holiday products that are still active
+  // or ready-made products within the "Jaunums" window after their FIRST publication.
   const isNew = (() => {
     const p: any = product;
+    if (p.is_draft) return false;
+    if (isFreshlyPublished(p)) return true;
     if (!p.holiday_id && !p.show_in_collection && !p.campaign_id) return false;
     if (p.expires_at && new Date(p.expires_at) < new Date()) return false;
     return true;
@@ -173,6 +178,12 @@ export const ProductCard = ({ product, onEdit, onDelete, priorityImage = false }
           </div>
         )}
 
+        {isAdmin && (product as any).is_draft && (
+          <div className="absolute bottom-2 left-2 z-10 bg-background/90 text-foreground border border-border text-[10px] font-bold font-body px-2 py-0.5 rounded uppercase tracking-wide">
+            Melnraksts
+          </div>
+        )}
+
         {isNew && product.in_stock && (
           <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-[10px] font-bold font-body px-2 py-0.5 rounded uppercase tracking-wide">
             {i18n.language === "en" ? "New" : "Jaunums"}
@@ -253,6 +264,16 @@ export const ProductCard = ({ product, onEdit, onDelete, priorityImage = false }
                 >
                   <Pencil className="w-3 h-3" />
                   <span className="hidden sm:inline">{t("admin.edit", "Rediģēt")}</span>
+                </button>
+              )}
+              {onDuplicate && (
+                <button
+                  onClick={(e) => { e.preventDefault(); onDuplicate(product); }}
+                  aria-label={`Dublēt ${displayName}`}
+                  className="flex-1 flex items-center justify-center gap-1 py-1 rounded text-xs font-body text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span className="hidden sm:inline">Dublēt</span>
                 </button>
               )}
               {onDelete && (

@@ -15,6 +15,13 @@
       "when": 1792743656365,
       "tag": "0001_manual_payment_admin_access_only",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793004603966,
+      "tag": "0002_ready_made_drafts_duplicate_themes",
+      "breakpoints": true
     }
   ]
 }

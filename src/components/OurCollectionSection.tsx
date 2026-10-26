@@ -8,6 +8,7 @@ import { useActiveCollectionCampaigns } from "@/hooks/useActiveCollectionCampaig
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useProductThemes, themeLabel } from "@/hooks/useProductThemes";
 import { useCategories, buildCategoryFilterList, getCategorySlugsIncludingChildren } from "@/hooks/useCategories";
 
 export const OurCollectionSection = () => {
@@ -15,7 +16,8 @@ export const OurCollectionSection = () => {
   const { data: allCategories = [] } = useCategories();
   const { data: activeCampaigns = [] } = useActiveCollectionCampaigns();
   const { filters, setFilter, clearFilters, hasActiveFilters } = useProductFilters();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { data: themes = [] } = useProductThemes();
   const isMobile = useIsMobile();
 
   // Build dynamic category list from DB (only categories that have collection products)
@@ -51,12 +53,21 @@ export const OurCollectionSection = () => {
     return chips;
   }, [products, activeCampaigns, t]);
 
+  // Theme chips: active themes that have at least one visible product. URL uses the theme slug.
+  const themeChips = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of products) for (const a of p.product_theme_assignments ?? []) counts.set(a.theme_id, (counts.get(a.theme_id) ?? 0) + 1);
+    return themes.filter((th) => th.is_active && (counts.get(th.id) ?? 0) > 0).map((th) => ({ ...th, count: counts.get(th.id)! }));
+  }, [products, themes]);
+  const activeThemeId = filters.theme !== "all" ? themes.find((th) => th.slug === filters.theme)?.id ?? null : null;
+
   const filtered = useMemo(() => {
     const matchSlugs = filters.category !== "all"
       ? getCategorySlugsIncludingChildren(allCategories, filters.category)
       : null;
 
     return products.filter((p) => {
+      if (filters.theme !== "all" && !(p.product_theme_assignments ?? []).some((a) => a.theme_id === activeThemeId)) return false;
       if (matchSlugs && !matchSlugs.includes(p.category)) return false;
       if (filters.campaign !== "all") {
         const cid = (p as any).campaign_id as string | null;
@@ -78,7 +89,7 @@ export const OurCollectionSection = () => {
       if (filters.priceMax !== null && p.price > filters.priceMax) return false;
       return true;
     });
-  }, [products, filters, allCategories]);
+  }, [products, filters, allCategories, activeThemeId]);
 
   if (!isLoading && products.length === 0) return null;
 
@@ -149,6 +160,22 @@ export const OurCollectionSection = () => {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {themeChips.length > 0 && (
+          <div className="mb-8" role="group" aria-label={i18n.language === "en" ? "Themes" : "Tēmas"}>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {[{ slug: "all", label: i18n.language === "en" ? "All themes" : "Visas tēmas", count: products.length }, ...themeChips.map((th) => ({ slug: th.slug, label: themeLabel(th, i18n.language), count: th.count }))].map((chip) => {
+                const active = filters.theme === chip.slug;
+                return (
+                  <button key={chip.slug} type="button" aria-pressed={active} onClick={() => setFilter("theme", chip.slug)}
+                    className={`px-4 py-2 rounded-full text-sm font-body font-medium transition-all border ${active ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-foreground/30"}`}>
+                    {chip.label}<span className={`ml-1.5 text-xs ${active ? "opacity-80" : "opacity-60"}`}>({chip.count})</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
