@@ -122,7 +122,7 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
   const handleSave = async () => {
     if (!product.name || !product.slug) { toast.error(t("admin.nameSlugRequired")); return; }
     const publishing = !product.is_draft;
-    if (publishing) {
+    if (publishing && initialDraft) {
       const missing = validateForPublish(product);
       if (missing.length) { toast.error("Lai publicētu, aizpildi: " + missing.join(", ")); return; }
     }
@@ -277,8 +277,8 @@ export const ProductDialog = ({ open, onOpenChange, product, onProductChange, on
               <p id="product-draft-help" className="text-xs text-muted-foreground font-body mt-0.5">
                 {product.is_draft
                   ? "Ieslēgts: produkts klientiem nav redzams. Izslēdz un saglabā, lai publicētu."
-                  : product.published_at
-                    ? "Izslēgts: pēc saglabāšanas produkts redzams veikalā. Pirmās publicēšanas datums nemainās."
+                  : !initialDraft || product.published_at
+                    ? "Izslēgts: produkts ir redzams veikalā. Labojumi nemaina pirmās publicēšanas datumu."
                     : "Izslēgts: pēc saglabāšanas produkts tiks publicēts un parādīsies kā jaunākais ar zīmi \"Jaunums\"."}
               </p>
             </div>
